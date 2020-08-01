@@ -4,7 +4,7 @@ SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
 LDFLAGS :=
 CPPFLAGS :=
-CXXFLAGS :=
+CXXFLAGS := -std=c++17
 
 main: $(OBJ_FILES)
 	g++ $(LDFLAGS) -o $@ $^
