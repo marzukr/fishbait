@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <algorithm>
 #include "Agent.h"
 
 Agent::Agent(int card1, int card2, double blind) {
@@ -9,6 +10,7 @@ Agent::Agent(int card1, int card2, double blind) {
     chips = 100 - blind;
 }
 
+// -2: this player is already all in 
 // -1: fold
 //  any other amount is a bet. if the value is the same as max_bet, then it is
 //  a check/call, otherwise a raise.
@@ -16,6 +18,9 @@ Agent::Agent(int card1, int card2, double blind) {
 //  this agent is dumb and will check/fold, check/call, and raise with equal
 //  probability. when raising, it will always min raise.
 double Agent::action(double max_bet, double min_raise) {
+
+    if (chips == 0) return -2;
+
     std::random_device dev;
     std::mt19937 rng(dev());
     std::uniform_int_distribution<std::mt19937::result_type> dist6(0,2);
@@ -29,16 +34,18 @@ double Agent::action(double max_bet, double min_raise) {
     // check/call
     else if (decision == 1) {
         if (max_bet > bet) { // call
-            chips = chips - (max_bet - bet);
-            bet = max_bet;
+            double call_size = std::min(chips, max_bet - bet);
+            chips = chips - call_size;
+            bet = bet + call_size;
             return bet;
         }
         return bet; // check
     }
     // raise
     else {
-        chips = chips - (max_bet - bet) - min_raise;
-        bet = max_bet + min_raise;
+        double raise_size = std::min(chips, max_bet - bet + min_raise);
+        chips = chips - raise_size;
+        bet = bet + raise_size;
         return bet;
     }
 }
