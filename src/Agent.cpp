@@ -1,13 +1,12 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
+
 #include "Agent.h"
 
-Agent::Agent(int card1, int card2, double blind) {
-    c1 = card1;
-    c2 = card2;
-    bet = blind;
-    chips = 100 - blind;
+Agent::Agent(double start_chips) {
+    bet = 0;
+    chips = start_chips;
 }
 
 // -2: this player is already all in 
@@ -48,6 +47,17 @@ double Agent::action(double max_bet, double min_raise) {
         bet = bet + raise_size;
         return bet;
     }
+}
+
+void Agent::assign_blind(double blind) {
+    double post_amount = std::min(chips, blind);
+    bet = bet + post_amount;
+    chips = chips - post_amount;
+}
+
+void Agent::deal_cards(int card1, int card2) {
+    c1 = card1;
+    c2 = card2;
 }
 
 std::ostream& operator<<(std::ostream &strm, const Agent &a) {
