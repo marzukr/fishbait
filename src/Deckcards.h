@@ -22,6 +22,7 @@
 
 #include "Constants.h"
 #include <cstdint>
+#include <string>
 
 uint_fast32_t const card[DECK_SIZE] = {
   ACE + (SPADE << FLUSH_BIT_SHIFT),
@@ -88,6 +89,73 @@ uint_fast32_t const card[DECK_SIZE] = {
   TWO + (HEART << FLUSH_BIT_SHIFT),
   TWO + (DIAMOND << FLUSH_BIT_SHIFT),
   TWO + (CLUB << FLUSH_BIT_SHIFT)
+};
+
+std::string const pretty_card[DECK_SIZE] = {
+  "A♠",
+  "A♥",
+  "A♦",
+  "A♣",
+
+  "K♠",
+  "K♥",
+  "K♦",
+  "K♣",
+
+  "Q♠",
+  "Q♥",
+  "Q♦",
+  "Q♣",
+
+  "J♠",
+  "J♥",
+  "J♦",
+  "J♣",
+
+  "10♠",
+  "10♥",
+  "10♦",
+  "10♣",
+
+  "9♠",
+  "9♥",
+  "9♦",
+  "9♣",
+
+  "8♠",
+  "8♥",
+  "8♦",
+  "8♣",
+
+  "7♠",
+  "7♥",
+  "7♦",
+  "7♣",
+
+  "6♠",
+  "6♠",
+  "6♦",
+  "6♣",
+
+  "5♠",
+  "5♥",
+  "5♦",
+  "5♣",
+
+  "4♠",
+  "4♥",
+  "4♦",
+  "4♣",
+
+  "3♠",
+  "3♥",
+  "3♦",
+  "3♣",
+
+  "2♠",
+  "2♥",
+  "2♦",
+  "2♣"
 };
 
 uint_fast8_t const suit[DECK_SIZE] = {

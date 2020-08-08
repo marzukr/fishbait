@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Agent.h"
+#include "Deckcards.h"
 
 Agent::Agent(double start_chips, std::string agent_name) {
     bet = 0;
@@ -63,6 +64,7 @@ void Agent::deal_cards(int card1, int card2) {
 }
 
 std::ostream& operator<<(std::ostream &strm, const Agent &a) {
-    return strm << a.name << " (" << a.c1 << "," << a.c2 << "," 
+    return strm << a.name << " (" 
+        << pretty_card[a.c1] << "," << pretty_card[a.c2] << "," 
         << a.bet << ")";
 }

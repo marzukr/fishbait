@@ -1,19 +1,11 @@
 #include <iostream>
 
-#include "SevenEval.h"
 #include "Game.h"
 
 int main() {
-    // game with 100 bb / player
+    // game with 100 bb / player, player 0 on the button
     Game g(100);
-    bool game_complete = false;
+    g.play(0);
 
-    // play the preflop with player 0 on the button
-    if (!game_complete) game_complete = g.preflop(0);
-    if (!game_complete) game_complete = g.flop();
-    if (!game_complete) game_complete = g.turn();
-    if (!game_complete) game_complete = g.river();
-
-    // std::cout << SevenEval::GetRank(0, 4, 8, 12, 16, 20, 24) << std::endl;
     return 0;
 }

@@ -2,8 +2,11 @@
 #include <random>
 #include <string>
 
-#include "Game.h"
+#include "SevenEval.h"
+#include "Deckcards.h"
 #include "Constants.h"
+
+#include "Game.h"
 
 Game::Game(double bb_per_player) {
     // initialize the deck
@@ -19,6 +22,15 @@ Game::Game(double bb_per_player) {
         Agent* a = new Agent(bb_per_player, default_names[i]);
         agents[i] = a;
     }
+}
+
+void Game::play(int button_pos) {
+    bool game_complete = false;
+
+    if (!game_complete) game_complete = preflop(button_pos);
+    if (!game_complete) game_complete = flop();
+    if (!game_complete) game_complete = turn();
+    if (!game_complete) river();
 }
 
 void Game::shuffle_deck() {
@@ -65,9 +77,9 @@ bool Game::preflop(int button_pos) {
 bool Game::flop() {
     std::cout << "--------------- Flop ---------------" << std::endl;
     std::cout << "The flop is "
-        << deck[12] << ", "
-        << deck[13] << ", "
-        << deck[14] << std::endl;
+        << pretty_card[deck[FLOP_1]] << ", "
+        << pretty_card[deck[FLOP_2]] << ", "
+        << pretty_card[deck[FLOP_3]] << std::endl;
 
     // the minimum bet amount is the big blind
     min_raise = 1;
@@ -78,7 +90,7 @@ bool Game::flop() {
 
 bool Game::turn() {
     std::cout << "--------------- Turn ---------------" << std::endl;
-    std::cout << "The turn is " << deck[15] << std::endl;
+    std::cout << "The turn is " << pretty_card[deck[TURN]] << std::endl;
 
     // the minimum bet amount is the big blind
     min_raise = 1;
@@ -87,15 +99,16 @@ bool Game::turn() {
     return main_game_loop(button + 1);
 }
 
-bool Game::river() {
+void Game::river() {
     std::cout << "-------------- River ---------------" << std::endl;
-    std::cout << "The river is " << deck[16] << std::endl;
+    std::cout << "The river is " << pretty_card[deck[RIVER]] << std::endl;
 
     // the minimum bet amount is the big blind
     min_raise = 1;
 
     // main game loop start with SB
-    return main_game_loop(button + 1);
+    bool folded = main_game_loop(button + 1);
+    if (!folded) award_pot();
 }
 
 bool Game::main_game_loop(int first_to_act) {
@@ -182,4 +195,66 @@ bool Game::main_game_loop(int first_to_act) {
         }
     }
     return false;
+}
+
+void Game::award_pot() {
+    double bets[NUM_PLAYERS];
+    double awards[NUM_PLAYERS];
+    int ranks[NUM_PLAYERS];
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        bets[i] = agents[i]->get_bet();
+        ranks[i] = SevenEval::GetRank(
+            agents[i]->get_c1(), agents[i]->get_c2(),
+            deck[FLOP_1], deck[FLOP_2], deck[FLOP_3],
+            deck[TURN],
+            deck[RIVER]
+        );
+        awards[i] = 0;
+    }
+
+    while (players_left > 0) {
+        double min_bet = pot;
+        for (int i = 1; i < NUM_PLAYERS; i++) {
+            double bet_i = bets[i];
+            if (bet_i < min_bet && bet_i > 0) min_bet = bet_i;
+        }
+
+        double side_pot = 0;
+
+        int best_hand = -1;
+        int best_players = 0;
+
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            if (bets[i] >= min_bet) {
+                side_pot += min_bet;
+                bets[i] = bets[i] - min_bet;
+            }
+            if (in_game[i]) {
+                if (ranks[i] > best_hand) {
+                    best_hand = ranks[i];
+                    best_players = 1;
+                }
+                else if (ranks[i] == best_hand) {
+                    best_players += 1;
+                }
+            }
+        }
+
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            if (in_game[i] && ranks[i] == best_hand) {
+                awards[i] += side_pot / best_players;
+            }
+            if (bets[i] == 0) {
+                if (in_game[i]) players_left += -1;
+                in_game[i] = false;
+            }
+        }
+    }
+
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        if (awards[i] > 0) {
+            std::cout << *agents[i];
+            std::cout << " wins " << awards[i] << std::endl;
+        }
+    }
 }
