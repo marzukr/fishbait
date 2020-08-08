@@ -1,11 +1,14 @@
 #ifndef AGENT
 #define AGENT
+
+#include <string>
  
 class Agent
 {
     private:
         int c1;
         int c2;
+        std::string name;
 
         // measured in big blinds 
         double bet;
@@ -14,7 +17,7 @@ class Agent
         friend std::ostream& operator<<(std::ostream&, const Agent&);
      
     public:
-        Agent(double start_chips);
+        Agent(double start_chips, std::string agent_name);
      
         int get_c1() { return c1; };
         int get_c2() { return c2; };

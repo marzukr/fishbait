@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <string>
 
 #include "Game.h"
 #include "Constants.h"
@@ -10,9 +11,12 @@ Game::Game(double bb_per_player) {
         deck[i] = i;
     }
 
+    std::string default_names[6] = {"Trump", "McConnell", "Pelosi", "Schumer", 
+        "McCarthy", "Roberts"};
+
     // initialize the players
     for (int i = 0; i < NUM_PLAYERS; i++) {
-        Agent* a = new Agent(bb_per_player);
+        Agent* a = new Agent(bb_per_player, default_names[i]);
         agents[i] = a;
     }
 }
@@ -31,7 +35,9 @@ void Game::shuffle_deck() {
     }
 }
 
-void Game::preflop(int button_pos) {
+bool Game::preflop(int button_pos) {
+    std::cout << "------------- Preflop --------------" << std::endl;
+
     // shuffle and deal
     shuffle_deck();
     for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -50,18 +56,58 @@ void Game::preflop(int button_pos) {
     for (int i = 0; i < NUM_PLAYERS; i++) {
         in_game[i] = true;
     }
+    players_left = NUM_PLAYERS;
 
     // main game loop start with UTG
-    main_game_loop(button + 3);
+    return main_game_loop(button + 3);
 }
 
-void Game::main_game_loop(int first_to_act) {
+bool Game::flop() {
+    std::cout << "--------------- Flop ---------------" << std::endl;
+    std::cout << "The flop is "
+        << deck[12] << ", "
+        << deck[13] << ", "
+        << deck[14] << std::endl;
+
+    // the minimum bet amount is the big blind
+    min_raise = 1;
+
+    // main game loop start with SB
+    return main_game_loop(button + 1);
+}
+
+bool Game::turn() {
+    std::cout << "--------------- Turn ---------------" << std::endl;
+    std::cout << "The turn is " << deck[15] << std::endl;
+
+    // the minimum bet amount is the big blind
+    min_raise = 1;
+
+    // main game loop start with SB
+    return main_game_loop(button + 1);
+}
+
+bool Game::river() {
+    std::cout << "-------------- River ---------------" << std::endl;
+    std::cout << "The river is " << deck[16] << std::endl;
+
+    // the minimum bet amount is the big blind
+    min_raise = 1;
+
+    // main game loop start with SB
+    return main_game_loop(button + 1);
+}
+
+bool Game::main_game_loop(int first_to_act) {
     int pot_good = NUM_PLAYERS;
     int no_raise = 0;
 
     std::cout << "There is " << pot << " in the pot" << std::endl;
 
     for (int i = 0; i < pot_good + no_raise; i++) {
+        // don't allow action to continue if there is only one player remaining
+        if (players_left <= 1) break; 
+
         int acting_player = (first_to_act + i) % NUM_PLAYERS;
         if (!in_game[acting_player]) continue;
         std::cout << *agents[acting_player];
@@ -78,6 +124,7 @@ void Game::main_game_loop(int first_to_act) {
         // fold 
         else if (action == -1) {
             in_game[acting_player] = false;
+            players_left += -1;
             std::cout << " has folded" << std::endl; 
         }
         // going all in on this turn
@@ -124,8 +171,15 @@ void Game::main_game_loop(int first_to_act) {
 
         std::cout << "There is " << pot << " in the pot" << std::endl;
     }
-}
 
-// std::ostream& operator<<(std::ostream &strm, const Agent &a) {
-//     return strm << "Agent(" << a.c1 << ", " << a.c2 << ", " << a.bet << ")";
-// }
+    if (players_left <= 1) {
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            if (in_game[i]) {
+                std::cout << *agents[i];
+                std::cout << " wins " << pot << std::endl;
+                return true;
+            }
+        }
+    }
+    return false;
+}
