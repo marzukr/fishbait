@@ -2,9 +2,9 @@
 #include <random>
 #include <string>
 
-#include "SevenEval.h"
-#include "Deckcards.h"
-#include "Constants.h"
+#include "hand_evaluator/SevenEval.h"
+#include "hand_evaluator/Deckcards.h"
+#include "hand_evaluator/Constants.h"
 
 #include "Game.h"
 

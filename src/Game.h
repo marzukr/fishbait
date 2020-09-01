@@ -1,7 +1,7 @@
 #ifndef GAME
 #define GAME
 
-#include "Constants.h"
+#include "hand_evaluator/Constants.h"
 #include "Agent.h"
 
 #define NUM_PLAYERS 6

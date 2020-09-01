@@ -4,7 +4,7 @@
 #include <string>
 
 #include "Agent.h"
-#include "Deckcards.h"
+#include "hand_evaluator/Deckcards.h"
 
 Agent::Agent(double start_chips, std::string agent_name) {
     bet = 0;
