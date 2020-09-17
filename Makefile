@@ -155,6 +155,58 @@ poker/fast:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/poker.dir/build.make src/CMakeFiles/poker.dir/build
 .PHONY : poker/fast
 
+#=============================================================================
+# Target rules for targets named omp_lib
+
+# Build rule for target.
+omp_lib: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omp_lib
+.PHONY : omp_lib
+
+# fast build rule for target.
+omp_lib/fast:
+	$(MAKE) $(MAKESILENT) -f src/omp/CMakeFiles/omp_lib.dir/build.make src/omp/CMakeFiles/omp_lib.dir/build
+.PHONY : omp_lib/fast
+
+#=============================================================================
+# Target rules for targets named isomorphism_lib
+
+# Build rule for target.
+isomorphism_lib: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 isomorphism_lib
+.PHONY : isomorphism_lib
+
+# fast build rule for target.
+isomorphism_lib/fast:
+	$(MAKE) $(MAKESILENT) -f src/isomorphism/CMakeFiles/isomorphism_lib.dir/build.make src/isomorphism/CMakeFiles/isomorphism_lib.dir/build
+.PHONY : isomorphism_lib/fast
+
+#=============================================================================
+# Target rules for targets named cpp_experiment.out
+
+# Build rule for target.
+cpp_experiment.out: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cpp_experiment.out
+.PHONY : cpp_experiment.out
+
+# fast build rule for target.
+cpp_experiment.out/fast:
+	$(MAKE) $(MAKESILENT) -f src/abstraction/CMakeFiles/cpp_experiment.out.dir/build.make src/abstraction/CMakeFiles/cpp_experiment.out.dir/build
+.PHONY : cpp_experiment.out/fast
+
+#=============================================================================
+# Target rules for targets named hand_evaluator
+
+# Build rule for target.
+hand_evaluator: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hand_evaluator
+.PHONY : hand_evaluator
+
+# fast build rule for target.
+hand_evaluator/fast:
+	$(MAKE) $(MAKESILENT) -f src/abstraction/CMakeFiles/hand_evaluator.dir/build.make src/abstraction/CMakeFiles/hand_evaluator.dir/build
+.PHONY : hand_evaluator/fast
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -163,7 +215,11 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... cpp_experiment.out"
+	@echo "... hand_evaluator"
+	@echo "... isomorphism_lib"
 	@echo "... main.out"
+	@echo "... omp_lib"
 	@echo "... poker"
 .PHONY : help
 
