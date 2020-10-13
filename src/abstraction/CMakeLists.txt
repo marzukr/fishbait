@@ -28,7 +28,7 @@ else()
   message(STATUS "iso found as ${ISO_LIB}")
 endif()
 
-target_link_libraries(hand_evaluator ${OMP_LIB})
+target_link_libraries(hand_evaluator ${OMP_LIB} isomorphism_lib)
 
 add_executable(cpp_experiment.out cpp_experiment.cpp)
 target_link_libraries(cpp_experiment.out isomorphism_lib)
