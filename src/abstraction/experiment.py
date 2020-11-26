@@ -1,6 +1,7 @@
 from itertools import combinations
 import time
 import hand_evaluator
+import OCHS
 import concurrent.futures
 import matplotlib.pyplot as plt
 import numpy as np
@@ -86,6 +87,42 @@ def generate_hand_strength_roll(hand):
 
     return {'data': ins, 'hand': hand}
 
+def hand_str(cards):
+    ret_str = ''
+    for card in cards:
+        c = hand_evaluator.CardString(card)
+        ret_str += ',' + c
+    return ret_str[1:]
+
+def generate_hand_strength_roll_ochs(hand):
+    isocalc = hand_evaluator.Indexer(2, [2,5])
+    hand_indexer = hand_evaluator.Indexer(1, [2])
+    ret = {}
+    to_add = []
+    ts = time.time()
+    r_total = 2118760
+    r = 0
+    for rollout in rollouts(hand):
+        iso_idx = isocalc.index([hand[0], hand[1],
+            rollout[0], rollout[1], rollout[2], rollout[3], rollout[4]], 
+            False)
+        if iso_idx not in ret:
+            wins = np.zeros(8)
+            total = np.zeros(8)
+            for op_hand in possible_opponent_hands(hand, rollout):
+                cluster = hand_indexer.index([op_hand[0], op_hand[1]], False)
+                cluster = OCHS.op_clusters[cluster] - 1
+                wins[cluster] += compute_win(hand, op_hand, rollout)
+                total[cluster] += 1
+            ret[iso_idx] = True
+            to_add.append({"_id": iso_idx, "vect": list(wins/total)})
+        r += 1
+        progress = r / r_total * 100
+        if time.time() - ts >= 30:
+            print('{}: {}%'.format(hand, progress))
+            ts = time.time()
+    return to_add
+
 def save_distribution(hand, res):
     jdata = json.dumps(res, indent=4)
     with open('luts/{}_{}.json'.format(hand[0], hand[1]), 'w') as f:
@@ -145,10 +182,59 @@ def flop_from_precompute(hand, flop, data):
     _ = plt.hist(dist, bins=50, range=(0,1))
     plt.show()
 
+def generate_turn_histograms(hand):
+    client = MongoClient()
+    db = client.pluribus
+    hand_strengths = db.hand_strengths
+    turns = db.turns
+
+    isocalc = hand_evaluator.Indexer(2, [2,5])
+    turncalc = hand_evaluator.Indexer(2, [2,4])
+
+    roll_dict = {}
+    roll_list = []
+    for rollout in rollouts(hand):
+        roll_cards = [hand[0], hand[1], 
+            rollout[0], rollout[1], rollout[2], rollout[3], rollout[4]]
+        roll_idx = isocalc.index(roll_cards, False)
+        if roll_idx not in roll_dict:
+            roll_list.append(roll_idx)
+            roll_dict[roll_idx] = True
+    print("found rollouts {}".format(hand))
+    result = hand_strengths.find({"_id":{"$in":roll_list}})
+    print("queried db {}".format(hand))
+    for res in result:
+        hand_id = res["_id"]
+        roll_dict[hand_id] = res["hand_strength"]
+    print("loaded {}".format(hand))
+
+    idxs = {}
+    to_add = []
+    for flop in rollouts(hand, roll_size=4):
+        cards = [hand[0], hand[1], 
+            flop[0], flop[1], flop[2], flop[3]]
+        idx = turncalc.index(cards, False)
+        if idx not in idxs:
+            idxs[idx] = True
+            hs_idxs = []
+            for tr in rollouts(cards, roll_size=1):
+                all_cards = [hand[0], hand[1], 
+                    flop[0], flop[1], flop[2], flop[3], tr[0]]
+                hs_idx = isocalc.index(all_cards, False)
+                hs_idxs.append(hs_idx)
+            dist = [roll_dict[i] for i in hs_idxs]
+            # print(sum(dist)/len(dist))
+            # _ = plt.hist(dist, bins=50, range=(0,1))
+            # print(hand)
+            # print(flop)
+            # plt.show()
+            hist = np.histogram(dist, bins=50, range=(0,1))[0].tolist()
+            to_add.append({"_id": idx, "hist": hist})
+    turns.insert_many(to_add)
+    print("completed {}".format(hand))
+    to_add = []
+
 if __name__ == '__main__':
-    # 0.8735472205870012
-    # (0, 1)
-    # (4, 23, 44)
     deck = [i for i in range(0, 52)]
     hands = {}
     handcalc = hand_evaluator.Indexer(1, [2])
@@ -159,114 +245,25 @@ if __name__ == '__main__':
                 hands[hand_idx] = (i, j)
     hands = [hand for hand in hands.values()]
 
-    # client = MongoClient()
-    # db = client.pluribus
-    # hand_strengths = db.hand_strengths
-    # flops = db.flops
+    client = MongoClient()
+    db = client.pluribus
+    rivers = db.rivers
 
-    # 13960050 turns
-
-    idxs = {}
-    to_add = []
-    handcalc = hand_evaluator.Indexer(2, [2,4])
-    isocalc = hand_evaluator.Indexer(4, [2,3,1,1])
-    count = 0
-    for hand in hands:
-        for flop in rollouts(hand, roll_size=3):
-            for turn in rollouts(list(hand) + list(flop), roll_size=1): 
-                for river in rollouts(list(hand) + list(flop) + list(turn), roll_size=1): 
-                    cards = [hand[0], hand[1], 
-                        flop[0], flop[1], flop[2], turn[0], river[0]]
-                    idx = handcalc.index(cards, False)
-                    if idx not in idxs:
-                        idxs[idx] = True
-                        count += 1
-        print(count)
-        count = 0
-    print(len(idxs))
-
-        # roll_dict = {}
-        # roll_list = []
-        # for rollout in rollouts(hand):
-        #     roll_cards = [hand[0], hand[1], 
-        #         rollout[0], rollout[1], rollout[2], rollout[3], rollout[4]]
-        #     roll_idx = isocalc.index(roll_cards, False)
-        #     if roll_idx not in roll_dict:
-        #         roll_list.append(roll_idx)
-        #         roll_dict[roll_idx] = True
-        # print("found rollouts {}".format(hand))
-        # result = hand_strengths.find({"_id":{"$in":roll_list}})
-        # print("queried db {}".format(hand))
-        # for res in result:
-        #     hand_id = res["_id"]
-        #     roll_dict[hand_id] = res["hand_strength"]
-        # print("loaded {}".format(hand))
-        # for flop in rollouts(hand, roll_size=3):
-        #     count += 1
-        #     if count % 33124 == 0:
-        #         print(count / 3312400)
-        #     # if count < 3000:
-        #     #     continue
-        #     cards = [hand[0], hand[1], 
-        #         flop[0], flop[1], flop[2]]
-        #     idx = handcalc.index(cards, False)
-        #     if idx not in idxs:
-        #         idxs[idx] = True
-        #         hs_idxs = []
-        #         for tr in rollouts(cards, roll_size=2):
-        #             all_cards = [hand[0], hand[1], 
-        #                 flop[0], flop[1], flop[2], tr[0], tr[1]]
-        #             hs_idx = isocalc.index(all_cards, False)
-        #             hs_idxs.append(hs_idx)
-        #         dist = [roll_dict[i] for i in hs_idxs]
-        #         # print(sum(dist)/len(dist))
-        #         # _ = plt.hist(dist, bins=50, range=(0,1))
-        #         # print(hand)
-        #         # print(flop)
-        #         # plt.show()
-        #         hist = np.histogram(dist, bins=50, range=(0,1))[0].tolist()
-        #         to_add.append({"_id": idx, "hist": hist})
-        # flops.insert_many(to_add)
-        # to_add = []
-
-    # client = MongoClient()
-    # db = client.pluribus
-    # collection = db.hand_strengths
-
-    # ts = time.time()
-    # result = collection.find({"_id":{"$in":idx_list}})
-    # dist = load_distribution(result)
-    # print(sum(dist) / len(dist))
-    # print(time.time() - ts)
-    # ts = time.time()
-    # _ = plt.hist(dist, bins=50, range=(0,1))
-    # print(time.time() - ts)
-    # plt.show()
-
-    # with concurrent.futures.ProcessPoolExecutor() as executor:
-    #     results = executor.map(
-    #         generate_hand_strength_roll, hands, chunksize=1)
-    #     for result in results:
-    #         save_distribution(result['hand'], result['data'])
-
-    # res = generate_hand_strength_roll((4, 8)) # QsKs seveneval
-    # res = generate_hand_strength_roll((32, 33)) # 6s6h seveleval
-    # res = generate_hand_strength_roll((40, 41)) # 4s4h seveleval
-    # res = generate_hand_strength_roll((12, 16)) # TsJs seveleval
-    # res = generate_hand_strength_roll((40, 44)) # QsKs OMP
-    # res = generate_hand_strength_roll((16, 17)) # 6s6h OMP
-
-    # jdata = json.dumps(res)
-    # with open('QsKsISO.json', 'w') as f:
-    #     f.write(jdata)
-
-    # load_distribution('QsKsISO.json')
-
-    # print(sum(res) / len(res))
-    # with open('6s6hOMPISO.npy', 'wb') as f:
-    #     np.save(f, res)
-    # _ = plt.hist(res, bins=50, range=(0,1))
-    # plt.show()
+    i = 0
+    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+        results = {
+            executor.submit(generate_hand_strength_roll_ochs, hand): hand
+            for hand in hands
+        }
+        # results = executor.map(
+        #     generate_hand_strength_roll_ochs, hands, chunksize=len(hands))
+        for output in concurrent.futures.as_completed(results):
+            result = output.result()
+        # for result in results:
+            rivers.insert_many(result)
+            i += 1
+            progress = i/len(hands)*100
+            print("completed {}%".format(progress))
 
     # EMD
     # with open('QsKsISO.npy', 'rb') as f:

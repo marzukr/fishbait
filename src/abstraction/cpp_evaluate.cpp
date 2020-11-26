@@ -1,10 +1,12 @@
 #include "SevenEval.h"
+#include "Deckcards.h"
 #include <boost/python.hpp>
 #include "HandEvaluator.h"
 extern "C" {
     #include "hand_index.h"
     #include "deck.h"
 }
+#include <string>
 
 using namespace boost::python;
 
@@ -49,6 +51,10 @@ uint16_t RankFn(uint8_t i, uint8_t j, uint8_t k, uint8_t m,
     return SevenEval::GetRank(i,j,k,m,n,p,q);
 }
 
+std::string CardStr(uint8_t i) {
+    return pretty_card[i];
+}
+
 class OMP
 {
     omp::HandEvaluator eval;
@@ -68,6 +74,7 @@ BOOST_PYTHON_MODULE(hand_evaluator)
     using namespace boost::python;
     def("GetRank", RankFn, 
         args("c1", "c2", "c3", "c4", "c5", "c6", "c7"));
+    def("CardString", CardStr, args("c"));
     class_<Indexer>("Indexer", init<int, list&>())
         .def("index", &Indexer::index);
     class_<OMP>("OMP")
