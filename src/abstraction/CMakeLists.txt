@@ -1,9 +1,14 @@
-cmake_minimum_required(VERSION 3.18.2)
+cmake_minimum_required(VERSION 2.8.12.2)
 project(abstraction)
+
+# option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
 
 include_directories(../hand_evaluator ../omp ../isomorphism)
 
-FIND_PACKAGE(Boost COMPONENTS python38)
+set(Boost_INCLUDE_DIR /home/marzukr2/boost_1_59_0)
+set(Boost_LIBRARY_DIR /home/marzukr2/boost_1_59_0/stage/lib)
+# set(BOOST_ROOT /home/marzukr2/boost)
+find_package(Boost 1.59.0 REQUIRED COMPONENTS python3)
 FIND_PACKAGE(PythonInterp 3)
 FIND_PACKAGE(PythonLibs 3 REQUIRED)
 
@@ -12,7 +17,7 @@ LINK_LIBRARIES(${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 PYTHON_ADD_MODULE(hand_evaluator cpp_evaluate.cpp)
 
-set_property(TARGET hand_evaluator PROPERTY CXX_STANDARD 17)
+set_property(TARGET hand_evaluator PROPERTY CXX_STANDARD 14)
 
 find_library(OMP_LIB omp_lib ../omp)
 if (${OMP_LIB} STREQUAL "OMP_LIB-NOTFOUND")
@@ -28,8 +33,9 @@ else()
   message(STATUS "iso found as ${ISO_LIB}")
 endif()
 
-target_link_libraries(hand_evaluator ${OMP_LIB} isomorphism_lib)
+target_link_libraries(hand_evaluator /home/marzukr2/poker-bot/src/omp/libomp_lib.so /home/marzukr2/poker-bot/src/isomorphism/libisomorphism_lib.so)
+set_target_properties(hand_evaluator PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_executable(cpp_experiment.out cpp_experiment.cpp)
-target_link_libraries(cpp_experiment.out isomorphism_lib)
+target_link_libraries(cpp_experiment.out /home/marzukr2/poker-bot/src/isomorphism/libisomorphism_lib.so)
 

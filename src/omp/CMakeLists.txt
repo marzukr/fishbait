@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.18.2)
+cmake_minimum_required(VERSION 2.8.12.2)
 project(omp)
 
 add_library(
-    omp_lib STATIC
+    omp_lib SHARED
     CardRange.cpp
     CardRange.h
     CombinedRange.cpp
@@ -18,6 +18,8 @@ add_library(
     Util.h
     )
 
-target_include_directories(omp_lib INTERFACE ./)
+# target_include_directories(omp_lib INTERFACE ./)
 
-set_property(TARGET omp_lib PROPERTY CXX_STANDARD 17)
+set_property(TARGET omp_lib PROPERTY CXX_STANDARD 14)
+
+SET(CMAKE_CXX_FLAGS "-std=c++11 -O3")

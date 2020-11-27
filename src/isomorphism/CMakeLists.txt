@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18.2)
+cmake_minimum_required(VERSION 2.8.12.2)
 project(isomorphism)
 
 add_library(
@@ -11,3 +11,4 @@ add_library(
     hand_index.h
     )
 
+set(CMAKE_C_FLAGS "-std=c99")
