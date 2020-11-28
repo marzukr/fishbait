@@ -94,9 +94,8 @@ def hand_str(cards):
         ret_str += ',' + c
     return ret_str[1:]
 
-def generate_hand_strength_roll_ochs(hand):
+def generate_hand_strength_roll_ochs(hand, op_clusters):
     isocalc = hand_evaluator.Indexer(2, [2,5])
-    hand_indexer = hand_evaluator.Indexer(1, [2])
     ret = {}
     to_add = []
     ts = time.time()
@@ -110,12 +109,12 @@ def generate_hand_strength_roll_ochs(hand):
             wins = np.zeros(8)
             total = np.zeros(8)
             for op_hand in possible_opponent_hands(hand, rollout):
-                cluster = hand_indexer.index([op_hand[0], op_hand[1]], False)
-                cluster = OCHS.op_clusters[cluster] - 1
+                cluster = op_clusters[op_hand[0], op_hand[1]]
+                assert(cluster != -1)
                 wins[cluster] += compute_win(hand, op_hand, rollout)
                 total[cluster] += 1
             ret[iso_idx] = True
-            to_add.append({"_id": iso_idx, "vect": list(wins/total)})
+            to_add.append({"_id": iso_idx, "vect": (wins/total).tolist()})
         r += 1
         progress = r / r_total * 100
         if time.time() - ts >= 30:
@@ -244,16 +243,28 @@ if __name__ == '__main__':
             if hand_idx not in hands:
                 hands[hand_idx] = (i, j)
     hands = [hand for hand in hands.values()]
+    print("computed unique hands")
+
+    # op_clusters = [[None]*52]*52
+    op_clusters = np.zeros((52,52), dtype=np.int8) - 1
+    hand_indexer = hand_evaluator.Indexer(1, [2])
+    for i in range(0, len(deck)):
+        for j in range(0, len(deck)):
+            if i != j:
+                hand_index = hand_indexer.index([i, j], False)
+                cluster = OCHS.op_clusters[hand_index] - 1
+                op_clusters[i][j] = cluster
+    print("computed opponent OCHS clusters")
 
     client = MongoClient()
     db = client.pluribus
     rivers = db.rivers
 
     i = 0
-    with concurrent.futures.ProcessPoolExecutor(max_workers=24) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
         results = {
-            executor.submit(generate_hand_strength_roll_ochs, hand): hand
-            for hand in hands
+            executor.submit(generate_hand_strength_roll_ochs, 
+                hand, op_clusters): hand for hand in hands
         }
         # results = executor.map(
         #     generate_hand_strength_roll_ochs, hands, chunksize=len(hands))
