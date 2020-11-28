@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.18.2)
-project(Pluribus VERSION 1.0.0)
+cmake_minimum_required(VERSION 3.5.0)
+project(Pluribus)
 
 add_subdirectory(src)
 

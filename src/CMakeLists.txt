@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18.2)
+cmake_minimum_required(VERSION 3.5.0)
 project(blueprint)
 
 add_subdirectory(hand_evaluator)
@@ -18,3 +18,4 @@ add_executable(main.out main.cpp)
 
 target_link_libraries(main.out hand_evaluator_lib poker)
 
+SET(CMAKE_CXX_FLAGS "-std=c++11 -O3")

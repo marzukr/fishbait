@@ -250,7 +250,7 @@ if __name__ == '__main__':
     rivers = db.rivers
 
     i = 0
-    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=24) as executor:
         results = {
             executor.submit(generate_hand_strength_roll_ochs, hand): hand
             for hand in hands
