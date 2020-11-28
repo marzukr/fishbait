@@ -3,7 +3,7 @@ import time
 import hand_evaluator
 import OCHS
 import concurrent.futures
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import json
 import sys
