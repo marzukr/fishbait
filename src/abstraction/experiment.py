@@ -95,6 +95,9 @@ def hand_str(cards):
     return ret_str[1:]
 
 def generate_hand_strength_roll_ochs(hand, op_clusters):
+    client = MongoClient()
+    db = client.pluribus
+    rivers = db.rivers
     isocalc = hand_evaluator.Indexer(2, [2,5])
     ret = {}
     to_add = []
@@ -120,7 +123,11 @@ def generate_hand_strength_roll_ochs(hand, op_clusters):
         if time.time() - ts >= 30:
             print('{}: {}%'.format(hand, progress))
             ts = time.time()
-    return to_add
+        if r % 211876 == 0:
+            batch_number = r // 2118760
+            print("adding batch {} for hand {}".format(batch_number, hand))
+            rivers.insert_many(to_add)
+            to_add = []
 
 def save_distribution(hand, res):
     jdata = json.dumps(res, indent=4)
@@ -256,22 +263,14 @@ if __name__ == '__main__':
                 op_clusters[i][j] = cluster
     print("computed opponent OCHS clusters")
 
-    client = MongoClient()
-    db = client.pluribus
-    rivers = db.rivers
-
     i = 0
-    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
         results = {
             executor.submit(generate_hand_strength_roll_ochs, 
                 hand, op_clusters): hand for hand in hands
         }
-        # results = executor.map(
-        #     generate_hand_strength_roll_ochs, hands, chunksize=len(hands))
         for output in concurrent.futures.as_completed(results):
-            result = output.result()
-        # for result in results:
-            rivers.insert_many(result)
+            print("processed {}".format(results[output]))
             i += 1
             progress = i/len(hands)*100
             print("completed {}%".format(progress))
