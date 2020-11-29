@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from itertools import combinations
 import time
 import hand_evaluator
@@ -7,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 import sys
+import os
 import pickle
 from pymongo import MongoClient
 
@@ -94,40 +97,24 @@ def hand_str(cards):
         ret_str += ',' + c
     return ret_str[1:]
 
-def generate_hand_strength_roll_ochs(hand, op_clusters):
-    client = MongoClient()
-    db = client.pluribus
-    rivers = db.rivers
-    isocalc = hand_evaluator.Indexer(2, [2,5])
-    ret = {}
-    to_add = []
-    ts = time.time()
-    r_total = 2118760
-    r = 0
-    for rollout in rollouts(hand):
-        iso_idx = isocalc.index([hand[0], hand[1],
-            rollout[0], rollout[1], rollout[2], rollout[3], rollout[4]], 
-            False)
-        if iso_idx not in ret:
-            wins = np.zeros(8)
-            total = np.zeros(8)
-            for op_hand in possible_opponent_hands(hand, rollout):
-                cluster = op_clusters[op_hand[0], op_hand[1]]
-                assert(cluster != -1)
-                wins[cluster] += compute_win(hand, op_hand, rollout)
-                total[cluster] += 1
-            ret[iso_idx] = True
-            to_add.append({"_id": iso_idx, "vect": (wins/total).tolist()})
-        r += 1
-        progress = r / r_total * 100
-        if time.time() - ts >= 30:
-            print('{}: {}%'.format(hand, progress))
-            ts = time.time()
-        if r % 211876 == 0:
-            batch_number = r // 2118760
-            print("adding batch {} for hand {}".format(batch_number, hand))
-            rivers.insert_many(to_add)
-            to_add = []
+def generate_hand_strength_roll_ochs(hand, rollout, op_clusters):
+    # ts = time.time()
+    # r_total = 2118760
+    # r = 0
+    # for rollout in rollouts(hand):
+    wins = np.zeros(8)
+    total = np.zeros(8)
+    for op_hand in possible_opponent_hands(hand, rollout):
+        cluster = op_clusters[op_hand[0], op_hand[1]]
+        assert(cluster != -1)
+        wins[cluster] += compute_win(hand, op_hand, rollout)
+        total[cluster] += 1
+    return (wins/total).tolist()
+        # r += 1
+        # progress = r / r_total * 100
+        # if time.time() - ts >= 30:
+        #     print('{}: {}%'.format(hand, progress))
+        #     ts = time.time()
 
 def save_distribution(hand, res):
     jdata = json.dumps(res, indent=4)
@@ -142,12 +129,15 @@ def save_binary(location, res):
         for idx in range(0, len(bytes_out), max_bytes):
             f_out.write(bytes_out[idx:idx+max_bytes])
 
-# bytes_in = bytearray(0)
-# input_size = os.path.getsize(file_path)
-# with open(file_path, 'rb') as f_in:
-#     for _ in range(0, input_size, max_bytes):
-#         bytes_in += f_in.read(max_bytes)
-# data2 = pickle.loads(bytes_in)
+def load_binary(file_path):
+    max_bytes = 2**31 - 1
+    bytes_in = bytearray(0)
+    input_size = os.path.getsize(file_path)
+    with open(file_path, 'rb') as f_in:
+        for _ in range(0, input_size, max_bytes):
+            bytes_in += f_in.read(max_bytes)
+    data2 = pickle.loads(bytes_in)
+    return data2
 
 def load_raw_json(filename):
     data = None
@@ -241,6 +231,14 @@ def generate_turn_histograms(hand):
     to_add = []
 
 if __name__ == '__main__':
+    assert(len(sys.argv) == 2)
+    try:
+        hand_num = int(sys.argv[1])
+    except ValueError:
+        raise
+    assert(hand_num < 169)
+    assert(hand_num >= 0)
+
     deck = [i for i in range(0, 52)]
     hands = {}
     handcalc = hand_evaluator.Indexer(1, [2])
@@ -250,9 +248,9 @@ if __name__ == '__main__':
             if hand_idx not in hands:
                 hands[hand_idx] = (i, j)
     hands = [hand for hand in hands.values()]
-    print("computed unique hands")
+    hands.sort(key=lambda tup: tup[0])
+    hand = hands[hand_num]
 
-    # op_clusters = [[None]*52]*52
     op_clusters = np.zeros((52,52), dtype=np.int8) - 1
     hand_indexer = hand_evaluator.Indexer(1, [2])
     for i in range(0, len(deck)):
@@ -261,19 +259,30 @@ if __name__ == '__main__':
                 hand_index = hand_indexer.index([i, j], False)
                 cluster = OCHS.op_clusters[hand_index] - 1
                 op_clusters[i][j] = cluster
-    print("computed opponent OCHS clusters")
+    
+    isocalc = hand_evaluator.Indexer(2, [2,5])
+    unique_rollouts = {}
+    for rollout in rollouts(hand):
+        iso_idx = isocalc.index([hand[0], hand[1],
+            rollout[0], rollout[1], rollout[2], rollout[3], rollout[4]], 
+            False)
+        if iso_idx not in unique_rollouts:
+            unique_rollouts[iso_idx] = rollout
+            if len(unique_rollouts) > 12:
+                break
 
-    i = 0
-    with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
-        results = {
+    ret = {}
+    with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
+        future_to_iso_idx = {
             executor.submit(generate_hand_strength_roll_ochs, 
-                hand, op_clusters): hand for hand in hands
+                hand, rollout, op_clusters): iso_idx 
+            for iso_idx, rollout in unique_rollouts.items()
         }
-        for output in concurrent.futures.as_completed(results):
-            print("processed {}".format(results[output]))
-            i += 1
-            progress = i/len(hands)*100
-            print("completed {}%".format(progress))
+        for future in concurrent.futures.as_completed(future_to_iso_idx):
+            vect = future.result()
+            iso_idx = future_to_iso_idx[future]
+            ret[iso_idx] = vect
+    save_binary("luts/{}_{}.ochs".format(hand[0], hand[1]), ret)
 
     # EMD
     # with open('QsKsISO.npy', 'rb') as f:
