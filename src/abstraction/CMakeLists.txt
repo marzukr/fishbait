@@ -7,21 +7,19 @@ endif()
 
 include_directories(../hand_evaluator ../omp ../isomorphism)
 
-if(MACHINE EQUAL "Mac")
+if(MACHINE STREQUAL "Mac")
   FIND_PACKAGE(Boost COMPONENTS python38)
 endif()
 
-if(MACHINE EQUAL "EWS")
-  set(Boost_INCLUDE_DIR /home/marzukr2/boost_1_59_0)
-  set(Boost_LIBRARY_DIR /home/marzukr2/boost_1_59_0/stage/lib)
-  find_package(Boost 1.59.0 REQUIRED COMPONENTS python3)
+if(MACHINE STREQUAL "EWS")
+  find_package(Boost 1.70.0 REQUIRED COMPONENTS python)
 endif()
 
 FIND_PACKAGE(PythonInterp 3)
 FIND_PACKAGE(PythonLibs 3 REQUIRED)
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
-LINK_LIBRARIES(${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+LINK_LIBRARIES(Boost::python)
 
 PYTHON_ADD_MODULE(hand_evaluator cpp_evaluate.cpp)
 
@@ -41,22 +39,10 @@ else()
   message(STATUS "iso found as ${ISO_LIB}")
 endif()
 
-if(MACHINE EQUAL "Mac")
-  target_link_libraries(hand_evaluator ${OMP_LIB} isomorphism_lib)
-endif()
-
-if(MACHINE EQUAL "EWS")
-  target_link_libraries(hand_evaluator /home/marzukr2/poker-bot/src/omp/libomp_lib.so /home/marzukr2/poker-bot/src/isomorphism/libisomorphism_lib.so)
-  set_target_properties(hand_evaluator PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif()
+target_link_libraries(hand_evaluator ${OMP_LIB} ${ISO_LIB})
 
 add_executable(cpp_experiment.out cpp_experiment.cpp)
 
-if(MACHINE EQUAL "Mac")
-  target_link_libraries(cpp_experiment.out isomorphism_lib)
-endif()
+target_link_libraries(cpp_experiment.out ${ISO_LIB})
 
-if(MACHINE EQUAL "EWS")
-  target_link_libraries(cpp_experiment.out /home/marzukr2/poker-bot/src/isomorphism/libisomorphism_lib.so)
-endif()
 
