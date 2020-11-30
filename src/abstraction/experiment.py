@@ -268,8 +268,6 @@ if __name__ == '__main__':
             False)
         if iso_idx not in unique_rollouts:
             unique_rollouts[iso_idx] = rollout
-            if len(unique_rollouts) > 12:
-                break
 
     ret = {}
     with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
