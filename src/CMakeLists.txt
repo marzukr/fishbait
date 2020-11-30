@@ -4,7 +4,6 @@ project(blueprint)
 add_subdirectory(hand_evaluator)
 add_subdirectory(omp)
 add_subdirectory(isomorphism)
-add_subdirectory(abstraction)
 
 add_library(
     poker SHARED
