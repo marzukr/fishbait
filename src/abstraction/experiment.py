@@ -282,20 +282,3 @@ if __name__ == '__main__':
             ret[iso_idx] = vect
     save_binary("luts/{}_{}.ochs".format(hand[0], hand[1]), ret)
 
-    # EMD
-    # with open('QsKsISO.npy', 'rb') as f:
-    #     b1 = np.load(f)
-    #     b1 = plt.hist(b1, bins=50, range=(0,1))
-    #     b1s = sum(b1[0])
-    # with open('6s6hISO.npy', 'rb') as f:
-    #     b2 = np.load(f)
-    #     b2 = plt.hist(b2, bins=50, range=(0,1))
-    #     b2s = sum(b2[0])
-    # prev = 0
-    # tot = 0
-    # for i in range(1, len(b1[0])):
-    #     nxt = b1[0][i-1] / b1s + prev - b2[0][i-1] / b2s
-    #     tot += abs(nxt)
-    #     prev = nxt
-    # print(tot)
-
