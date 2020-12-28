@@ -1,3 +1,4 @@
-# pluribus
-An implementation of the Pluribus poker bot developed by CMU and Facebook.
+# FISHBAIT
+An AI agent designed to play poker. Inspired by the Pluribus poker bot developed 
+by CMU and Facebook.
 
