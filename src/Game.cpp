@@ -6,9 +6,7 @@
 #include "hand_evaluator/Deckcards.h"
 #include "hand_evaluator/Constants.h"
 
-#include "GameState.h"
 #include "Game.h"
-#include "GameLogic.h"
 
 // IT APPEARS THAT:
 // action is the total chips that have been put in for this round
@@ -29,10 +27,40 @@ Game::Game(double bb_per_player) {
         Agent* a = new Agent(bb_per_player, default_names[i]);
         agents[i] = a;
     }
+
+    //initialize game state
+    // set initial game state variables
+    game_state.pot = 1+SMALL_BLIND;
+    game_state.max_bet = 1;
+    game_state.min_raise = 1;
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        game_state.in_game[i] = true;
+    }
+    for(int i = 0; i < NUM_PLAYERS; i++){
+        game_state.chip_amounts[i] = starting_chips;
+        if(i == 0){
+            game_state.chip_amounts[i] -= SMALL_BLIND;
+        }
+        if(i == 1){
+            game_state.chip_amounts[i] -= 1;
+        }
+    }
+    game_state.current_round = 0;
+    game_state.acting_player = 2 % NUM_PLAYERS;
+    game_state.min_raise = 1;
+    for(int i = 0; i < NUM_PLAYERS; i++){
+        game_state.total_bets[i] = 0;
+        if(i == 0){
+            game_state.total_bets[i] = SMALL_BLIND;
+        }
+        if(i == 1){
+            game_state.total_bets[i] = 1;
+        }
+    }
+
 }
 
 void Game::play(int button_pos) {
-    GameState current_game;
 
     preflop(button_pos);
 
@@ -55,7 +83,7 @@ void Game::play(int button_pos) {
         }
         double action = agents[(game_state.acting_player+button)% NUM_PLAYERS]->action(game_state.max_bet, game_state.min_raise);
         double chips = agents[(game_state.acting_player+button)% NUM_PLAYERS]->get_chips();
-        game_state = TakeAction(game_state, action);
+        TakeAction(game_state, action);
 
     }
     for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -96,36 +124,7 @@ bool Game::preflop(int button_pos) {
     agents[button + 1]->assign_blind(0.5); // small blind
     agents[button + 2]->assign_blind(1); // big blind
 
-    // set initial game state variables
-    game_state.pot = 1.5;
-    game_state.max_bet = 1;
-    game_state.min_raise = 1;
-    for (int i = 0; i < NUM_PLAYERS; i++) {
-        game_state.in_game[i] = true;
-    }
-    for(int i = 0; i < NUM_PLAYERS; i++){
-        game_state.chip_amounts[i] = starting_chips;
-        if(i == 0){
-            game_state.chip_amounts[i] -= SMALL_BLIND;
-        }
-        if(i == 1){
-            game_state.chip_amounts[i] -= 1;
-        }
-    }
-    game_state.current_round = 0;
-    game_state.acting_player = 2 % NUM_PLAYERS;
-    game_state.min_raise = 1;
-    for(int i = 0; i < NUM_PLAYERS; i++){
-        game_state.total_bets[i] = 0;
-        if(i == 0){
-            game_state.total_bets[i] = SMALL_BLIND;
-        }
-        if(i == 1){
-            game_state.total_bets[i] = 1;
-        }
-    }
-    game_state.pot = 1+SMALL_BLIND;
-    game_state.max_bet = 1;
+    
     players_left = NUM_PLAYERS;
 }
 
@@ -148,5 +147,5 @@ bool Game::turn() {
 void Game::river() {
     std::cout << "-------------- River ---------------" << std::endl;
     std::cout << "The river is " << pretty_card[deck[RIVER]] << std::endl;
-    bool folded = main_game_loop(button + 1);
+    // bool folded = main_game_loop(button + 1);
 }

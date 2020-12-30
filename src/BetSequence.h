@@ -24,12 +24,12 @@ int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState stat
     }
 
     int total_num = 0;
-    GameState new_state;
+    GameState new_state = state;
 
     //go to next if already folded or all in
     if(state.in_game[acting_player] == false || state.chip_amounts[acting_player] == 0){
         //std::cout << "Player " << acting_player << " has no choices, round " << state.current_round << std::endl;
-        new_state = TakeAction(state, -2);
+        TakeAction(new_state, -2);
         total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
 
     }
@@ -39,13 +39,15 @@ int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState stat
         double call = state.max_bet - state.total_bets[acting_player];
         if(state.chip_amounts[acting_player] > call){
             //std::cout << "Player " << acting_player << " calls, round " << state.current_round << std::endl;
-            new_state = TakeAction(state, call);
+            new_state = state;
+            TakeAction(new_state, call);
             total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
         }
 
         // all in
         //std::cout << "Player " << acting_player << " goes all in" << " round " << state.current_round << std::endl;
-        new_state  = TakeAction(state, state.chip_amounts[acting_player]);
+        new_state = state;
+        TakeAction(new_state, state.chip_amounts[acting_player]);
 
 
         total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
@@ -59,7 +61,8 @@ int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState stat
                 // legal bet (not equal to call or all in because that is already done)
                 if(raise_size >= state.min_raise && action < state.chip_amounts[acting_player]){
                     //std::cout << "Player " << acting_player << "bets " << action << " round " << state.current_round << std::endl;
-                    new_state = TakeAction(state, action);
+                    new_state = state;
+                    TakeAction(new_state, action);
                     total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
                 }
 
@@ -72,7 +75,8 @@ int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState stat
                 // legal bet (not equal to call or all in because that is already done)
                 if(raise_size >= state.min_raise && action < state.chip_amounts[acting_player]){
                     //std::cout << "Player " << acting_player << "bets " << action << " round " << state.current_round << std::endl;
-                    new_state = TakeAction(state, action);
+                    new_state = state;
+                    TakeAction(new_state, action);
                     total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
                 }
 
@@ -81,7 +85,8 @@ int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState stat
         // fold
         if(call != 0){
             //std::cout << "Player " << acting_player << " folds " << "round " << state.current_round << std::endl;
-            new_state = TakeAction(state, -1);
+            new_state = state;
+            TakeAction(new_state, -1);
             total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
         }
 

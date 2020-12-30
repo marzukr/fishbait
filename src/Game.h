@@ -4,6 +4,7 @@
 #include "hand_evaluator/Constants.h"
 #include "Agent.h"
 #include "GameState.h"
+#include "GameLogic.h"
 
 #define NUM_PLAYERS 6
 #define FLOP_1 12
