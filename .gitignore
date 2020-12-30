@@ -37,6 +37,8 @@ __pycache__/
 
 *.swp
 *.DS_Store
+.vscode
+*/.vscode/*
 
 ### CMake template
 CMakeCache.txt

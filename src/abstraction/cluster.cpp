@@ -12,7 +12,9 @@ template <typename T>
 class Array {
   public:
     Array(uint32_t n) : n_(n) { data_ = new T[n]; }
-    ~Array() { delete[] data_; }
+    ~Array() {
+      delete[] data_; 
+    }
     Array(const Array&) = delete;
     Array& operator= (const Array&) = delete;
 
@@ -26,14 +28,14 @@ class Array {
     }
 
     void Fill(T filler) {
-      for(uint32_t i = 0; i < n_; i++) {
+      for (uint32_t i = 0; i < n_; i++) {
         data_[i] = filler;
       }
     }
 
     T sum() const {
       T total = 0;
-      for(uint32_t i = 0; i < n_; i++) {
+      for (uint32_t i = 0; i < n_; i++) {
         total += data_[i];
       }
       return total;
@@ -50,7 +52,9 @@ template <typename T>
 class Matrix {
   public:
     Matrix(uint32_t n, uint32_t m) : n_(n), m_(m) { data_ = new T[n*m]; }
-    ~Matrix() { delete[] data_; }
+    ~Matrix() { 
+      delete[] data_; 
+    }
     Matrix (const Matrix&) = delete;
     Matrix& operator=(const Matrix&) = delete;
 
@@ -78,13 +82,13 @@ class Matrix {
     void SetRow(uint32_t i, Row r) {
       assert(i < n_);
       assert(r.length == m_);
-      for(uint32_t j = 0; j < m_; j++) {
+      for (uint32_t j = 0; j < m_; j++) {
         operator()(i,j) = r.start[j];
       }
     }
 
     void Fill(T filler) {
-      for(uint32_t i = 0; i < n_*m_; i++) {
+      for (uint32_t i = 0; i < n_*m_; i++) {
         data_[i] = filler;
       }
     }
@@ -110,7 +114,7 @@ class SymmetricMatrix {
       assert(i != j);
       assert(i < n_);
       assert(j < n_);
-      if(i > j) {
+      if (i > j) {
         uint32_t temp = i;
         i = j;
         j = temp;
@@ -134,7 +138,7 @@ struct EarthMoverDistance {
 
     double prev = 0;
     double sum = 0;
-    for(uint8_t i = 1; i < p.length + 1; i++) {
+    for (uint8_t i = 1; i < p.length + 1; i++) {
       // all flops have area of 1081
       T p_i = p.start[i-1];
       T q_i = q.start[i-1];
@@ -179,9 +183,9 @@ class HandDB {
       mongocxx::cursor cursor = collection.find({});
 
       int t = 0;
-      for(auto doc : cursor) {
+      for (auto doc : cursor) {
         uint32_t i = doc["_id"].get_int32();
-        for(uint32_t j = 0; j < lists.m(); j++) {
+        for (uint32_t j = 0; j < lists.m(); j++) {
           lists(i,j) = GetValue<T>(doc[list_name][j]);
         }
         t += 1;
@@ -190,7 +194,7 @@ class HandDB {
         }
       }
 
-      if(verbose) {
+      if (verbose) {
         std::cout << "Loaded data." << std::endl;
       }
     }
@@ -231,8 +235,8 @@ class KMeans {
       // Compute and store the distance between each cluster and every
       // other cluster
       SymmetricMatrix<double> cluster_dists(k_);
-      for(uint32_t c1 = 0; c1 < k_; c1++) {
-        for(uint32_t c2 = c1 + 1; c2 < k_; c2++) {
+      for (uint32_t c1 = 0; c1 < k_; c1++) {
+        for (uint32_t c2 = c1 + 1; c2 < k_; c2++) {
           cluster_dists(c1, c2) = Distance<T>::Compute((*clusters_)(c1), 
                                                        (*clusters_)(c2));
         }
@@ -245,19 +249,19 @@ class KMeans {
       Array<bool> upper_bound_loose(data.n());
       delete assignments_;
       assignments_ = new Array<uint32_t>(data.n());
-      for(uint32_t x = 0; x < data.n(); x++) {
+      for (uint32_t x = 0; x < data.n(); x++) {
         bool uninitialized = true;
         uint32_t& c = (*assignments_)(x);
-        for(uint32_t cprime = 0; cprime < k_; cprime++) {
+        for (uint32_t cprime = 0; cprime < k_; cprime++) {
 
           // Check if we need to compute the distance to this cluster using
           // lemma 1 and if we have already computed the distance to at least
           // one other cluster
           bool calc_x_cprime_dist = false;
-          if(!uninitialized) {
+          if (!uninitialized) {
             double c_cprime_dist = cluster_dists(c, cprime);
             double x_c_dist = upper_bounds(x);
-            if(c_cprime_dist/2 < x_c_dist) {
+            if (c_cprime_dist/2 < x_c_dist) {
               calc_x_cprime_dist = true;
             }
           }
@@ -267,7 +271,7 @@ class KMeans {
           // calculate the distance to this cluster. Also set the lower bound of
           // the distance between x and this cluster to the distance we just
           // calculated
-          if(uninitialized || calc_x_cprime_dist) {
+          if (uninitialized || calc_x_cprime_dist) {
             double x_cprime_dist = Distance<T>::Compute(data(x), 
                                                         (*clusters_)(cprime));
             lower_bounds(x,cprime) = x_cprime_dist;
@@ -276,7 +280,7 @@ class KMeans {
             // cluster is the closest cluster we have encountered so far, assign
             // x to this cluster and set the upper bound of x to the distance
             // between this cluster and x
-            if(uninitialized || x_cprime_dist < upper_bounds(x)) {
+            if (uninitialized || x_cprime_dist < upper_bounds(x)) {
               (*assignments_)(x) = cprime;
               upper_bounds(x) = x_cprime_dist;
               uninitialized = false;
@@ -286,7 +290,7 @@ class KMeans {
         upper_bound_loose(x) = false;
       }
 
-      if(verbose) {
+      if (verbose) {
         std::cout << "initialized data structures";
         std::cout << std::endl;
       }
@@ -294,48 +298,58 @@ class KMeans {
       // Step 1:
       // From each cluster, compute and store 1/2 the distance to the nearest
       // other cluster
-      Array<double> min_cluster_dists(k_);
-      for(uint32_t c1 = 0; c1 < k_; c1++) {
+      Array<double> half_min_cluster_dists(k_);
+      for (uint32_t c1 = 0; c1 < k_; c1++) {
         bool uninitialized = true;
-        for(uint32_t c2 = 0; c2 < k_; c2++) {
+        for (uint32_t c2 = 0; c2 < k_; c2++) {
           if (c1 == c2) continue;
           if (uninitialized) {
-            min_cluster_dists(c1) = cluster_dists(c1, c2)/2;
+            half_min_cluster_dists(c1) = cluster_dists(c1, c2)/2;
           } else {
-            min_cluster_dists(c1) = std::min(cluster_dists(c1, c2)/2,
-                                             min_cluster_dists(c1)
-            );
+            half_min_cluster_dists(c1) = std::min(cluster_dists(c1, c2)/2,
+                                                  half_min_cluster_dists(c1));
           }
         }
       }
 
       // Step 3
-      for(uint32_t c = 0; c < k_; c++) {
-        for(uint32_t x = 0; x < data.n(); x++) {
+      for (uint32_t c = 0; c < k_; c++) {
+        for (uint32_t x = 0; x < data.n(); x++) {
+          uint32_t& c_x = (*assignments_)(x);
+
           // Step 2
-          double s_c_x = min_cluster_dists((*assignments_)(x));
-          if(upper_bounds(x) <= s_c_x) continue;
+          if (upper_bounds(x) <= half_min_cluster_dists(c_x)) continue;
 
           // Step 3(i)
-          if(c == (*assignments_)(x)) continue;
+          if (c == c_x) continue;
 
           // Step 3(ii)
-          if(upper_bounds(x) <= lower_bounds(x, c)) continue;
+          if (upper_bounds(x) <= lower_bounds(x, c)) continue;
 
           // Step 3(iii)
-          double d_c_x_c = cluster_dists((*assignments_)(x), c)/2;
-          if(upper_bounds(x) <= d_c_x_c) continue;
+          if (upper_bounds(x) <= cluster_dists(c_x, c)/2) continue;
 
           // Step 3a
-          if(upper_bound_loose(x)) {
-            upper_bounds(x) = Distance<T>::Compute(
-                data(x), (*clusters_)((*assignments_)(x)));
+          if (upper_bound_loose(x)) {
+            upper_bounds(x) = Distance<T>::Compute(data(x), (*clusters_)(c_x));
+            lower_bounds(x,c_x) = upper_bounds(x);
             upper_bound_loose(x) = false;
+          }
+
+          // Step 3b
+          if (upper_bounds(x) > lower_bounds(x,c) || 
+              upper_bounds(x) > cluster_dists(c_x, c)/2) {
+            double x_c_dist = Distance<T>::Compute(data(x), (*clusters_)(c));
+            lower_bounds(x,c) = x_c_dist;
+            if (x_c_dist < upper_bounds(x)) {
+              c_x = c;
+              upper_bounds(x) = x_c_dist;
+            }
           }
         }
       }
 
-      if(verbose) {
+      if (verbose) {
         int i;
         std::cout << "Done." << std::endl;
         std::cin >> i;
@@ -358,14 +372,15 @@ class KMeans {
       Array<uint32_t> clusters(k_);
 
       // Assign each cluster
-      for(uint32_t c = 0; c < k_; c++) {
+      for (uint32_t c = 0; c < k_; c++) {
 
         // Select the next cluster based on the D^2 probability distribution
         double selection = std_unif(rng);
         double cumulative_probability = 0;
-        for(uint32_t x = 0; x < data.n(); x++) {
+        for (uint32_t x = 0; x < data.n(); x++) {
+          assert(squared_sum != 0);
           cumulative_probability += squared_dists(x) / squared_sum;
-          if(selection < cumulative_probability) {
+          if (selection < cumulative_probability) {
             clusters(c) = x;
             break;
           }
@@ -377,10 +392,10 @@ class KMeans {
         // squared_dists if this is the first cluster and update squared_sums as
         // we go along.
         squared_sum = 0;
-        for(uint32_t x = 0; x < data.n(); x++) {
+        for (uint32_t x = 0; x < data.n(); x++) {
           double new_dist = Distance<T>::Compute(data(clusters(c)), data(x));
           double new_sq_dist = std::pow(new_dist, 2);
-          if(c == 0 || new_sq_dist < squared_dists(x)) {
+          if (c == 0 || new_sq_dist < squared_dists(x)) {
             squared_dists(x) = new_sq_dist;
           }
           squared_sum += squared_dists(x);
@@ -396,7 +411,7 @@ class KMeans {
       // variable.
       delete clusters_;
       clusters_ = new Matrix<T>(k_, data.m());
-      for(uint32_t c = 0; c < k_; c++) {
+      for (uint32_t c = 0; c < k_; c++) {
         clusters_->SetRow(c, data(clusters(c)));
       }
     }
