@@ -14,7 +14,7 @@
 
 
 
-int NumPossible(float raise_sizes[][1], float num_raise_sizes[], GameState state){
+int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState state){
 
     int acting_player = state.acting_player;
 
@@ -98,7 +98,7 @@ int NumPossible(float raise_sizes[][1], float num_raise_sizes[], GameState state
 
 }
 
-int GetNumPossible(float raise_sizes[][1], float num_raise_sizes[], float starting_chips){
+int GetNumPossible(float raise_sizes[][14], float num_raise_sizes[], float starting_chips){
     bool in_game [NUM_PLAYERS];
     for(int i = 0; i < NUM_PLAYERS; i++){
         in_game[i] = true;
@@ -129,14 +129,14 @@ int GetNumPossible(float raise_sizes[][1], float num_raise_sizes[], float starti
     double pot = 1+SMALL_BLIND;
     double max_bet = 1;
     GameState state = {
-        {1.5,1},
-        {1,1},
+        {99.5,99,100,100},
+        {1,1,1,1},
         acting_player,
         current_round,
         min_raise,
         max_bet,
         pot,
-        {0.5,1},
+        {0.5,1,0,0},
         0,
         false,
         0
