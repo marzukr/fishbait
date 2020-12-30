@@ -31,23 +31,28 @@ double Agent::action(double max_bet, double min_raise) {
     // check/fold
     if (decision == 0) {
         if (max_bet > bet) return -1; // fold
+        std::cout << name << "has checked/folded" << std::endl;
+
         return bet; // check
+
     }
     // check/call
     else if (decision == 1) {
         if (max_bet > bet) { // call
             double call_size = std::min(chips, max_bet - bet);
             chips = chips - call_size;
-            bet = bet + call_size;
+            bet = call_size;
+            std::cout << name << "has checked/called" << bet << std::endl;
             return bet;
         }
-        return bet; // check
+        return 0; // check
     }
     // raise
     else {
         double raise_size = std::min(chips, max_bet - bet + min_raise);
         chips = chips - raise_size;
-        bet = bet + raise_size;
+        bet = raise_size;
+        std::cout << name << "has bet" << bet << std::endl;
         return bet;
     }
 }

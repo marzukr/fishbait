@@ -3,6 +3,7 @@
 
 #include "hand_evaluator/Constants.h"
 #include "Agent.h"
+#include "GameState.h"
 
 #define NUM_PLAYERS 6
 #define FLOP_1 12
@@ -18,11 +19,8 @@ class Game
         Agent* agents[NUM_PLAYERS];
         int button;
 
-        double pot;
-        double max_bet;
-        double min_raise;
-        bool in_game[NUM_PLAYERS];
         int players_left;
+        float starting_chips;
 
         void shuffle_deck();
 
@@ -42,6 +40,7 @@ class Game
     public:
         Game(double bb_per_player);
         void play(int button_pos);
+        GameState game_state;
 };
  
 #endif

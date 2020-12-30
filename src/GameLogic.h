@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <iterator>
 
+static int counter = 0;
+
+
 bool GameOver(GameState state){
     int num = 0;
     int num_all_in = 0;
@@ -16,6 +19,12 @@ bool GameOver(GameState state){
         }
     }
     if(num <= 1 || state.current_round > (MAX_TURNS-1) || num_all_in == NUM_PLAYERS){
+        // if(num <= 1 || num_all_in == NUM_PLAYERS){
+            counter++;
+            if(counter % 100000 == 0){
+                std::cout << counter << std::endl;
+            }
+        // }
         return true;
     }
     return false;
@@ -28,93 +37,85 @@ void printChips(GameState state){
     }
 }
 
-GameState TakeAction(GameState state, float action){
-    std::cout << "action: " << action << std::endl;
-    std::cout << "before" << std::endl;
-    printChips(state);
-
-    bool new_in_game [NUM_PLAYERS];
-    std::copy(std::begin(new_in_game), std::end(new_in_game), std::begin(state.in_game));    
-    float new_chip_amounts [NUM_PLAYERS];
-    std::copy(std::begin(new_chip_amounts), std::end(new_chip_amounts), std::begin(state.chip_amounts));
-    float new_total_bets [NUM_PLAYERS];
-    std::copy(std::begin(new_total_bets), std::end(new_total_bets), std::begin(state.total_bets));
-    int new_acting_player = (state.acting_player+1) % NUM_PLAYERS;
-    float new_pot = state.pot;
-    int new_current_round = state.current_round;
-    float new_min_raise = state.min_raise;
-    float new_max_bet = state.max_bet;
-    float new_is_done = state.is_done;
-    char new_pot_good = state.pot_good + 1;
-
-    // this player will always be good
+GameState TakeAction(GameState state, double action){
+    // std::cout << "action: " << action << std::endl;
+    // std::cout << "before" << std::endl;
 
     int acting_player = state.acting_player;
 
+    GameState new_state = state;
+
+    // std::cout << "initial" << std::endl;
+    // std::cout << new_state.chip_amounts[0] << std::endl;
+    // state.chip_amounts[0] = 56;
+    // std::cout << "new" << std::endl;
+    // std::cout << new_state.chip_amounts[0] << std::endl;
+    // std::cout << "old" << std::endl;
+    // std::cout << state.chip_amounts[0] << std::endl;
+
+
+
+
+
+    
+    new_state.acting_player = (new_state.acting_player+1) % NUM_PLAYERS;
+    new_state.pot_good++;
+
     // get new amount that this player will have in pot and their new chip amounts
-    float new_total_bet = state.total_bets[acting_player];
-    float new_chip_amount = state.chip_amounts[acting_player];
-    float raise_amount = 0;
+    double new_total_bet = new_state.total_bets[acting_player];
+    double new_chip_amount = new_state.chip_amounts[acting_player];
+    double raise_amount = 0;
     if(action >= 0){
         new_total_bet += action;
         new_chip_amount -= action;
-        new_pot += action;
+        new_state.pot += action;
         raise_amount = new_total_bet - state.max_bet;
     }
     // fold
     else if(action == -1){
-        new_in_game[acting_player] = false;
+        new_state.in_game[acting_player] = false;
     }
-    new_chip_amounts[acting_player] = new_chip_amount;
-    new_total_bets[acting_player] = new_total_bet;
+    new_state.chip_amounts[acting_player] = new_chip_amount;
+    new_state.total_bets[acting_player] = new_total_bet;
+    new_state.betting_round++;
 
     //check or call doesn't need to change any additional variables
 
     // raise less than min raise (should only happen if all in)
     if(raise_amount > 0 && raise_amount < state.min_raise){
-        float extra = raise_amount;
-        new_min_raise = 2*state.min_raise + extra;
-        new_max_bet = new_total_bet;
-        new_pot_good = 1;
+        double extra = raise_amount;
+        new_state.min_raise = 2*state.min_raise + extra;
+        new_state.max_bet = new_total_bet;
+        new_state.pot_good = 1;
 
     }
 
     // raise min raise or more
     else if(raise_amount >= state.min_raise){
-        new_min_raise = 2*raise_amount;
-        new_max_bet = new_total_bet;
-        new_pot_good = 1;
+        new_state.min_raise = 2*raise_amount;
+        new_state.max_bet = new_total_bet;
+        new_state.pot_good = 1;
     }
 
     //check if we need to go to next round and update accordingly
-    if(new_pot_good == NUM_PLAYERS){
-        new_current_round++;
-        new_pot_good = 0;
-        new_min_raise = 1;
-        new_acting_player = 0;
+    if(new_state.pot_good == NUM_PLAYERS){
+        new_state.current_round++;
+        new_state.pot_good = 0;
+        new_state.min_raise = 1;
+        new_state.acting_player = 0;
+        new_state.betting_round = 0;
 
 
     }
 
-    //construct new state
-    GameState new_state = {
-        new_chip_amounts,
-        new_in_game,
-        new_acting_player,
-        new_current_round,
-        new_min_raise,
-        new_max_bet,
-        new_pot,
-        new_total_bets,
-        new_pot_good,
-        new_is_done,
-    };
+
     if(GameOver(new_state)){
         new_state.is_done = true;
     }
-    std::cout << "after" << std::endl;
+    // std::cout << "after" << std::endl;
 
-    printChips(new_state);
+    // printChips(new_state);
+    //printChips(new_state);
     return new_state;
 
 }
