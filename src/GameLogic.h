@@ -1,6 +1,8 @@
 #include "GameState.h"
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include <iterator>
 
 bool GameOver(GameState state){
     int num = 0;
@@ -27,21 +29,25 @@ void printChips(GameState state){
 }
 
 GameState TakeAction(GameState state, float action){
+    std::cout << "action: " << action << std::endl;
     std::cout << "before" << std::endl;
     printChips(state);
 
-    bool* new_in_game = state.in_game;
-    float* new_chip_amounts = state.chip_amounts;
-    float* new_total_bets = state.total_bets;
+    bool new_in_game [NUM_PLAYERS];
+    std::copy(std::begin(new_in_game), std::end(new_in_game), std::begin(state.in_game));    
+    float new_chip_amounts [NUM_PLAYERS];
+    std::copy(std::begin(new_chip_amounts), std::end(new_chip_amounts), std::begin(state.chip_amounts));
+    float new_total_bets [NUM_PLAYERS];
+    std::copy(std::begin(new_total_bets), std::end(new_total_bets), std::begin(state.total_bets));
     int new_acting_player = (state.acting_player+1) % NUM_PLAYERS;
     float new_pot = state.pot;
     int new_current_round = state.current_round;
     float new_min_raise = state.min_raise;
     float new_max_bet = state.max_bet;
     float new_is_done = state.is_done;
+    char new_pot_good = state.pot_good + 1;
 
     // this player will always be good
-    char new_pot_good = state.pot_good + 1;
 
     int acting_player = state.acting_player;
 
@@ -54,8 +60,6 @@ GameState TakeAction(GameState state, float action){
         new_chip_amount -= action;
         new_pot += action;
         raise_amount = new_total_bet - state.max_bet;
-
-
     }
     // fold
     else if(action == -1){
@@ -92,7 +96,7 @@ GameState TakeAction(GameState state, float action){
 
     }
 
-    // construct new state
+    //construct new state
     GameState new_state = {
         new_chip_amounts,
         new_in_game,

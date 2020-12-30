@@ -16,6 +16,7 @@
 
 
 int NumPossible(float* raise_sizes, char num_raise_sizes, GameState state){
+    printChips(state);
     int acting_player = state.acting_player;
 
     if(state.is_done == true){
@@ -67,7 +68,6 @@ int NumPossible(float* raise_sizes, char num_raise_sizes, GameState state){
         if(call != 0){
             std::cout << "Player " << acting_player << " folds " << "round " << state.current_round << std::endl;
             new_state = TakeAction(state, -1);
-
             total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
         }
 

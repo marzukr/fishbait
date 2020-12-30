@@ -6,8 +6,8 @@
 
 struct GameState{
 
-    float* chip_amounts;
-    bool* in_game;
+    float chip_amounts [NUM_PLAYERS];
+    bool in_game [NUM_PLAYERS];
     int acting_player;
     int current_round;
     // minimum raise for this round
@@ -16,7 +16,7 @@ struct GameState{
     float max_bet;
     float pot;
     // represents the amount each player has in the pot FOR THE WHOLE HAND
-    float* total_bets;
+    float total_bets [NUM_PLAYERS];
     char pot_good;
     bool is_done;
 
