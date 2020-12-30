@@ -54,7 +54,7 @@ void printAction(GameState state, double action){
 }
 
 void TakeAction( GameState& state, double action){
-    std::cout << "acting player " << state.acting_player << std::endl;
+    // std::cout << "acting player " << state.acting_player << std::endl;
     // std::cout << "action: " << action << std::endl;
     // std::cout << "before" << std::endl;
     // printAction(state, action);

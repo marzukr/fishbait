@@ -125,8 +125,8 @@ void Game::preflop(int button_pos) {
 
     // assign positions and blinds
     button = button_pos;
-    agents[button + 1]->assign_blind(0.5); // small blind
-    agents[button + 2]->assign_blind(1); // big blind
+    agents[button]->assign_blind(0.5); // small blind
+    agents[button+1]->assign_blind(1); // big blind
 
     
     players_left = NUM_PLAYERS;
