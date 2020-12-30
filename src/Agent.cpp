@@ -27,11 +27,10 @@ double Agent::action(double max_bet, double min_raise) {
     std::mt19937 rng(dev());
     std::uniform_int_distribution<std::mt19937::result_type> dist6(0,2);
     int decision = dist6(rng);
-    std::cout << name << " has " << decision << std::endl;
     // check/fold
     if (decision == 0) {
         if (max_bet > bet) return -1; // fold
-        std::cout << name << "has checked/folded" << std::endl;
+        std::cout << name << " has checked/folded" << std::endl;
 
         return bet; // check
 
@@ -42,7 +41,7 @@ double Agent::action(double max_bet, double min_raise) {
             double call_size = std::min(chips, max_bet - bet);
             chips = chips - call_size;
             bet = call_size;
-            std::cout << name << "has checked/called" << bet << std::endl;
+            std::cout << name << " has checked/called " << bet << std::endl;
             return bet;
         }
         return 0; // check
@@ -52,7 +51,7 @@ double Agent::action(double max_bet, double min_raise) {
         double raise_size = std::min(chips, max_bet - bet + min_raise);
         chips = chips - raise_size;
         bet = raise_size;
-        std::cout << name << "has bet" << bet << std::endl;
+        std::cout << name << " has bet " << bet << std::endl;
         return bet;
     }
 }

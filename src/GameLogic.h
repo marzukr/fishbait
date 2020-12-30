@@ -53,7 +53,8 @@ void printAction(GameState state, double action){
     }
 }
 
-void TakeAction(GameState state, double action){
+void TakeAction( GameState& state, double action){
+    std::cout << "acting player " << state.acting_player << std::endl;
     // std::cout << "action: " << action << std::endl;
     // std::cout << "before" << std::endl;
     // printAction(state, action);
@@ -61,7 +62,6 @@ void TakeAction(GameState state, double action){
 
 
 
-    int acting_player = state.acting_player;
 
 
     // std::cout << "initial" << std::endl;
@@ -78,6 +78,8 @@ void TakeAction(GameState state, double action){
 
     
     state.acting_player = (state.acting_player+1) % NUM_PLAYERS;
+    std::cout << "acting player " << state.acting_player << std::endl;
+    int acting_player = state.acting_player;
     state.pot_good++;
 
     // get new amount that this player will have in pot and their new chip amounts

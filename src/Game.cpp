@@ -71,7 +71,7 @@ void Game::play(int button_pos) {
     bool turn_done = false;
     bool river_done = false;
     while(game_state.is_done == false){
-        // std::cout << "There is " << game_state.pot << " in the pot" << std::endl;
+        std::cout << "There is " << game_state.pot << " in the pot" << std::endl;
         if(game_state.current_round == 1 && flop_done == false){
             flop();
             flop_done = true;
@@ -84,7 +84,7 @@ void Game::play(int button_pos) {
             river();
             river_done = true;
         }
-        std::cout << "acting player " << game_state.acting_player << std::endl;
+        // std::cout << "acting player " << game_state.acting_player << std::endl;
         double action = agents[(game_state.acting_player+button)% NUM_PLAYERS]->action(game_state.max_bet, game_state.min_raise);
         double chips = agents[(game_state.acting_player+button)% NUM_PLAYERS]->get_chips();
         TakeAction(game_state, action);
