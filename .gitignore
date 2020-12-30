@@ -36,6 +36,7 @@ __pycache__/
 *.app
 
 *.swp
+*.DS_Store
 
 ### CMake template
 CMakeCache.txt
