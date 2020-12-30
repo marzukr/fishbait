@@ -14,7 +14,7 @@
 
 
 
-int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState state){
+int NumPossible(float raise_sizes[][1], float num_raise_sizes[], GameState state){
 
     int acting_player = state.acting_player;
 
@@ -29,6 +29,7 @@ int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState stat
     //go to next if already folded or all in
     if(state.in_game[acting_player] == false || state.chip_amounts[acting_player] == 0){
         //std::cout << "Player " << acting_player << " has no choices, round " << state.current_round << std::endl;
+        new_state = state;
         TakeAction(new_state, -2);
         total_num += NumPossible(raise_sizes, num_raise_sizes, new_state);
 
@@ -97,7 +98,7 @@ int NumPossible(float raise_sizes[][14], float num_raise_sizes[], GameState stat
 
 }
 
-int GetNumPossible(float raise_sizes[][14], float num_raise_sizes[], float starting_chips){
+int GetNumPossible(float raise_sizes[][1], float num_raise_sizes[], float starting_chips){
     bool in_game [NUM_PLAYERS];
     for(int i = 0; i < NUM_PLAYERS; i++){
         in_game[i] = true;
@@ -128,14 +129,14 @@ int GetNumPossible(float raise_sizes[][14], float num_raise_sizes[], float start
     double pot = 1+SMALL_BLIND;
     double max_bet = 1;
     GameState state = {
-        {99.5,99,100,100},
-        {1,1,1,1},
+        {1.5,1},
+        {1,1},
         acting_player,
         current_round,
         min_raise,
         max_bet,
         pot,
-        {0.5,1,0,0},
+        {0.5,1},
         0,
         false,
         0

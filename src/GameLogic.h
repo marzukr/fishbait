@@ -22,7 +22,7 @@ bool GameOver(GameState state){
     if(num <= 1 || state.current_round > (MAX_TURNS-1) || num_all_in == NUM_PLAYERS){
         gameovercounter++;
         // if(gameovercounter % 10000 == 1){
-        //     std::cout << "game over counter " <<  gameovercounter << std::endl;
+            std::cout << "game over counter " <<  gameovercounter << std::endl;
         // }
         // if(num <= 1 || num_all_in == NUM_PLAYERS){
             // counter++;
@@ -57,7 +57,7 @@ void TakeAction( GameState& state, double action){
     // std::cout << "acting player " << state.acting_player << std::endl;
     // std::cout << "action: " << action << std::endl;
     // std::cout << "before" << std::endl;
-    // printAction(state, action);
+    printAction(state, action);
     counter++;
 
 
@@ -77,8 +77,8 @@ void TakeAction( GameState& state, double action){
 
 
     
-    state.acting_player = (state.acting_player+1) % NUM_PLAYERS;
-    std::cout << "acting player " << state.acting_player << std::endl;
+
+    // std::cout << "acting player " << state.acting_player << std::endl;
     int acting_player = state.acting_player;
     state.pot_good++;
 
@@ -139,14 +139,15 @@ void TakeAction( GameState& state, double action){
     // std::cout << "after" << std::endl;
 
     // printChips(state);
-    //printChips(state);
+    printChips(state);
     // if(counter % 10000 == 0){
-    //     std::cout << "total: " << counter << std::endl;
+        std::cout << "total: " << counter << std::endl;
         
     // }
     // if(othercounter % 10000 == 0){
         
-    //     std::cout << "non-leaf total: " << othercounter << std::endl;
+        std::cout << "non-leaf total: " << othercounter << std::endl;
     // }
+        state.acting_player = (state.acting_player+1) % NUM_PLAYERS;
 
 }

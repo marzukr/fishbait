@@ -2,8 +2,8 @@
 #include <stdint.h>
 
 
-#define NUM_PLAYERS 6
-#define MAX_TURNS 4
+#define NUM_PLAYERS 2
+#define MAX_TURNS 1
 #define SMALL_BLIND 0.5
 
 
