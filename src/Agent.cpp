@@ -27,7 +27,7 @@ double Agent::action(double max_bet, double min_raise) {
     std::mt19937 rng(dev());
     std::uniform_int_distribution<std::mt19937::result_type> dist6(0,2);
     int decision = dist6(rng);
-    
+    std::cout << name << " has " << decision << std::endl;
     // check/fold
     if (decision == 0) {
         if (max_bet > bet) return -1; // fold

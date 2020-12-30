@@ -21,9 +21,9 @@ bool GameOver(GameState state){
     }
     if(num <= 1 || state.current_round > (MAX_TURNS-1) || num_all_in == NUM_PLAYERS){
         gameovercounter++;
-        if(gameovercounter % 10000 == 1){
-            std::cout << "game over counter " <<  gameovercounter << std::endl;
-        }
+        // if(gameovercounter % 10000 == 1){
+        //     std::cout << "game over counter " <<  gameovercounter << std::endl;
+        // }
         // if(num <= 1 || num_all_in == NUM_PLAYERS){
             // counter++;
             // if(counter % 100000 == 0){
@@ -138,13 +138,13 @@ void TakeAction(GameState state, double action){
 
     // printChips(state);
     //printChips(state);
-    if(counter % 10000 == 0){
-        std::cout << "total: " << counter << std::endl;
+    // if(counter % 10000 == 0){
+    //     std::cout << "total: " << counter << std::endl;
         
-    }
-    if(othercounter % 10000 == 0){
+    // }
+    // if(othercounter % 10000 == 0){
         
-        std::cout << "non-leaf total: " << othercounter << std::endl;
-    }
+    //     std::cout << "non-leaf total: " << othercounter << std::endl;
+    // }
 
 }
