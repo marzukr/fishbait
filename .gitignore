@@ -4,6 +4,8 @@
 */.ipynb_checkpoints/*
 __pycache__/
 *.py[cod]
+*/.vscode/*
+.vscode
 
 ### C++ template
 # Compiled Object files

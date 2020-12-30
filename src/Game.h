@@ -29,6 +29,8 @@ class Game
         // returns true if the game is complete, false otherwise
         bool main_game_loop(int first_to_act);
         void award_pot();
+        void TakeAction();
+
 
         // each street function returns true if the game is complete, false
         // otherwise

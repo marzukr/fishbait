@@ -8,6 +8,11 @@
 
 #include "Game.h"
 
+// IT APPEARS THAT:
+// action is the total chips that have been put in for this round
+// min_raise is minimum raise that anyone has made
+// max_bet is the maximum amount of total chips that someone has put in this round
+
 Game::Game(double bb_per_player) {
     // initialize the deck
     for (int i = 0; i < DECK_SIZE; i++) {
@@ -129,16 +134,35 @@ bool Game::main_game_loop(int first_to_act) {
         double action = agents[acting_player]->action(max_bet, min_raise);
         double chips = agents[acting_player]->get_chips();
 
+
+
+        std::cout << "There is " << pot << " in the pot" << std::endl;
+    }
+
+    if (players_left <= 1) {
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            if (in_game[i]) {
+                std::cout << *agents[i];
+                std::cout << " wins " << pot << std::endl;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Game::TakeAction(double action){
         // already all in
         if (action == -2) {
             std::cout << " is already all in" << std::endl;
-            continue;
+            return;
         }
         // fold 
         else if (action == -1) {
             in_game[acting_player] = false;
             players_left += -1;
             std::cout << " has folded" << std::endl; 
+            return;
         }
         // going all in on this turn
         else if (chips == 0) {
@@ -182,19 +206,6 @@ bool Game::main_game_loop(int first_to_act) {
             pot += action - prev_bet;
         }
 
-        std::cout << "There is " << pot << " in the pot" << std::endl;
-    }
-
-    if (players_left <= 1) {
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            if (in_game[i]) {
-                std::cout << *agents[i];
-                std::cout << " wins " << pot << std::endl;
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 void Game::award_pot() {
