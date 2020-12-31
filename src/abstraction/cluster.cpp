@@ -7,6 +7,7 @@
 #include <cmath>
 #include <random>
 #include <cassert>
+#include <string>
 
 template <typename T>
 class Array {
@@ -15,8 +16,6 @@ class Array {
     ~Array() {
       delete[] data_; 
     }
-    Array(const Array&) = delete;
-    Array& operator= (const Array&) = delete;
 
     T& operator()(uint32_t i) {
       assert(i < n_);
@@ -51,12 +50,28 @@ class Array {
 template <typename T>
 class Matrix {
   public:
-    Matrix(uint32_t n, uint32_t m) : n_(n), m_(m) { data_ = new T[n*m]; }
-    ~Matrix() { 
+    Matrix(uint32_t n, uint32_t m) : n_(n), m_(m) { 
+      data_ = new T[n*m]; 
+    }
+    ~Matrix() {
       delete[] data_; 
     }
-    Matrix (const Matrix&) = delete;
-    Matrix& operator=(const Matrix&) = delete;
+    Matrix(const Matrix<T>& other) : n_(other.n_), m_(other.m_) {
+      data_ = new T[n_*m_];
+      for (uint32_t i = 0; i < n_*m_; i++) {
+        data_[i] = other.data_[i];
+      }
+    }
+    Matrix<T>& operator=(const Matrix<T>& other) {
+      n_ = other.n_;
+      m_ = other.m_;
+      delete[] data_;
+      data_ = new T[n_*m_];
+      for (uint32_t i = 0; i < n_*m_; i++) {
+        data_[i] = other.data_[i];
+      }
+      return *this;
+    }
 
     T& operator()(uint32_t i, uint32_t j) {
       assert(i < n_);
@@ -79,11 +94,48 @@ class Matrix {
       return row;
     }
 
-    void SetRow(uint32_t i, Row r) {
+    bool operator==(const Matrix<T>& other) const {
+      if (other.n_ != n_ || other.m_ != m_) return false;
+      for (uint32_t i = 0; i < n_*m_; i++) {
+        if (data_[i] != other.data_[i]) return false;
+      }
+      return true;
+    }
+
+    template <typename U>
+    void SetRow(uint32_t i, typename Matrix<U>::Row r) {
       assert(i < n_);
       assert(r.length == m_);
       for (uint32_t j = 0; j < m_; j++) {
         operator()(i,j) = r.start[j];
+      }
+    }
+
+    template <typename U>
+    void AddToRow(uint32_t i, typename Matrix<U>::Row r) {
+      assert(i < n_);
+      assert(r.length == m_);
+      for (uint32_t j = 0; j < m_; j++) {
+        operator()(i,j) += r.start[j];
+      }
+    }
+
+    template <typename U>
+    void SubtractFromRow(uint32_t i, typename Matrix<U>::Row r) {
+      assert(i < n_);
+      assert(r.length == m_);
+      for (uint32_t j = 0; j < m_; j++) {
+        operator()(i,j) -= r.start[j];
+      }
+    }
+
+    template <typename U>
+    void Divide(Array<U>& a) {
+      assert(a.n() == n_);
+      for (uint32_t i = 0; i < n_; i++) {
+        for (uint32_t j = 0; j < m_; j++) {
+          operator()(i,j) /= a(i);
+        }
       }
     }
 
@@ -105,10 +157,10 @@ class Matrix {
 template <typename T>
 class SymmetricMatrix {
   public:
-    SymmetricMatrix(uint32_t n) : n_(n) { data_ = new T[n]; }
-    ~SymmetricMatrix() { delete[] data_; }
-    SymmetricMatrix (const SymmetricMatrix&) = delete;
-    SymmetricMatrix& operator= (const SymmetricMatrix&) = delete;
+    SymmetricMatrix(uint32_t n) : n_(n) { data_ = new T[(n*n-n)/2]; }
+    ~SymmetricMatrix() { 
+      delete[] data_; 
+    }
 
     T& operator()(uint32_t i, uint32_t j) {
       assert(i != j);
@@ -130,9 +182,9 @@ class SymmetricMatrix {
     T* data_;
 };
 
-template <typename T>
+template <typename T, typename U>
 struct EarthMoverDistance {
-  static double Compute(typename Matrix<T>::Row p, typename Matrix<T>::Row q) {
+  static double Compute(typename Matrix<T>::Row p, typename Matrix<U>::Row q) {
     // The two distributions need to have the same number of buckets
     assert(p.length == q.length);
 
@@ -212,7 +264,7 @@ class HandDB {
     mongocxx::database db_;
 };
 
-template <typename T, template<class> class Distance>
+template <typename T, template<class, class> class Distance>
 class KMeans {
   public:
     KMeans(uint32_t k) : k_(k), clusters_(nullptr), assignments_(nullptr) {}
@@ -225,6 +277,7 @@ class KMeans {
 
 
     void Elkan(Matrix<T>& data, bool verbose = false) {
+
       InitPlusPlus(data, verbose);
 
       // Initialize the lower bounds of the distance between x and every
@@ -237,14 +290,14 @@ class KMeans {
       SymmetricMatrix<double> cluster_dists(k_);
       for (uint32_t c1 = 0; c1 < k_; c1++) {
         for (uint32_t c2 = c1 + 1; c2 < k_; c2++) {
-          cluster_dists(c1, c2) = Distance<T>::Compute((*clusters_)(c1), 
-                                                       (*clusters_)(c2));
+          cluster_dists(c1, c2) = Distance<double,double>::Compute(
+              (*clusters_)(c1), (*clusters_)(c2));
         }
       }
 
       // Compute the assignments for each point (the closest cluster) using
       // lemma 1 to avoid redudant distance computation, and store the distance
-      // to the closest cluster as the upper bound for each point
+      // to the closest cluster as the upper bound for each point.
       Array<double> upper_bounds(data.n());
       Array<bool> upper_bound_loose(data.n());
       delete assignments_;
@@ -272,8 +325,8 @@ class KMeans {
           // the distance between x and this cluster to the distance we just
           // calculated
           if (uninitialized || calc_x_cprime_dist) {
-            double x_cprime_dist = Distance<T>::Compute(data(x), 
-                                                        (*clusters_)(cprime));
+            double x_cprime_dist = Distance<T,double>::Compute(
+                data(x), (*clusters_)(cprime));
             lower_bounds(x,cprime) = x_cprime_dist;
 
             // If we haven't computed the distance to any cluster yet or this
@@ -290,69 +343,122 @@ class KMeans {
         upper_bound_loose(x) = false;
       }
 
+      // Data structures to calculate the new clusters in Step 4
+      Matrix<double> cluster_sums(k_, data.m());
+      cluster_sums.Fill(0);
+      Array<uint32_t> cluster_counts(k_);
+      cluster_counts.Fill(0);
+      for (uint32_t x = 0; x < data.n(); x++) {
+        uint32_t c = (*assignments_)(x);
+        cluster_sums.AddToRow<T>(c, data(x));
+        cluster_counts(c) += 1;
+      }
+
       if (verbose) {
         std::cout << "initialized data structures";
         std::cout << std::endl;
       }
 
-      // Step 1:
-      // From each cluster, compute and store 1/2 the distance to the nearest
-      // other cluster
-      Array<double> half_min_cluster_dists(k_);
-      for (uint32_t c1 = 0; c1 < k_; c1++) {
-        bool uninitialized = true;
-        for (uint32_t c2 = 0; c2 < k_; c2++) {
-          if (c1 == c2) continue;
-          if (uninitialized) {
-            half_min_cluster_dists(c1) = cluster_dists(c1, c2)/2;
-          } else {
-            half_min_cluster_dists(c1) = std::min(cluster_dists(c1, c2)/2,
-                                                  half_min_cluster_dists(c1));
-          }
-        }
-      }
+      bool converged = false;
+      uint32_t iteration = 0;
+      while (!converged) {
 
-      // Step 3
-      for (uint32_t c = 0; c < k_; c++) {
-        for (uint32_t x = 0; x < data.n(); x++) {
-          uint32_t& c_x = (*assignments_)(x);
-
-          // Step 2
-          if (upper_bounds(x) <= half_min_cluster_dists(c_x)) continue;
-
-          // Step 3(i)
-          if (c == c_x) continue;
-
-          // Step 3(ii)
-          if (upper_bounds(x) <= lower_bounds(x, c)) continue;
-
-          // Step 3(iii)
-          if (upper_bounds(x) <= cluster_dists(c_x, c)/2) continue;
-
-          // Step 3a
-          if (upper_bound_loose(x)) {
-            upper_bounds(x) = Distance<T>::Compute(data(x), (*clusters_)(c_x));
-            lower_bounds(x,c_x) = upper_bounds(x);
-            upper_bound_loose(x) = false;
-          }
-
-          // Step 3b
-          if (upper_bounds(x) > lower_bounds(x,c) || 
-              upper_bounds(x) > cluster_dists(c_x, c)/2) {
-            double x_c_dist = Distance<T>::Compute(data(x), (*clusters_)(c));
-            lower_bounds(x,c) = x_c_dist;
-            if (x_c_dist < upper_bounds(x)) {
-              c_x = c;
-              upper_bounds(x) = x_c_dist;
+        // Step 1:
+        // From each cluster, compute and store 1/2 the distance to the nearest
+        // other cluster
+        Array<double> half_min_cluster_dists(k_);
+        for (uint32_t c1 = 0; c1 < k_; c1++) {
+          bool uninitialized = true;
+          for (uint32_t c2 = 0; c2 < k_; c2++) {
+            if (c1 == c2) continue;
+            if (uninitialized) {
+              half_min_cluster_dists(c1) = cluster_dists(c1, c2)/2;
+            } else {
+              half_min_cluster_dists(c1) = std::min(cluster_dists(c1, c2)/2,
+                                                    half_min_cluster_dists(c1));
             }
           }
         }
-      }
 
-      if (verbose) {
-        int i;
-        std::cout << "Done." << std::endl;
-        std::cin >> i;
+        // Step 3
+        for (uint32_t c = 0; c < k_; c++) {
+          for (uint32_t x = 0; x < data.n(); x++) {
+            uint32_t& c_x = (*assignments_)(x);
+
+            // Step 2
+            if (upper_bounds(x) <= half_min_cluster_dists(c_x)) continue;
+
+            // Step 3(i)
+            if (c == c_x) continue;
+
+            // Step 3(ii)
+            if (upper_bounds(x) <= lower_bounds(x, c)) continue;
+
+            // Step 3(iii)
+            if (upper_bounds(x) <= cluster_dists(c_x, c)/2) continue;
+
+            // Step 3a
+            if (upper_bound_loose(x)) {
+              upper_bounds(x) = Distance<T,double>::Compute(data(x), 
+                                                            (*clusters_)(c_x));
+              lower_bounds(x,c_x) = upper_bounds(x);
+              upper_bound_loose(x) = false;
+            }
+
+            // Step 3b
+            if (upper_bounds(x) > lower_bounds(x,c) || 
+                upper_bounds(x) > cluster_dists(c_x, c)/2) {
+              double x_c_dist = Distance<T,double>::Compute(data(x), 
+                                                            (*clusters_)(c));
+              lower_bounds(x,c) = x_c_dist;
+              if (x_c_dist < upper_bounds(x)) {
+
+                // Update data structures for Step 4 upon new assignment
+                cluster_sums.SubtractFromRow<T>(c_x, data(x));
+                cluster_counts(c_x) += -1;
+                cluster_sums.AddToRow<T>(c, data(x));
+                cluster_counts(c) += 1;
+
+                // Step 3b cont.
+                c_x = c;
+                upper_bounds(x) = x_c_dist;
+              }
+            }
+          }
+        }
+
+        // Step 4
+        Matrix<double>* means = new Matrix<double>(cluster_sums);
+        means->Divide(cluster_counts);
+
+        // Step 5
+        Array<double> cluster_to_means(k_);
+        for (uint32_t c = 0; c < k_; c++) {
+          cluster_to_means(c) = Distance<double,double>::Compute(
+              (*clusters_)(c), (*means)(c));
+          for (uint32_t x = 0; x < data.n(); x++) {
+            lower_bounds(x,c) = std::max(lower_bounds(x,c)-cluster_to_means(c), 
+                                         0.0);
+          }
+        }
+
+        // Step 6
+        for (uint32_t x = 0; x < data.n(); x++) {
+          uint32_t c_x = (*assignments_)(x);
+          upper_bounds(x) = upper_bounds(x) + cluster_to_means(c_x);
+          upper_bound_loose(x) = true;
+        }
+
+        // Step 7
+        converged = (*clusters_) == (*means);
+        delete clusters_;
+        clusters_ = means;
+
+        if (verbose) {
+          std::cout << "computed iteration " << iteration;
+          std::cout << ", converged: " << converged << std::endl;
+        }
+        iteration += 1;
       }
     }
 
@@ -393,7 +499,7 @@ class KMeans {
         // we go along.
         squared_sum = 0;
         for (uint32_t x = 0; x < data.n(); x++) {
-          double new_dist = Distance<T>::Compute(data(clusters(c)), data(x));
+          double new_dist = Distance<T,T>::Compute(data(clusters(c)), data(x));
           double new_sq_dist = std::pow(new_dist, 2);
           if (c == 0 || new_sq_dist < squared_dists(x)) {
             squared_dists(x) = new_sq_dist;
@@ -410,14 +516,14 @@ class KMeans {
       // Copy the values of the cluster data points into the clusters_ member
       // variable.
       delete clusters_;
-      clusters_ = new Matrix<T>(k_, data.m());
+      clusters_ = new Matrix<double>(k_, data.m());
       for (uint32_t c = 0; c < k_; c++) {
-        clusters_->SetRow(c, data(clusters(c)));
+        clusters_->SetRow<T>(c, data(clusters(c)));
       }
     }
 
     const uint32_t k_;
-    Matrix<T>* clusters_;
+    Matrix<double>* clusters_;
     Array<uint32_t>* assignments_;
 };
 
