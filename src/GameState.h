@@ -5,7 +5,6 @@
 class GameState {
   private:
     void PrintChips();
-    void PrintAction(double action);
     // number of players who need to get a chance to bet in this round
     char pot_good_;
     // number of players that are not folded or all in
@@ -18,6 +17,8 @@ class GameState {
     GameState& operator=(const GameState&);
     ~GameState();
     void TakeAction(double action);
+    void PrintAction(double action);
+
     double* chip_amounts_;
     bool* in_game_;
     // represents the amount each player has in the pot FOR THE WHOLE HAND

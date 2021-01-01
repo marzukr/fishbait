@@ -9,15 +9,15 @@ int main(){
   //                              {0.5,1,0,0,0,0,0,0,0,0,0,0,0,0},
   //                              {0.5,1,0,0,0,0,0,0,0,0,0,0,0,0}};
   // number of raise sizes for each round
-  float num_raise_sizes [4] = {3,3,2,2};
-  float raise_sizes [4][3] = {{.25,.5,1},
-  {0.25,0.5,1},
-  {.5,1,0},
-  {.5,1,0}};
+  float num_raise_sizes [4] = {1,0,0,0};
+  float raise_sizes [4][1] = {{1},
+  {0.25},
+  {.5},
+  {.5}};
   // float num_raise_sizes [4] = {2,2,2,2};
-  double starting_chips = 100;
-  char num_players = 6;
-  char num_rounds = 4;
+  double starting_chips = 2;
+  char num_players = 2;
+  char num_rounds = 1;
   float small_blind_multiplier = 0.5;
   std::cout << GetNumPossible(raise_sizes, num_raise_sizes, starting_chips, 
                               small_blind_multiplier, num_players, num_rounds) 
