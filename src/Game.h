@@ -3,9 +3,8 @@
 
 #include "hand_evaluator/Constants.h"
 #include "Agent.h"
-#include "GameLogic.h"
+#include "GameState.h"
 
-// #define NUM_PLAYERS 6
 #define FLOP_1 12
 #define FLOP_2 13
 #define FLOP_3 14
@@ -14,33 +13,23 @@
  
 class Game
 {
-    private:
-        int deck[DECK_SIZE];
-        Agent* agents[NUM_PLAYERS];
-        int button;
+  private:
+    int deck_ [DECK_SIZE];
+    Agent** agents_;
+    int small_blind_pos_;
+    GameState game_state_;
 
-        int players_left;
-        float starting_chips;
-        GameState game_state;
+    void ShuffleDeck();
+    void AwardPot();
+    void Preflop(int button_pos);
+    void Flop();
+    void Turn();
+    void River();
 
-
-        void shuffle_deck();
-
-        // returns true if the game is complete, false otherwise
-        bool main_game_loop(int first_to_act);
-        void award_pot();
-
-
-        // each street function returns true if the game is complete, false
-        // otherwise
-        void preflop(int button_pos);
-        void flop();
-        void turn();
-        void river();
-
-    public:
-        Game(double bb_per_player);
-        void play(int button_pos);
+  public:
+    Game(char num_players, char num_rounds, float small_blind_multiplier, 
+         double starting_bb_amounts);
+    void Play(int button_pos);
 };
  
 #endif

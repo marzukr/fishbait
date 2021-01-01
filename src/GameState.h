@@ -1,42 +1,40 @@
-
+#ifndef GAMESTATE
+#define GAMESTATE
 #include <stdint.h>
 
+class GameState {
+  private:
+    void PrintChips();
+    void PrintAction(double action);
+    // number of players who need to get a chance to bet in this round
+    char pot_good_;
+    // number of players that are not folded or all in
+    char num_left_;
 
-#define NUM_PLAYERS 4
-#define MAX_TURNS 4
-#define SMALL_BLIND 0.5
-
-
-struct GameState{
-
-    double chip_amounts[NUM_PLAYERS];
-    bool in_game[NUM_PLAYERS];
-    int acting_player;
-    int current_round;
-    // minimum raise for this round
-    double min_raise;
-    // maximum amount that has been put in by any individual, = call amount
-    double max_bet;
-    double pot;
+  public:
+    GameState(char num_players, char num_rounds, float small_blind_multiplier, 
+              double starting_bb_amounds);
+    GameState(const GameState&);
+    GameState& operator=(const GameState&);
+    ~GameState();
+    void TakeAction(double action);
+    double* chip_amounts_;
+    bool* in_game_;
     // represents the amount each player has in the pot FOR THE WHOLE HAND
-    double total_bets[NUM_PLAYERS];
-    char pot_good;
-    bool is_done;
-    int betting_round;
-
-    // GameState& operator = (const GameState& other){
-    //     chip_amounts = other.chip_amounts;
-    //     in_game = other.in_game;
-    //     total_bets = other.total_bets;
-    //     acting_player = other.acting_player;
-    //     current_round = other.current_round;
-    //     min_raise = other.min_raise;
-    //     max_bet = other.max_bet;
-    //     pot = other.pot;
-    //     pot_good = other.pot_good;
-    //     is_done = other.is_done;
-    //     return *this;
-    // }
-
-
+    double* total_bets_;
+    char acting_player_;
+    char current_round_;
+    // minimum raise for this round
+    double min_raise_;
+    // maximum amount that has been put in by any individual, = call amount
+    double max_bet_;
+    double pot_;
+    bool is_done_;
+    char betting_round_;
+    char num_players_;
+    char num_rounds_;
+    float small_blind_multiplier_;
+    double starting_bb_amounts_;
 };
+
+#endif
