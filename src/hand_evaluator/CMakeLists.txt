@@ -15,3 +15,6 @@ target_include_directories(hand_evaluator PRIVATE
 target_link_libraries(hand_evaluator 
   ompeval handisomorphism ${Boost_LIBRARIES} ${PYTHON_LIBRARIES}
 )
+
+add_custom_target(distribution_gen)
+add_dependencies(distribution_gen hand_evaluator)
