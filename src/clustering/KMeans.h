@@ -70,7 +70,7 @@ class KMeans {
         // the distance between x and this cluster to the distance we just
         // calculated
         if (uninitialized || calc_x_cprime_dist) {
-          double x_cprime_dist = Distance<T,double>::Compute(
+          double x_cprime_dist = Distance<T, double>::Compute(
               data(x), (*clusters)(cprime));
           lower_bounds(x, cprime) = x_cprime_dist;
 
