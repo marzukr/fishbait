@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-static int nodes;
 GameState::GameState(char num_players, char num_rounds, 
                      float small_blind_multiplier, double starting_bb_amounts) {
   // initialize arrays
@@ -181,10 +180,6 @@ void GameState::TakeAction(double action) {
   if (current_round_ >= num_rounds_ || num_left_ <= 1){
     is_done_ = true;
   }
-  else {
-    nodes++;
-  }
-  std::cout << "nodes: " << nodes << std::endl;
 
 }
 

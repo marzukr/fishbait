@@ -2,9 +2,11 @@
 #include <iostream>
 #include "GameState.h"
 
-#define NUM_RAISES 1
+#define NUM_RAISES 3
 
 static int leaf_counter = 0;
+static int ind = 0;
+static int non_leaf_index = 0;
 static unsigned int counter = 0;
 static unsigned int preflop = 0;
 static unsigned int flop = 0;
@@ -27,29 +29,23 @@ void PrintAction(const GameState& state, double action) {
 }
 int NumPossible(float raise_sizes[][NUM_RAISES], float num_raise_sizes[], 
                 const GameState& state, int total_num){
+  int orig_total = total_num;
+  // std::cout << "total:" << total_num << std::endl;
+  // if(ind % 100000 == 0){
+  //   std::cout << "index:" << ind << std::endl;
+  // }
+  // if(non_leaf_index % 100000 == 0){
+  //   std::cout << "non-leaf:" << non_leaf_index << std::endl;
+  // }
   char acting_player = state.acting_player_;
-  // if(counter % 10000000 == 0){
-  //     std::cout << "total:" << counter << std::endl;
-  // }
-  // if(preflop % 10000000 == 0){
-  //     std::cout << "preflop:" << preflop << std::endl;
-  // }
-  // if(flop % 10000000 == 0){
-  //     std::cout << "flop:" << flop << std::endl;
-  // }
-  // if(turn % 10000000 == 0){
-  //     std::cout << "turn:" << turn << std::endl;
-  // }
-  // if(river % 10000000 == 0){
-  //     std::cout << "river:" << river << std::endl;
-  // }
   if (state.is_done_ == true){
     // std::cout << "returning " << state.pot_ << std::endl;
     leaf_counter++;
-    // /if(leaf_counter % 10000000 == 0){
+    if(leaf_counter % 100000 == 0){
       std::cout << "leaf:" << leaf_counter << std::endl;
-    // }
-    return 1;
+    }
+    non_leaf_index--;
+    return orig_total-total_num;
   }
   // GameState new_state = state;
 
@@ -57,69 +53,26 @@ int NumPossible(float raise_sizes[][NUM_RAISES], float num_raise_sizes[],
   if (state.in_game_[acting_player] == false || 
       state.chip_amounts_[acting_player] == 0) {
     GameState no_action_state = state;
-    // counter++;
-    // if(state.current_round_ == 0){
-    //   preflop++;
-    // }
-    // else if(state.current_round_ == 1){
-    //   flop++;
-    // }
-    // else if(state.current_round_ == 2){
-    //   turn++;
-    // }
-    // else{
-    //   river++;
-    // }
-    std::cout << "total:" << total_num << std::endl;
-    PrintAction(state, -2);
     no_action_state.TakeAction(-2);
-    return NumPossible(raise_sizes, num_raise_sizes, no_action_state, total_num);
+    return orig_total-NumPossible(raise_sizes, num_raise_sizes, no_action_state, total_num);
   } else { //loop through all actions if not already folded or all in
 
     // check/call if possible
     double call = state.max_bet_ - state.total_bets_[acting_player];
     if (state.chip_amounts_[acting_player] > call){
       GameState check_call_state = state;
-      // counter++;
-      // if(state.current_round_ == 0){
-      //   preflop++;
-      // }
-      // else if(state.current_round_ == 1){
-      //   flop++;
-      // }
-      // else if(state.current_round_ == 2){
-      //   turn++;
-      // }
-      // else{
-      //   river++;
-      // }
-      std::cout << "total:" << total_num << std::endl;
-      PrintAction(state, call);
-      total_num++;
+      ind++;
+      non_leaf_index++;
       check_call_state.TakeAction(call);
-      total_num += NumPossible(raise_sizes, num_raise_sizes, check_call_state, total_num);
+      total_num += NumPossible(raise_sizes, num_raise_sizes, check_call_state, total_num+1);
     }
 
     // all in
     GameState all_in_state = state;
-    // counter++;
-    // if(state.current_round_ == 0){
-    //   preflop++;
-    // }
-    // else if(state.current_round_ == 1){
-    //   flop++;
-    // }
-    // else if(state.current_round_ == 2){
-    //   turn++;
-    // }
-    // else{
-    //   river++;
-    // }
-    std::cout << "total:" << total_num << std::endl;
-    PrintAction(state, state.chip_amounts_[acting_player]);
-    total_num++;
+    ind++;
+    non_leaf_index++;
     all_in_state.TakeAction(state.chip_amounts_[acting_player]);
-    total_num += NumPossible(raise_sizes, num_raise_sizes, all_in_state, total_num);
+    total_num += NumPossible(raise_sizes, num_raise_sizes, all_in_state, total_num+1);
 
     // all other raise sizes that are legal
 
@@ -135,28 +88,16 @@ int NumPossible(float raise_sizes[][NUM_RAISES], float num_raise_sizes[],
         if (raise_size >= state.min_raise_ && 
             action < state.chip_amounts_[acting_player]){
           GameState raise_state = state;
-          // counter++;
-          // if(state.current_round_ == 0){
-          //   preflop++;
-          // }
-          // else if(state.current_round_ == 1){
-          //   flop++;
-          // }
-          // else if(state.current_round_ == 2){
-          //   turn++;
-          // }
-          // else{
-          //   river++;
-          // }
-          std::cout << "total:" << total_num << std::endl;
-          PrintAction(state, action);
+          ind++;
+          non_leaf_index++;
           raise_state.TakeAction(action);
-          total_num++;
-          total_num += NumPossible(raise_sizes, num_raise_sizes, raise_state, total_num);
+          total_num += NumPossible(raise_sizes, num_raise_sizes, raise_state, total_num+1);
         }
       }
     }
-    else { // if after the first betting round on the turn or river
+    // if after the first betting round on the turn or river, and we're not
+    // limiting actions to only fold/call/all in
+    else if(state.num_left_ <= 3) {
       double raise_size = state.pot_+call;
       double action = call+raise_size;
 
@@ -164,51 +105,23 @@ int NumPossible(float raise_sizes[][NUM_RAISES], float num_raise_sizes[],
       if (raise_size >= state.min_raise_ && 
           action < state.chip_amounts_[acting_player]){
         GameState raise_state = state;
-        // counter++;
-        // if(state.current_round_ == 0){
-        //   preflop++;
-        // }
-        // else if(state.current_round_ == 1){
-        //   flop++;
-        // }
-        // else if(state.current_round_ == 2){
-        //   turn++;
-        // }
-        // else{
-        //   river++;
-        // }
-        std::cout << "total:" << total_num << std::endl;
-        PrintAction(state, action);
+        ind++;
+        non_leaf_index++;
         raise_state.TakeAction(action);
-        total_num++;
-        total_num += NumPossible(raise_sizes, num_raise_sizes, raise_state, total_num);
+        total_num += NumPossible(raise_sizes, num_raise_sizes, raise_state, total_num+1);
       }
     }
     // fold
     if (call != 0){
       GameState fold_state = state;
-      // counter++;
-      // if(state.current_round_ == 0){
-      //   preflop++;
-      // }
-      // else if(state.current_round_ == 1){
-      //   flop++;
-      // }
-      // else if(state.current_round_ == 2){
-      //   turn++;
-      // }
-      // else{
-      //   river++;
-      // }
-      std::cout << "total:" << total_num << std::endl;
-      PrintAction(state, -1);
+      ind++;
+      non_leaf_index++;
       fold_state.TakeAction(-1);
-      total_num++;
-      total_num += NumPossible(raise_sizes, num_raise_sizes, fold_state, total_num);
+      total_num += NumPossible(raise_sizes, num_raise_sizes, fold_state, total_num+1);
     }
   }
 
-  return total_num;
+  return orig_total-total_num;
 }
 
 int GetNumPossible(float raise_sizes[][NUM_RAISES], float num_raise_sizes[], 

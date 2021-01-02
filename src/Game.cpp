@@ -118,13 +118,15 @@ void Game::AwardPot() {
   bool in_game [game_state_.num_players_];
   double awards[game_state_.num_players_];
   char players_left = 0;
+  // create bets, in_game, and awards arrays that are adjusted for the small blind
+  // position
   for(int i = 0; i < game_state_.num_players_; i++){
-    bets[i] = game_state_.total_bets_[i];
-    in_game[i] = game_state_.in_game_[i];
-    if (in_game[i]) {
+    bets[(i+small_blind_pos_)% game_state_.num_players_] = game_state_.total_bets_[i];
+    in_game[(i+small_blind_pos_)% game_state_.num_players_] = game_state_.in_game_[i];
+    if (in_game[(i+small_blind_pos_)% game_state_.num_players_]) {
       players_left++;
     }
-    awards[i] = game_state_.in_game_[i];
+    awards[(i+small_blind_pos_)% game_state_.num_players_] = game_state_.in_game_[i];
   }
 
   int ranks[game_state_.num_players_];

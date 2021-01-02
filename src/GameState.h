@@ -7,8 +7,7 @@ class GameState {
     void PrintChips();
     // number of players who need to get a chance to bet in this round
     char pot_good_;
-    // number of players that are not folded or all in
-    char num_left_;
+
 
   public:
     GameState(char num_players, char num_rounds, float small_blind_multiplier, 
@@ -36,6 +35,8 @@ class GameState {
     char num_rounds_;
     float small_blind_multiplier_;
     double starting_bb_amounts_;
+    // number of players that are not folded or all in
+    char num_left_;
 };
 
 #endif
