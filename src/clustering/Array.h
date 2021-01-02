@@ -1,5 +1,7 @@
-#ifndef FISHBAIT_CLUSTERING_ARRAY
-#define FISHBAIT_CLUSTERING_ARRAY
+// Copyright 2021 Marzuk Rashid
+
+#ifndef SRC_CLUSTERING_ARRAY_H_
+#define SRC_CLUSTERING_ARRAY_H_
 
 #include <stdint.h>
 
@@ -10,7 +12,7 @@ namespace clustering {
 template <typename T>
 class Array {
  public:
-  Array(uint32_t n) : n_(n) { data_ = new T[n]; }
+  explicit Array(uint32_t n) : n_(n) { data_ = new T[n]; }
   ~Array() {
     delete[] data_;
   }
@@ -38,13 +40,13 @@ class Array {
     return total;
   }
 
-  uint32_t n() const { return n_; };
+  uint32_t n() const { return n_; }
 
  private:
-  const uint32_t n_; // rows
+  const uint32_t n_;  // rows
   T* data_;
 };
 
-}
+}  // namespace clustering
 
-#endif
+#endif  // SRC_CLUSTERING_ARRAY_H_

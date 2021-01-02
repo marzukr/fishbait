@@ -1,5 +1,7 @@
-#ifndef FISHBAIT_CLUSTERING_EARTHMOVERDISTANCE
-#define FISHBAIT_CLUSTERING_EARTHMOVERDISTANCE
+// Copyright 2021 Marzuk Rashid
+
+#ifndef SRC_CLUSTERING_EARTHMOVERDISTANCE_H_
+#define SRC_CLUSTERING_EARTHMOVERDISTANCE_H_
 
 #include <stdint.h>
 
@@ -13,7 +15,7 @@ namespace clustering {
 template <typename T, typename U>
 class EarthMoverDistance {
  public:
-  static double Compute(typename Matrix<T>::Row p, 
+  static double Compute(typename Matrix<T>::Row p,
                         typename Matrix<U>::Row q) {
     // The two distributions need to have the same number of buckets
     assert(p.length == q.length);
@@ -32,6 +34,6 @@ class EarthMoverDistance {
   }
 };
 
-}
+}  // namespace clustering
 
-#endif
+#endif  // SRC_CLUSTERING_EARTHMOVERDISTANCE_H_

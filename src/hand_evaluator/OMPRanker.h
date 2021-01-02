@@ -1,5 +1,7 @@
-#ifndef FISHBAIT_HANDEVALUATOR_OMPRANKER
-#define FISHBAIT_HANDEVALUATOR_OMPRANKER
+// Copyright 2021 Marzuk Rashid
+
+#ifndef SRC_HAND_EVALUATOR_OMPRANKER_H_
+#define SRC_HAND_EVALUATOR_OMPRANKER_H_
 
 #include <stdint.h>
 
@@ -16,6 +18,6 @@ class OMPRanker {
   omp::HandEvaluator eval;
 };
 
-}
+}  // namespace hand_evaluator
 
-#endif
+#endif  // SRC_HAND_EVALUATOR_OMPRANKER_H_

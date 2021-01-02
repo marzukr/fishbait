@@ -1,5 +1,5 @@
-#ifndef AGENT
-#define AGENT
+#ifndef SRC_POKER_ENGINE_AGENT_H_
+#define SRC_POKER_ENGINE_AGENT_H_
 
 #include <string>
  

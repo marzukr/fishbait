@@ -1,5 +1,7 @@
-#ifndef FISHBAIT_CLUSTERING_LOADDATA
-#define FISHBAIT_CLUSTERING_LOADDATA
+// Copyright 2021 Marzuk Rashid
+
+#ifndef SRC_CLUSTERING_LOADDATA_H_
+#define SRC_CLUSTERING_LOADDATA_H_
 
 #include <stdint.h>
 
@@ -67,7 +69,7 @@ std::unique_ptr<Matrix<T>> LoadData(std::string mongo_server,
   for (auto doc : cursor) {
     uint32_t i = doc["_id"].get_int32();
     for (uint32_t j = 0; j < lists->m(); ++j) {
-      (*lists)(i,j) = GetValue<T>(doc[list_name][j]);
+      (*lists)(i, j) = GetValue<T>(doc[list_name][j]);
     }
     t += 1;
     if (verbose && t % 100000 == 0) {
@@ -83,6 +85,6 @@ std::unique_ptr<Matrix<T>> LoadData(std::string mongo_server,
   return lists;
 }
 
-}
+}  // namespace clustering
 
-#endif
+#endif  // SRC_CLUSTERING_LOADDATA_H_

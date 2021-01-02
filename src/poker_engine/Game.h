@@ -1,5 +1,5 @@
-#ifndef GAME
-#define GAME
+#ifndef SRC_POKER_ENGINE_GAME_H_
+#define SRC_POKER_ENGINE_GAME_H_
 
 #include "SKPokerEval/src/Constants.h"
 #include "poker_engine/Agent.h"

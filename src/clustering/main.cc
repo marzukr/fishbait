@@ -1,3 +1,5 @@
+// Copyright 2021 Marzuk Rashid
+
 #include <stdint.h>
 
 // #include <iostream>
@@ -16,7 +18,7 @@ int main() {
   std::string list_name = "hist";
   typedef uint16_t data_type;
 
-  auto data_points = clustering::LoadData<data_type>(uri, db_name, street, 
+  auto data_points = clustering::LoadData<data_type>(uri, db_name, street,
                                                      list_name, true);
 
   clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);

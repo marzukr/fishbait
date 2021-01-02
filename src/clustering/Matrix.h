@@ -1,5 +1,7 @@
-#ifndef FISHBAIT_CLUSTERING_MATRIX
-#define FISHBAIT_CLUSTERING_MATRIX
+// Copyright 2021 Marzuk Rashid
+
+#ifndef SRC_CLUSTERING_MATRIX_H_
+#define SRC_CLUSTERING_MATRIX_H_
 
 #include <stdint.h>
 
@@ -35,13 +37,13 @@ class Matrix {
     return *this;
   }
 
-  T& Access(uint32_t i, uint32_t j) { 
+  T& Access(uint32_t i, uint32_t j) {
     assert(i < n_);
     assert(j < m_);
     return data_[i*m_ + j];
   }
-  T& operator()(uint32_t i, uint32_t j) { return Access(i,j); }
-  const T& operator()(uint32_t i, uint32_t j) const { return Access(i,j); }
+  T& operator()(uint32_t i, uint32_t j) { return Access(i, j); }
+  const T& operator()(uint32_t i, uint32_t j) const { return Access(i, j); }
 
   struct Row {
     T* start;
@@ -66,7 +68,7 @@ class Matrix {
     assert(i < n_);
     assert(r.length == m_);
     for (uint32_t j = 0; j < m_; ++j) {
-      operator()(i,j) = r.start[j];
+      operator()(i, j) = r.start[j];
     }
   }
 
@@ -75,7 +77,7 @@ class Matrix {
     assert(i < n_);
     assert(r.length == m_);
     for (uint32_t j = 0; j < m_; ++j) {
-      operator()(i,j) += r.start[j];
+      operator()(i, j) += r.start[j];
     }
   }
 
@@ -84,16 +86,16 @@ class Matrix {
     assert(i < n_);
     assert(r.length == m_);
     for (uint32_t j = 0; j < m_; ++j) {
-      operator()(i,j) -= r.start[j];
+      operator()(i, j) -= r.start[j];
     }
   }
 
   template <typename U>
-  void Divide(Array<U>& a) {
+  void Divide(const Array<U>& a) {
     assert(a.n() == n_);
     for (uint32_t i = 0; i < n_; ++i) {
       for (uint32_t j = 0; j < m_; ++j) {
-        operator()(i,j) /= a(i);
+        operator()(i, j) /= a(i);
       }
     }
   }
@@ -104,15 +106,15 @@ class Matrix {
     }
   }
 
-  uint32_t n() const { return n_; };
-  uint32_t m() const { return m_; };
+  uint32_t n() const { return n_; }
+  uint32_t m() const { return m_; }
 
  private:
-  const uint32_t n_; // rows
-  const uint32_t m_; // cols
+  const uint32_t n_;  // rows
+  const uint32_t m_;  // cols
   T* data_;
 };
 
-}
+}  // namespace clustering
 
-#endif
+#endif  // SRC_CLUSTERING_MATRIX_H_

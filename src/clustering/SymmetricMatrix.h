@@ -1,5 +1,7 @@
-#ifndef FISHBAIT_CLUSTERING_SYMMETRICMATRIX
-#define FISHBAIT_CLUSTERING_SYMMETRICMATRIX
+// Copyright 2021 Marzuk Rashid
+
+#ifndef SRC_CLUSTERING_SYMMETRICMATRIX_H_
+#define SRC_CLUSTERING_SYMMETRICMATRIX_H_
 
 #include <stdint.h>
 
@@ -10,8 +12,8 @@ namespace clustering {
 template <typename T>
 class SymmetricMatrix {
  public:
-  SymmetricMatrix(uint32_t n) : n_(n) { 
-    data_ = new T[(n*n-n)/2]; 
+  explicit SymmetricMatrix(uint32_t n) : n_(n) {
+    data_ = new T[(n*n-n)/2];
   }
   ~SymmetricMatrix() {
     delete[] data_;
@@ -30,13 +32,13 @@ class SymmetricMatrix {
     return this->data_[idx];
   }
 
-  uint32_t n() { return n_; };
+  uint32_t n() { return n_; }
 
  private:
-  const uint32_t n_; // side length
+  const uint32_t n_;  // side length
   T* data_;
 };
 
-}
+}  // namespace clustering
 
-#endif
+#endif  // SRC_CLUSTERING_SYMMETRICMATRIX_H_
