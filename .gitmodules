@@ -1,0 +1,9 @@
+[submodule "external/SKPokerEval"]
+	path = external/SKPokerEval
+	url = git@github.com:marzukr/SKPokerEval.git
+[submodule "external/OMPEval"]
+	path = external/OMPEval
+	url = git@github.com:marzukr/OMPEval.git
+[submodule "external/hand-isomorphism"]
+	path = external/hand-isomorphism
+	url = git@github.com:marzukr/hand-isomorphism.git
