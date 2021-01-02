@@ -5,6 +5,8 @@
 
 #include <cassert>
 
+namespace clustering {
+
 template <typename T>
 class Array {
  public:
@@ -42,5 +44,7 @@ class Array {
   const uint32_t n_; // rows
   T* data_;
 };
+
+}
 
 #endif

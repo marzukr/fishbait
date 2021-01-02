@@ -13,6 +13,8 @@
 #include "clustering/Array.h"
 #include "clustering/SymmetricMatrix.h"
 
+namespace clustering {
+
 template <typename T, template<class, class> class Distance>
 class KMeans {
  public:
@@ -282,5 +284,7 @@ class KMeans {
   std::unique_ptr<Array<uint32_t>> assignments_;
   std::unique_ptr<double> loss_;
 };
+
+}
 
 #endif

@@ -5,6 +5,8 @@
 
 #include <cassert>
 
+namespace clustering {
+
 template <typename T>
 class SymmetricMatrix {
  public:
@@ -34,5 +36,7 @@ class SymmetricMatrix {
   const uint32_t n_; // side length
   T* data_;
 };
+
+}
 
 #endif

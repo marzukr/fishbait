@@ -8,6 +8,8 @@
 
 #include "clustering/Matrix.h"
 
+namespace clustering {
+
 template <typename T, typename U>
 class EarthMoverDistance {
  public:
@@ -29,5 +31,7 @@ class EarthMoverDistance {
     return sum;
   }
 };
+
+}
 
 #endif

@@ -7,6 +7,8 @@
 
 #include "clustering/Array.h"
 
+namespace clustering {
+
 template <typename T>
 class Matrix {
  public:
@@ -110,5 +112,7 @@ class Matrix {
   const uint32_t m_; // cols
   T* data_;
 };
+
+}
 
 #endif
