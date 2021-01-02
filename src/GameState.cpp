@@ -125,7 +125,7 @@ void GameState::TakeAction(double action) {
 
   // update all in if this action puts player all in
   // if (action >= chip_amounts_[acting_player_]) {
-  //   // num_left_ -= 1;
+  //   num_left_ -= 1;
   // }
 
   // get new amount that this player will have in pot and their new chip amounts
@@ -177,10 +177,9 @@ void GameState::TakeAction(double action) {
   }
 
   // check if game over and update accordingly
-  if (current_round_ >= num_rounds_ || num_left_ <= 1){
+  if (current_round_ >= 4 || num_left_ <= 1){
     is_done_ = true;
   }
-
 }
 
 
