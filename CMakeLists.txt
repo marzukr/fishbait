@@ -10,3 +10,4 @@ include_directories(external)
 
 add_subdirectory(src/clustering)
 add_subdirectory(external/OMPEval)
+add_subdirectory(external/hand-isomorphism)
