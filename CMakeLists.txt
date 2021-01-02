@@ -9,3 +9,4 @@ include_directories(src)
 include_directories(external)
 
 add_subdirectory(src/clustering)
+add_subdirectory(external/OMPEval)

@@ -42,6 +42,7 @@ __pycache__/
 
 /build
 /build/*
+build
 
 ### CMake template
 CMakeCache.txt
