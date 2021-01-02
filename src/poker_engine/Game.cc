@@ -2,11 +2,11 @@
 #include <random>
 #include <string>
 
-#include "hand_evaluator/SevenEval.h"
-#include "hand_evaluator/Deckcards.h"
-#include "hand_evaluator/Constants.h"
+#include "SKPokerEval/src/SevenEval.h"
+#include "SKPokerEval/src/Deckcards.h"
+#include "SKPokerEval/src/Constants.h"
 
-#include "Game.h"
+#include "poker_engine/Game.h"
 
 Game::Game(double bb_per_player) {
     // initialize the deck

@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <string>
 
-#include "Agent.h"
-#include "hand_evaluator/Deckcards.h"
+#include "poker_engine/Agent.h"
+#include "SKPokerEval/src/Deckcards.h"
 
 Agent::Agent(double start_chips, std::string agent_name) {
     bet = 0;

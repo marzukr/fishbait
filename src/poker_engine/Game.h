@@ -1,8 +1,8 @@
 #ifndef GAME
 #define GAME
 
-#include "hand_evaluator/Constants.h"
-#include "Agent.h"
+#include "SKPokerEval/src/Constants.h"
+#include "poker_engine/Agent.h"
 
 #define NUM_PLAYERS 6
 #define FLOP_1 12

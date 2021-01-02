@@ -2,15 +2,18 @@
 
 from itertools import combinations
 import time
-import hand_evaluator
 import OCHS
 import concurrent.futures
 import matplotlib.pyplot as plt
 import numpy as np
 import json
-import sys
 import os
 import pickle
+
+import sys
+sys.path.append("../../build/lib")
+import hand_evaluator
+
 from pymongo import MongoClient
 
 def rollouts(hand, roll_size=5):
