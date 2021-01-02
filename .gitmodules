@@ -1,0 +1,3 @@
+[submodule "external/SKPokerEval"]
+	path = external/SKPokerEval
+	url = git@github.com:marzukr/SKPokerEval.git

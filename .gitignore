@@ -40,6 +40,9 @@ __pycache__/
 .vscode
 */.vscode/*
 
+/build
+/build/*
+
 ### CMake template
 CMakeCache.txt
 CMakeFiles

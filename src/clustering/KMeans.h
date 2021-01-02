@@ -1,271 +1,17 @@
-#include <mongocxx/client.hpp>
-#include <mongocxx/uri.hpp>
-#include <mongocxx/instance.hpp>
+#ifndef FISHBAIT_CLUSTERING_KMEANS
+#define FISHBAIT_CLUSTERING_KMEANS
 
 #include <stdint.h>
+
 #include <iostream>
-#include <cmath>
+#include <memory>
 #include <random>
 #include <cassert>
-#include <string>
+#include <algorithm>
 
-template <typename T>
-class Array {
-  public:
-    Array(uint32_t n) : n_(n) { data_ = new T[n]; }
-    ~Array() {
-      delete[] data_;
-    }
-
-    T& operator()(uint32_t i) {
-      assert(i < n_);
-      return data_[i];
-    }
-    const T& operator()(uint32_t i) const {
-      assert(i < n_);
-      return data_[i];
-    }
-
-    void Fill(T filler) {
-      for (uint32_t i = 0; i < n_; ++i) {
-        data_[i] = filler;
-      }
-    }
-
-    T sum() const {
-      T total = 0;
-      for (uint32_t i = 0; i < n_; ++i) {
-        total += data_[i];
-      }
-      return total;
-    }
-
-    uint32_t n() const { return n_; };
-
-  private:
-    const uint32_t n_; // rows
-    T* data_;
-};
-
-template <typename T>
-class Matrix {
-  public:
-    Matrix(uint32_t n, uint32_t m) : n_(n), m_(m) {
-      data_ = new T[n*m];
-    }
-    ~Matrix() {
-      delete[] data_;
-    }
-    Matrix(const Matrix<T>& other) : n_(other.n_), m_(other.m_) {
-      data_ = new T[n_*m_];
-      for (uint32_t i = 0; i < n_*m_; ++i) {
-        data_[i] = other.data_[i];
-      }
-    }
-    Matrix<T>& operator=(const Matrix<T>& other) {
-      n_ = other.n_;
-      m_ = other.m_;
-      delete[] data_;
-      data_ = new T[n_*m_];
-      for (uint32_t i = 0; i < n_*m_; ++i) {
-        data_[i] = other.data_[i];
-      }
-      return *this;
-    }
-
-    T& operator()(uint32_t i, uint32_t j) {
-      assert(i < n_);
-      assert(j < m_);
-      return data_[i*m_ + j];
-    }
-    const T& operator()(uint32_t i, uint32_t j) const {
-      assert(i < n_);
-      assert(j < m_);
-      return data_[i*m_ + j];
-    }
-
-    struct Row {
-      T* start;
-      uint32_t length;
-    };
-    Row operator()(uint32_t i) const {
-      assert(i < n_);
-      Row row { &data_[i*m_], m_ };
-      return row;
-    }
-
-    bool operator==(const Matrix<T>& other) const {
-      if (other.n_ != n_ || other.m_ != m_) return false;
-      for (uint32_t i = 0; i < n_*m_; ++i) {
-        if (data_[i] != other.data_[i]) return false;
-      }
-      return true;
-    }
-
-    template <typename U>
-    void SetRow(uint32_t i, typename Matrix<U>::Row r) {
-      assert(i < n_);
-      assert(r.length == m_);
-      for (uint32_t j = 0; j < m_; ++j) {
-        operator()(i,j) = r.start[j];
-      }
-    }
-
-    template <typename U>
-    void AddToRow(uint32_t i, typename Matrix<U>::Row r) {
-      assert(i < n_);
-      assert(r.length == m_);
-      for (uint32_t j = 0; j < m_; ++j) {
-        operator()(i,j) += r.start[j];
-      }
-    }
-
-    template <typename U>
-    void SubtractFromRow(uint32_t i, typename Matrix<U>::Row r) {
-      assert(i < n_);
-      assert(r.length == m_);
-      for (uint32_t j = 0; j < m_; ++j) {
-        operator()(i,j) -= r.start[j];
-      }
-    }
-
-    template <typename U>
-    void Divide(Array<U>& a) {
-      assert(a.n() == n_);
-      for (uint32_t i = 0; i < n_; ++i) {
-        for (uint32_t j = 0; j < m_; ++j) {
-          operator()(i,j) /= a(i);
-        }
-      }
-    }
-
-    void Fill(T filler) {
-      for (uint32_t i = 0; i < n_*m_; ++i) {
-        data_[i] = filler;
-      }
-    }
-
-    uint32_t n() const { return n_; };
-    uint32_t m() const { return m_; };
-
-  private:
-    const uint32_t n_; // rows
-    const uint32_t m_; // cols
-    T* data_;
-};
-
-template <typename T>
-class SymmetricMatrix {
-  public:
-    SymmetricMatrix(uint32_t n) : n_(n) { data_ = new T[(n*n-n)/2]; }
-    ~SymmetricMatrix() {
-      delete[] data_;
-    }
-
-    T& operator()(uint32_t i, uint32_t j) {
-      assert(i != j);
-      assert(i < n_);
-      assert(j < n_);
-      if (i > j) {
-        uint32_t temp = i;
-        i = j;
-        j = temp;
-      }
-      uint32_t idx = i*this->n_ - i*(i+1)/2 + j - i - 1;
-      return this->data_[idx];
-    }
-
-    uint32_t n() { return n_; };
-
-  private:
-    const uint32_t n_; // side length
-    T* data_;
-};
-
-template <typename T, typename U>
-struct EarthMoverDistance {
-  static double Compute(typename Matrix<T>::Row p, typename Matrix<U>::Row q) {
-    // The two distributions need to have the same number of buckets
-    assert(p.length == q.length);
-
-    double prev = 0;
-    double sum = 0;
-    for (uint8_t i = 1; i < p.length + 1; ++i) {
-      // all flops have area of 1081
-      T p_i = p.start[i-1];
-      T q_i = q.start[i-1];
-      double nxt = p_i + prev - q_i;
-      sum += std::abs(nxt);
-      prev = nxt;
-    }
-    return sum;
-  }
-};
-
-template <typename T> T GetValue(bsoncxx::array::element e) {}
-template <> double GetValue<double>(bsoncxx::array::element e) {
-  return e.get_double();
-}
-template <> uint16_t GetValue<uint16_t>(bsoncxx::array::element e) {
-  return e.get_int32();
-}
-template <typename T>
-std::unique_ptr<Matrix<T>> LoadData(std::string mongo_server,
-                                    std::string db_name, std::string street,
-                                    std::string list_name,
-                                    bool verbose = false) {
-  if (verbose) {
-    std::cout << "Loading data for " << street << std::endl;
-  }
-
-  mongocxx::instance::current();
-  mongocxx::uri uri(mongo_server);
-  mongocxx::client client = mongocxx::client(uri);
-  mongocxx::database db = client[db_name];
-
-  mongocxx::collection collection = db[street];
-  uint32_t n = collection.count_documents({});
-  if (verbose) {
-    std::cout << "n_documents: " << n << std::endl;
-    std::cout << "\t" << "expects 1286792 for flops" << std::endl;
-    std::cout << "\t" << "expects 13960050 for turns" << std::endl;
-    std::cout << "\t" << "expects 123156254 for rivers" << std::endl;
-  }
-
-  bsoncxx::stdx::optional<bsoncxx::document::value> result =
-      collection.find_one({});
-  assert(result);
-  bsoncxx::array::view v = result->view()[list_name].get_array();
-  uint32_t m = std::distance(v.begin(), v.end());
-  if (verbose) {
-    std::cout << "m_documents: " << m << std::endl;
-    std::cout << "\t" << "expects 50 for flops" << std::endl;
-    std::cout << "\t" << "expects 50 for turns" << std::endl;
-    std::cout << "\t" << "expects 8 for rivers" << std::endl;
-  }
-
-  std::unique_ptr<Matrix<T>> lists = std::make_unique<Matrix<T>>(n, m);
-
-  int t = 0;
-  mongocxx::cursor cursor = collection.find({});
-  for (auto doc : cursor) {
-    uint32_t i = doc["_id"].get_int32();
-    for (uint32_t j = 0; j < lists->m(); ++j) {
-      (*lists)(i,j) = GetValue<T>(doc[list_name][j]);
-    }
-    t += 1;
-    if (verbose && t % 100000 == 0) {
-      std::cout << 100.0 * t / lists->n() << "%";
-      std::cout << " of data loaded" << std::endl;
-    }
-  }
-
-  if (verbose) {
-    std::cout << "Loaded data." << std::endl;
-  }
-
-  return lists;
-}
+#include "clustering/Matrix.h"
+#include "clustering/Array.h"
+#include "clustering/SymmetricMatrix.h"
 
 template <typename T, template<class, class> class Distance>
 class KMeans {
@@ -423,7 +169,7 @@ class KMeans {
               (*clusters)(c), (*means)(c));
           for (uint32_t x = 0; x < data.n(); ++x) {
             lower_bounds(x,c) = std::max(lower_bounds(x,c)-cluster_to_means(c),
-                                         0.0);
+                                        0.0);
           }
         }
 
@@ -525,7 +271,7 @@ class KMeans {
       for (uint32_t x = 0; x < data.n(); ++x) {
         uint32_t c_x = assignments(x);
         double dist_to_cluster = Distance<T,double>::Compute(data(x),
-                                                             clusters(c_x));
+                                                            clusters(c_x));
         squared_sum += std::pow(dist_to_cluster/1081, 2);
       }
       return squared_sum/data.n();
@@ -537,24 +283,4 @@ class KMeans {
     std::unique_ptr<double> loss_;
 };
 
-int main() {
-  std::string uri = "mongodb://localhost:27017";
-  std::string db_name = "pluribus";
-  std::string street = "flops";
-  std::string list_name = "hist";
-  typedef uint16_t data_type;
-
-  auto data_points = LoadData<data_type>(uri, db_name, street, list_name, true);
-
-  KMeans<data_type, EarthMoverDistance> k(200);
-  k.Elkan(*data_points, true);
-
-  // std::cout << "Done." << std::endl;
-  // // should be 36
-  // std::cout << histograms[276*BIN_SIZE + 29] << std::endl;
-  // // should be 0
-  // std::cout << e->Distance(302847, 91636) << std::endl;
-  // // should be 37339
-  // std::cout << e->Distance(315, 302769) << std::endl;
-  return 0;
-}
+#endif
