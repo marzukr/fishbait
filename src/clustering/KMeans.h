@@ -52,7 +52,6 @@ class KMeans {
       bool uninitialized = true;
       uint32_t& c = (*assignments)(x);
       for (uint32_t cprime = 0; cprime < k_; ++cprime) {
-
         // Check if we need to compute the distance to this cluster using
         // lemma 1 and if we have already computed the distance to at least
         // one other cluster
@@ -171,7 +170,7 @@ class KMeans {
         cluster_to_means(c) = Distance<double, double>::Compute((*clusters)(c),
                                                                 (*means)(c));
         for (uint32_t x = 0; x < data.n(); ++x) {
-          lower_bounds(x, c) = std::max(lower_bounds(x,c)-cluster_to_means(c),
+          lower_bounds(x, c) = std::max(lower_bounds(x, c)-cluster_to_means(c),
                                         0.0);
         }
       }
