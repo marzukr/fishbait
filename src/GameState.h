@@ -37,6 +37,8 @@ class GameState {
     double starting_bb_amounts_;
     // number of players that are not folded or all in
     char num_left_;
+    char num_all_in_;
+
 };
 
 #endif

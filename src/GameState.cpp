@@ -34,8 +34,9 @@ GameState::GameState(char num_players, char num_rounds,
   num_rounds_ = num_rounds;
   small_blind_multiplier_ = small_blind_multiplier;
   starting_bb_amounts_ = starting_bb_amounts;
-  pot_good_ = 0;
+  pot_good_ = num_players;
   num_left_ = num_players;
+  num_all_in_ = 0;
 }
 
 GameState::GameState(const GameState& other) {
@@ -52,6 +53,8 @@ GameState::GameState(const GameState& other) {
     num_rounds_ = other.num_rounds_;
     small_blind_multiplier_ = other.small_blind_multiplier_;
     starting_bb_amounts_ = other.starting_bb_amounts_;
+    num_all_in_ = other.num_all_in_;
+
 
     chip_amounts_ = new double[num_players_];
     in_game_ = new bool[num_players_];
@@ -78,6 +81,7 @@ GameState& GameState::operator=(const GameState& other) {
   num_rounds_ = other.num_rounds_;
   small_blind_multiplier_ = other.small_blind_multiplier_;
   starting_bb_amounts_ = other.starting_bb_amounts_;
+  num_all_in_ = other.num_all_in_;
 
   for(int i = 0; i < num_players_; i++){
     chip_amounts_[i] = other.chip_amounts_[i];
@@ -118,21 +122,16 @@ void GameState::PrintAction(double action) {
   }
 }
 void GameState::TakeAction(double action) {
-  pot_good_++;
+
   if(acting_player_ == 0){
     betting_round_++;
   }
-
-  // update all in if this action puts player all in
-  // if (action >= chip_amounts_[acting_player_]) {
-  //   num_left_ -= 1;
-  // }
-
   // get new amount that this player will have in pot and their new chip amounts
   double new_total_bet = total_bets_[acting_player_];
   double new_chip_amount = chip_amounts_[acting_player_];
   double raise_amount = 0;
   if (action >= 0) {
+    pot_good_--;
     new_total_bet += action;
     new_chip_amount -= action;
     pot_ += action;
@@ -142,6 +141,7 @@ void GameState::TakeAction(double action) {
   else if (action == -1) {
     in_game_[acting_player_] = false;
     num_left_ -= 1;
+    pot_good_--;
   }
   chip_amounts_[acting_player_] = new_chip_amount;
   total_bets_[acting_player_] = new_total_bet;
@@ -153,21 +153,24 @@ void GameState::TakeAction(double action) {
     double extra = raise_amount;
     min_raise_ = 2 * min_raise_ + extra;
     max_bet_ = new_total_bet;
-    pot_good_ = 1;
-
+    pot_good_ = num_left_-num_all_in_-1;
   }
 
   // raise min raise or more
   else if (raise_amount >= min_raise_) {
     min_raise_ = 2 * raise_amount;
     max_bet_ = new_total_bet;
-    pot_good_ = 1;
+    pot_good_ = num_left_-num_all_in_-1;
+  }
+  // update all in if this action puts player all in
+  if (action >= chip_amounts_[acting_player_]) {
+    num_all_in_ += 1;
   }
 
   // check if we need to go to next round and update accordingly
-  if (pot_good_ == num_players_) {
+  if (pot_good_ == 0) {
     current_round_++;
-    pot_good_ = 0;
+    pot_good_ = num_left_-num_all_in_;
     min_raise_ = 1;
     acting_player_ = 0;
     betting_round_ = 0;
@@ -176,8 +179,9 @@ void GameState::TakeAction(double action) {
     acting_player_ = (acting_player_+1) % num_players_;
   }
 
+
   // check if game over and update accordingly
-  if (current_round_ >= 4 || num_left_ <= 1){
+  if (current_round_ >= num_rounds_ || num_left_ <= 1 || num_all_in_ == num_left_){
     is_done_ = true;
   }
 }
