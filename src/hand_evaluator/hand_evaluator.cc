@@ -30,11 +30,12 @@ BOOST_PYTHON_MODULE(hand_evaluator) {
     using boost::python::args;
     using boost::python::class_;
     using boost::python::init;
+    using boost::python::list;
 
     def("GetRank", hand_evaluator::RankFn,
         args("c1", "c2", "c3", "c4", "c5", "c6", "c7"));
     def("CardString", hand_evaluator::CardStr, args("c"));
-    class_<hand_evaluator::Indexer>("Indexer", init<int, list&>())
+    class_<hand_evaluator::Indexer>("Indexer", init<int, const list&>())
         .def("index", &hand_evaluator::Indexer::Index);
     class_<hand_evaluator::OMPRanker>("OMP")
         .def("GetRank", &hand_evaluator::OMPRanker::RankHand);

@@ -25,7 +25,7 @@ class EarthMoverDistance {
     for (uint8_t i = 1; i < p.length + 1; ++i) {
       // all flops have area of 1081
       T p_i = p.start[i-1];
-      T q_i = q.start[i-1];
+      U q_i = q.start[i-1];
       double nxt = p_i + prev - q_i;
       sum += std::abs(nxt);
       prev = nxt;

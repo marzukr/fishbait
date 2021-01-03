@@ -22,7 +22,7 @@ Indexer::Indexer(int rounds, const boost::python::list& cpr) {
   hand_indexer_init(rounds, cpr_cpp, isocalc);
 }
 
-hand_index_t Indexer::Index(boost::python::list& cards, bool is_omp) {
+hand_index_t Indexer::Index(const boost::python::list& cards, bool is_omp) {
   uint8_t cards_cpp[len(cards)];  // NOLINT(runtime/arrays)
   for (int i = 0; i < len(cards); ++i) {
     uint8_t c = boost::python::extract<uint8_t>(cards[i]);
