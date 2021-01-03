@@ -45,7 +45,7 @@ class Array {
  private:
   const uint32_t n_;  // rows
   T* data_;
-};
+};  // Array
 
 }  // namespace clustering
 

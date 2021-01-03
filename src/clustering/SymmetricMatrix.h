@@ -37,7 +37,7 @@ class SymmetricMatrix {
  private:
   const uint32_t n_;  // side length
   T* data_;
-};
+};  // SymmetricMatrix
 
 }  // namespace clustering
 

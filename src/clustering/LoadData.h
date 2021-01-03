@@ -83,7 +83,7 @@ std::unique_ptr<Matrix<T>> LoadData(std::string mongo_server,
   }
 
   return lists;
-}
+}  // LoadData
 
 }  // namespace clustering
 

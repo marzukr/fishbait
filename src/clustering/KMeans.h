@@ -84,9 +84,9 @@ class KMeans {
             uninitialized = false;
           }
         }
-      }
+      }  // for c
       upper_bound_loose(x) = false;
-    }
+    }  // for x
 
     if (verbose) {
       std::cout << "initialized data structures";
@@ -149,8 +149,8 @@ class KMeans {
               upper_bounds(x) = x_c_dist;
             }
           }
-        }
-      }
+        }  // for x
+      }  // for c
 
       // Step 4
       auto means = std::make_unique<Matrix<double>>(k_, data.m());
@@ -192,15 +192,15 @@ class KMeans {
       }
       iteration += 1;
       loss_ = std::make_unique<double>(ComputeLoss(data, *clusters,
-                                                    *assignments));
+                                                   *assignments));
       std::cout << loss() << std::endl;
-    }
+    }  // while !converged
 
     // Compute the loss and set the instance variables to the clusters and
     // assignments we just computed
     clusters_ = std::move(clusters);
     assignments_ = std::move(assignments);
-  }
+  }  // Elkan
 
   double loss() const {
     if (loss_) return *loss_;
@@ -209,7 +209,7 @@ class KMeans {
 
  private:
   std::unique_ptr<Matrix<double>> InitPlusPlus(const Matrix<T>& data,
-                                                bool verbose = false) const {
+                                               bool verbose = false) const {
     std::random_device dev;
     std::mt19937 rng(dev());
     std::uniform_real_distribution<> std_unif(0.0, 1.0);
@@ -256,7 +256,7 @@ class KMeans {
         std::cout << "assigned cluster " << c;
         std::cout << ": " << clusters(c) << std::endl;
       }
-    }
+    }  // for c
 
     // Copy the values of the cluster data points into a new Matrix
     auto filled_clusters = std::make_unique<Matrix<double>>(k_, data.m());
@@ -264,7 +264,7 @@ class KMeans {
       filled_clusters->template SetRow<T>(c, data(clusters(c)));
     }
     return filled_clusters;
-  }
+  }  // InitPlusPlus
 
   double ComputeLoss(const Matrix<T>& data, const Matrix<double>& clusters,
                       const Array<uint32_t>& assignments) {
@@ -282,7 +282,7 @@ class KMeans {
   std::unique_ptr<Matrix<double>> clusters_;
   std::unique_ptr<Array<uint32_t>> assignments_;
   std::unique_ptr<double> loss_;
-};
+};  // KMeans
 
 }  // namespace clustering
 

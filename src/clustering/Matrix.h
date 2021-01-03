@@ -6,6 +6,9 @@
 #include <stdint.h>
 
 #include <cassert>
+#include <iostream>
+#include <string>
+#include <sstream>
 
 #include "clustering/Array.h"
 
@@ -48,6 +51,16 @@ class Matrix {
   struct Row {
     T* start;
     uint32_t length;
+
+    std::string Print() const {
+      std::ostringstream strm;
+      strm << "(" << start[0];
+      for (uint32_t j = 1; j < length; ++j) {
+        strm << ", " << start[j];
+      }
+      strm << ")";
+      return strm.str();
+    }
   };
   Row operator()(uint32_t i) const {
     assert(i < n_);
@@ -113,7 +126,7 @@ class Matrix {
   const uint32_t n_;  // rows
   const uint32_t m_;  // cols
   T* data_;
-};
+};  // Matrix
 
 }  // namespace clustering
 
