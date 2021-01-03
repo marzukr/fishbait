@@ -21,6 +21,7 @@ class SequenceTable{
   SequenceTable(float raise_sizes [NUM_ROUNDS][NUM_RAISES], int num_raise_sizes[NUM_ROUNDS], 
                    double starting_chips, float small_blind_multiplier, 
                    char num_players, char num_rounds);
+  ~SequenceTable();
   unsigned int** table_;
   unsigned int GetTotalRows();
   unsigned int GetPreflopRows();
