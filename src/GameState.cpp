@@ -37,6 +37,7 @@ GameState::GameState(char num_players, char num_rounds,
   pot_good_ = num_players;
   num_left_ = num_players;
   num_all_in_ = 0;
+  needs_card_ = false;
 }
 
 GameState::GameState(const GameState& other) {
@@ -54,6 +55,7 @@ GameState::GameState(const GameState& other) {
     small_blind_multiplier_ = other.small_blind_multiplier_;
     starting_bb_amounts_ = other.starting_bb_amounts_;
     num_all_in_ = other.num_all_in_;
+    needs_card_ = other.needs_card_;
 
 
     chip_amounts_ = new double[num_players_];
@@ -82,6 +84,7 @@ GameState& GameState::operator=(const GameState& other) {
   small_blind_multiplier_ = other.small_blind_multiplier_;
   starting_bb_amounts_ = other.starting_bb_amounts_;
   num_all_in_ = other.num_all_in_;
+  needs_card_ = other.needs_card_;
 
   for(int i = 0; i < num_players_; i++){
     chip_amounts_[i] = other.chip_amounts_[i];
@@ -107,6 +110,12 @@ void GameState::PrintChips() {
   }
 }
 
+void GameState::UpdateNeedsCard() {
+  if (needs_card_ == false) {
+    std::cout << "bad! trying to deal a card when the game doesn't need it" << std::endl;
+  }
+  needs_card_ = false;
+}
 void GameState::PrintAction(double action) {
   if (action == -2) {
     std::cout << "player " << acting_player_ << " was already out round " 
@@ -122,7 +131,6 @@ void GameState::PrintAction(double action) {
   }
 }
 void GameState::TakeAction(double action) {
-
   if(acting_player_ == 0){
     betting_round_++;
   }
@@ -174,8 +182,9 @@ void GameState::TakeAction(double action) {
     min_raise_ = 1;
     acting_player_ = 0;
     betting_round_ = 0;
+    needs_card_ = true;
   }
-  else{
+  else {
     acting_player_ = (acting_player_+1) % num_players_;
   }
 

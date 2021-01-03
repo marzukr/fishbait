@@ -3,7 +3,6 @@ const unsigned int kRoundNum = 0;
 const unsigned int kFold = 1;
 const unsigned int kCall = 2;
 const unsigned int kAllIn = 3;
-const unsigned int kIllegalActionVal = 0;
 const double kBetAllowedInBigGame = 1;
 const char kMultiwayThreshold = 3;
 
@@ -200,7 +199,8 @@ double SequenceTable::IndexToAction(unsigned int action_index, GameState state){
   else if (action_index == kAllIn) {
     return state.chip_amounts_[state.acting_player_];
   }
-
+  std::cout << "bad action index" << std::endl;
+  return -2;
 }
 unsigned int SequenceTable::GetTotalRows() {
   return (num_rows_[0] + num_rows_[1] + num_rows_[2] + num_rows_[3]);

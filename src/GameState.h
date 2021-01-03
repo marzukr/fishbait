@@ -17,6 +17,7 @@ class GameState {
     ~GameState();
     void TakeAction(double action);
     void PrintAction(double action);
+    void UpdateNeedsCard();
 
     double* chip_amounts_;
     bool* in_game_;

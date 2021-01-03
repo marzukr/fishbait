@@ -53,9 +53,10 @@ void Game::Play(int button_pos) {
     char agent_index = game_state_.acting_player_ + button_pos % 
                        game_state_.num_players_;
     double action = agents_[agent_index]->action(game_state_.max_bet_, 
-                                                 game_state_.min_raise_);
+                                                  game_state_.min_raise_);
     double chips = agents_[agent_index]->get_chips();
     game_state_.TakeAction(action);
+    std::cout << " max bet: " << game_state_.max_bet_ << std::endl;
 
   }
 
@@ -110,7 +111,6 @@ void Game::Turn() {
 void Game::River() {
   std::cout << "-------------- River ---------------" << std::endl;
   std::cout << "The river is " << pretty_card[deck_[RIVER]] << std::endl;
-  // bool folded = main_game_loop(button + 1);
 }
 
 void Game::AwardPot() {
@@ -121,12 +121,15 @@ void Game::AwardPot() {
   // create bets, in_game, and awards arrays that are adjusted for the small blind
   // position
   for(int i = 0; i < game_state_.num_players_; i++){
-    bets[(i+small_blind_pos_)% game_state_.num_players_] = game_state_.total_bets_[i];
-    in_game[(i+small_blind_pos_)% game_state_.num_players_] = game_state_.in_game_[i];
+    bets[(i+small_blind_pos_)% game_state_.num_players_] = 
+                                                    game_state_.total_bets_[i];
+    in_game[(i+small_blind_pos_)% game_state_.num_players_] = 
+                                                    game_state_.in_game_[i];
     if (in_game[(i+small_blind_pos_)% game_state_.num_players_]) {
       players_left++;
     }
-    awards[(i+small_blind_pos_)% game_state_.num_players_] = game_state_.in_game_[i];
+    awards[(i+small_blind_pos_)% game_state_.num_players_] = 
+                                                    game_state_.in_game_[i];
   }
 
   int ranks[game_state_.num_players_];
@@ -139,6 +142,7 @@ void Game::AwardPot() {
       deck_[RIVER]
     );
     awards[i] = 0;
+    std::cout << "player: " << i << "rank: " << ranks[i] << std::endl;
   }
   
   while (players_left > 0) {
@@ -168,6 +172,8 @@ void Game::AwardPot() {
         }
       }
     }
+    std::cout << "side pot: " << side_pot << std::endl;
+    std::cout << "best players: " << best_players << std::endl;
 
     for (int i = 0; i < game_state_.num_players_; i++) {
       if (in_game[i] && ranks[i] == best_hand) {
