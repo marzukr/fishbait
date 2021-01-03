@@ -1,8 +1,11 @@
-const int kColumnsAdd = 4;
-const int kRoundNum = 0;
-const int kFold = 1;
-const int kCall = 2;
-const int kAllIn = 3;
+const unsigned int kColumnsAdd = 4;
+const unsigned int kRoundNum = 0;
+const unsigned int kFold = 1;
+const unsigned int kCall = 2;
+const unsigned int kAllIn = 3;
+const unsigned int kIllegalActionVal = 0;
+const double kBetAllowedInBigGame = 1;
+const char kMultiwayThreshold = 3;
 
 #include "SequenceTable.h"
 #include <iostream>
@@ -32,7 +35,9 @@ SequenceTable::SequenceTable(float raise_sizes [kNumRounds][kNumRaises],
   update_nums_ = false;
   //actually make the sequence table
   current_index_ = 0;
+  terminal_index_ = 0;
   total_rows_ = 0;
+  PrintTable(false);
   for (int i = 0; i < kNumRounds; ++i) {
     total_rows_ += num_rows_[i];
   }
@@ -46,9 +51,9 @@ SequenceTable::SequenceTable(float raise_sizes [kNumRounds][kNumRaises],
 void SequenceTable::AllocateRow(unsigned int index, char current_round) {
   unsigned int num_needed = num_raise_sizes_[current_round] + kColumnsAdd;
   table_[index] = new unsigned int[num_needed];
-  table_[index][0] = (unsigned int) current_round;
+  table_[index][0] = (unsigned int) num_raise_sizes_[current_round] + kColumnsAdd;
   for (int j = 1; j < num_needed; ++j) {
-        table_[index][j] = 0;
+        table_[index][j] = kIllegalActionVal;
   }
 }
 
@@ -96,7 +101,8 @@ void SequenceTable::Update(const GameState& state, unsigned int orig_index) {
         Update(check_call_state, current_index_);
       }
       else if (!update_nums_) {
-        table_[recursive_index][kCall] = -1;
+        table_[recursive_index][kCall] = terminal_index_ + total_rows_;
+        terminal_index_++;
       }
     }
 
@@ -115,69 +121,36 @@ void SequenceTable::Update(const GameState& state, unsigned int orig_index) {
         Update(all_in_state, current_index_);
     }
     else if (!update_nums_) {
-      table_[recursive_index][kAllIn] = -1;
+      table_[recursive_index][kAllIn] = terminal_index_ + total_rows_;
+      terminal_index_++;
     }
     // all other raise sizes that are legal
     // for pre flop, flop, or the first betting round on the turn or river allow
     // many bet sizes
-    if (state.current_round_ <= 1 || state.betting_round_ < 1) {
-      for (int i = 0; i < num_raise_sizes_[state.current_round_]; ++i) {
-        double raise_size = (raise_sizes_[state.current_round_][i]) *
-                            (state.pot_+call);
-        double action = call+raise_size;
-
-        // legal raise (not equal to call or all in)
-        if (raise_size >= state.min_raise_ && 
-            action < state.chip_amounts_[acting_player]) {
-          GameState raise_state = state;
-          raise_state.TakeAction(action);
-          if (!raise_state.is_done_) {
-            current_index_ += 1;
-            if (raise_state.current_round_ >=4 ) {
-              std::cout << "wtf" << std::endl;
-            }
-            if (update_nums_) {
-              num_rows_[raise_state.current_round_] += 1;
-            }
-            else {
-              table_[recursive_index][i+kColumnsAdd] = current_index_;
-              AllocateRow(current_index_, raise_state.current_round_);             
-            }
-            Update(raise_state, current_index_);
-          }
-          else if (!update_nums_) { 
-            table_[recursive_index][i+kColumnsAdd] = -1;
-          }
-        }
-      }
-    }
-    // if after the first betting round on the turn or river, and we're not
-    // limiting actions to only fold/call/all in
-    else if (state.num_left_ <= 4) {
-      double raise_size = state.pot_+call;
+    for (int i = 0; i < num_raise_sizes_[state.current_round_]; ++i) {
+      double raise_size = (raise_sizes_[state.current_round_][i]) *
+                          (state.pot_+call);
       double action = call+raise_size;
-
-      // legal bet (not equal to call or all in because that is already done)
-      if (raise_size >= state.min_raise_ && 
-          action < state.chip_amounts_[acting_player]) {
+      if(IsLegalAction(action, raise_size, state)){
         GameState raise_state = state;
         raise_state.TakeAction(action);
-            if (!raise_state.is_done_) {
-              current_index_ += 1;
-              if (raise_state.current_round_ >=4 ) {
-                std::cout << "wtf" << std::endl;
-              }
-            if (update_nums_) {
-              num_rows_[raise_state.current_round_] += 1;
-            }
-            else {
-              AllocateRow(current_index_, raise_state.current_round_);
-              table_[recursive_index][kColumnsAdd] = current_index_;
-            }
-            Update(raise_state, current_index_);
+        if (!raise_state.is_done_) {
+          current_index_ += 1;
+          if (raise_state.current_round_ >=4 ) {
+            std::cout << "wtf" << std::endl;
           }
-        else if (!update_nums_) {
-          table_[recursive_index][kColumnsAdd] = -1;
+          if (update_nums_) {
+            num_rows_[raise_state.current_round_] += 1;
+          }
+          else {
+            table_[recursive_index][i+kColumnsAdd] = current_index_;
+            AllocateRow(current_index_, raise_state.current_round_);             
+          }
+          Update(raise_state, current_index_);
+        }
+        else if (!update_nums_) { 
+          table_[recursive_index][i+kColumnsAdd] = terminal_index_ + total_rows_;
+          terminal_index_++;
         }
       }
     }
@@ -199,13 +172,36 @@ void SequenceTable::Update(const GameState& state, unsigned int orig_index) {
 
       }
       else if (!update_nums_){
-        table_[recursive_index][kFold] = -1;
+        table_[recursive_index][kFold] = terminal_index_ + total_rows_;
+        terminal_index_++;
       }
     }
   }
   return;
 }
 
+
+double SequenceTable::IndexToAction(unsigned int action_index, GameState state){
+  if (action_index == 0) {
+    std::cout << "bad action index" << std::endl;
+    return -2;
+  }
+  double call = state.max_bet_ - state.total_bets_[state.acting_player_];
+  if (action_index >= kColumnsAdd) {
+    return (raise_sizes_[state.current_round_][action_index - kColumnsAdd])*
+           (state.pot_+call) + call;
+  }
+  else if (action_index == kFold) {
+    return -1;
+  }
+  else if (action_index == kCall) {
+    return call;
+  }
+  else if (action_index == kAllIn) {
+    return state.chip_amounts_[state.acting_player_];
+  }
+
+}
 unsigned int SequenceTable::GetTotalRows() {
   return (num_rows_[0] + num_rows_[1] + num_rows_[2] + num_rows_[3]);
 }
@@ -220,6 +216,38 @@ unsigned int SequenceTable::GetTurnRows() {
 }
 unsigned int SequenceTable::GetRiverRows() {
   return num_rows_[3];
+}
+
+bool SequenceTable::IsLegalAction(double action, double raise_size, GameState state) {
+  double call = action - raise_size;
+  // only allow less than min raise if going all in 
+  if (raise_size < state.min_raise_ && action < state.chip_amounts_[state.acting_player_]) {
+    return false;
+  }
+
+  // never allow betting more chips than the player has
+  if (action > state.chip_amounts_[state.acting_player_]) {
+    return false;
+  }
+
+  // no other limits in first two rounds or 1st betting round in turn/river
+  if (state.current_round_ <= 1 || state.betting_round_ < 1) {
+    return true;
+  }
+  // turn/river 2nd betting round and beyond
+  else {
+    // only allow predefined bet size
+    // should probably use epsilon instead of ==
+    if (raise_size != (kBetAllowedInBigGame * (state.pot_ + call))) {
+      return false;
+    }
+
+    // if too many people you just can't raise other than all in 
+    if (state.num_left_ > kMultiwayThreshold){
+      return false;
+    }
+  }
+  return true;
 }
 
 void SequenceTable::PrintTable(bool full_table) {

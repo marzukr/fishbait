@@ -1,22 +1,12 @@
 #ifndef SEQUENCETABLE
 #define SEQUENCETABLE
-#define kNumRaises 5
+#define kNumRaises 14
 #define kNumRounds 4
+const unsigned int kIllegalActionVal = 0;
 
 #include "GameState.h"
 
 class SequenceTable{
-
-  private:
-  void Update(const GameState& state, unsigned int orig_index);
-  void AllocateRow(unsigned int index, char current_round);
-  unsigned int current_index_;
-  bool update_nums_;
-  float raise_sizes_ [kNumRounds][kNumRaises];
-  float num_raise_sizes_ [kNumRounds];
-  unsigned int num_rows_[kNumRounds];
-  unsigned int total_rows_;
-
   public:
   SequenceTable(float raise_sizes [kNumRounds][kNumRaises], 
                 int num_raise_sizes[kNumRounds], 
@@ -30,6 +20,20 @@ class SequenceTable{
   unsigned int GetTurnRows();
   unsigned int GetRiverRows();
   void PrintTable(bool full_table);
+  double IndexToAction(unsigned int action_index, GameState state);
+  unsigned int total_rows_;
+
+
+  private:
+  void Update(const GameState& state, unsigned int orig_index);
+  void AllocateRow(unsigned int index, char current_round);
+  bool IsLegalAction(double action, double raise_size, GameState state);
+  unsigned int current_index_;
+  unsigned int terminal_index_;
+  bool update_nums_;
+  float raise_sizes_ [kNumRounds][kNumRaises];
+  float num_raise_sizes_ [kNumRounds];
+  unsigned int num_rows_[kNumRounds];
 
 };
 

@@ -38,6 +38,7 @@ class GameState {
     // number of players that are not folded or all in
     char num_left_;
     char num_all_in_;
+    bool needs_card_;
 
 };
 
