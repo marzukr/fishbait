@@ -49,7 +49,12 @@ void SequenceTable::AllocateRow(unsigned int index, char current_round){
   for(int j = 1; j < num_needed;j++){
         table_[index][j] = 0;
   }
-
+}
+SequenceTable::~SequenceTable() {
+  for(int i = 0; i  < total_rows_; ++i) {
+    delete[] table_[i];
+  }
+  delete[] table_;
 }
 void SequenceTable::Update(const GameState& state, unsigned int orig_index){
   unsigned int recursive_index = orig_index;
