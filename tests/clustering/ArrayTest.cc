@@ -1,6 +1,8 @@
-#include "Catch2/single_include/catch2/catch.hpp"
+// Copyright 2021 Marzuk Rashid
 
 #include <stdint.h>
+
+#include "Catch2/single_include/catch2/catch.hpp"
 
 #include "clustering/Array.h"
 
