@@ -5,18 +5,19 @@
 #include "hand_evaluator/SevenEval.h"
 #include "hand_evaluator/Deckcards.h"
 #include "hand_evaluator/Constants.h"
-
 #include "Game.h"
 
-Game::Game(char num_players, char num_rounds, float small_blind_multiplier, 
-           double starting_bb_amounts) : game_state_(num_players, num_rounds,
-                                                     small_blind_multiplier, 
-                                                     starting_bb_amounts) {
+namespace game_engine {
+
+Game::Game(char num_players, char num_rounds, double small_blind_multiplier, 
+           double starting_bb_amounts, char small_blind_pos) : 
+           game_state_(num_players, num_rounds, small_blind_multiplier, 
+           starting_bb_amounts, small_blind_pos) {
   // initialize the deck
-  for (int i = 0; i < DECK_SIZE; i++) {
+  for (int i = 0; i < kDeckSize; i++) {
     deck_[i] = i;
   }
-
+  deck_index_ = 0;
   std::string default_names[6] = {"Trump", "McConnell", "Pelosi", "Schumer", 
     "McCarthy", "Roberts"};
 
@@ -24,45 +25,49 @@ Game::Game(char num_players, char num_rounds, float small_blind_multiplier,
 
   // initialize the players
   for (int i = 0; i < num_players; i++) {
-    Agent* a = new Agent(starting_bb_amounts, default_names[i]);
+    Agent* a = new Agent(default_names[i]);
     agents_[i] = a;
   }
 }
 
-void Game::Play(int button_pos) {
-  Preflop(button_pos);
+void Game::Play() {
+  Preflop();
 
   bool flop_done = false;
   bool turn_done = false;
   bool river_done = false;
-  while(game_state_.is_done_ == false){
+  //else if on same line
+  while (game_state_.is_done_ == false) {
     std::cout << "There is " << game_state_.pot_ << " in the pot" << std::endl;
-    if(game_state_.current_round_ == 1 && flop_done == false){
-      Flop();
+    if (game_state_.current_round_ == 1 && flop_done == false) {
+      DealCard(3);
+      std::cout << "------------- Flop --------------" << std::endl;
       flop_done = true;
     }
-    else if(game_state_.current_round_ == 2 && turn_done == false){
-      Turn();
+    else if (game_state_.current_round_ == 2 && turn_done == false) {
+      DealCard(1);
+      std::cout << "------------- Turn --------------" << std::endl;
       turn_done = true;
     }
-    else if(game_state_.current_round_ == 3 && river_done == false){
-      River();
+    else if (game_state_.current_round_ == 3 && river_done == false) {
+      DealCard(1);
+      std::cout << "------------- River --------------" << std::endl;
       river_done = true;
     }
     // std::cout << "acting player " << game_state.acting_player << std::endl;
-    char agent_index = game_state_.acting_player_ + button_pos % 
-                       game_state_.num_players_;
-    double action = agents_[agent_index]->action(game_state_.max_bet_, 
-                                                  game_state_.min_raise_);
-    double chips = agents_[agent_index]->get_chips();
+    double action = -2;
+    if(game_state_.in_game_[game_state_.acting_player_] && 
+       game_state_.chip_amounts_[game_state_.acting_player_] != 0){
+       action = agents_[game_state_.acting_player_]->
+        action(game_state_.max_bet_, game_state_.min_raise_, 
+               game_state_.total_bets_[game_state_.acting_player_],
+               game_state_.chip_amounts_[game_state_.acting_player_]);
+    }
     game_state_.TakeAction(action);
     std::cout << " max bet: " << game_state_.max_bet_ << std::endl;
-
   }
-
   AwardPot();
-
-}
+}  // Play
 
 void Game::ShuffleDeck() {
   std::random_device dev;
@@ -78,116 +83,100 @@ void Game::ShuffleDeck() {
   }
 }
 
-void Game::Preflop(int button_pos) {
+void Game::Preflop() {
   std::cout << "------------- Preflop --------------" << std::endl;
-
   // shuffle and deal
   ShuffleDeck();
   for (int i = 0; i < game_state_.num_players_; i++) {
     agents_[i]->deal_cards(deck_[2*i], deck_[2*i + 1]);
+    deck_index_ += 2;
   }
-
-  // assign positions and blinds
-  agents_[button_pos]->assign_blind(0.5); // small blind
-  agents_[button_pos+1]->assign_blind(1); // big blind
-
 }
 
-void Game::Flop() {
-  std::cout << "--------------- Flop ---------------" << std::endl;
-  std::cout << "The flop is "
-    << pretty_card[deck_[FLOP_1]] << ", "
-    << pretty_card[deck_[FLOP_2]] << ", "
-    << pretty_card[deck_[FLOP_3]] << std::endl;
-
-  // main game loop start with SB
-}
-
-void Game::Turn() {
-  std::cout << "--------------- Turn ---------------" << std::endl;
-  std::cout << "The turn is " << pretty_card[deck_[TURN]] << std::endl;
-}
-
-void Game::River() {
-  std::cout << "-------------- River ---------------" << std::endl;
-  std::cout << "The river is " << pretty_card[deck_[RIVER]] << std::endl;
+void Game::DealCard(char num_cards) {
+  for(int i = 0; i < num_cards; ++i){
+    std::cout << "card: " << pretty_card[deck_[deck_index_]] << std::endl;
+    deck_index_++;
+  }
 }
 
 void Game::AwardPot() {
-  std::cout << "pot: " << game_state_.pot_ << std::endl;
-  double bets [game_state_.num_players_];
-  bool in_game [game_state_.num_players_];
-  double awards[game_state_.num_players_];
-  char players_left = 0;
-  // create bets, in_game, and awards arrays that are adjusted for the small blind
-  // position
-  for(int i = 0; i < game_state_.num_players_; i++){
-    bets[(i+small_blind_pos_)% game_state_.num_players_] = 
-                                                    game_state_.total_bets_[i];
-    in_game[(i+small_blind_pos_)% game_state_.num_players_] = 
-                                                    game_state_.in_game_[i];
-    if (in_game[(i+small_blind_pos_)% game_state_.num_players_]) {
-      players_left++;
+  char num_players = game_state_.num_players_;
+  char players_left = game_state_.num_left_;
+  double awards[num_players];
+  int ranks[num_players];
+
+  // if only one player left don't evaluate hands
+  if (players_left <= 1) {
+    for (int i = 0; i < num_players; i++) {
+      if (game_state_.in_game_[i] == true) {
+        awards[i] = game_state_.pot_;
+        std::cout << *agents_[i];
+        std::cout << " wins " << awards[i] << std::endl;
+      }
+      else {
+        awards[i] = 0;
+      }
     }
-    awards[i] = 0;
+    return;
   }
 
-  int ranks[game_state_.num_players_];
-  for (int i = 0; i < game_state_.num_players_; i++) {
-    ranks[i] = SevenEval::GetRank(
-      agents_[i]->get_c1(), agents_[i]->get_c2(),
-      deck_[FLOP_1], deck_[FLOP_2], deck_[FLOP_3],
-      deck_[TURN],
-      deck_[RIVER]
-    );
-    awards[i] = 0;
-    std::cout << "player: " << i << " rank: " << ranks[i] << std::endl;
+  char card_start= 2 * num_players;
+  for (int i = 0; i < num_players; i++) {
+      ranks[i] = SevenEval::GetRank(
+          agents_[i]->get_c1(), agents_[i]->get_c2(),
+          deck_[card_start], deck_[card_start+1], deck_[card_start+2],
+          deck_[card_start+3],
+          deck_[card_start+4]
+      );
+      awards[i] = 0;
   }
-  
-   while (players_left > 0) {
-        double min_bet = game_state_.pot_;
-        for (int i = 1; i < game_state_.num_players_; i++) {
-            double bet_i = bets[i];
-            if (bet_i < min_bet && bet_i > 0) min_bet = bet_i;
-        }
 
-        double side_pot = 0;
+  while (players_left > 0) {
+      double min_bet = game_state_.pot_;
+      for (int i = 1; i < num_players; i++) {
+          double bet_i = game_state_.total_bets_[i];
+          if (bet_i < min_bet && bet_i > 0) min_bet = bet_i;
+      }
 
-        int best_hand = -1;
-        int best_players = 0;
+      double side_pot = 0;
 
-        for (int i = 0; i < game_state_.num_players_; i++) {
-            if (bets[i] >= min_bet) {
-                side_pot += min_bet;
-                bets[i] = bets[i] - min_bet;
-            }
-            if (in_game[i]) {
-                if (ranks[i] > best_hand) {
-                    best_hand = ranks[i];
-                    best_players = 1;
-                }
-                else if (ranks[i] == best_hand) {
-                    best_players += 1;
-                }
-            }
-        }
+      int best_hand = -1;
+      int best_players = 0;
 
-        for (int i = 0; i < game_state_.num_players_; i++) {
-            if (in_game[i] && ranks[i] == best_hand) {
-                awards[i] += side_pot / best_players;
-                std::cout << "award: " << awards[i] << std::endl;
-            }
-            if (bets[i] == 0) {
-                if (in_game[i]) players_left += -1;
-                in_game[i] = false;
-            }
-        }
-    }
+      for (int i = 0; i < num_players; i++) {
+          if (game_state_.total_bets_[i] >= min_bet) {
+              side_pot += min_bet;
+              game_state_.total_bets_[i] = game_state_.total_bets_[i] - min_bet;
+          }
+          if (game_state_.in_game_[i]) {
+              if (ranks[i] > best_hand) {
+                  best_hand = ranks[i];
+                  best_players = 1;
+              }
+              else if (ranks[i] == best_hand) {
+                  best_players += 1;
+              }
+          }
+      }
 
-  for (int i = 0; i < game_state_.num_players_; i++) {
-    if (awards[i] > 0) {
-      std::cout << *agents_[i];
-      std::cout << " wins " << awards[i] << std::endl;
-    }
+      for (int i = 0; i < num_players; i++) {
+          if (game_state_.in_game_[i] && ranks[i] == best_hand) {
+              awards[i] += side_pot / best_players;
+          }
+          if (game_state_.total_bets_[i] == 0) {
+              if (game_state_.in_game_[i]) players_left += -1;
+              game_state_.in_game_[i] = false;
+          }
+      }
   }
-}
+
+  for (int i = 0; i < num_players; i++) {
+      if (awards[i] > 0) {
+          std::cout << *agents_[i];
+          std::cout << " wins " << awards[i] << std::endl;
+      }
+  }
+}  // AwardPot
+
+}  // namespace game_engine

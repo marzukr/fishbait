@@ -5,31 +5,28 @@
 #include "Agent.h"
 #include "GameState.h"
 
-#define FLOP_1 12
-#define FLOP_2 13
-#define FLOP_3 14
-#define TURN 15
-#define RIVER 16
- 
+const int kDeckSize = 52;
+
+namespace game_engine {
+
 class Game
 {
-  private:
-    int deck_ [DECK_SIZE];
-    Agent** agents_;
-    int small_blind_pos_;
-    GameState game_state_;
+ private:
+  int deck_ [kDeckSize];
+  Agent** agents_;
+  GameState game_state_;
+  char deck_index_;  // index of next card to be dealt
+  void ShuffleDeck();
+  void AwardPot();
+  void Preflop();
+  void DealCard(char num_cards);
 
-    void ShuffleDeck();
-    void AwardPot();
-    void Preflop(int button_pos);
-    void Flop();
-    void Turn();
-    void River();
-
-  public:
-    Game(char num_players, char num_rounds, float small_blind_multiplier, 
-         double starting_bb_amounts);
-    void Play(int button_pos);
-};
+ public:
+  Game(char num_players, char num_rounds, double small_blind_multiplier, 
+        double starting_bb_amounts, char small_blind_pos);
+  void Play();
+};  // class Game
  
-#endif
+}  // namespace game_engine
+
+#endif  // GAME
