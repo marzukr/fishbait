@@ -1,6 +1,6 @@
 #ifndef SEQUENCETABLE
 #define SEQUENCETABLE
-#define kNumRaises 14
+#define kNumRaises 3
 #define kNumRounds 4
 const unsigned int kIllegalActionVal = 0;
 
@@ -25,12 +25,13 @@ class SequenceTable{
 
 
   private:
-  void Update(const GameState& state, unsigned int orig_index);
+  void Update(GameState& state, unsigned int orig_index);
   void AllocateRow(unsigned int index, char current_round);
   bool IsLegalAction(double action, double raise_size, GameState state);
   unsigned int current_index_;
   unsigned int terminal_index_;
   bool update_nums_;
+  char num_rounds_;
   float raise_sizes_ [kNumRounds][kNumRaises];
   float num_raise_sizes_ [kNumRounds];
   unsigned int num_rows_[kNumRounds];

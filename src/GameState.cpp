@@ -188,11 +188,42 @@ void GameState::TakeAction(double action) {
     acting_player_ = (acting_player_+1) % num_players_;
   }
 
-
   // check if game over and update accordingly
   if (current_round_ >= num_rounds_ || num_left_ <= 1 || num_all_in_ == num_left_){
     is_done_ = true;
   }
+}
+
+void GameState::UndoAction(char acted_player, double action, double old_max_bet, 
+                           double old_min_raise, double old_pot_good, char old_round,
+                           char old_betting_round, char old_all_in, double old_pot,
+                           char old_num_left, bool old_is_done) {
+  acting_player_ = acted_player;
+
+  // get new amount that this player will have in pot and their new chip amounts
+  double old_total_bet = total_bets_[acting_player_];
+  double old_chip_amount = chip_amounts_[acting_player_];
+  double raise_amount = 0;
+  if (action >= 0) {
+    old_total_bet -= action;
+    old_chip_amount += action;
+  }
+  // fold
+  else if (action == -1) {
+    in_game_[acting_player_] = true;
+  }
+  chip_amounts_[acted_player] = old_chip_amount;
+  total_bets_[acted_player] = old_total_bet;
+
+  min_raise_ = old_min_raise;
+  max_bet_ = old_max_bet;
+  pot_good_ = old_pot_good;
+  current_round_ = old_round;
+  betting_round_ = old_betting_round;
+  num_all_in_ = old_all_in;
+  pot_ = old_pot;
+  num_left_ = old_num_left;
+  is_done_ = old_is_done;
 }
 
 

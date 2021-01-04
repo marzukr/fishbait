@@ -27,10 +27,10 @@ SequenceTable::SequenceTable(float raise_sizes [kNumRounds][kNumRaises],
   num_rows_[1] = 0;
   num_rows_[2] = 0;
   num_rows_[3] = 0;
+  num_rounds_ = num_rounds;
   //figure out amount of memory needed to allocate
   GameState state(num_players, num_rounds, small_blind_multiplier, starting_chips);
   Update(state, 0);
-
   update_nums_ = false;
   //actually make the sequence table
   current_index_ = 0;
@@ -63,66 +63,79 @@ SequenceTable::~SequenceTable() {
   delete[] table_;
 }
 
-void SequenceTable::Update(const GameState& state, unsigned int orig_index) {
+void SequenceTable::Update(GameState& state, unsigned int orig_index) {
   unsigned int recursive_index = orig_index;
   char acting_player = state.acting_player_;
-
+  double max_bet = state.max_bet_;
+  double pot_good = state.pot_good_;
+  double min_raise = state.min_raise_;
+  char round = state.current_round_;
+  char betting_round = state.betting_round_;
+  double pot = state.pot_;
+  bool is_done = state.is_done_;
+  char num_all_in = state.num_all_in_;
+  char num_left = state.num_left_;
   //go to next if already folded or all in
   if (state.in_game_[acting_player] == false || 
       state.chip_amounts_[acting_player] == 0) {
-    GameState no_action_state = state;
-    no_action_state.TakeAction(-2);
-    if(!no_action_state.is_done_){
-        if(no_action_state.current_round_ >=4 ){
+    // GameState no_action_state = state;
+    state.TakeAction(-2);
+    if(!state.is_done_){
+        if(state.current_round_ >=4 ){
           std::cout << "wtf" << std::endl;
         }
-        Update(no_action_state, current_index_);
+        Update(state, current_index_);
     }
+    state.UndoAction(acting_player, -2, max_bet, min_raise, pot_good, round, betting_round, num_all_in, pot, num_left, is_done);
   } else { //loop through all actions if not already folded or all in
 
     // check/call if possible
     double call = state.max_bet_ - state.total_bets_[acting_player];
     if (state.chip_amounts_[acting_player] > call) {
-      GameState check_call_state = state;
-      check_call_state.TakeAction(call);
-      if (!check_call_state.is_done_) {
+      // GameState check_call_state = state;
+      state.TakeAction(call);
+      if (!state.is_done_) {
         current_index_ += 1;
-        if (check_call_state.current_round_ >=4 ) {
+        if (state.current_round_ >=4 ) {
           std::cout << "wtf" << std::endl;
         }
         if (update_nums_){
-          num_rows_[check_call_state.current_round_] += 1;
+          num_rows_[state.current_round_] += 1;
         }
         else {
-          AllocateRow(current_index_, check_call_state.current_round_);
+          AllocateRow(current_index_, state.current_round_);
           table_[recursive_index][kCall] = current_index_;
         }
-        Update(check_call_state, current_index_);
+        Update(state, current_index_);
       }
       else if (!update_nums_) {
         table_[recursive_index][kCall] = terminal_index_ + total_rows_;
         terminal_index_++;
       }
+      state.UndoAction(acting_player, call, max_bet, min_raise, pot_good, round, betting_round, num_all_in, pot, num_left, is_done);
     }
 
+
     // all in
-    GameState all_in_state = state;
-    all_in_state.TakeAction(state.chip_amounts_[acting_player]);
-    if (!all_in_state.is_done_) {
+    // GameState all_in_state = state;
+    double action = state.chip_amounts_[acting_player];
+    state.TakeAction(action);
+    if (!state.is_done_) {
         current_index_ += 1;
         if (update_nums_) {
-          num_rows_[all_in_state.current_round_] += 1;
+          num_rows_[state.current_round_] += 1;
         }
         else {
-          AllocateRow(current_index_, all_in_state.current_round_);
+          AllocateRow(current_index_, state.current_round_);
           table_[recursive_index][kAllIn] = current_index_;
         }
-        Update(all_in_state, current_index_);
+        Update(state, current_index_);
     }
     else if (!update_nums_) {
       table_[recursive_index][kAllIn] = terminal_index_ + total_rows_;
       terminal_index_++;
     }
+    state.UndoAction(acting_player, action, max_bet, min_raise, pot_good, round, betting_round, num_all_in, pot, num_left, is_done);
     // all other raise sizes that are legal
     // for pre flop, flop, or the first betting round on the turn or river allow
     // many bet sizes
@@ -131,49 +144,49 @@ void SequenceTable::Update(const GameState& state, unsigned int orig_index) {
                           (state.pot_+call);
       double action = call+raise_size;
       if(IsLegalAction(action, raise_size, state)){
-        GameState raise_state = state;
-        raise_state.TakeAction(action);
-        if (!raise_state.is_done_) {
+        // GameState raise_state = state;
+        state.TakeAction(action);
+        if (!state.is_done_) {
           current_index_ += 1;
-          if (raise_state.current_round_ >=4 ) {
+          if (state.current_round_ >=4 ) {
             std::cout << "wtf" << std::endl;
           }
           if (update_nums_) {
-            num_rows_[raise_state.current_round_] += 1;
+            num_rows_[state.current_round_] += 1;
           }
           else {
             table_[recursive_index][i+kColumnsAdd] = current_index_;
-            AllocateRow(current_index_, raise_state.current_round_);             
+            AllocateRow(current_index_, state.current_round_);             
           }
-          Update(raise_state, current_index_);
+          Update(state, current_index_);
         }
         else if (!update_nums_) { 
           table_[recursive_index][i+kColumnsAdd] = terminal_index_ + total_rows_;
           terminal_index_++;
         }
+        state.UndoAction(acting_player, action, max_bet, min_raise, pot_good, round, betting_round, num_all_in, pot, num_left, is_done);
       }
     }
     // fold
     if (call != 0) {
-      GameState fold_state = state;
-
-      fold_state.TakeAction(-1);
-      if (!fold_state.is_done_) {
+      // GameState fold_state = state;
+      state.TakeAction(-1);
+      if (!state.is_done_) {
         current_index_ += 1;
         if (update_nums_) {
-          num_rows_[fold_state.current_round_] += 1;
+          num_rows_[state.current_round_] += 1;
         }
         else {
-          AllocateRow(current_index_, fold_state.current_round_);
+          AllocateRow(current_index_, state.current_round_);
           table_[recursive_index][kFold] = current_index_;
         }
-        Update(fold_state, current_index_);
-
+        Update(state, current_index_);
       }
       else if (!update_nums_){
         table_[recursive_index][kFold] = terminal_index_ + total_rows_;
         terminal_index_++;
       }
+      state.UndoAction(acting_player, -1, max_bet, min_raise, pot_good, round, betting_round, num_all_in, pot, num_left, is_done);
     }
   }
   return;
@@ -226,7 +239,7 @@ bool SequenceTable::IsLegalAction(double action, double raise_size, GameState st
   }
 
   // never allow betting more chips than the player has
-  if (action > state.chip_amounts_[state.acting_player_]) {
+  if (action >= state.chip_amounts_[state.acting_player_]) {
     return false;
   }
 
@@ -254,7 +267,7 @@ void SequenceTable::PrintTable(bool full_table) {
   if (full_table){
       for(int i = 0; i < total_rows_; ++i){
         std::cout << "" << std::endl;
-        int max = num_raise_sizes_[table_[i][0]] + kColumnsAdd;
+        int max = table_[i][0];
         for(int j = 0; j < max; ++j) {
           if(table_[i][j] == -1){
             std::cout << "-1 ";
@@ -269,6 +282,12 @@ void SequenceTable::PrintTable(bool full_table) {
   std::cout << "number flop: " << num_rows_[1] << std::endl;
   std::cout << "number turn: " << num_rows_[2] << std::endl;
   std::cout << "number river: " << num_rows_[3] << std::endl;
+  double total = 0;
+  for(int i = 0; i < num_rounds_; i++) { 
+    total += (num_raise_sizes_[i]+kColumnsAdd)*num_rows_[i]*32/8000000000;
+  }
+  double gig = total/8000000000;
+  std::cout << "memory: " << total << " gb" << std::endl;
 }
 
 

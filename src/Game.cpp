@@ -114,6 +114,7 @@ void Game::River() {
 }
 
 void Game::AwardPot() {
+  std::cout << "pot: " << game_state_.pot_ << std::endl;
   double bets [game_state_.num_players_];
   bool in_game [game_state_.num_players_];
   double awards[game_state_.num_players_];
@@ -128,13 +129,11 @@ void Game::AwardPot() {
     if (in_game[(i+small_blind_pos_)% game_state_.num_players_]) {
       players_left++;
     }
-    awards[(i+small_blind_pos_)% game_state_.num_players_] = 
-                                                    game_state_.in_game_[i];
+    awards[i] = 0;
   }
 
   int ranks[game_state_.num_players_];
   for (int i = 0; i < game_state_.num_players_; i++) {
-    bets[i] = agents_[i]->get_bet();
     ranks[i] = SevenEval::GetRank(
       agents_[i]->get_c1(), agents_[i]->get_c2(),
       deck_[FLOP_1], deck_[FLOP_2], deck_[FLOP_3],
@@ -142,49 +141,48 @@ void Game::AwardPot() {
       deck_[RIVER]
     );
     awards[i] = 0;
-    std::cout << "player: " << i << "rank: " << ranks[i] << std::endl;
+    std::cout << "player: " << i << " rank: " << ranks[i] << std::endl;
   }
   
-  while (players_left > 0) {
-    double min_bet = game_state_.pot_;
-    for (int i = 1; i < game_state_.num_players_; i++) {
-      double bet_i = bets[i];
-      if (bet_i < min_bet && bet_i > 0) min_bet = bet_i;
-    }
-
-    double side_pot = 0;
-
-    int best_hand = -1;
-    int best_players = 0;
-
-    for (int i = 0; i < game_state_.num_players_; i++) {
-      if (bets[i] >= min_bet) {
-        side_pot += min_bet;
-        bets[i] = bets[i] - min_bet;
-      }
-      if (in_game[i]) {
-        if (ranks[i] > best_hand) {
-          best_hand = ranks[i];
-          best_players = 1;
+   while (players_left > 0) {
+        double min_bet = game_state_.pot_;
+        for (int i = 1; i < game_state_.num_players_; i++) {
+            double bet_i = bets[i];
+            if (bet_i < min_bet && bet_i > 0) min_bet = bet_i;
         }
-        else if (ranks[i] == best_hand) {
-          best_players += 1;
-        }
-      }
-    }
-    std::cout << "side pot: " << side_pot << std::endl;
-    std::cout << "best players: " << best_players << std::endl;
 
-    for (int i = 0; i < game_state_.num_players_; i++) {
-      if (in_game[i] && ranks[i] == best_hand) {
-        awards[i] += side_pot / best_players;
-      }
-      if (bets[i] == 0) {
-        if (in_game[i]) players_left += -1;
-        in_game[i] = false;
-      }
+        double side_pot = 0;
+
+        int best_hand = -1;
+        int best_players = 0;
+
+        for (int i = 0; i < game_state_.num_players_; i++) {
+            if (bets[i] >= min_bet) {
+                side_pot += min_bet;
+                bets[i] = bets[i] - min_bet;
+            }
+            if (in_game[i]) {
+                if (ranks[i] > best_hand) {
+                    best_hand = ranks[i];
+                    best_players = 1;
+                }
+                else if (ranks[i] == best_hand) {
+                    best_players += 1;
+                }
+            }
+        }
+
+        for (int i = 0; i < game_state_.num_players_; i++) {
+            if (in_game[i] && ranks[i] == best_hand) {
+                awards[i] += side_pot / best_players;
+                std::cout << "award: " << awards[i] << std::endl;
+            }
+            if (bets[i] == 0) {
+                if (in_game[i]) players_left += -1;
+                in_game[i] = false;
+            }
+        }
     }
-  }
 
   for (int i = 0; i < game_state_.num_players_; i++) {
     if (awards[i] > 0) {

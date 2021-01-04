@@ -6,7 +6,6 @@ class GameState {
   private:
     void PrintChips();
     // number of players who need to get a chance to bet in this round
-    char pot_good_;
 
 
   public:
@@ -18,6 +17,10 @@ class GameState {
     void TakeAction(double action);
     void PrintAction(double action);
     void UpdateNeedsCard();
+    void UndoAction(char acted_player, double action, double old_max_bet, 
+                    double old_min_raise, double old_pot_good, char old_round,
+                    char old_betting_round, char old_all_in, double old_pot,
+                    char old_num_left, bool old_is_done);
 
     double* chip_amounts_;
     bool* in_game_;
@@ -40,7 +43,7 @@ class GameState {
     char num_left_;
     char num_all_in_;
     bool needs_card_;
-
+    char pot_good_;
 };
 
 #endif
