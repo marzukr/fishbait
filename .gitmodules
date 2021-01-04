@@ -7,3 +7,7 @@
 [submodule "external/hand-isomorphism"]
 	path = external/hand-isomorphism
 	url = git@github.com:marzukr/hand-isomorphism.git
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = git@github.com:marzukr/Catch2.git
+	branch = v2.x

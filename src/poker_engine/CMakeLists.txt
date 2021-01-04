@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 3.5.0)
-project(fishbait_pokerengine)
-
 add_library(
   poker_engine SHARED
   Agent.cc

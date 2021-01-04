@@ -1,7 +1,3 @@
-cmake_minimum_required(VERSION 3.5.0)
-project(fishbait_handevaluator)
-
-
 find_package(Boost COMPONENTS python3 REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 
