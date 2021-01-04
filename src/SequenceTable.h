@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "GameState.h"
 
-const char kNumRaises = 3;
+const char kNumRaises = 1;
 const char kNumRounds = 4;
 const uint32_t kIllegalActionVal = 0;
 
@@ -12,7 +12,7 @@ namespace blueprint_strategy {
 
 class SequenceTable { 
  public:
-  SequenceTable(float raise_sizes[kNumRounds][kNumRaises], 
+  SequenceTable(float raise_sizes_2d[kNumRounds][kNumRaises], 
                 char num_raise_sizes[kNumRounds], 
                 double starting_chips, float small_blind_multiplier, 
                 char num_players, char num_rounds);
@@ -28,17 +28,17 @@ class SequenceTable {
   // overload << instead
   void PrintTable(bool full_table);
   double IndexToAction(uint32_t action_index, game_engine::GameState state);
-  uint32_t total_rows_;
 
  private:
-  void Update(game_engine::GameState& state, uint32_t orig_index);
-  void AllocateRow(uint32_t index, char current_round);
+  void Update(game_engine::GameState& state, uint32_t orig_index, 
+                           float raise_sizes [kNumRounds*kNumRaises], int raise_size_index[kNumRounds+1],
+                           char num_raise_sizes[kNumRounds], bool update_nums);
+  void AllocateRow(uint32_t index, char current_round, char num_raise_sizes [kNumRounds]);
   double LegalAction(double action, double call, float raise_mult, 
                      game_engine::GameState state);
-  uint32_t current_index_;
-  uint32_t terminal_index_;
   // get rid of unneccessary member variables
-  bool update_nums_;
+  uint32_t total_rows_;
+  uint32_t terminal_rows_;
   char num_rounds_;
   float raise_sizes_ [kNumRounds][kNumRaises];
   char num_raise_sizes_ [kNumRounds];
