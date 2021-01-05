@@ -1,3 +1,4 @@
+// copyright Emily Dale 2021
 #include <iostream>
 #include <random>
 #include <string>
@@ -9,16 +10,16 @@
 
 namespace game_engine {
 
-Game::Game(char num_players, char num_rounds, double small_blind_multiplier, 
-           double starting_bb_amounts, char small_blind_pos) : 
-           game_state_(num_players, num_rounds, small_blind_multiplier, 
+Game::Game(char num_players, char num_rounds, double small_blind_multiplier,
+           double starting_bb_amounts, char small_blind_pos) :
+           game_state_(num_players, num_rounds, small_blind_multiplier,
            starting_bb_amounts, small_blind_pos) {
   // initialize the deck
   for (int i = 0; i < kDeckSize; i++) {
     deck_[i] = i;
   }
   deck_index_ = 0;
-  std::string default_names[6] = {"Trump", "McConnell", "Pelosi", "Schumer", 
+  std::string default_names[6] = {"Trump", "McConnell", "Pelosi", "Schumer",
     "McCarthy", "Roberts"};
 
   agents_ = new Agent*[num_players];
@@ -36,30 +37,28 @@ void Game::Play() {
   bool flop_done = false;
   bool turn_done = false;
   bool river_done = false;
-  //else if on same line
+  // else if on same line
   while (game_state_.is_done_ == false) {
     std::cout << "There is " << game_state_.pot_ << " in the pot" << std::endl;
     if (game_state_.current_round_ == 1 && flop_done == false) {
       DealCard(3);
       std::cout << "------------- Flop --------------" << std::endl;
       flop_done = true;
-    }
-    else if (game_state_.current_round_ == 2 && turn_done == false) {
+    } else if (game_state_.current_round_ == 2 && turn_done == false) {
       DealCard(1);
       std::cout << "------------- Turn --------------" << std::endl;
       turn_done = true;
-    }
-    else if (game_state_.current_round_ == 3 && river_done == false) {
+    } else if (game_state_.current_round_ == 3 && river_done == false) {
       DealCard(1);
       std::cout << "------------- River --------------" << std::endl;
       river_done = true;
     }
     // std::cout << "acting player " << game_state.acting_player << std::endl;
     double action = -2;
-    if(game_state_.in_game_[game_state_.acting_player_] && 
-       game_state_.chip_amounts_[game_state_.acting_player_] != 0){
+    if (game_state_.in_game_[game_state_.acting_player_] &&
+       game_state_.chip_amounts_[game_state_.acting_player_] != 0) {
        action = agents_[game_state_.acting_player_]->
-        action(game_state_.max_bet_, game_state_.min_raise_, 
+        action(game_state_.max_bet_, game_state_.min_raise_,
                game_state_.total_bets_[game_state_.acting_player_],
                game_state_.chip_amounts_[game_state_.acting_player_]);
     }
@@ -75,7 +74,7 @@ void Game::ShuffleDeck() {
 
   // knuth shuffle
   for (int i = DECK_SIZE - 1; i >= 1; i--) {
-    std::uniform_int_distribution<std::mt19937::result_type> dist6(0,i);
+    std::uniform_int_distribution<std::mt19937::result_type> dist6(0, i);
     int j = dist6(rng);
     int temp = deck_[i];
     deck_[i] = deck_[j];
@@ -94,7 +93,7 @@ void Game::Preflop() {
 }
 
 void Game::DealCard(char num_cards) {
-  for(int i = 0; i < num_cards; ++i){
+  for (int i = 0; i < num_cards; ++i) {
     std::cout << "card: " << pretty_card[deck_[deck_index_]] << std::endl;
     deck_index_++;
   }
@@ -113,22 +112,20 @@ void Game::AwardPot() {
         awards[i] = game_state_.pot_;
         std::cout << *agents_[i];
         std::cout << " wins " << awards[i] << std::endl;
-      }
-      else {
+      } else {
         awards[i] = 0;
       }
     }
     return;
   }
 
-  char card_start= 2 * num_players;
+  char card_start = 2 * num_players;
   for (int i = 0; i < num_players; i++) {
       ranks[i] = SevenEval::GetRank(
           agents_[i]->get_c1(), agents_[i]->get_c2(),
           deck_[card_start], deck_[card_start+1], deck_[card_start+2],
           deck_[card_start+3],
-          deck_[card_start+4]
-      );
+          deck_[card_start+4]);
       awards[i] = 0;
   }
 
@@ -153,8 +150,7 @@ void Game::AwardPot() {
               if (ranks[i] > best_hand) {
                   best_hand = ranks[i];
                   best_players = 1;
-              }
-              else if (ranks[i] == best_hand) {
+              } else if (ranks[i] == best_hand) {
                   best_players += 1;
               }
           }
