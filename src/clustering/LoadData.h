@@ -16,7 +16,7 @@
 #include <mongocxx/instance.hpp>
 #include <bsoncxx/json.hpp>
 
-#include "clustering/Matrix.h"
+#include "utils/Matrix.h"
 
 namespace clustering {
 
@@ -28,10 +28,11 @@ template <> uint16_t GetValue<uint16_t>(bsoncxx::array::element e) {
   return e.get_int32();
 }
 template <typename T>
-std::unique_ptr<Matrix<T>> LoadData(std::string mongo_server,
-                                    std::string db_name, std::string street,
-                                    std::string list_name,
-                                    bool verbose = false) {
+std::unique_ptr<utils::Matrix<T>> LoadData(std::string mongo_server,
+                                           std::string db_name,
+                                           std::string street,
+                                           std::string list_name,
+                                           bool verbose = false) {
   if (verbose) {
     std::cout << "Loading data for " << street << std::endl;
   }
@@ -62,7 +63,7 @@ std::unique_ptr<Matrix<T>> LoadData(std::string mongo_server,
     std::cout << "\t" << "expects 8 for rivers" << std::endl;
   }
 
-  std::unique_ptr<Matrix<T>> lists = std::make_unique<Matrix<T>>(n, m);
+  auto lists = std::make_unique<utils::Matrix<T>>(n, m);
 
   int t = 0;
   mongocxx::cursor cursor = collection.find({});

@@ -1,23 +1,21 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_CLUSTERING_SYMMETRICMATRIX_H_
-#define SRC_CLUSTERING_SYMMETRICMATRIX_H_
+#ifndef SRC_UTILS_COMBINATIONMATRIX_H_
+#define SRC_UTILS_COMBINATIONMATRIX_H_
 
 #include <stdint.h>
 
 #include <cassert>
+#include <vector>
 
-namespace clustering {
+namespace utils {
 
 template <typename T>
-class SymmetricMatrix {
+class CombinationMatrix {
  public:
-  explicit SymmetricMatrix(uint32_t n) : n_(n) {
-    data_ = new T[(n*n-n)/2];
-  }
-  ~SymmetricMatrix() {
-    delete[] data_;
-  }
+  explicit CombinationMatrix(uint32_t n, T filler = 0)
+      : n_(n), data_((n*n-n)/2, filler) {}
+  ~CombinationMatrix() {}
 
   T& operator()(uint32_t i, uint32_t j) {
     assert(i != j);
@@ -36,9 +34,9 @@ class SymmetricMatrix {
 
  private:
   const uint32_t n_;  // side length
-  T* data_;
-};  // SymmetricMatrix
+  std::vector<T> data_;
+};  // CombinationMatrix
 
-}  // namespace clustering
+}  // namespace utils
 
-#endif  // SRC_CLUSTERING_SYMMETRICMATRIX_H_
+#endif  // SRC_UTILS_COMBINATIONMATRIX_H_

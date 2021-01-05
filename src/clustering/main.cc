@@ -8,8 +8,8 @@
 
 #include "clustering/EarthMoverDistance.h"
 #include "clustering/KMeans.h"
-#include "clustering/Matrix.h"
 #include "clustering/LoadData.h"
+#include "utils/Matrix.h"
 
 int main() {
   std::string uri = "mongodb://localhost:27017";
