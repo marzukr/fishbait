@@ -41,6 +41,7 @@ __pycache__/
 */.vscode/*
 
 /build/*
+build
 
 ### CMake template
 CMakeCache.txt

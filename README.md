@@ -6,9 +6,10 @@ poker. Inspired by the Pluribus poker bot developed by CMU and Facebook.
 ## Build Steps
 From the root directory:
 
-1. `cd build`
-2. `cmake ..`
-3. `make`
+1. `mkdir -p build`
+2. `cd build`
+3. `cmake ..`
+4. `make`
     - Note: You can also run `make clustering`, `make distribution_gen`,
       `make simulator`, or `make tests` to only build those respective parts of
       the project.
