@@ -1,4 +1,7 @@
-add_executable(tests.out main.cc clustering/ArrayTest.cc)
+add_executable(tests.out main.cc 
+  utils/VectorViewTest.cc
+  )
+
 set_property(TARGET tests.out PROPERTY CXX_STANDARD 17)
 
 add_custom_target(tests)

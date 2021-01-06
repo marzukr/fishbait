@@ -14,7 +14,7 @@ template <typename T>
 class VectorView {
  public:
   VectorView(const T* start, uint32_t n) : start_(start), n_(n) {}
-  explicit VectorView(std::vector<T> v) : start_(v.data()), n_(v.size()) {}
+  explicit VectorView(std::vector<T>& v) : start_(v.data()), n_(v.size()) {}
   ~VectorView() {}
 
   const T operator()(uint32_t i) {
