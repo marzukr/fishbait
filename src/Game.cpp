@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "hand_evaluator/SevenEval.h"
 #include "hand_evaluator/Deckcards.h"
@@ -102,7 +103,7 @@ void Game::DealCard(char num_cards) {
 void Game::AwardPot() {
   char num_players = game_state_.num_players_;
   char players_left = game_state_.num_left_;
-  double awards[num_players];
+  vector<double> awards(num_players);
   int ranks[num_players];
 
   // if only one player left don't evaluate hands
