@@ -1,4 +1,4 @@
-find_package(mongocxx REQUIRED)
+find_package(mongocxx)
 
 add_executable(clustering.out main.cc)
 set_property(TARGET clustering.out PROPERTY CXX_STANDARD 17)

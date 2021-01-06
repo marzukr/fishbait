@@ -7,7 +7,7 @@
 #include "poker_engine/Agent.h"
 #include "SKPokerEval/src/Deckcards.h"
 
-namespace game_engine {
+namespace poker_engine {
 
 // -2: this player is already all in
 // -1: fold
@@ -59,4 +59,4 @@ std::ostream& operator<<(std::ostream &strm, const Agent &a) {
     << pretty_card[a.c1_] << "," << pretty_card[a.c2_] << ", )" << std::endl;
 }
 
-}  // namespace game_engine
+}  // namespace poker_engine

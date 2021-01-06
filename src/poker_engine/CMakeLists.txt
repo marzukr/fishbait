@@ -4,6 +4,8 @@ add_library(
   Agent.h
   Game.cc
   Game.h
+  GameState.cc
+  GameState.h
   )
 set_property(TARGET poker_engine PROPERTY CXX_STANDARD 17)
 

@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace game_engine {
+namespace poker_engine {
 
 class Agent {
  private:

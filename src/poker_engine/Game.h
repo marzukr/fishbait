@@ -2,13 +2,13 @@
 #ifndef SRC_POKER_ENGINE_GAME_H_
 #define SRC_POKER_ENGINE_GAME_H_
 
-#include "hand_evaluator/Constants.h"
-#include "Agent.h"
-#include "GameState.h"
+#include "SKPokerEval/src/Constants.h"
+#include "poker_engine/Agent.h"
+#include "poker_engine/GameState.h"
 
 const int kDeckSize = 52;
 
-namespace game_engine {
+namespace poker_engine {
 
 class Game {
  private:
@@ -27,6 +27,6 @@ class Game {
   void Play();
 };  // class Game
 
-}  // namespace game_engine
+}  // namespace poker_engine
 
 #endif  // SRC_POKER_ENGINE_GAME_H_

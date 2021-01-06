@@ -1,9 +1,9 @@
 // copyright Emily Dale 2021
-#include "GameState.h"
+#include "poker_engine/GameState.h"
 
 #include <iostream>
 
-namespace game_engine {
+namespace poker_engine {
 
 GameState::GameState(char num_players, char num_rounds,
                      double small_blind_multiplier, double starting_bb_amounts,
@@ -215,4 +215,4 @@ void GameState::UndoAction(char acted_player, double action, double old_max_bet,
   is_done_ = old_is_done;
 }  // UndoAction
 
-}  // namespace game_engine
+}  // namespace poker_engine

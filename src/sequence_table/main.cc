@@ -1,4 +1,4 @@
-#include "SequenceTable.h"
+#include "sequence_table/SequenceTable.h"
 #include <iostream>
 
 int main(){

@@ -1,5 +1,5 @@
-#include "SequenceTable.h"
-#include "Matrix.h"
+#include "sequence_table/SequenceTable.h"
+#include "utils/Matrix.h"
 #include <iostream>
 #include <stdint.h>
 #include <math.h>
@@ -45,12 +45,12 @@ SequenceTable::SequenceTable(float raise_sizes_2d[kNumRounds][kNumRaises],
   num_rows_[3] = 0;
 
   // figure out amount of memory needed to allocate
-  game_engine::GameState state(num_players, num_rounds, small_blind_multiplier, starting_chips, 0);
+  poker_engine::GameState state(num_players, num_rounds, small_blind_multiplier, starting_chips, 0);
   Update(state, 0, raise_sizes, raise_size_index, num_raise_sizes, true);
   std::cout << "0: "<< num_rows_[0] << std::endl;
 
   for (int i = 0; i < num_rounds; ++i) {
-    table_[i] = new clustering::Matrix<uint32_t>(num_rows_[i]+1, (num_raise_sizes[i]+kColumnsAdd));
+    table_[i] = new utils::Matrix<uint32_t>(num_rows_[i]+1, (num_raise_sizes[i]+kColumnsAdd));
     table_[i]->Fill(kIllegalActionVal);
   }
   for(int i = 0; i < num_rounds; i++){
@@ -58,7 +58,7 @@ SequenceTable::SequenceTable(float raise_sizes_2d[kNumRounds][kNumRaises],
     num_rows_[i] = 0;
   }
 
-  game_engine::GameState state_new(num_players, num_rounds, small_blind_multiplier, 
+  poker_engine::GameState state_new(num_players, num_rounds, small_blind_multiplier, 
                       starting_chips, 0);
   Update(state_new, total_rows_, raise_sizes, raise_size_index, num_raise_sizes, false);
   total_rows_ += 1;
@@ -75,7 +75,7 @@ SequenceTable::~SequenceTable() {
   }
 }
 
-void SequenceTable::Update(game_engine::GameState& state, uint32_t orig_index, 
+void SequenceTable::Update(poker_engine::GameState& state, uint32_t orig_index, 
                            float raise_sizes [kNumRounds*kNumRaises], int raise_size_index[kNumRounds+1],
                            char num_raise_sizes[kNumRounds], bool update_nums) {
   uint32_t recursive_index = orig_index;
@@ -135,7 +135,7 @@ void SequenceTable::Update(game_engine::GameState& state, uint32_t orig_index,
   return;
 }  // Updated
 
-double SequenceTable::IndexToAction(uint32_t action_index, game_engine::GameState state) {
+double SequenceTable::IndexToAction(uint32_t action_index, poker_engine::GameState state) {
   if (action_index == 0) {
     std::cout << "bad action index" << std::endl;
     return -2;
@@ -175,7 +175,7 @@ uint32_t SequenceTable::GetRiverRows() {
 }
 
 // returns -2 for illegal actions, otherwise the action
-double SequenceTable::LegalAction(double action, double call, float raise_mult, game_engine::GameState state) {
+double SequenceTable::LegalAction(double action, double call, float raise_mult, poker_engine::GameState state) {
   // only allow fold if the player can't check
   if (action == -1) {
     if (call == 0) {

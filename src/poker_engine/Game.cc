@@ -4,12 +4,12 @@
 #include <string>
 #include <vector>
 
-#include "hand_evaluator/SevenEval.h"
-#include "hand_evaluator/Deckcards.h"
-#include "hand_evaluator/Constants.h"
-#include "Game.h"
+#include "SKPokerEval/src/SevenEval.h"
+#include "SKPokerEval/src/Deckcards.h"
+#include "SKPokerEval/src/Constants.h"
+#include "poker_engine/Game.h"
 
-namespace game_engine {
+namespace poker_engine {
 
 Game::Game(char num_players, char num_rounds, double small_blind_multiplier,
            double starting_bb_amounts, char small_blind_pos) :
@@ -103,7 +103,7 @@ void Game::DealCard(char num_cards) {
 void Game::AwardPot() {
   char num_players = game_state_.num_players_;
   char players_left = game_state_.num_left_;
-  vector<double> awards(num_players);
+  std::vector<double> awards(num_players);
   int ranks[num_players];
 
   // if only one player left don't evaluate hands
@@ -176,4 +176,4 @@ void Game::AwardPot() {
   }
 }  // AwardPot
 
-}  // namespace game_engine
+}  // namespace poker_engine

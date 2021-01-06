@@ -35,5 +35,6 @@ add_subdirectory(external/hand-isomorphism)
 add_subdirectory(src/clustering)
 add_subdirectory(src/hand_evaluator)
 add_subdirectory(src/poker_engine)
+add_subdirectory(src/sequence_table)
 
 add_subdirectory(tests)

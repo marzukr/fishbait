@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <iostream>
 
-namespace game_engine {
+namespace poker_engine {
 
 class GameState {
  public:
@@ -46,6 +46,6 @@ class GameState {
                    // the round increments when pot_good_ = 0
 };  // GameState
 
-}  // namespace game_engine
+}  // namespace poker_engine
 
 #endif  // SRC_POKER_ENGINE_GAMESTATE_H_
