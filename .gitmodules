@@ -1,0 +1,13 @@
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = https://github.com/marzukr/Catch2
+	branch = v2.x
+[submodule "external/hand-isomorphism"]
+	path = external/hand-isomorphism
+	url = https://github.com/marzukr/hand-isomorphism
+[submodule "external/OMPEval"]
+	path = external/OMPEval
+	url = https://github.com/marzukr/OMPEval
+[submodule "external/SKPokerEval"]
+	path = external/SKPokerEval
+	url = https://github.com/marzukr/SKPokerEval
