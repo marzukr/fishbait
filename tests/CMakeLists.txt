@@ -1,5 +1,6 @@
 add_executable(tests.out main.cc 
   utils/VectorViewTest.cc
+  utils/MatrixTest.cc
   )
 
 set_property(TARGET tests.out PROPERTY CXX_STANDARD 17)

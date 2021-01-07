@@ -29,12 +29,14 @@ class Matrix {
     return *this;
   }
 
-  T& Access(uint32_t i, uint32_t j) {
+  const T& Access(uint32_t i, uint32_t j) const {
     assert(i < n_);
     assert(j < m_);
     return data_[i*m_ + j];
   }
-  T& operator()(uint32_t i, uint32_t j) { return Access(i, j); }
+  T& operator()(uint32_t i, uint32_t j) {
+    return const_cast<T&>(const_cast<const Matrix<T>*>(this)->Access(i, j));
+  }
   const T& operator()(uint32_t i, uint32_t j) const { return Access(i, j); }
 
   VectorView<T> operator()(uint32_t i) const {
@@ -43,21 +45,21 @@ class Matrix {
   }
 
   bool operator==(const Matrix<T>& other) const {
-    return data_ == other.data_;
+    return n_ == other.n_ && m_ == other.m_ && data_ == other.data_;
   }
 
   template <typename U>
   void SetRow(uint32_t i, VectorView<U> r) {
     assert(i < n_);
     assert(r.n() == m_);
-    std::copy(r.begin(), r.end(), &Access(i, 0));
+    std::copy(r.begin(), r.end(), &(*this)(i, 0));
   }
 
   template <typename U>
   void AddToRow(uint32_t i, VectorView<U> r) {
     assert(i < n_);
     assert(r.n() == m_);
-    T* row_begin = &Access(i, 0);
+    T* row_begin = &(*this)(i, 0);
     std::transform(r.begin(), r.end(), row_begin, row_begin,
         [](U a, T b) -> T { return b + a; });
   }
@@ -66,7 +68,7 @@ class Matrix {
   void SubtractFromRow(uint32_t i, VectorView<U> r) {
     assert(i < n_);
     assert(r.n() == m_);
-    T* row_begin = *Access(i, 0);
+    T* row_begin = &(*this)(i, 0);
     std::transform(r.begin(), r.end(), row_begin, row_begin,
         [](U a, T b) -> T { return b - a; });
   }
@@ -75,7 +77,7 @@ class Matrix {
   void Divide(VectorView<U> a) {
     assert(a.n() == n_);
     for (uint32_t i = 0; i < n_; ++i) {
-      T* row_begin = &Access(i, 0);
+      T* row_begin = &(*this)(i, 0);
       U divisor = a(i);
       std::for_each(row_begin, row_begin+m_, [&divisor](T& elem) {
         elem /= divisor;
@@ -91,8 +93,8 @@ class Matrix {
   uint32_t m() const { return m_; }
 
  private:
-  const uint32_t n_;  // rows
-  const uint32_t m_;  // cols
+  uint32_t n_;  // rows
+  uint32_t m_;  // cols
   std::vector<T> data_;
 };  // Matrix
 

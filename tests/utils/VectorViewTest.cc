@@ -33,7 +33,7 @@ TEST_CASE("Test VectorView with heap array", "[utils][vectorview]") {
       REQUIRE(*it == 4);
     }
   }
-}
+}  // TEST_CASE("Test VectorView with heap array", "[utils][vectorview]")
 
 TEST_CASE("Test VectorView with vector", "[utils][vectorview]") {
   std::vector<double> double_vector(100, 6.78);
@@ -56,4 +56,4 @@ TEST_CASE("Test VectorView with vector", "[utils][vectorview]") {
       REQUIRE(*it == 6.78);
     }
   }
-}
+}  // TEST_CASE("Test VectorView with vector", "[utils][vectorview]")
