@@ -22,8 +22,8 @@ class Game {
   void DealCard(char num_cards);
 
  public:
-  Game(char num_players, char num_rounds, double small_blind_multiplier,
-        double starting_bb_amounts, char small_blind_pos);
+  Game(char num_players, char num_rounds, long small_blind, long big_blind,
+        long starting_amounts, char small_blind_pos);
   void Play();
 };  // class Game
 

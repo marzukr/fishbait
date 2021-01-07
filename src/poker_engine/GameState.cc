@@ -5,43 +5,43 @@
 
 namespace poker_engine {
 
-GameState::GameState(char num_players, char num_rounds,
-                     double small_blind_multiplier, double starting_bb_amounts,
-                     char small_blind_pos) {
+GameState::GameState(char num_players, char num_rounds, long small_blind, long big_blind,
+            long starting_amounts, char small_blind_pos) {
   // initialize arrays
-  chip_amounts_  = new double[num_players];
+  chip_amounts_  = new long[num_players];
   in_game_ = new bool[num_players];
-  total_bets_ = new double[num_players];
+  total_bets_ = new long[num_players];
   for (int i = 0; i < num_players; i++) {
-    chip_amounts_[i] = starting_bb_amounts;
+    chip_amounts_[i] = starting_amounts;
     in_game_[i] = true;
     total_bets_[i] = 0;
     if (i == 0) {
-      chip_amounts_[i] -= small_blind_multiplier;
-      total_bets_[i] = small_blind_multiplier;
+      chip_amounts_[i] -= small_blind;
+      total_bets_[i] = small_blind;
     } else if (i == 1) {
-      chip_amounts_[i] -= 1;
-      total_bets_[i] = 1;
+      chip_amounts_[i] -= big_blind;
+      total_bets_[i] = big_blind;
     }
   }
 
   // initialize everything else
   acting_player_ = (small_blind_pos+2) % num_players;
   current_round_ = 0;
-  min_raise_ = 1;
-  max_bet_ = 1;
-  pot_ = 1 + small_blind_multiplier;
+  min_raise_ = big_blind;
+  max_bet_ = big_blind;
+  pot_ = small_blind + big_blind;
   is_done_ = 0;
   betting_round_ = 0;
   num_players_ = num_players;
   num_rounds_ = num_rounds;
-  small_blind_multiplier_ = small_blind_multiplier;
-  starting_bb_amounts_ = starting_bb_amounts;
+  small_blind_ = small_blind;
+  big_blind_ = big_blind;
   pot_good_ = num_players;
   num_left_ = num_players;
   num_all_in_ = 0;
   needs_card_ = false;
   small_blind_pos_ = small_blind_pos;
+  starting_amounts_ = starting_amounts;
 }  // GameState constructor
 
 GameState::GameState(const GameState& other) {
@@ -56,16 +56,17 @@ GameState::GameState(const GameState& other) {
     betting_round_ = other.betting_round_;
     num_players_ = other.num_players_;
     num_rounds_ = other.num_rounds_;
-    small_blind_multiplier_ = other.small_blind_multiplier_;
-    starting_bb_amounts_ = other.starting_bb_amounts_;
+    small_blind_ = other.small_blind_;
+    big_blind_ = other.big_blind_;
+    starting_amounts_ = other.starting_amounts_;
     num_all_in_ = other.num_all_in_;
     needs_card_ = other.needs_card_;
     small_blind_pos_ = other.small_blind_pos_;
 
 
-    chip_amounts_ = new double[num_players_];
+    chip_amounts_ = new long[num_players_];
     in_game_ = new bool[num_players_];
-    total_bets_ = new double[num_players_];
+    total_bets_ = new long[num_players_];
 
     for (int i = 0; i < num_players_; ++i) {
       chip_amounts_[i] = other.chip_amounts_[i];
@@ -86,8 +87,9 @@ GameState& GameState::operator=(const GameState& other) {
   betting_round_ = other.betting_round_;
   num_players_ = other.num_players_;
   num_rounds_ = other.num_rounds_;
-  small_blind_multiplier_ = other.small_blind_multiplier_;
-  starting_bb_amounts_ = other.starting_bb_amounts_;
+    small_blind_ = other.small_blind_;
+  big_blind_ = other.big_blind_;
+  starting_amounts_ = other.starting_amounts_;
   num_all_in_ = other.num_all_in_;
   needs_card_ = other.needs_card_;
   small_blind_pos_ = other.small_blind_pos_;
@@ -127,14 +129,14 @@ void GameState::UpdateNeedsCard() {
 }
 
 // document action
-void GameState::TakeAction(double action) {
+void GameState::TakeAction(long action) {
   if (acting_player_ == small_blind_pos_) {
     ++betting_round_;
   }
   // get new amount that this player will have in pot and their new chip amounts
-  double new_total_bet = total_bets_[acting_player_];
-  double new_chip_amount = chip_amounts_[acting_player_];
-  double raise_amount = 0;
+  long new_total_bet = total_bets_[acting_player_];
+  long new_chip_amount = chip_amounts_[acting_player_];
+  long raise_amount = 0;
   if (action >= 0) {
     --pot_good_;
     new_total_bet += action;
@@ -169,7 +171,7 @@ void GameState::TakeAction(double action) {
   if (pot_good_ == 0) {
     ++current_round_;
     pot_good_ = num_left_-num_all_in_;
-    min_raise_ = 1;
+    min_raise_ = big_blind_;
     acting_player_ = small_blind_pos_;
     betting_round_ = 0;
     needs_card_ = true;
@@ -184,17 +186,16 @@ void GameState::TakeAction(double action) {
   }
 }  // TakeAction
 
-void GameState::UndoAction(char acted_player, double action, double old_max_bet,
-                           double old_min_raise, double old_pot_good,
-                           char old_round, char old_betting_round,
-                           char old_all_in, double old_pot,
-                           char old_num_left, bool old_is_done) {
+void GameState::UndoAction(char acted_player, long action, long old_max_bet,
+                  long old_min_raise, long old_pot_good, char old_round,
+                  char old_betting_round, char old_all_in, long old_pot,
+                  char old_num_left, bool old_is_done) {
   acting_player_ = acted_player;
 
   // get new amount that this player will have in pot and their new chip amounts
-  double old_total_bet = total_bets_[acting_player_];
-  double old_chip_amount = chip_amounts_[acting_player_];
-  double raise_amount = 0;
+  long old_total_bet = total_bets_[acting_player_];
+  long old_chip_amount = chip_amounts_[acting_player_];
+  long raise_amount = 0;
   if (action >= 0) {
     old_total_bet -= action;
     old_chip_amount += action;

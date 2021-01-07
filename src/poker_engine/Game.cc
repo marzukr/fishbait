@@ -11,10 +11,10 @@
 
 namespace poker_engine {
 
-Game::Game(char num_players, char num_rounds, double small_blind_multiplier,
-           double starting_bb_amounts, char small_blind_pos) :
-           game_state_(num_players, num_rounds, small_blind_multiplier,
-           starting_bb_amounts, small_blind_pos) {
+Game::Game(char num_players, char num_rounds, long small_blind, long big_blind,
+           long starting_amounts, char small_blind_pos) :
+           game_state_(num_players, num_rounds, small_blind, big_blind,
+           starting_amounts, small_blind_pos) {
   // initialize the deck
   for (int i = 0; i < kDeckSize; i++) {
     deck_[i] = i;

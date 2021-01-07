@@ -14,9 +14,9 @@ const char kMultiwayThreshold = 3;
 namespace blueprint_strategy {
 
 SequenceTable::SequenceTable(float raise_sizes_2d[kNumRounds][kNumRaises], 
-                             char num_raise_sizes[kNumRounds], 
-                             double starting_chips, float small_blind_multiplier, 
-                             char num_players, char num_rounds) {
+                char num_raise_sizes[kNumRounds], 
+                long starting_chips, long small_blind, long big_blind, 
+                char num_players, char num_rounds, bool only_nums) {
 
   total_rows_ = 0;
   num_rounds_ = num_rounds;
@@ -27,14 +27,13 @@ SequenceTable::SequenceTable(float raise_sizes_2d[kNumRounds][kNumRaises],
   int temp_index = 0;
   for (int i = 0; i < num_rounds; ++i) {
     raise_sizes[temp_index + kFold] = -1;
-    raise_sizes[temp_index + kCall] = -1;
-    raise_sizes[temp_index + kAllIn] = -1;
+    raise_sizes[temp_index + kCall] = -3;
+    raise_sizes[temp_index + kAllIn] = -4;
     temp_index += kColumnsAdd;
     for (int j = 0; j < num_raise_sizes[i]; ++j) {
       raise_sizes[temp_index + j] = raise_sizes_2d[i][j];
     }
     temp_index += num_raise_sizes[i];
-    std::cout << (int) num_raise_sizes[i] << std::endl;
     raise_size_index[i+1] = temp_index;
   }
   // number of rows for preflop starts at 1 to account for root node, all others
@@ -45,28 +44,44 @@ SequenceTable::SequenceTable(float raise_sizes_2d[kNumRounds][kNumRaises],
   num_rows_[3] = 0;
 
   // figure out amount of memory needed to allocate
-  poker_engine::GameState state(num_players, num_rounds, small_blind_multiplier, starting_chips, 0);
-  Update(state, 0, raise_sizes, raise_size_index, num_raise_sizes, true);
-  std::cout << "0: "<< num_rows_[0] << std::endl;
-
-  for (int i = 0; i < num_rounds; ++i) {
-    table_[i] = new utils::Matrix<uint32_t>(num_rows_[i]+1, (num_raise_sizes[i]+kColumnsAdd));
-    table_[i]->Fill(kIllegalActionVal);
+  bool update_nums = true;
+  uint32_t orig_index = 0;
+  poker_engine::GameState state(num_players, num_rounds, small_blind, big_blind, starting_chips, 0);
+  Update(state, orig_index, raise_sizes, raise_size_index, num_raise_sizes, update_nums);
+  PrintTable(false, num_rounds);
+  if(only_nums) {
+    PrintTable(false, num_rounds);
+    std::cout << "here" << std::endl;
+    return;
   }
+  std::cout << "here" << std::endl;
+
+  // for (int i = 0; i < num_rounds; ++i) {
+  //   table_[i] = new utils::Matrix<uint32_t>(num_rows_[i]+1, (num_raise_sizes[i]+kColumnsAdd));
+  //   table_[i]->Fill(kIllegalActionVal);
+  // }
+  // for (int i = 0; i < num_rounds; ++i) {
+  //   table_[i] = new uint32_t*[num_rows_[i]];
+  //   // table_[i]->Fill(kIllegalActionVal);
+  // }
+  table_ = new uint32_t*[total_rows_];
+  total_rows_ = 0;
+  terminal_rows_ = total_rows_;
+
   for(int i = 0; i < num_rounds; i++){
-    terminal_rows_[i] = num_rows_[i] + 1;
+    // terminal_rows_[i] = num_rows_[i] + 1;
     num_rows_[i] = 0;
   }
-
-  poker_engine::GameState state_new(num_players, num_rounds, small_blind_multiplier, 
-                      starting_chips, 0);
-  Update(state_new, total_rows_, raise_sizes, raise_size_index, num_raise_sizes, false);
+  AllocateRow(0,0,num_raise_sizes);
+  update_nums = false;
+  poker_engine::GameState state_new(num_players, num_rounds, small_blind, big_blind, starting_chips, 0);
+  Update(state_new, total_rows_, raise_sizes, raise_size_index, num_raise_sizes, update_nums);
   total_rows_ += 1;
   std::cout << num_rows_[0] << std::endl;
   std::cout << num_rows_[1] << std::endl;
   std::cout << num_rows_[2] << std::endl;
   std::cout << num_rows_[3] << std::endl;
-  PrintTable(true, num_rounds);
+  PrintTable(false, num_rounds);
 } // SequenceTable constructor
 
 SequenceTable::~SequenceTable() {
@@ -74,24 +89,35 @@ SequenceTable::~SequenceTable() {
     delete table_[i];
   }
 }
+void SequenceTable::AllocateRow(uint32_t index, char current_round, char num_raise_sizes[kNumRounds]) {
+  uint32_t num_needed = num_raise_sizes[current_round] + kColumnsAdd;
+  // table_[current_round][index] = new uint32_t[num_needed];
+  // for (int j = 0; j < num_needed; ++j) {
+  //       table_[current_round][index][j] = kIllegalActionVal;
+  // }
+  table_[index] = new uint32_t[num_needed];
+  for (int j = 0; j < num_needed; ++j) {
+        table_[index][j] = kIllegalActionVal;
+  }
+}
 
-void SequenceTable::Update(poker_engine::GameState& state, uint32_t orig_index, 
-                           float raise_sizes [kNumRounds*kNumRaises], int raise_size_index[kNumRounds+1],
-                           char num_raise_sizes[kNumRounds], bool update_nums) {
+void SequenceTable::Update(poker_engine::GameState& state, uint32_t& orig_index, 
+                           float raise_sizes [kNumRounds*(kNumRaises+kColumnsAdd)], int raise_size_index[kNumRounds+1],
+                           char num_raise_sizes[kNumRounds], bool& update_nums) {
   uint32_t recursive_index = orig_index;
   char acting_player = state.acting_player_;
-  double max_bet = state.max_bet_;
-  double pot_good = state.pot_good_;
-  double min_raise = state.min_raise_;
+  long max_bet = state.max_bet_;
+  long pot_good = state.pot_good_;
+  long min_raise = state.min_raise_;
   char round = state.current_round_;
   char betting_round = state.betting_round_;
-  double pot = state.pot_;
+  long pot = state.pot_;
   bool is_done = state.is_done_;
   char num_all_in = state.num_all_in_;
   char num_left = state.num_left_;
   //go to next if already folded or all in
   if (state.in_game_[acting_player] == false || 
-      state.chip_amounts_[acting_player] == 0) {
+    state.chip_amounts_[acting_player] == 0) {
     state.TakeAction(-2);
     if(!state.is_done_){
       Update(state, orig_index, raise_sizes, raise_size_index, num_raise_sizes, update_nums);
@@ -99,34 +125,46 @@ void SequenceTable::Update(poker_engine::GameState& state, uint32_t orig_index,
     state.UndoAction(acting_player, -2, max_bet, min_raise, pot_good, round, betting_round, num_all_in, pot, num_left, is_done);
   } else { //loop through all actions if not already folded or all in
     // loop through fold, call, all in, all raise sizes that are legal
-    double call = state.max_bet_ - state.total_bets_[acting_player];
+    long call = state.max_bet_ - state.total_bets_[acting_player];
     for (int i = raise_size_index[state.current_round_]; i < raise_size_index[state.current_round_+1]; ++i) {
       
       uint32_t col_index = i-raise_size_index[state.current_round_];
       float raise_multiplier = raise_sizes[i];
       double action = -1;
       double raise_size = raise_multiplier * (state.pot_+call);
-      if (col_index == kCall) {
-        action = call;
+      long legalized_action = -1;
+      if (col_index == kFold){
+        legalized_action = LegalActionFold(call);
+      } else if (col_index == kCall) {
+        legalized_action = LegalActionCall(call, state);
       } else if (col_index == kAllIn) {
         action = state.chip_amounts_[state.acting_player_];
-      } else if (col_index >= kColumnsAdd){
+        legalized_action = state.chip_amounts_[state.acting_player_];
+      } else {
         action = call+raise_size;
+        legalized_action = LegalAction(action, call, raise_multiplier, state);
       }
-      double legalized_action = LegalAction(action, call, raise_multiplier, state);
-      std::cout << legalized_action << std::endl;
       if(legalized_action >= -1){
         state.TakeAction(legalized_action);
         if (!state.is_done_) {
           num_rows_[state.current_round_] += 1;
-          uint32_t assign_index = num_rows_[state.current_round_];
+          total_rows_+=1;
+          // uint32_t assign_index = num_rows_[state.current_round_];
+          uint32_t assign_index = total_rows_;
           if (!update_nums) {
-            (*(table_[round]))(recursive_index,col_index) = assign_index;             
+            // (*(table_[round]))(recursive_index,col_index) = assign_index;
+            AllocateRow(assign_index, state.current_round_, num_raise_sizes);
+            // table_[round][recursive_index][col_index] = assign_index;
+            table_[recursive_index][col_index] = assign_index;
+             
           }
           Update(state, assign_index, raise_sizes, raise_size_index, num_raise_sizes, update_nums);
         } else if (!update_nums) { 
-        (*(table_[round]))(recursive_index, col_index) = terminal_rows_[round];
-        terminal_rows_[round] += 1;
+        // (*(table_[round]))(recursive_index, col_index) = terminal_rows_[round];
+        // table_[round][recursive_index][col_index] = terminal_rows_[round];
+        table_[recursive_index][col_index] = terminal_rows_;
+        terminal_rows_ += 1;
+        // terminal_rows_[round] += 1;
         }
         state.UndoAction(acting_player, legalized_action, max_bet, min_raise, pot_good, round, betting_round, num_all_in, pot, num_left, is_done);
       }
@@ -175,33 +213,17 @@ uint32_t SequenceTable::GetRiverRows() {
 }
 
 // returns -2 for illegal actions, otherwise the action
-double SequenceTable::LegalAction(double action, double call, float raise_mult, poker_engine::GameState state) {
-  // only allow fold if the player can't check
-  if (action == -1) {
-    if (call == 0) {
-      return -2;
-    } else {
-      return -1;
-    }
-  }
-  float real_action = (round(action * 2))/2.0;
+long SequenceTable::LegalAction(double& action, long& call, float& raise_mult, poker_engine::GameState& state) {
+  long real_action = round(action);
   // always allow all in and call, only count once (only at kCall and kAllIn)
-  if (real_action == state.chip_amounts_[state.acting_player_] || real_action == call) {
-    if (raise_mult == -1) {
-      return real_action;
-    } else return -2;
-  }
-  // actual action can only be in multiples of 0.5 big blinds
-  // only allow less than min raise if going all in 
-  if (real_action - call < state.min_raise_ && real_action < state.chip_amounts_[state.acting_player_]) {
-    return -2;
-  }
-
-  // never allow betting more chips than the player has
   if (real_action >= state.chip_amounts_[state.acting_player_]) {
     return -2;
   }
-
+  // actual action can only be in multiples of 0.5 big blinds
+  // only allow less than min raise if going all in 
+  if (real_action - call < state.min_raise_) {
+    return -2;
+  }
   // no other limits in first two rounds or 1st betting round in turn/river
   if (state.current_round_ <= 1 || state.betting_round_ < 1) {
     return real_action;
@@ -223,28 +245,29 @@ double SequenceTable::LegalAction(double action, double call, float raise_mult, 
 }  // LegalAction
 
 void SequenceTable::PrintTable(bool full_table, char num_rounds) {
-  if (full_table) {
-      for (int i = 0; i < num_rounds_; ++i) {
-        int m = table_[i] -> m();
-        int n = table_[i] -> n();
-        for (int j = 0; j < n; ++j) {
-          std::cout << "" << std::endl;
-          for(int k = 0; k < m; ++k) {
-            std::cout << table_[i]->Access(j,k) << " ";
-          }
-        }
-    }
-  }
+  // if (full_table) {
+  //     for (int i = 0; i < num_rounds_; ++i) {
+  //       std::cout << "------------ table: " << i << "-----------" << std::endl;
+  //       int m = table_[i] -> m();
+  //       int n = table_[i] -> n();
+  //       for (int j = 0; j < n; ++j) {
+  //         std::cout << "" << std::endl;
+  //         for(int k = 0; k < m; ++k) {
+  //           std::cout << table_[i]->Access(j,k) << " ";
+  //         }
+  //       }
+  //   }
+  // }
+
   std::cout << "number pre flop: " << num_rows_[0] << std::endl;
   std::cout << "number flop: " << num_rows_[1] << std::endl;
   std::cout << "number turn: " << num_rows_[2] << std::endl;
   std::cout << "number river: " << num_rows_[3] << std::endl;
-  // double total = 0;
-  // for (int i = 0; i < num_rounds_; i++) { 
-  //   total += (num_raise_sizes_[i]+kColumnsAdd)*num_rows_[i]*32/8000000000;
-  // }
-  // double gig = total/8000000000;
-  // std::cout << "memory: " << total << " gb" << std::endl;
+  double total = 0;
+  for (int i = 0; i < num_rounds_; i++) { 
+    total += (num_raise_sizes_[i]+kColumnsAdd)*num_rows_[i]*32/8000000000.0;
+  }
+  std::cout << "memory: " << total << " gb" << std::endl;
 }
 
 }  // namespace blueprint_strategy
