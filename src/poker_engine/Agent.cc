@@ -1,10 +1,12 @@
 // Copyright 2021 Emily Dale
+
 #include <iostream>
 #include <random>
 #include <algorithm>
 #include <string>
 
 #include "poker_engine/Agent.h"
+
 #include "SKPokerEval/src/Deckcards.h"
 
 namespace poker_engine {

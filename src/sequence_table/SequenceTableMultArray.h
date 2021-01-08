@@ -1,5 +1,5 @@
-#ifndef SEQUENCETABLE
-#define SEQUENCETABLE
+#ifndef SEQUENCETABLEMULTARRAY
+#define SEQUENCETABLEMULTARRAY
 
 #include <stdint.h>
 #include <vector>
@@ -10,17 +10,14 @@ const uint32_t kIllegalActionVal = 0;
 
 namespace blueprint_strategy {
 
-class SequenceTable { 
+class SequenceTableMultArray { 
  public:
   SequenceTable(std::vector<float> &raise_sizes, 
                 std::vector<char> &num_raise_sizes, 
                 long starting_chips, long small_blind, long big_blind, 
                 char num_players, char num_rounds, bool only_nums);
   ~SequenceTable();
-  // utils::Matrix<uint32_t>* table_[kNumRounds];
-  // utils::Matrix<uint32_t>* table_;
-  // uint32_t** table_[kNumRounds];
-  uint32_t** table_;
+  uint32_t** table_[4];
   uint32_t GetTotalRows();
   uint32_t GetPreflopRows();
   uint32_t GetFlopRows();
@@ -39,7 +36,6 @@ class SequenceTable {
                      poker_engine::GameState& state);
   //get rid of unneccessary member variables
   uint32_t total_rows_;
-  // uint32_t terminal_rows_[kNumRounds];
   char num_rounds_;
   std::vector<char> num_raise_sizes_;
   long LegalActionFold (long& call) {
@@ -49,10 +45,10 @@ class SequenceTable {
     return call < state.chip_amounts_[state.acting_player_] ? call : -2;
   }
   std::vector<uint32_t> num_rows_;
-  uint32_t terminal_rows_;
+  std::vector<uint32_t> terminal_rows_;
 
-};  // class SequenceTable
+};  // class SequenceTableMultARRAY
 
 }  // namespace blueprint_strategy
 
-#endif  // SEQUENCETABLE
+#endif  // SEQUENCETABLEMULTARRAY

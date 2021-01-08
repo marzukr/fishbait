@@ -1,4 +1,5 @@
-// copyright Emily Dale 2021
+// Copyright Emily Dale 2021
+
 #include <iostream>
 #include <random>
 #include <string>
@@ -7,6 +8,7 @@
 #include "SKPokerEval/src/SevenEval.h"
 #include "SKPokerEval/src/Deckcards.h"
 #include "SKPokerEval/src/Constants.h"
+
 #include "poker_engine/Game.h"
 
 namespace poker_engine {
