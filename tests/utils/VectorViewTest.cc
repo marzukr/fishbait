@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <memory>
-#include <iostream>
 
 #include "Catch2/single_include/catch2/catch.hpp"
 
