@@ -18,7 +18,7 @@ Game::Game(char num_players, char num_rounds, long small_blind, long big_blind,
            game_state_(num_players, num_rounds, small_blind, big_blind,
            starting_amounts, small_blind_pos) {
   // initialize the deck
-  for (int i = 0; i < kDeckSize; i++) {
+  for (int i = 0; i < kDeckSize; ++i) {
     deck_[i] = i;
   }
   deck_index_ = 0;
@@ -28,7 +28,7 @@ Game::Game(char num_players, char num_rounds, long small_blind, long big_blind,
   agents_ = new Agent*[num_players];
 
   // initialize the players
-  for (int i = 0; i < num_players; i++) {
+  for (int i = 0; i < num_players; ++i) {
     Agent* a = new Agent(default_names[i]);
     agents_[i] = a;
   }
@@ -89,7 +89,7 @@ void Game::Preflop() {
   std::cout << "------------- Preflop --------------" << std::endl;
   // shuffle and deal
   ShuffleDeck();
-  for (int i = 0; i < game_state_.num_players_; i++) {
+  for (int i = 0; i < game_state_.num_players_; ++i) {
     agents_[i]->deal_cards(deck_[2*i], deck_[2*i + 1]);
     deck_index_ += 2;
   }
@@ -98,7 +98,7 @@ void Game::Preflop() {
 void Game::DealCard(char num_cards) {
   for (int i = 0; i < num_cards; ++i) {
     std::cout << "card: " << pretty_card[deck_[deck_index_]] << std::endl;
-    deck_index_++;
+    ++deck_index_;
   }
 }
 
@@ -110,7 +110,7 @@ void Game::AwardPot() {
 
   // if only one player left don't evaluate hands
   if (players_left <= 1) {
-    for (int i = 0; i < num_players; i++) {
+    for (int i = 0; i < num_players; ++i) {
       if (game_state_.in_game_[i] == true) {
         awards[i] = game_state_.pot_;
         std::cout << *agents_[i];
@@ -123,7 +123,7 @@ void Game::AwardPot() {
   }
 
   char card_start = 2 * num_players;
-  for (int i = 0; i < num_players; i++) {
+  for (int i = 0; i < num_players; ++i) {
       ranks[i] = SevenEval::GetRank(
           agents_[i]->get_c1(), agents_[i]->get_c2(),
           deck_[card_start], deck_[card_start+1], deck_[card_start+2],
@@ -134,7 +134,7 @@ void Game::AwardPot() {
 
   while (players_left > 0) {
       double min_bet = game_state_.pot_;
-      for (int i = 1; i < num_players; i++) {
+      for (int i = 1; i < num_players; ++i) {
           double bet_i = game_state_.total_bets_[i];
           if (bet_i < min_bet && bet_i > 0) min_bet = bet_i;
       }
@@ -144,7 +144,7 @@ void Game::AwardPot() {
       int best_hand = -1;
       int best_players = 0;
 
-      for (int i = 0; i < num_players; i++) {
+      for (int i = 0; i < num_players; ++i) {
           if (game_state_.total_bets_[i] >= min_bet) {
               side_pot += min_bet;
               game_state_.total_bets_[i] = game_state_.total_bets_[i] - min_bet;
@@ -159,7 +159,7 @@ void Game::AwardPot() {
           }
       }
 
-      for (int i = 0; i < num_players; i++) {
+      for (int i = 0; i < num_players; ++i) {
           if (game_state_.in_game_[i] && ranks[i] == best_hand) {
               awards[i] += side_pot / best_players;
           }
@@ -170,7 +170,7 @@ void Game::AwardPot() {
       }
   }
 
-  for (int i = 0; i < num_players; i++) {
+  for (int i = 0; i < num_players; ++i) {
       if (awards[i] > 0) {
           std::cout << *agents_[i];
           std::cout << " wins " << awards[i] << std::endl;

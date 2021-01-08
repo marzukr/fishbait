@@ -1,4 +1,4 @@
-// copyright Emily Dale 2021
+// Copyright Emily Dale 2021
 
 #ifndef SRC_POKER_ENGINE_GAMESTATE_H_
 #define SRC_POKER_ENGINE_GAMESTATE_H_

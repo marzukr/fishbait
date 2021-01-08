@@ -1,17 +1,19 @@
-// copyright Emily Dale 2021
+// Copyright Emily Dale 2021
+
 #include "poker_engine/GameState.h"
 
 #include <iostream>
 
 namespace poker_engine {
 
-GameState::GameState(char num_players, char num_rounds, long small_blind, long big_blind,
-            long starting_amounts, char small_blind_pos) {
+GameState::GameState(char num_players, char num_rounds, long small_blind, 
+                     long big_blind, long starting_amounts, 
+                     char small_blind_pos) {
   // initialize arrays
   chip_amounts_  = new long[num_players];
   in_game_ = new bool[num_players];
   total_bets_ = new long[num_players];
-  for (int i = 0; i < num_players; i++) {
+  for (int i = 0; i < num_players; ++i) {
     chip_amounts_[i] = starting_amounts;
     in_game_[i] = true;
     total_bets_[i] = 0;
@@ -114,7 +116,7 @@ std::ostream& operator<<(std::ostream &strm, const GameState &state) {
   std::cout << "round: " << static_cast<int>(state.current_round_)
             << " player: " << static_cast<int>(state.acting_player_) << " pot: "
             << state.pot_ << std::endl;
-  for (int i = 0; i < state.num_players_; i++) {
+  for (int i = 0; i < state.num_players_; ++i) {
     std::cout << "Player: " << i << " in game: " << state.in_game_[i]
               << " amount bet: " << state.total_bets_[i] << " , amount left: "
               << state.chip_amounts_[i] << std::endl;
@@ -187,11 +189,11 @@ void GameState::TakeAction(long action) {
 }  // TakeAction
 
 void GameState::UndoAction(char acted_player, long action, long old_max_bet,
-                  long old_min_raise, long old_pot_good, char old_round,
-                  char old_betting_round, char old_all_in, long old_pot,
-                  char old_num_left, bool old_is_done) {
+                           long old_min_raise, long old_pot_good, 
+                           char old_round, char old_betting_round, 
+                           char old_all_in, long old_pot, char old_num_left, 
+                           bool old_is_done) {
   acting_player_ = acted_player;
-
   // get new amount that this player will have in pot and their new chip amounts
   long old_total_bet = total_bets_[acting_player_];
   long old_chip_amount = chip_amounts_[acting_player_];
