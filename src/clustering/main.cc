@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-#include "clustering/EarthMoverDistance.h"
+#include "clustering/Distance.h"
 #include "clustering/KMeans.h"
 #include "clustering/LoadData.h"
 #include "utils/Matrix.h"
