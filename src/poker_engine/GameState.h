@@ -22,7 +22,8 @@ class GameState {
   void UndoAction(char acted_player, int32_t action, int32_t old_max_bet,
                   int32_t old_min_raise, int32_t old_pot_good, char old_round,
                   char old_betting_round, char old_all_in, int32_t old_pot,
-                  char old_num_left, bool old_is_done, int32_t old_number_of_raises);
+                  char old_num_left, bool old_is_done, 
+                  int32_t old_number_of_raises);
   char small_blind_pos_;  // index of person who has small blind
   int32_t* chip_amounts_;  // each player's remaining chips
   bool* in_game_;  // false if player has folded, true otherwise

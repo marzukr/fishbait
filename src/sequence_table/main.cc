@@ -6,18 +6,18 @@
 #include "sequence_table/SequenceTable.h"
 
 int main() {
-  std::vector<char> num_raise_sizes = {13, 3, 2, 2};
+  std::vector<char> num_raise_sizes = {4, 2, 1, 1};
   std::vector<float> raise_sizes =
-  {0.3, 0.4, 0.5, 0.75, 0.9, 1, 1.2, 1.4, 1.5, 1.6, 1.75, 2, 2.25,
-  0.5, 1, 1.5,
+  {0.5,1,1.5,2,
   0.5, 1,
-  0.5, 1};
+  1,
+  1};
   int32_t starting_chips = 200;
   int32_t big_blind = 2;
   int32_t small_blind = 1;
   char num_players = 6;
   char num_rounds = 4;
-  std::vector<float> late_raises = {0.5, 1, 1.5};
+  std::vector<float> late_raises = {0.5, 1};
   auto start = std::chrono::high_resolution_clock::now();
   blueprint_strategy::SequenceTable seq = blueprint_strategy::SequenceTable
                                          (raise_sizes, num_raise_sizes,
