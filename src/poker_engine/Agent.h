@@ -1,5 +1,6 @@
-#ifndef SRC_POKER_ENGINE_AGENT_H_
 // Copyright 2021 Emily Dale
+
+#ifndef SRC_POKER_ENGINE_AGENT_H_
 #define SRC_POKER_ENGINE_AGENT_H_
 
 #include <string>
@@ -19,9 +20,8 @@ class Agent {
   int c2_;
   std::string name_;
   friend std::ostream& operator<<(std::ostream&, const Agent&);
-
 };  // class Agent
 
-}  // namespace game_engine
+}  // namespace poker_engine
 
 #endif  // SRC_POKER_ENGINE_AGENT_H_

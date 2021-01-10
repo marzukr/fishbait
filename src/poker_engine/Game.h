@@ -14,8 +14,8 @@ namespace poker_engine {
 
 class Game {
  public:
-  Game(char num_players, char num_rounds, long small_blind, long big_blind,
-       long starting_amounts, char small_blind_pos);
+  Game(char num_players, char num_rounds, int32_t small_blind,
+       int32_t big_blind, int32_t starting_amounts, char small_blind_pos);
   void Play();
  private:
   int deck_[kDeckSize];
@@ -26,7 +26,6 @@ class Game {
   void AwardPot();
   void Preflop();
   void DealCard(char num_cards);
-
 };  // class Game
 
 }  // namespace poker_engine

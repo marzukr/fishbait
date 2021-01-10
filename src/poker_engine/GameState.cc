@@ -6,13 +6,14 @@
 
 namespace poker_engine {
 
-GameState::GameState(char num_players, char num_rounds, long small_blind, 
-                     long big_blind, long starting_amounts, 
+GameState::GameState(char num_players, char num_rounds, int32_t small_blind,
+                     int32_t big_blind, int32_t starting_amounts,
                      char small_blind_pos) {
   // initialize arrays
-  chip_amounts_  = new long[num_players];
+  chip_amounts_  = new int32_t[num_players];
   in_game_ = new bool[num_players];
-  total_bets_ = new long[num_players];
+  total_bets_ = new int32_t[num_players];
+  number_of_raises_ = 0;
   for (int i = 0; i < num_players; ++i) {
     chip_amounts_[i] = starting_amounts;
     in_game_[i] = true;
@@ -64,11 +65,12 @@ GameState::GameState(const GameState& other) {
     num_all_in_ = other.num_all_in_;
     needs_card_ = other.needs_card_;
     small_blind_pos_ = other.small_blind_pos_;
+    number_of_raises_ = other.number_of_raises_;
 
 
-    chip_amounts_ = new long[num_players_];
+    chip_amounts_ = new int32_t[num_players_];
     in_game_ = new bool[num_players_];
-    total_bets_ = new long[num_players_];
+    total_bets_ = new int32_t[num_players_];
 
     for (int i = 0; i < num_players_; ++i) {
       chip_amounts_[i] = other.chip_amounts_[i];
@@ -95,6 +97,8 @@ GameState& GameState::operator=(const GameState& other) {
   num_all_in_ = other.num_all_in_;
   needs_card_ = other.needs_card_;
   small_blind_pos_ = other.small_blind_pos_;
+  number_of_raises_ = other.number_of_raises_;
+
 
   for (int i = 0; i < num_players_; ++i) {
     chip_amounts_[i] = other.chip_amounts_[i];
@@ -131,14 +135,14 @@ void GameState::UpdateNeedsCard() {
 }
 
 // document action
-void GameState::TakeAction(long action) {
+void GameState::TakeAction(int32_t action) {
   if (acting_player_ == small_blind_pos_) {
     ++betting_round_;
   }
   // get new amount that this player will have in pot and their new chip amounts
-  long new_total_bet = total_bets_[acting_player_];
-  long new_chip_amount = chip_amounts_[acting_player_];
-  long raise_amount = 0;
+  int32_t new_total_bet = total_bets_[acting_player_];
+  int32_t new_chip_amount = chip_amounts_[acting_player_];
+  int32_t raise_amount = 0;
   if (action >= 0) {
     --pot_good_;
     new_total_bet += action;
@@ -159,10 +163,12 @@ void GameState::TakeAction(long action) {
   if (raise_amount > 0 && raise_amount < min_raise_) {
     max_bet_ = new_total_bet;
     pot_good_ = num_left_-num_all_in_-1;
+    number_of_raises_ += 1;
   } else if (raise_amount >= min_raise_) {  // raise min raise or more
     min_raise_ = raise_amount;
     max_bet_ = new_total_bet;
     pot_good_ = num_left_-num_all_in_-1;
+    number_of_raises_ += 1;
   }
   // update all in if this action puts player all in
   if (action >= chip_amounts_[acting_player_]) {
@@ -177,6 +183,7 @@ void GameState::TakeAction(long action) {
     acting_player_ = small_blind_pos_;
     betting_round_ = 0;
     needs_card_ = true;
+    number_of_raises_ = 0;
   } else {
     acting_player_ = (acting_player_+1) % num_players_;
   }
@@ -188,16 +195,17 @@ void GameState::TakeAction(long action) {
   }
 }  // TakeAction
 
-void GameState::UndoAction(char acted_player, long action, long old_max_bet,
-                           long old_min_raise, long old_pot_good, 
-                           char old_round, char old_betting_round, 
-                           char old_all_in, long old_pot, char old_num_left, 
-                           bool old_is_done) {
+void GameState::UndoAction(char acted_player, int32_t action,
+                           int32_t old_max_bet, int32_t old_min_raise,
+                           int32_t old_pot_good, char old_round,
+                           char old_betting_round, char old_all_in,
+                           int32_t old_pot, char old_num_left,
+                           bool old_is_done, int32_t old_number_of_raises) {
   acting_player_ = acted_player;
   // get new amount that this player will have in pot and their new chip amounts
-  long old_total_bet = total_bets_[acting_player_];
-  long old_chip_amount = chip_amounts_[acting_player_];
-  long raise_amount = 0;
+  int32_t old_total_bet = total_bets_[acting_player_];
+  int32_t old_chip_amount = chip_amounts_[acting_player_];
+  int32_t raise_amount = 0;
   if (action >= 0) {
     old_total_bet -= action;
     old_chip_amount += action;
@@ -216,6 +224,7 @@ void GameState::UndoAction(char acted_player, long action, long old_max_bet,
   pot_ = old_pot;
   num_left_ = old_num_left;
   is_done_ = old_is_done;
+  number_of_raises_ = old_number_of_raises;
 }  // UndoAction
 
 }  // namespace poker_engine

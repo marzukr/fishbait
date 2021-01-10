@@ -13,8 +13,8 @@
 
 namespace poker_engine {
 
-Game::Game(char num_players, char num_rounds, long small_blind, long big_blind,
-           long starting_amounts, char small_blind_pos) :
+Game::Game(char num_players, char num_rounds, int32_t small_blind,
+           int32_t big_blind, int32_t starting_amounts, char small_blind_pos) :
            game_state_(num_players, num_rounds, small_blind, big_blind,
            starting_amounts, small_blind_pos) {
   // initialize the deck
@@ -106,7 +106,7 @@ void Game::AwardPot() {
   char num_players = game_state_.num_players_;
   char players_left = game_state_.num_left_;
   std::vector<double> awards(num_players);
-  int ranks[num_players];
+  std::vector<int> ranks(num_players);
 
   // if only one player left don't evaluate hands
   if (players_left <= 1) {
