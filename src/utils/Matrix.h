@@ -79,6 +79,7 @@ class Matrix {
     for (uint32_t i = 0; i < n_; ++i) {
       T* row_begin = &(*this)(i, 0);
       U divisor = a(i);
+      assert(divisor != 0);
       std::for_each(row_begin, row_begin+m_, [&divisor](T& elem) {
         elem /= divisor;
       });

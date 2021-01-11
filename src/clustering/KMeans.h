@@ -24,9 +24,17 @@ class KMeans {
  public:
   explicit KMeans(uint32_t k)
       : k_(k), clusters_(nullptr), assignments_(nullptr), loss_(-1) {}
+  KMeans(uint32_t k, std::unique_ptr<utils::Matrix<double>> initial_clusters)
+      : k_(k), clusters_(std::move(initial_clusters)), assignments_(nullptr),
+        loss_(-1) {}
 
   void Elkan(const utils::Matrix<T>& data, bool verbose = false) {
-    std::unique_ptr clusters = InitPlusPlus(data, verbose);
+    std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
+    if (clusters_ == nullptr) {
+      clusters = InitPlusPlus(data, verbose);
+    } else {
+      clusters = std::make_unique<utils::Matrix<double>>(*clusters_);
+    }
 
     // Initialize the lower bounds of the distance between x and every
     // cluster to 0
@@ -41,6 +49,10 @@ class KMeans {
             (*clusters)(c1), (*clusters)(c2));
       }
     }
+
+    // An array to keep track of 1/2 the distance to the shortest other cluster
+    // from each cluster
+    std::vector<double> half_min_cluster_dists(k_);
 
     // Compute the assignments for each point (the closest cluster) using
     // lemma 1 to avoid redudant distance computation, and store the distance
@@ -96,16 +108,23 @@ class KMeans {
     bool converged = false;
     uint32_t iteration = 0;
     while (!converged) {
-      // Step 1:
+      // Step 1
+      // For all centers c and c', compute the distance between them
+      for (uint32_t c1 = 0; c1 < k_; ++c1) {
+        for (uint32_t c2 = c1 + 1; c2 < k_; ++c2) {
+          cluster_dists(c1, c2) = Distance<double, double>::Compute(
+              (*clusters)(c1), (*clusters)(c2));
+        }
+      }
       // From each cluster, compute and store 1/2 the distance to the nearest
       // other cluster
-      std::vector<double> half_min_cluster_dists(k_);
       for (uint32_t c1 = 0; c1 < k_; ++c1) {
         bool uninitialized = true;
         for (uint32_t c2 = 0; c2 < k_; ++c2) {
           if (c1 == c2) continue;
           if (uninitialized) {
             half_min_cluster_dists[c1] = cluster_dists(c1, c2)/2;
+            uninitialized = false;
           } else {
             half_min_cluster_dists[c1] = std::min(cluster_dists(c1, c2)/2,
                                                   half_min_cluster_dists[c1]);
@@ -114,13 +133,13 @@ class KMeans {
       }
 
       // Step 3
-      for (uint32_t c = 0; c < k_; ++c) {
-        for (uint32_t x = 0; x < data.n(); ++x) {
-          uint32_t& c_x = (*assignments)[x];
+      for (uint32_t x = 0; x < data.n(); ++x) {
+        uint32_t& c_x = (*assignments)[x];
 
-          // Step 2
-          if (upper_bounds[x] <= half_min_cluster_dists[c_x]) continue;
+        // Step 2
+        if (upper_bounds[x] <= half_min_cluster_dists[c_x]) continue;
 
+        for (uint32_t c = 0; c < k_; ++c) {
           // Step 3(i)
           if (c == c_x) continue;
 
@@ -149,8 +168,8 @@ class KMeans {
               upper_bounds[x] = x_c_dist;
             }
           }
-        }  // for x
-      }  // for c
+        }  // for c
+      }  // for x
 
       // Step 4
       auto means = std::make_unique<utils::Matrix<double>>(k_, data.m(), 0);
@@ -183,14 +202,14 @@ class KMeans {
       // Step 7
       converged = (*clusters) == (*means);
       clusters = std::move(means);
+      loss_ = ComputeLoss(data, *clusters, *assignments);
 
+      iteration += 1;
       if (verbose) {
         std::cout << "computed iteration " << iteration;
         std::cout << ", converged: " << converged << std::endl;
+        std::cout << loss_ << std::endl;
       }
-      iteration += 1;
-      loss_ = ComputeLoss(data, *clusters, *assignments);
-      std::cout << loss_ << std::endl;
     }  // while !converged
 
     // Compute the loss and set the instance variables to the clusters and
@@ -198,6 +217,14 @@ class KMeans {
     clusters_ = std::move(clusters);
     assignments_ = std::move(assignments);
   }  // Elkan
+
+  const utils::Matrix<double>& clusters() const {
+    return *clusters_;
+  }
+
+  const std::vector<uint32_t>& assignments() const {
+    return *assignments_;
+  }
 
  private:
   std::unique_ptr<utils::Matrix<double>> InitPlusPlus(
@@ -266,7 +293,7 @@ class KMeans {
       uint32_t c_x = assignments[x];
       double dist_to_cluster = Distance<T, double>::Compute(data(x),
                                                             clusters(c_x));
-      squared_sum += std::pow(dist_to_cluster/1081, 2);
+      squared_sum += std::pow(dist_to_cluster, 2);
     }
     return squared_sum/data.n();
   }
