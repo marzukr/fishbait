@@ -26,6 +26,7 @@ class SequenceTable {
   char num_rounds_;
   std::vector<uint32_t> num_rows_;
   std::vector<char> num_raise_sizes_;
+  std::vector<int> raise_size_index_;
   uint64_t terminal_rows_;
   uint32_t GetTotalRows();
   uint32_t GetPreflopRows();
@@ -34,15 +35,18 @@ class SequenceTable {
   uint32_t GetRiverRows();
   friend std::ostream& operator<<(std::ostream&, const SequenceTable& s);
   void AllocateRow(const uint32_t& index, const char& current_round);
+  std::vector<int32_t> GetAllActions(uint32_t row, poker_engine::GameState state);
+  int32_t IndexToAction(uint32_t row, uint32_t col, poker_engine::GameState state);
+  std::vector<uint32_t> GetAllActionIndicies(uint32_t row, poker_engine::GameState state);
 
  private:
   void Update(poker_engine::GameState& state,   // NOLINT (runtime/references)
               const uint32_t& orig_index,
-              const std::vector<int> &raise_size_index,
               const bool& update_nums);
   int32_t LegalAction(const double& action, const int32_t& call,
                       const float& raise_mult, const int32_t& prev,
                       const poker_engine::GameState& state);
+  float IndexToRaise(int index);
   uint32_t total_rows_;
   uint32_t num_illegal_;
   char multi_player_max_;

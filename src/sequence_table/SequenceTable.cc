@@ -42,8 +42,8 @@ SequenceTable::SequenceTable(const std::vector<float> &raise_sizes,
   // it is 1d vector to be fast, so we also have another vector saying the
   // indicies of where each round starts and stopped
   raise_sizes_.reserve(length + num_rounds_*kColumnsAdd);
-  std::vector<int> raise_size_index(num_rounds_ + 1);
-  raise_size_index[0] = 0;
+  raise_size_index_.reserve(num_rounds_ + 1);
+  raise_size_index_[0] = 0;
   int temp_index = 0;
   int raises_index = 0;
   for (int i = 0; i < num_rounds_; ++i) {
@@ -56,7 +56,7 @@ SequenceTable::SequenceTable(const std::vector<float> &raise_sizes,
     }
     temp_index += num_raise_sizes[i];
     raises_index += num_raise_sizes[i];
-    raise_size_index[i+1] = temp_index;
+    raise_size_index_[i+1] = temp_index;
   }
   // number of rows for preflop starts at 1 to account for root node, all others
   // initialize to 0
@@ -67,7 +67,7 @@ SequenceTable::SequenceTable(const std::vector<float> &raise_sizes,
   uint32_t orig_index = 0;
   poker_engine::GameState state(num_players, num_rounds, small_blind, big_blind,
                                 starting_chips, 0);
-  Update(state, orig_index, raise_size_index, update_nums);
+  Update(state, orig_index, update_nums);
   if (only_nums) {
     return;
   }
@@ -88,7 +88,7 @@ SequenceTable::SequenceTable(const std::vector<float> &raise_sizes,
   poker_engine::GameState state_new(num_players, num_rounds_, small_blind,
                                     big_blind, starting_chips, 0);
   // recursion
-  Update(state_new, total_rows_, raise_size_index, update_nums);
+  Update(state_new, total_rows_, update_nums);
   total_rows_ += 1;
 }  // SequenceTable constructor
 
@@ -112,7 +112,6 @@ void SequenceTable::AllocateRow(const uint32_t& index,
 
 void SequenceTable::Update(poker_engine::GameState& state,
                            const uint32_t& orig_index,
-                           const std::vector<int> &raise_size_index,
                            const bool& update_nums) {
   uint32_t recursive_index = orig_index;
   char acting_player = state.acting_player_;
@@ -131,7 +130,7 @@ void SequenceTable::Update(poker_engine::GameState& state,
     state.chip_amounts_[acting_player] == 0) {
     state.TakeAction(-2);
     if (!state.is_done_) {
-      Update(state, orig_index, raise_size_index, update_nums);
+      Update(state, orig_index, update_nums);
     } else {
       terminal_rows_ += 1;
     }
@@ -142,9 +141,9 @@ void SequenceTable::Update(poker_engine::GameState& state,
     // loop through fold, call, all in, all raise sizes that are legal
     int32_t call = state.max_bet_ - state.total_bets_[acting_player];
     int32_t prev = -2;
-    for (int i = raise_size_index[state.current_round_];
-         i < raise_size_index[state.current_round_+1]; ++i) {
-      uint32_t col_index = i-raise_size_index[state.current_round_];
+    for (int i = raise_size_index_[state.current_round_];
+         i < raise_size_index_[state.current_round_+1]; ++i) {
+      uint32_t col_index = i-raise_size_index_[state.current_round_];
       float raise_multiplier = raise_sizes_[i];
       double action = -1;
       double raise_size = raise_multiplier * (state.pot_+call);
@@ -174,7 +173,7 @@ void SequenceTable::Update(poker_engine::GameState& state,
             AllocateRow(assign_index, state.current_round_);
             table_[recursive_index][col_index] = assign_index;
           }
-          Update(state, assign_index, raise_size_index, update_nums);
+          Update(state, assign_index, update_nums);
         } else {
             terminal_rows_ += 1;
             if (!update_nums) {
@@ -257,6 +256,66 @@ int32_t SequenceTable::LegalAction(const double& action, const int32_t& call,
   }
   return real_action;
 }  // LegalAction
+
+
+// std::vector<int32_t> SequenceTable::GetAllActions(uint32_t row, poker_engine::GameState state){
+//   char num_cols = num_raise_sizes_[state.current_round_] + kColumnsAdd;
+//   uint32_t* table_row = table_[row];
+//   std::vector<int32_t> actions;
+//   int32_t call = state.max_bet_ - state.total_bets_[state.acting_player_];
+//   for (int i = 0; i < num_cols; ++i) {
+//     if (table_row[i] != kIllegalActionVal) {
+//       if (i == kFold) {
+//         actions.push_back(-1);
+//       }
+//       if (i == kCall) {
+//         actions.push_back(call);
+//       }
+//       if (i == kAllIn) {
+//         actions.push_back(state.chip_amounts_[state.acting_player_]);
+//       }
+//       else {
+//         float raise_size = raise_sizes_[raise_size_index_[state.current_round_] + i];
+//         actions.push_back(round(call+raise_size*(state.pot_+call)));
+//       }
+//     }
+//   }
+// }
+
+// std::vector<uint32_t> SequenceTable::GetAllActionIndicies(uint32_t row, poker_engine::GameState state) {
+//   char num_cols = num_raise_sizes_[state.current_round_] + kColumnsAdd;
+//   std::vector<uint32_t> indicies;
+//   for (int i = 0; i < num_cols; ++i) {
+//     uint32_t val = table_[row][i];
+//     if (val != kIllegalActionVal) {
+//       indicies.push_back(val);
+//     }
+//   }
+//   return indicies;
+// }
+
+// int32_t SequenceTable::IndexToAction(uint32_t row, uint32_t col, poker_engine::GameState state) {
+//   char num_cols = num_raise_sizes_[state.current_round_] + kColumnsAdd;
+//   if (col >= num_cols) {
+//     return -3;
+//   }
+//   if (table_[row][col] == kIllegalActionVal) {
+//     return -2;
+//   }
+//   if (col == kFold) {
+//     return -1;
+//   }
+//   int32_t call = state.max_bet_ - state.total_bets_[state.acting_player_];
+//   if (col == kCall) {
+//     return call;
+//   }
+//   if (col == kAllIn) {
+//     return state.chip_amounts_[state.acting_player_];
+//   }
+//   float raise_size = raise_sizes_[raise_size_index_[state.current_round_] + col];
+//   return round(call+raise_size*(state.pot_+call));
+// }
+
 
 std::ostream& operator<<(std::ostream &strm, const SequenceTable &s) {
   double total = 0;

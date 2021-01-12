@@ -105,7 +105,7 @@ void Game::DealCard(char num_cards) {
 void Game::AwardPot() {
   char num_players = game_state_.num_players_;
   char players_left = game_state_.num_left_;
-  std::vector<double> awards(num_players);
+  std::vector<int32_t> awards(num_players);
   std::vector<int> ranks(num_players);
 
   // if only one player left don't evaluate hands
