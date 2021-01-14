@@ -501,6 +501,58 @@ TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters",
   REQUIRE(k.loss() == 38.983333333333334);
 }  // TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters")
 
+TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
+          "[clustering][kmeans]") {
+  std::vector<int8_t> d0{-7,  3};
+  std::vector<int8_t> d1{-7,  3};
+  std::vector<int8_t> d2{-7,  3};
+  std::vector<int8_t> d3{-7,  3};
+  std::vector<int8_t> d4{-7,  3};
+  std::vector<int8_t> d5{-7,  3};
+  std::vector<int8_t> d6{10, 10};
+  std::vector<int8_t> d7{10, 10};
+  std::vector<int8_t> d8{10, 10};
+  std::vector<int8_t> d9{10, 10};
+
+  utils::Matrix<int8_t> features(10, 2);
+  features.SetRow(0, utils::VectorView(d0));
+  features.SetRow(1, utils::VectorView(d1));
+  features.SetRow(2, utils::VectorView(d2));
+  features.SetRow(3, utils::VectorView(d3));
+  features.SetRow(4, utils::VectorView(d4));
+  features.SetRow(5, utils::VectorView(d5));
+  features.SetRow(6, utils::VectorView(d6));
+  features.SetRow(7, utils::VectorView(d7));
+  features.SetRow(8, utils::VectorView(d8));
+  features.SetRow(9, utils::VectorView(d9));
+
+  std::vector<double> c0{1, 0};
+  std::vector<double> c1{0, 1};
+
+  auto initial_centers = std::make_unique<utils::Matrix<double>>(2, 2);
+  initial_centers->SetRow(0, utils::VectorView(c0));
+  initial_centers->SetRow(1, utils::VectorView(c1));
+
+  clustering::KMeans<int8_t, clustering::EuclideanDistance>
+      k(2, std::move(initial_centers));
+  k.Elkan(features);
+
+  std::vector<double> correct_c0{10, 10};
+  std::vector<double> correct_c1{-7,  3};
+
+  utils::Matrix<double> correct_centers(2, 2);
+  correct_centers.SetRow(0, utils::VectorView(correct_c0));
+  correct_centers.SetRow(1, utils::VectorView(correct_c1));
+
+  REQUIRE(k.clusters() == correct_centers);
+
+  std::vector<uint32_t> correct_assignments{1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+
+  REQUIRE(k.assignments() == correct_assignments);
+
+  REQUIRE(k.loss() == 0.0);
+}  // TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters")
+
 // kmeans++ test cases generated with spreadsheets and a separate C++ program to
 // determine the order of the psuedo random numbers used in InitPlusPlus
 
@@ -894,3 +946,44 @@ TEST_CASE("kmeans++ 10 int points 10 dimensions 3 clusters",
 
   REQUIRE(*centers == correct_centers);
 }  // TEST_CASE("kmeans++ 10 int points 10 dimensions 3 clusters")
+
+TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
+          "[clustering][kmeans]") {
+  std::vector<int8_t> d0{ 4, -1};
+  std::vector<int8_t> d1{ 4, -1};
+  std::vector<int8_t> d2{ 4, -1};
+  std::vector<int8_t> d3{ 4, -1};
+  std::vector<int8_t> d4{ 4, -1};
+  std::vector<int8_t> d5{ 4, -1};
+  std::vector<int8_t> d6{-5,  0};
+  std::vector<int8_t> d7{-5,  0};
+  std::vector<int8_t> d8{-5,  0};
+  std::vector<int8_t> d9{-5,  0};
+
+  utils::Matrix<int8_t> features(10, 2);
+  features.SetRow(0, utils::VectorView(d0));
+  features.SetRow(1, utils::VectorView(d1));
+  features.SetRow(2, utils::VectorView(d2));
+  features.SetRow(3, utils::VectorView(d3));
+  features.SetRow(4, utils::VectorView(d4));
+  features.SetRow(5, utils::VectorView(d5));
+  features.SetRow(6, utils::VectorView(d6));
+  features.SetRow(7, utils::VectorView(d7));
+  features.SetRow(8, utils::VectorView(d8));
+  features.SetRow(9, utils::VectorView(d9));
+
+  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(2);
+  std::unique_ptr<utils::Matrix<double>> centers = k.InitPlusPlus(features,
+                                                                  false);
+
+  utils::Matrix<double> correct_centers_1(2, 2);
+  correct_centers_1.SetRow(0, utils::VectorView(d0));
+  correct_centers_1.SetRow(1, utils::VectorView(d6));
+
+  utils::Matrix<double> correct_centers_2(2, 2);
+  correct_centers_2.SetRow(0, utils::VectorView(d6));
+  correct_centers_2.SetRow(1, utils::VectorView(d0));
+
+  REQUIRE((*centers == correct_centers_1 || *centers == correct_centers_2));
+}  // TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions
+   //            2 clusters") NOLINT(whitespace/indent)
