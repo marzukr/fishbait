@@ -11,3 +11,6 @@
 [submodule "external/SKPokerEval"]
 	path = external/SKPokerEval
 	url = https://github.com/marzukr/SKPokerEval
+[submodule "external/scikit-build"]
+	path = external/scikit-build
+	url = https://github.com/marzukr/scikit-build.git

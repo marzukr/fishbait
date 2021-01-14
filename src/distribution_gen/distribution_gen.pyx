@@ -9,6 +9,7 @@ import numpy as np
 import json
 import os
 import pickle
+import cProfile
 
 import sys
 sys.path.append("../../build/lib")
@@ -105,8 +106,8 @@ def generate_hand_strength_roll_ochs(hand, rollout, op_clusters):
     # r_total = 2118760
     # r = 0
     # for rollout in rollouts(hand):
-    wins = np.zeros(8)
-    total = np.zeros(8)
+    wins = np.zeros(8, dtype=np.float64)
+    total = np.zeros(8, dtype=np.float64)
     for op_hand in possible_opponent_hands(hand, rollout):
         cluster = op_clusters[op_hand[0], op_hand[1]]
         assert(cluster != -1)
@@ -233,15 +234,8 @@ def generate_turn_histograms(hand):
     print("completed {}".format(hand))
     to_add = []
 
-if __name__ == '__main__':
-    assert(len(sys.argv) == 2)
-    try:
-        hand_num = int(sys.argv[1])
-    except ValueError:
-        raise
-    assert(hand_num < 169)
-    assert(hand_num >= 0)
 
+def go(hand_num):
     deck = [i for i in range(0, 52)]
     hands = {}
     handcalc = hand_evaluator.Indexer(1, [2])
@@ -265,23 +259,43 @@ if __name__ == '__main__':
     
     isocalc = hand_evaluator.Indexer(2, [2,5])
     unique_rollouts = {}
+
+    i = 0
+    pr = cProfile.Profile()
+    pr.enable()
     for rollout in rollouts(hand):
         iso_idx = isocalc.index([hand[0], hand[1],
             rollout[0], rollout[1], rollout[2], rollout[3], rollout[4]], 
             False)
         if iso_idx not in unique_rollouts:
-            unique_rollouts[iso_idx] = rollout
+            unique_rollouts[iso_idx] = generate_hand_strength_roll_ochs(hand, 
+                rollout, op_clusters)
+        if i > 10000:
+            break
+        i += 1
+    pr.disable()
+    pr.print_stats(sort='time')
 
-    ret = {}
-    with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
-        future_to_iso_idx = {
-            executor.submit(generate_hand_strength_roll_ochs, 
-                hand, rollout, op_clusters): iso_idx 
-            for iso_idx, rollout in unique_rollouts.items()
-        }
-        for future in concurrent.futures.as_completed(future_to_iso_idx):
-            vect = future.result()
-            iso_idx = future_to_iso_idx[future]
-            ret[iso_idx] = vect
-    save_binary("luts/{}_{}.ochs".format(hand[0], hand[1]), ret)
+    # ret = {}
+    # with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
+    #     future_to_iso_idx = {
+    #         executor.submit(generate_hand_strength_roll_ochs, 
+    #             hand, rollout, op_clusters): iso_idx 
+    #         for iso_idx, rollout in unique_rollouts.items()
+    #     }
+    #     for future in concurrent.futures.as_completed(future_to_iso_idx):
+    #         vect = future.result()
+    #         iso_idx = future_to_iso_idx[future]
+    #         ret[iso_idx] = vect
+    # save_binary("luts/{}_{}.ochs".format(hand[0], hand[1]), ret)
 
+if __name__ == '__main__':
+    assert(len(sys.argv) == 2)
+    try:
+        hand_num = int(sys.argv[1])
+    except ValueError:
+        raise
+    assert(hand_num < 169)
+    assert(hand_num >= 0)
+    # cProfile.run('go(hand_num)')
+    go(hand_num)

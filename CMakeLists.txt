@@ -22,6 +22,10 @@ if(GIT_SUBMODULE)
   endif()
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -33,6 +37,7 @@ add_subdirectory(external/OMPEval)
 add_subdirectory(external/hand-isomorphism)
 
 add_subdirectory(src/clustering)
+add_subdirectory(src/distribution_gen)
 add_subdirectory(src/hand_evaluator)
 add_subdirectory(src/poker_engine)
 
