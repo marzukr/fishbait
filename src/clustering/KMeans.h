@@ -61,39 +61,28 @@ class KMeans {
     std::vector<bool> upper_bound_loose(data.n(), true);
     auto assignments = std::make_unique<std::vector<uint32_t>>(data.n());
     for (uint32_t x = 0; x < data.n(); ++x) {
-      bool uninitialized = true;
-      uint32_t& c = (*assignments)[x];
-      for (uint32_t cprime = 0; cprime < k_; ++cprime) {
-        // Check if we need to compute the distance to this cluster using
-        // lemma 1 and if we have already computed the distance to at least
-        // one other cluster
-        bool calc_x_cprime_dist = false;
-        if (!uninitialized) {
-          double c_cprime_dist = cluster_dists(c, cprime);
-          double x_c_dist = upper_bounds[x];
-          if (c_cprime_dist/2 < x_c_dist) {
-            calc_x_cprime_dist = true;
-          }
-        }
+      (*assignments)[x] = 0;
+      upper_bounds[x] = Distance<T, double>::Compute(data(x), (*clusters)(0));
+      lower_bounds(x, 0) = upper_bounds[x];
 
-        // If we haven't computed the distance to any cluster yet, or this
-        // cluster might be closer than the current closest from lemma 1, then
-        // calculate the distance to this cluster. Also set the lower bound of
-        // the distance between x and this cluster to the distance we just
-        // calculated
-        if (uninitialized || calc_x_cprime_dist) {
+      uint32_t& c = (*assignments)[x];
+      for (uint32_t cprime = 1; cprime < k_; ++cprime) {
+        // If this cluster might be closer than the current closest from
+        // lemma 1, then calculate the distance to this cluster. Also set the
+        // lower bound of the distance between x and this cluster to the
+        // distance we just calculated
+
+        if (cluster_dists(c, cprime)/2 < upper_bounds[x]) {
           double x_cprime_dist = Distance<T, double>::Compute(
               data(x), (*clusters)(cprime));
           lower_bounds(x, cprime) = x_cprime_dist;
 
-          // If we haven't computed the distance to any cluster yet or this
-          // cluster is the closest cluster we have encountered so far, assign
-          // x to this cluster and set the upper bound of x to the distance
-          // between this cluster and x
-          if (uninitialized || x_cprime_dist < upper_bounds[x]) {
+          // If this cluster is the closest cluster we have encountered so far,
+          // assign x to this cluster and set the upper bound of x to the
+          // distance between this cluster and x
+          if (x_cprime_dist < upper_bounds[x]) {
             (*assignments)[x] = cprime;
             upper_bounds[x] = x_cprime_dist;
-            uninitialized = false;
           }
         }
       }  // for c
@@ -218,19 +207,14 @@ class KMeans {
     assignments_ = std::move(assignments);
   }  // Elkan
 
-  const utils::Matrix<double>& clusters() const {
-    return *clusters_;
-  }
-
-  const std::vector<uint32_t>& assignments() const {
-    return *assignments_;
-  }
-
- private:
   std::unique_ptr<utils::Matrix<double>> InitPlusPlus(
-      const utils::Matrix<T>& data, bool verbose = false) const {
-    std::random_device dev;
-    std::mt19937 rng(dev());
+      const utils::Matrix<T>& data, bool verbose = false, int32_t seed = -1) {
+    if (seed < 0) {
+      std::random_device dev;
+      seed = dev();
+    }
+    uint16_t unsigned_seed = seed;
+    std::mt19937 rng(unsigned_seed);
     std::uniform_real_distribution<> std_unif(0.0, 1.0);
 
     // Array to store the squared distances to the nearest cluster. Initially
@@ -285,6 +269,19 @@ class KMeans {
     return filled_clusters;
   }  // InitPlusPlus
 
+  const utils::Matrix<double>& clusters() const {
+    return *clusters_;
+  }
+
+  const std::vector<uint32_t>& assignments() const {
+    return *assignments_;
+  }
+
+  double loss() const {
+    return loss_;
+  }
+
+ private:
   double ComputeLoss(const utils::Matrix<T>& data,
                      const utils::Matrix<double>& clusters,
                      const std::vector<uint32_t>& assignments) {
