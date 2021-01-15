@@ -15,7 +15,7 @@ From the root directory:
     - `cmake ..` will use the last value specified for `CMAKE_BUILD_TYPE`. If no
       value is specified, it will use release mode by default.
 4. `make`
-    - Note: You can also run `make clustering`, `make distribution_gen`,
+    - Note: You can also run `make clustering`, `make hand_strengths_gen`,
       `make simulator`, or `make tests` to only build those respective parts of
       the project.
 

@@ -7,5 +7,5 @@ add_executable(tests.out main.cc
 
 set_property(TARGET tests.out PROPERTY CXX_STANDARD 17)
 
-add_custom_target(tests)
+add_custom_target(tests ALL)
 add_dependencies(tests tests.out)
