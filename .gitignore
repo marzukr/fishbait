@@ -40,6 +40,9 @@ __pycache__/
 .vscode
 */.vscode/*
 
+venv
+*/venv/*
+
 /build/*
 build
 

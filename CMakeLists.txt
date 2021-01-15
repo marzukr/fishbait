@@ -30,6 +30,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/scikit-build/skbuild/resources/cmake)
+
 include_directories(src)
 include_directories(external)
 
@@ -38,7 +41,7 @@ add_subdirectory(external/hand-isomorphism)
 
 add_subdirectory(src/clustering)
 add_subdirectory(src/distribution_gen)
-add_subdirectory(src/hand_evaluator)
+# add_subdirectory(src/hand_evaluator)
 add_subdirectory(src/poker_engine)
 
 add_subdirectory(tests)
