@@ -1,8 +1,9 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <cstdint>
-
 #include "hand_strengths/CardCombinations.h"
+
+#include <cstdint>
+#include <cassert>
 
 namespace hand_strengths {
 
@@ -22,10 +23,10 @@ CardCombinations::CardCombinations(uint32_t r, std::vector<uint32_t>&& exclude)
   }
 
   state_[0] = -1;
-  MoveToNextIncluded(0);
+  assert(MoveToNextIncluded(0) == true);
   for (uint32_t i = 1; i < r; ++i) {
     state_[i] = state_[i-1];
-    MoveToNextIncluded(i);
+    assert(MoveToNextIncluded(i) == true);
   }
 }
 
@@ -46,7 +47,7 @@ void CardCombinations::IncrementState(uint32_t i) {
   if (MoveToNextIncluded(i)) {
     for (uint32_t j = i + 1; j < r_; ++j) {
       state_[j] = state_[j-1];
-      MoveToNextIncluded(j);
+      assert(MoveToNextIncluded(j) == true);
     }
     return;
   } else if (i > 0) {
