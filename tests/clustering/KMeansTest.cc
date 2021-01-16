@@ -64,11 +64,11 @@ TEST_CASE("Elkan 10 double points 2 dimensions 3 clusters",
   correct_centers.SetRow(2, utils::VectorView(correct_c2));
 
 
-  REQUIRE(k.clusters() == correct_centers);
+  REQUIRE(*k.clusters() == correct_centers);
 
   std::vector<uint32_t> correct_assignments{2, 2, 0, 2, 1, 1, 1, 0, 0, 1};
 
-  REQUIRE(k.assignments() == correct_assignments);
+  REQUIRE(*k.assignments() == correct_assignments);
 
   REQUIRE(k.loss() == 9.511703026188766);
 }  // TEST_CASE("Elkan 10 double points 2 dimensions 3 clusters")
@@ -129,11 +129,11 @@ TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters",
   correct_centers.SetRow(4, utils::VectorView(correct_c4));
 
 
-  REQUIRE(k.clusters() == correct_centers);
+  REQUIRE(*k.clusters() == correct_centers);
 
   std::vector<uint32_t> correct_assignments{0, 4, 0, 2, 3, 1, 4, 3, 3, 2};
 
-  REQUIRE(k.assignments() == correct_assignments);
+  REQUIRE(*k.assignments() == correct_assignments);
 
   REQUIRE(k.loss() == 5.283333333333333);
 }  // TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters")
@@ -374,7 +374,7 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
   correct_centers.SetRow(4, utils::VectorView(correct_c4));
 
 
-  REQUIRE(k.clusters() == correct_centers);
+  REQUIRE(*k.clusters() == correct_centers);
 
   std::vector<uint32_t> correct_assignments{4, 2, 4, 2, 3, 2, 4, 3, 0, 2, 0, 4,
       1, 2, 0, 3, 0, 4, 1, 1, 0, 2, 3, 0, 3, 0, 2, 0, 1, 2, 1, 1, 3, 4, 3, 3, 0,
@@ -382,7 +382,7 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
       2, 1, 1, 1, 2, 2, 3, 1, 4, 0, 1, 3, 3, 4, 4, 0, 0, 0, 4, 2, 2, 1, 0, 3, 0,
       1, 3, 2, 4, 2, 0, 2, 1, 0, 2, 1, 3, 0};
 
-  REQUIRE(k.assignments() == correct_assignments);
+  REQUIRE(*k.assignments() == correct_assignments);
 
   REQUIRE(k.loss() == 0.03235891455004822);
 }  // TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters")
@@ -430,11 +430,11 @@ TEST_CASE("Elkan 10 double points 1 dimension 2 clusters",
   correct_centers.SetRow(0, utils::VectorView(correct_c0));
   correct_centers.SetRow(1, utils::VectorView(correct_c1));
 
-  REQUIRE(k.clusters() == correct_centers);
+  REQUIRE(*k.clusters() == correct_centers);
 
   std::vector<uint32_t> correct_assignments{0, 0, 0, 0, 1, 1, 0, 1, 1, 1};
 
-  REQUIRE(k.assignments() == correct_assignments);
+  REQUIRE(*k.assignments() == correct_assignments);
 
   REQUIRE(k.loss() == 0.8264051400816704);
 }  // TEST_CASE("Elkan 10 double points 1 dimension 2 clusters")
@@ -492,11 +492,11 @@ TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters",
   correct_centers.SetRow(1, utils::VectorView(correct_c1));
   correct_centers.SetRow(2, utils::VectorView(correct_c2));
 
-  REQUIRE(k.clusters() == correct_centers);
+  REQUIRE(*k.clusters() == correct_centers);
 
   std::vector<uint32_t> correct_assignments{2, 2, 0, 2, 0, 2, 1, 1, 1, 0};
 
-  REQUIRE(k.assignments() == correct_assignments);
+  REQUIRE(*k.assignments() == correct_assignments);
 
   REQUIRE(k.loss() == 38.983333333333334);
 }  // TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters")
@@ -544,11 +544,11 @@ TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   correct_centers.SetRow(0, utils::VectorView(correct_c0));
   correct_centers.SetRow(1, utils::VectorView(correct_c1));
 
-  REQUIRE(k.clusters() == correct_centers);
+  REQUIRE(*k.clusters() == correct_centers);
 
   std::vector<uint32_t> correct_assignments{1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
 
-  REQUIRE(k.assignments() == correct_assignments);
+  REQUIRE(*k.assignments() == correct_assignments);
 
   REQUIRE(k.loss() == 0.0);
 }  // TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters")

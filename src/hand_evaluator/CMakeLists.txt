@@ -1,5 +1,5 @@
-find_package(Boost COMPONENTS python3 REQUIRED)
-find_package(PythonLibs 3 REQUIRED)
+find_package(Boost COMPONENTS python3)
+find_package(PythonLibs 3)
 
 
 add_library(hand_evaluator MODULE hand_evaluator.cc Indexer.cc OMPRanker.cc)

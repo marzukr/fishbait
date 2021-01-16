@@ -269,12 +269,12 @@ class KMeans {
     return filled_clusters;
   }  // InitPlusPlus
 
-  const utils::Matrix<double>& clusters() const {
-    return *clusters_;
+  const utils::Matrix<double>* clusters() const {
+    return clusters_.get();
   }
 
-  const std::vector<uint32_t>& assignments() const {
-    return *assignments_;
+  const std::vector<uint32_t>* assignments() const {
+    return assignments_.get();
   }
 
   double loss() const {
