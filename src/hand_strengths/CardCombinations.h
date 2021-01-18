@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "utils/VectorView.h"
+
 namespace hand_strengths {
 
 const uint8_t kDeckSize = 5;
@@ -13,7 +15,7 @@ const uint8_t kDeckSize = 5;
 class CardCombinations {
  public:
   explicit CardCombinations(uint32_t r);
-  CardCombinations(uint32_t r, std::vector<uint32_t>&& exclude);
+  CardCombinations(uint32_t r, utils::VectorView<uint32_t> exclude);
 
   static uint32_t N_Choose_K(uint32_t n, uint32_t k);
 

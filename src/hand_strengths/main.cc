@@ -10,6 +10,7 @@
 #include "hand_strengths/OCHS.h"
 #include "hand_strengths/CardCombinations.h"
 #include "utils/CombinationMatrix.h"
+#include "utils/VectorView.h"
 
 void print(const hand_strengths::CardCombinations& c) {
   for (int i = 0; i < c.r(); ++i) {
@@ -17,6 +18,10 @@ void print(const hand_strengths::CardCombinations& c) {
   }
   std::cout << std::endl;
 }
+
+// void PreflopDistribution(std::array<uint8_t, 2> hand) {
+//   for (rollout)
+// }
 
 int main(int argc, char *argv[]) {
   assert(argc == 2);
@@ -63,8 +68,10 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  hand_strengths::CardCombinations rollouts(3, {3, 1});
-  for (; !rollouts.is_done(); ++rollouts) {
+  using hand_strengths::CardCombinations;
+  using utils::VectorView;
+  for (CardCombinations rollouts(2, VectorView<uint32_t>({3, 1}));
+       !rollouts.is_done(); ++rollouts) {
     print(rollouts);
   }
 

@@ -7,6 +7,8 @@
 
 #include <cassert>
 #include <vector>
+#include <array>
+#include <initializer_list>
 
 namespace utils {
 
@@ -14,7 +16,13 @@ template <typename T>
 class VectorView {
  public:
   VectorView(const T* start, uint32_t n) : start_(start), n_(n) {}
-  explicit VectorView(std::vector<T>& v) : start_(v.data()), n_(v.size()) {}
+  explicit VectorView(const std::vector<T>& v) : start_(v.data()),
+                                                 n_(v.size()) {}
+  explicit VectorView(const std::initializer_list<T> v) : start_(v.begin()),
+                                                          n_(v.size()) {}
+  template <std::size_t kN>
+  explicit VectorView(const std::array<T, kN>& a) : start_(a.begin()),
+                                                    n_(a.size()) {}
   ~VectorView() {}
 
   const T operator()(uint32_t i) {

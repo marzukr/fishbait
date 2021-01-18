@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <cassert>
 
+#include "utils/VectorView.h"
+
 namespace hand_strengths {
 
 CardCombinations::CardCombinations(uint32_t r)
@@ -15,7 +17,8 @@ CardCombinations::CardCombinations(uint32_t r)
   state_[r] = kDeckSize;
 }
 
-CardCombinations::CardCombinations(uint32_t r, std::vector<uint32_t>&& exclude)
+CardCombinations::CardCombinations(uint32_t r,
+                                   utils::VectorView<uint32_t> exclude)
     : state_(r+1, kDeckSize), included_(kDeckSize, true), r_(r),
       is_done_(false) {
   for (auto it = exclude.begin(); it != exclude.end(); ++it) {
