@@ -4,33 +4,46 @@
 
 #include <cstdint>
 #include <cassert>
+#include <algorithm>
 
 #include "utils/VectorView.h"
 
 namespace hand_strengths {
 
-CardCombinations::CardCombinations(uint32_t r)
+CardCombinations::CardCombinations(uint8_t r)
     : state_(r+1, 0), included_(kDeckSize, true), r_(r), is_done_(false) {
-  for (uint32_t i = 0; i < r; ++i) {
+  for (uint8_t i = 0; i < r; ++i) {
     state_[i] = i;
   }
   state_[r] = kDeckSize;
 }
 
-CardCombinations::CardCombinations(uint32_t r,
-                                   utils::VectorView<uint32_t> exclude)
+CardCombinations::CardCombinations(uint8_t r,
+                                   utils::VectorView<uint8_t> exclude)
     : state_(r+1, kDeckSize), included_(kDeckSize, true), r_(r),
       is_done_(false) {
+  Reset(exclude, true);
+}
+
+void CardCombinations::Reset(utils::VectorView<uint8_t> exclude,
+                             bool constructor) {
+  if (!constructor) {
+    std::fill(included_.begin(), included_.end(), true);
+    std::fill(state_.begin(), state_.end(), kDeckSize);
+    is_done_ = false;
+  }
+
   for (auto it = exclude.begin(); it != exclude.end(); ++it) {
     included_[*it] = false;
   }
 
   state_[0] = -1;
   assert(MoveToNextIncluded(0) == true);
-  for (uint32_t i = 1; i < r; ++i) {
+  for (uint8_t i = 1; i < r_; ++i) {
     state_[i] = state_[i-1];
     assert(MoveToNextIncluded(i) == true);
   }
+  state_[r_] = kDeckSize;
 }
 
 uint32_t CardCombinations::N_Choose_K(uint32_t n, uint32_t k) {
@@ -46,9 +59,9 @@ uint32_t CardCombinations::N_Choose_K(uint32_t n, uint32_t k) {
   return result;
 }
 
-void CardCombinations::IncrementState(uint32_t i) {
+void CardCombinations::IncrementState(uint8_t i) {
   if (MoveToNextIncluded(i)) {
-    for (uint32_t j = i + 1; j < r_; ++j) {
+    for (uint8_t j = i + 1; j < r_; ++j) {
       state_[j] = state_[j-1];
       assert(MoveToNextIncluded(j) == true);
     }
@@ -61,14 +74,15 @@ void CardCombinations::IncrementState(uint32_t i) {
   }
 }
 
-bool CardCombinations::MoveToNextIncluded(uint32_t i) {
-  uint32_t move_size = 0;
+bool CardCombinations::MoveToNextIncluded(uint8_t i) {
+  uint8_t move_size = 0;
   bool can_move = true;
   bool should_move = true;
   do {
     ++move_size;
-    can_move = state_[i] + move_size < state_[i + 1];
-    should_move = can_move && included_[state_[i] + move_size];
+    uint8_t potential_location = state_[i] + move_size;
+    can_move = potential_location < state_[i + 1];
+    should_move = can_move && included_[potential_location];
   } while (can_move && !should_move);
 
   if (can_move && should_move) {

@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <numeric>
 #include <cassert>
+#include <initializer_list>
+#include <array>
 
 extern "C" {
   #include "hand-isomorphism/src/hand_index.h"
@@ -15,14 +17,19 @@ namespace hand_strengths {
 
 class Indexer {
  public:
-  Indexer(const uint8_t rounds, const uint8_t* cpr) {
+  Indexer(const uint8_t rounds, const std::initializer_list<uint8_t> cpr) {
     isocalc_ = new hand_indexer_t();
-    hand_indexer_init(rounds, cpr, isocalc_);
+    hand_indexer_init(rounds, cpr.begin(), isocalc_);
   }
   ~Indexer() { delete isocalc_; }
 
-  uint32_t operator()(const uint8_t* cards) {
-    return hand_index_last(isocalc_, cards);
+  uint32_t operator()(const std::initializer_list<uint8_t> cards) {
+    return hand_index_last(isocalc_, cards.begin());
+  }
+
+  template <std::size_t kN>
+  uint32_t operator()(const std::array<uint8_t, kN>& cards) {
+    return hand_index_last(isocalc_, cards.begin());
   }
 
   static uint8_t ConvertSKtoISO(uint8_t sk_card) {
