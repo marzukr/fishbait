@@ -63,28 +63,6 @@ TEST_CASE("Test VectorView with vector", "[utils][vectorview]") {
   }
 }  // TEST_CASE("Test VectorView with vector", "[utils][vectorview]")
 
-TEST_CASE("Test VectorView with initializer list", "[utils][vectorview]") {
-  const int list_size = 6;
-
-  utils::VectorView int_vv({0, 1, 2, 3, 4, 5});
-
-  SECTION("Verify that n is correct") {
-    REQUIRE(int_vv.n() == list_size);
-  }
-  SECTION("Verify that the () operator works") {
-    for (uint32_t i = 0; i < int_vv.n(); ++i) {
-      REQUIRE(int_vv(i) == i);
-    }
-  }
-  SECTION("Verify that the iterator works") {
-    uint32_t i = 0;
-    for (const int* it = int_vv.begin(); it < int_vv.end(); ++it) {
-      REQUIRE(*it == i);
-      ++i;
-    }
-  }
-}  // TEST_CASE("Test VectorView with initializer list", "[utils][vectorview]")
-
 TEST_CASE("Test VectorView with array", "[utils][vectorview]") {
   const std::size_t array_size = 10;
   const std::array<double, array_size> arr = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};

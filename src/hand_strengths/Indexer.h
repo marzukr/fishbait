@@ -29,7 +29,7 @@ class Indexer {
 
   template <std::size_t kN>
   uint32_t operator()(const std::array<uint8_t, kN>& cards) {
-    return hand_index_last(isocalc_, cards.begin());
+    return hand_index_last(isocalc_, cards.data());
   }
 
   static uint8_t ConvertSKtoISO(uint8_t sk_card) {

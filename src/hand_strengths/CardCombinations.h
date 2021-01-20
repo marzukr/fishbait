@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <iostream>
 
 #include "utils/VectorView.h"
 
@@ -15,9 +16,35 @@ const uint8_t kDeckSize = 52;
 class CardCombinations {
  public:
   explicit CardCombinations(uint8_t r);
-  CardCombinations(uint8_t r, utils::VectorView<uint8_t> exclude);
 
-  void Reset(utils::VectorView<uint8_t> exclude, bool constructor = false);
+  template <typename T>
+  CardCombinations(uint8_t r, T&& exclude)
+      : state_(r+1, kDeckSize), included_(kDeckSize, true), r_(r),
+        is_done_(false) {
+    Reset(exclude, true);
+  }
+
+  template <typename T>
+  void Reset(T&& exclude, bool constructor = false) {
+    if (!constructor) {
+      std::fill(included_.begin(), included_.end(), true);
+      std::fill(state_.begin(), state_.end(), kDeckSize);
+      is_done_ = false;
+    }
+
+    for (auto it = exclude.begin(); it != exclude.end(); ++it) {
+      included_[*it] = false;
+    }
+
+    state_[0] = -1;
+    bool moved = MoveToNextIncluded(0);
+    assert(moved);
+    for (uint8_t i = 1; i < r_; ++i) {
+      state_[i] = state_[i-1];
+      moved = MoveToNextIncluded(i);
+      assert(moved);
+    }
+  }
 
   static uint32_t N_Choose_K(uint32_t n, uint32_t k);
 

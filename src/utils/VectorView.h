@@ -18,8 +18,6 @@ class VectorView {
   VectorView(const T* start, uint32_t n) : start_(start), n_(n) {}
   explicit VectorView(const std::vector<T>& v) : start_(v.data()),
                                                  n_(v.size()) {}
-  explicit VectorView(const std::initializer_list<T> v) : start_(v.begin()),
-                                                          n_(v.size()) {}
   template <std::size_t kN>
   explicit VectorView(const std::array<T, kN>& a) : start_(a.begin()),
                                                     n_(a.size()) {}

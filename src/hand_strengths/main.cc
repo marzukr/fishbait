@@ -48,7 +48,6 @@ double Showdown(const std::vector<uint8_t>& hero,
 std::map<uint32_t, double>
 GenerateHandStrengthLookup(std::vector<uint8_t> hand) {
   using hand_strengths::CardCombinations;
-  using utils::VectorView;
 
   const uint32_t kBins = 50;
 
@@ -60,8 +59,7 @@ GenerateHandStrengthLookup(std::vector<uint8_t> hand) {
   std::array<uint8_t, 7> all_cards{hand[0], hand[1], 0, 0, 0, 0, 0};
   CardCombinations op_hands(2);
 
-  for (CardCombinations rollouts(5, VectorView(hand));
-       !rollouts.is_done(); ++rollouts) {
+  for (CardCombinations rollouts(5, hand); !rollouts.is_done(); ++rollouts) {
     for (uint8_t i = 0; i < 5; ++i) {
       all_cards[i + 2] = rollouts(i);
     }
@@ -72,8 +70,7 @@ GenerateHandStrengthLookup(std::vector<uint8_t> hand) {
     if (hand_strength_lookup.find(idx) == hand_strength_lookup.end()) {
       double wins = 0;
       double total = 0;
-      for (op_hands.Reset(VectorView(all_cards));
-           !op_hands.is_done(); ++op_hands) {
+      for (op_hands.Reset(all_cards); !op_hands.is_done(); ++op_hands) {
         wins += Showdown(hand, op_hands.state(), rollouts.state());
         total += 1;
       }
@@ -103,12 +100,19 @@ GenerateHandStrengthLookup(std::vector<uint8_t> hand) {
 // }
 
 int main(int argc, char *argv[]) {
-  assert(argc == 2);
+  if (argc != 2) {
+    std::cerr << "Please specify which hand to calculate" << std::endl;
+    return 1;
+  }
   int16_t hand_num = std::stoi(argv[1]);
-  assert(hand_num < hand_strengths::kUniqueHands && hand_num >= 0);
+  if (hand_num >= hand_strengths::kUniqueHands || hand_num < 0) {
+    std::cerr << "The hand must be in the range [0,169)" << std::endl;
+    return 1;
+  }
 
   std::set<uint32_t> hands_idxs{};
-  std::vector<uint8_t> hand(2);
+  std::vector<std::vector<uint8_t>> hands;
+  // std::vector<uint8_t> hand(2);
 
   hand_strengths::Indexer handcalc(1, {2});
 
@@ -119,16 +123,18 @@ int main(int argc, char *argv[]) {
       uint8_t j_iso = hand_strengths::Indexer::ConvertSKtoISO(j);
 
       uint32_t hand_idx = handcalc({i_iso, j_iso});
-      hands_idxs.insert(hand_idx);
-
-      if (hands_idxs.size() == hand_num + 1) {
-        hand[0] = i; hand[1] = j;
-        break;
+      if (hands_idxs.insert(hand_idx).second) {
+        hands.push_back({i_iso, j_iso});
       }
+
+      // if (hands_idxs.size() == hand_num + 1) {
+      //   hand[0] = i; hand[1] = j;
+      //   break;
+      // }
     }
-    if (hands_idxs.size() == hand_num + 1) break;
+    // if (hands_idxs.size() == hand_num + 1) break;
   }
-  std::cout << CardStr(+hand[0]) << ", " << CardStr(+hand[1]) << std::endl;
+  // std::cout << CardStr(+hand[0]) << ", " << CardStr(+hand[1]) << std::endl;
   // 4s4h is 160
   // 6s6h is 144
   // TsJs is 70
@@ -148,8 +154,46 @@ int main(int argc, char *argv[]) {
   //   }
   // }
 
-  std::map<uint32_t, double> hand_strength_lut =
-      GenerateHandStrengthLookup(hand);
+  // std::map<uint32_t, double> hand_strength_lut =
+  //     GenerateHandStrengthLookup(hand);
+
+
+
+  using hand_strengths::CardCombinations;
+  using utils::VectorView;
+  std::set<uint32_t> scenarios_fast{};
+  hand_strengths::Indexer isocalc(2, {2, 5});
+  std::array<uint8_t, 7> all_cards{0, 0, 0, 0, 0, 0, 0};
+  CardCombinations rollouts(5);
+  for (auto it = hands.begin(); it != hands.end(); ++it) {
+    all_cards[0] = (*it)[0]; all_cards[1] = (*it)[1];
+    for (rollouts.Reset(*it); !rollouts.is_done(); ++rollouts) {
+      for (uint8_t i = 0; i < 5; ++i) {
+        all_cards[i + 2] = rollouts(i);
+      }
+      uint32_t idx = isocalc(all_cards);
+      scenarios_fast.insert(idx);
+    }
+    std::cout << +all_cards[0] << ", " << +all_cards[1] << std::endl;
+  }
+  std::cout << scenarios_fast.size() << std::endl;
+
+  std::set<uint32_t> scenarios_slow{};
+  for (CardCombinations hand_roll(2); !hand_roll.is_done(); ++hand_roll) {
+    all_cards[0] = hand_roll(0); all_cards[1] = hand_roll(1);
+    for (rollouts.Reset(std::array{all_cards[0], all_cards[1]});
+         !rollouts.is_done(); ++rollouts) {
+      for (uint8_t i = 0; i < 5; ++i) {
+        all_cards[i + 2] = rollouts(i);
+      }
+      uint32_t idx = isocalc(all_cards);
+      scenarios_slow.insert(idx);
+    }
+    std::cout << +all_cards[0] << ", " << +all_cards[1] << std::endl;
+  }
+  std::cout << scenarios_slow.size() << std::endl;
+
+  std::cout << (scenarios_fast == scenarios_slow) << std::endl;
 
   return 0;
 }
