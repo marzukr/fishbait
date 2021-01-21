@@ -1,8 +1,14 @@
-add_executable(tests.out main.cc 
-  utils/VectorViewTest.cc
-  utils/MatrixTest.cc
-  clustering/DistanceTest.cc
-  clustering/KMeansTest.cc
+add_executable(tests.out main.cc
+
+  clustering/distance_test.cc
+  clustering/k_means_test.cc
+
+  hand_strengths/card_utils_test.cc
+
+  utils/combination_matrix_test.cc
+  utils/matrix_test.cc
+  utils/vector_view_test.cc
+
   )
 
 set_property(TARGET tests.out PROPERTY CXX_STANDARD 17)

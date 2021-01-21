@@ -2,7 +2,7 @@
 
 #include "Catch2/single_include/catch2/catch.hpp"
 
-#include "utils/CombinationMatrix.h"
+#include "utils/combination_matrix.h"
 
 TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]") {
   const int n_items = 50;
@@ -14,7 +14,11 @@ TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]") {
 
   for (int i = 0; i < cm.n(); ++i) {
     for (int j = 0; j < cm.n(); ++j) {
-      cm(i, j) = i / j;
+      if (i == j) {
+        continue;
+      }
+      double id = i, jd = j;
+      cm(i, j) = id / jd;
     }
   }
 
@@ -23,4 +27,4 @@ TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]") {
       REQUIRE(cm(i, j) == cm(j, i));
     }
   }
-}
+}  // TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]")

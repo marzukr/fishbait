@@ -6,7 +6,7 @@
 #include "SKPokerEval/src/Deckcards.h"
 #include "SKPokerEval/src/Constants.h"
 
-#include "poker_engine/Game.h"
+#include "poker_engine/game.h"
 
 Game::Game(double bb_per_player) {
     // initialize the deck

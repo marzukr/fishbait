@@ -2,7 +2,7 @@
 #define SRC_POKER_ENGINE_GAME_H_
 
 #include "SKPokerEval/src/Constants.h"
-#include "poker_engine/Agent.h"
+#include "poker_engine/agent.h"
 
 #define NUM_PLAYERS 6
 #define FLOP_1 12

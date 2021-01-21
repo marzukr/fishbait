@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <functional>
 
-#include "utils/VectorView.h"
+#include "utils/vector_view.h"
 
 namespace utils {
 

@@ -1,12 +1,12 @@
 // Copyright 2021 Marzuk Rashid
 
-#include "hand_strengths/CardCombinations.h"
+#include "hand_strengths/card_combinations.h"
 
 #include <cstdint>
 #include <cassert>
 #include <algorithm>
 
-#include "utils/VectorView.h"
+#include "hand_strengths/card_utils.h"
 
 namespace hand_strengths {
 

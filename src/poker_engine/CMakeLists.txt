@@ -1,9 +1,9 @@
 add_library(
   poker_engine SHARED
-  Agent.cc
-  Agent.h
-  Game.cc
-  Game.h
+  agent.cc
+  agent.h
+  game.cc
+  game.h
   )
 set_property(TARGET poker_engine PROPERTY CXX_STANDARD 17)
 

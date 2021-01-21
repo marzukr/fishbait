@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <string>
 
-#include "poker_engine/Agent.h"
+#include "poker_engine/agent.h"
 #include "SKPokerEval/src/Deckcards.h"
 
 Agent::Agent(double start_chips, std::string agent_name) {

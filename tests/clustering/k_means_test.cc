@@ -7,10 +7,10 @@
 
 #include "Catch2/single_include/catch2/catch.hpp"
 
-#include "clustering/KMeans.h"
-#include "clustering/Distance.h"
-#include "utils/Matrix.h"
-#include "utils/VectorView.h"
+#include "clustering/k_means.h"
+#include "clustering/distance.h"
+#include "utils/matrix.h"
+#include "utils/vector_view.h"
 
 // Elkan test cases generated with python and the kmeans from scikit learn after
 // disabling the mean centering and changing the cluster mean computation to

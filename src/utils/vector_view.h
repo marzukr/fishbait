@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_UTILS_VECTORVIEW_H_
-#define SRC_UTILS_VECTORVIEW_H_
+#ifndef SRC_UTILS_VECTOR_VIEW_H_
+#define SRC_UTILS_VECTOR_VIEW_H_
 
 #include <stdint.h>
 
@@ -45,4 +45,4 @@ class VectorView {
 
 }  // namespace utils
 
-#endif  // SRC_UTILS_VECTORVIEW_H_
+#endif  // SRC_UTILS_VECTOR_VIEW_H_

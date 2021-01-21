@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_CLUSTERING_LOADDATA_H_
-#define SRC_CLUSTERING_LOADDATA_H_
+#ifndef SRC_CLUSTERING_LOAD_DATA_H_
+#define SRC_CLUSTERING_LOAD_DATA_H_
 
 #include <stdint.h>
 
@@ -16,7 +16,7 @@
 #include <mongocxx/instance.hpp>
 #include <bsoncxx/json.hpp>
 
-#include "utils/Matrix.h"
+#include "utils/matrix.h"
 
 namespace clustering {
 
@@ -88,4 +88,4 @@ std::unique_ptr<utils::Matrix<T>> LoadData(std::string mongo_server,
 
 }  // namespace clustering
 
-#endif  // SRC_CLUSTERING_LOADDATA_H_
+#endif  // SRC_CLUSTERING_LOAD_DATA_H_

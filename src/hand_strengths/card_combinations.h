@@ -1,17 +1,15 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_HAND_STRENGTHS_CARDCOMBINATIONS_H_
-#define SRC_HAND_STRENGTHS_CARDCOMBINATIONS_H_
+#ifndef SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_
+#define SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_
 
 #include <cstdint>
+#include <cassert>
 #include <vector>
-#include <iostream>
 
-#include "utils/VectorView.h"
+#include "hand_strengths/card_utils.h"
 
 namespace hand_strengths {
-
-const uint8_t kDeckSize = 52;
 
 class CardCombinations {
  public:
@@ -71,4 +69,4 @@ class CardCombinations {
 
 }  // namespace hand_strengths
 
-#endif  // SRC_HAND_STRENGTHS_CARDCOMBINATIONS_H_
+#endif  // SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_

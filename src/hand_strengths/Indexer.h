@@ -5,7 +5,6 @@
 
 #include <cstdint>
 #include <numeric>
-#include <cassert>
 #include <initializer_list>
 #include <array>
 
@@ -32,17 +31,10 @@ class Indexer {
     return hand_index_last(isocalc_, cards.data());
   }
 
-  static uint8_t ConvertSKtoISO(uint8_t sk_card) {
-    uint8_t res = 51 - sk_card;
-    uint8_t rem = sk_card % 4;
-    return res + (rem - 3 + rem);
-  }
-
-  static uint8_t ConvertOMPtoISO(uint8_t omp_card) {
-    uint8_t rem = omp_card % 4;
-    if (rem == 2) return omp_card + 1;
-    else if (rem == 3) return omp_card - 1;
-    return omp_card;
+  template <std::size_t kN>
+  uint32_t operator()(uint32_t round, uint32_t index,
+                      std::array<uint8_t, kN>* cards) {
+    return hand_unindex(isocalc_, round, index, cards->data());
   }
 
  private:

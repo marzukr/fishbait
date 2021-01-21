@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_CLUSTERING_KMEANS_H_
-#define SRC_CLUSTERING_KMEANS_H_
+#ifndef SRC_CLUSTERING_K_MEANS_H_
+#define SRC_CLUSTERING_K_MEANS_H_
 
 #include <stdint.h>
 
@@ -13,9 +13,9 @@
 #include <utility>
 #include <vector>
 
-#include "utils/Matrix.h"
-#include "utils/CombinationMatrix.h"
-#include "utils/VectorView.h"
+#include "utils/matrix.h"
+#include "utils/combination_matrix.h"
+#include "utils/vector_view.h"
 
 namespace clustering {
 
@@ -303,4 +303,4 @@ class KMeans {
 
 }  // namespace clustering
 
-#endif  // SRC_CLUSTERING_KMEANS_H_
+#endif  // SRC_CLUSTERING_K_MEANS_H_

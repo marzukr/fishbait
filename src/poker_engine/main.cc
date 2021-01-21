@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "poker_engine/Game.h"
+#include "poker_engine/game.h"
 
 int main() {
     // game with 100 bb / player, player 0 on the button

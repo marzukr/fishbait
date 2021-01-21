@@ -6,8 +6,8 @@
 
 #include "Catch2/single_include/catch2/catch.hpp"
 
-#include "utils/Matrix.h"
-#include "utils/VectorView.h"
+#include "utils/matrix.h"
+#include "utils/vector_view.h"
 
 TEST_CASE("Test Matrix", "[utils][matrix]") {
   const int points_n = 1000;

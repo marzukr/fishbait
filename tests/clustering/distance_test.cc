@@ -5,8 +5,8 @@
 
 #include "Catch2/single_include/catch2/catch.hpp"
 
-#include "clustering/Distance.h"
-#include "utils/VectorView.h"
+#include "clustering/distance.h"
+#include "utils/vector_view.h"
 
 TEST_CASE("EMD identical test", "[clustering][distance]") {
   std::vector<uint16_t> p1(50, 0);  // flops _id: 302847

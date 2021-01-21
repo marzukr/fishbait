@@ -8,7 +8,7 @@
 
 #include "Catch2/single_include/catch2/catch.hpp"
 
-#include "utils/VectorView.h"
+#include "utils/vector_view.h"
 
 TEST_CASE("Test VectorView with heap array", "[utils][vectorview]") {
   const int array_size = 100;

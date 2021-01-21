@@ -1,12 +1,13 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_UTILS_COMBINATIONMATRIX_H_
-#define SRC_UTILS_COMBINATIONMATRIX_H_
+#ifndef SRC_UTILS_COMBINATION_MATRIX_H_
+#define SRC_UTILS_COMBINATION_MATRIX_H_
 
 #include <stdint.h>
 
 #include <cassert>
 #include <vector>
+#include <iostream>
 
 namespace utils {
 
@@ -39,4 +40,4 @@ class CombinationMatrix {
 
 }  // namespace utils
 
-#endif  // SRC_UTILS_COMBINATIONMATRIX_H_
+#endif  // SRC_UTILS_COMBINATION_MATRIX_H_
