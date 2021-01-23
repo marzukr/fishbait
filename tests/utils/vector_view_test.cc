@@ -6,7 +6,7 @@
 #include <memory>
 #include <array>
 
-#include "Catch2/single_include/catch2/catch.hpp"
+#include "catch2/catch.hpp"
 
 #include "utils/vector_view.h"
 

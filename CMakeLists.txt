@@ -28,6 +28,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(src)
 include_directories(external)
+include_directories(external/Catch2/single_include)
+include_directories(external/cereal/include)
 
 add_subdirectory(external/hand-isomorphism)
 

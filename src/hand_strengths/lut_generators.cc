@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <ostream>
 
 #include "SKPokerEval/src/SevenEval.h"
 #include "hand_strengths/ochs.h"
@@ -15,7 +16,7 @@
 
 namespace hand_strengths {
 
-std::vector<ShowdownStrength> ShowdownLUT() {
+std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
   utils::CombinationMatrix<uint8_t> op_clusters = SKClusterLUT();
 
   const uint32_t kNShowdowns = 123156254;
@@ -55,13 +56,31 @@ std::vector<ShowdownStrength> ShowdownLUT() {
     std::for_each(showdown_lut[idx].ochs, showdown_lut[idx].ochs + kOCHS_N,
         [](double& a) { a /= kNOpHands; });
 
-    if (idx % kOneHandApprox == 0) {
+    if (verbose && idx % kOneHandApprox == 0) {
       std::cout << 100.0 * idx / kNShowdowns << "%" << std::endl;
       t.StopAndReset(true);
     }
   }
 
   return showdown_lut;
+}
+
+std::ostream& operator<<(std::ostream& os,
+                         const std::vector<ShowdownStrength>& v) {
+  os << "[";
+  for (uint32_t i = 0; i < v.size(); ++i) {
+    os << "{ehs: " << v[i].ehs << ", ";
+    os << "ochs: [" << v[i].ochs[0];
+    for (uint8_t j = 1; j < kOCHS_N; ++j) {
+      os << ", " << v[i].ochs[j];
+    }
+    os << "]}";
+    if (i < v.size() - 1) {
+      os << ", ";
+    }
+  }
+  os << "]";
+  return os;
 }
 
 }  // namespace hand_strengths

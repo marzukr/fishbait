@@ -1,6 +1,6 @@
 // Copyright 2021 Marzuk Rashid
 
-#include "Catch2/single_include/catch2/catch.hpp"
+#include "catch2/catch.hpp"
 
 #include "utils/combination_matrix.h"
 
