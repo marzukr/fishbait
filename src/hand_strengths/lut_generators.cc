@@ -2,6 +2,8 @@
 
 #include "hand_strengths/lut_generators.h"
 
+#include <omp.h>
+
 #include <vector>
 #include <algorithm>
 #include <ostream>
@@ -29,7 +31,9 @@ std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
   std::array<uint8_t, 7> rollout;
   CardCombinations op_hands(2);
 
+  uint32_t sd_count = 0;
   utils::Timer t;
+  // #pragma omp parallel for firstprivate(rollout, op_hands)
   for (uint32_t idx = 0; idx < kNShowdowns; ++idx) {
     isocalc(1, idx, &rollout);
     std::for_each(rollout.begin(), rollout.end(), ConvertISOtoSK);
@@ -56,8 +60,9 @@ std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
     std::for_each(showdown_lut[idx].ochs, showdown_lut[idx].ochs + kOCHS_N,
         [](double& a) { a /= kNOpHands; });
 
-    if (verbose && idx % kOneHandApprox == 0) {
-      std::cout << 100.0 * idx / kNShowdowns << "%" << std::endl;
+    sd_count += 1;
+    if (verbose && sd_count % kOneHandApprox == 0) {
+      std::cout << 100.0 * sd_count / kNShowdowns << "%" << std::endl;
       t.StopAndReset(true);
     }
   }
