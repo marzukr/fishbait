@@ -7,20 +7,26 @@
 #include <iostream>
 
 #include "hand_strengths/ochs.h"
+#include "utils/matrix.h"
 
 namespace hand_strengths {
+
+const uint32_t kNShowdowns = 123156254;
 
 struct ShowdownStrength {
   double ehs = 0;
   double ochs[kOCHS_N] = {0, 0, 0, 0, 0, 0, 0, 0};
 
   template <class Archive>
-  void serialize(Archive & ar) {
+  void serialize(Archive& ar) {  // NOLINT(runtime/references)
     ar(ehs, ochs);
   }
 };
 
 std::vector<ShowdownStrength> ShowdownLUT(bool verbose = false);
+
+utils::Matrix<uint32_t> PreflopLUT(
+    const std::vector<ShowdownStrength>& showdown_lut, bool verbose = false);
 
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<ShowdownStrength>& v);

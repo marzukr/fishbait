@@ -2,11 +2,12 @@
 
 #include "hand_strengths/lut_generators.h"
 
-#include <omp.h>
+// #include <omp.h>
 
 #include <vector>
 #include <algorithm>
 #include <ostream>
+#include <iostream>
 
 #include "SKPokerEval/src/SevenEval.h"
 #include "hand_strengths/ochs.h"
@@ -14,6 +15,7 @@
 #include "hand_strengths/card_combinations.h"
 #include "hand_strengths/card_utils.h"
 #include "utils/combination_matrix.h"
+#include "utils/matrix.h"
 #include "utils/timer.h"
 
 namespace hand_strengths {
@@ -21,7 +23,6 @@ namespace hand_strengths {
 std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
   utils::CombinationMatrix<uint8_t> op_clusters = SKClusterLUT();
 
-  const uint32_t kNShowdowns = 123156254;
   const uint32_t kOneHandApprox = kNShowdowns / kUniqueHands;
   const uint32_t kNOpHands = 990;  // 45 choose 2
 
@@ -35,7 +36,7 @@ std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
   utils::Timer t;
   // #pragma omp parallel for firstprivate(rollout, op_hands)
   for (uint32_t idx = 0; idx < kNShowdowns; ++idx) {
-    isocalc(1, idx, &rollout);
+    isocalc.unindex(1, idx, &rollout);
     std::for_each(rollout.begin(), rollout.end(), ConvertISOtoSK);
 
     for (op_hands.Reset(rollout); !op_hands.is_done(); ++op_hands) {
@@ -68,6 +69,39 @@ std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
   }
 
   return showdown_lut;
+}
+
+utils::Matrix<uint32_t> PreflopLUT(
+    const std::vector<ShowdownStrength>& showdown_lut, bool verbose) {
+  const uint32_t kOneHandApprox = kNShowdowns / kUniqueHands;
+  const uint32_t kNBuckets = 50;
+  const double kBucketSize = 1.0 / kNBuckets;
+
+  utils::Matrix<uint32_t> preflop_lut(kUniqueHands, kNBuckets, 0);
+
+  Indexer isocalc(2, {2, 5});
+  std::array<uint8_t, 7> rollout;
+  std::array<uint64_t, 2> indicies;
+
+  uint32_t sd_count = 0;
+  utils::Timer t;
+  for (uint32_t idx = 0; idx < kNShowdowns; ++idx) {
+    isocalc.unindex(1, idx, &rollout);
+    isocalc.index(rollout, &indicies);
+
+    uint32_t bucket_unbounded = showdown_lut[idx].ehs / kBucketSize;
+    uint32_t bucket = std::min(bucket_unbounded, kNBuckets - 1);
+
+    preflop_lut(indicies[0], bucket) += 1;
+
+    sd_count += 1;
+    if (verbose && sd_count % kOneHandApprox == 0) {
+      std::cout << 100.0 * sd_count / kNShowdowns << "%" << std::endl;
+      t.StopAndReset(true);
+    }
+  }
+
+  return preflop_lut;
 }
 
 std::ostream& operator<<(std::ostream& os,

@@ -16,7 +16,8 @@ utils::CombinationMatrix<uint8_t> SKClusterLUT() {
   Indexer handcalc(1, {2});
   for (uint8_t i = 0; i < kDeckSize; ++i) {
     for (uint8_t j = i + 1; j < kDeckSize; ++j) {
-      uint32_t hand_idx = handcalc({ConvertSKtoISO(i), ConvertSKtoISO(j)});
+      uint32_t hand_idx = handcalc.index({ConvertSKtoISO(i),
+                                          ConvertSKtoISO(j)});
       uint8_t cluster = kOpClusters[hand_idx] - 1;
       op_clusters(i, j) = cluster;
     }

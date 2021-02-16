@@ -93,6 +93,11 @@ class Matrix {
   uint32_t n() const { return n_; }
   uint32_t m() const { return m_; }
 
+  template <class Archive>
+  void serialize(Archive& ar) {  // NOLINT(runtime/references)
+    ar(n_, m_, data_);
+  }
+
  private:
   uint32_t n_;  // rows
   uint32_t m_;  // cols
