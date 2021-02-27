@@ -2,6 +2,7 @@ add_library(
   hand_strengths SHARED
   card_combinations.cc
   card_combinations.h
+  card_utils.cc
   card_utils.h
   indexer.h
   lut_generators.cc

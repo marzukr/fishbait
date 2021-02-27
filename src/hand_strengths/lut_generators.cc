@@ -37,7 +37,8 @@ std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
   // #pragma omp parallel for firstprivate(rollout, op_hands)
   for (uint32_t idx = 0; idx < kNShowdowns; ++idx) {
     isocalc.unindex(1, idx, &rollout);
-    std::for_each(rollout.begin(), rollout.end(), ConvertISOtoSK);
+    std::transform(rollout.begin(), rollout.end(), rollout.begin(),
+                   ConvertISOtoSK);
 
     for (op_hands.Reset(rollout); !op_hands.is_done(); ++op_hands) {
       uint16_t hero_rank = SevenEval::GetRank(rollout[0], rollout[1],
