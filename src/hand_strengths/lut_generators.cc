@@ -23,6 +23,7 @@ namespace hand_strengths {
 std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
   utils::CombinationMatrix<uint8_t> op_clusters = SKClusterLUT();
 
+  const uint32_t kNShowdowns = 123156254;
   const uint32_t kOneHandApprox = kNShowdowns / kUniqueHands;
   const uint32_t kNOpHands = 990;  // 45 choose 2
 
@@ -74,7 +75,8 @@ std::vector<ShowdownStrength> ShowdownLUT(bool verbose) {
 
 utils::Matrix<uint32_t> PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, bool verbose) {
-  const uint32_t kOneHandApprox = kNShowdowns / kUniqueHands;
+  const uint32_t kUnabstractBoards = 2118760;
+  const uint32_t kOnePercentApprox = kUnabstractBoards * kUniqueHands / 100;
   const uint32_t kNBuckets = 50;
   const double kBucketSize = 1.0 / kNBuckets;
 
@@ -83,22 +85,31 @@ utils::Matrix<uint32_t> PreflopLUT(
   Indexer isocalc(2, {2, 5});
   std::array<uint8_t, 7> rollout;
   std::array<uint64_t, 2> indicies;
+  CardCombinations boards(5);
 
   uint32_t sd_count = 0;
   utils::Timer t;
-  for (uint32_t idx = 0; idx < kNShowdowns; ++idx) {
-    isocalc.unindex(1, idx, &rollout);
-    isocalc.index(rollout, &indicies);
+  for (uint32_t idx = 0; idx < kUniqueHands; ++idx) {
+    isocalc.unindex(0, idx, &rollout);
+    utils::VectorView<uint8_t> hand(rollout.data(), 2);
 
-    uint32_t bucket_unbounded = showdown_lut[idx].ehs / kBucketSize;
-    uint32_t bucket = std::min(bucket_unbounded, kNBuckets - 1);
+    for (boards.Reset(hand); !boards.is_done(); ++boards) {
+      rollout[2] = boards(0); rollout[3] = boards(1); rollout[4] = boards(2);
+      rollout[5] = boards(3); rollout[6] = boards(4);
 
-    preflop_lut(indicies[0], bucket) += 1;
+      isocalc.index(rollout, &indicies);  // Get indexes for the hand and board
 
-    sd_count += 1;
-    if (verbose && sd_count % kOneHandApprox == 0) {
-      std::cout << 100.0 * sd_count / kNShowdowns << "%" << std::endl;
-      t.StopAndReset(true);
+      uint32_t bucket_unbounded = showdown_lut[indicies[1]].ehs / kBucketSize;
+      uint32_t bucket = std::min(bucket_unbounded, kNBuckets - 1);
+
+      preflop_lut(indicies[0], bucket) += 1;
+
+      sd_count += 1;
+      if (verbose && sd_count % kOnePercentApprox == 0) {
+        std::cout << 100.0 * sd_count / (kUnabstractBoards * kUniqueHands)
+                  << "%" << std::endl;
+        t.StopAndReset(true);
+      }
     }
   }
 

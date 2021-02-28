@@ -11,8 +11,6 @@
 
 namespace hand_strengths {
 
-const uint32_t kNShowdowns = 123156254;
-
 struct ShowdownStrength {
   double ehs = 0;
   double ochs[kOCHS_N] = {0, 0, 0, 0, 0, 0, 0, 0};

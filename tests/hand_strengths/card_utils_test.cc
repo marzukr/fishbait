@@ -1,9 +1,9 @@
 // Copyright 2021 Marzuk Rashid
 
-#include "catch2/catch.hpp"
-
 #include <array>
 #include <cstdint>
+
+#include "catch2/catch.hpp"
 
 #include "hand_strengths/card_utils.h"
 

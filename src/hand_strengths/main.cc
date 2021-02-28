@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <fstream>
+#include <iostream>
 
 #include "cereal/types/vector.hpp"
 #include "cereal/archives/portable_binary.hpp"
@@ -11,6 +12,7 @@
 
 int main() {
   // Generate Showdown LUT
+  // std::cout << "Generating Showdown LUT..." << std::endl;
   // std::vector<hand_strengths::ShowdownStrength> showdown_lut =
   //     hand_strengths::ShowdownLUT(true);
   // std::ofstream os("luts/showdown_lut.cereal", std::ios::binary);
@@ -18,6 +20,7 @@ int main() {
   // archive(showdown_lut);
 
   // Load Showdown LUT
+  // std::cout << "Loading Showdown LUT..." << std::endl;
   // std::ifstream ins("luts/showdown_lut.cereal", std::ios::binary);
   // cereal::PortableBinaryInputArchive iarchive(ins);
   // std::vector<hand_strengths::ShowdownStrength> showdown_lut;
@@ -52,23 +55,25 @@ int main() {
   // std::cout << showdown_lut[0].ehs << std::endl;
 
   // Generate Preflop LUT
+  // std::cout << "Generating Preflop LUT..." << std::endl;
   // utils::Matrix<uint32_t> preflop_lut = PreflopLUT(showdown_lut, true);
   // std::ofstream os("luts/preflop_lut.cereal", std::ios::binary);
   // cereal::PortableBinaryOutputArchive archive(os);
   // archive(preflop_lut);
 
   // Load Preflop LUT
-  // std::ifstream ins("luts/preflop_lut.cereal", std::ios::binary);
-  // cereal::PortableBinaryInputArchive iarchive(ins);
-  // utils::Matrix<uint32_t> preflop_lut(1,1,0);
-  // iarchive(preflop_lut);
+  std::cout << "Loading Preflop LUT..." << std::endl;
+  std::ifstream ins("luts/preflop_lut.cereal", std::ios::binary);
+  cereal::PortableBinaryInputArchive iarchive(ins);
+  utils::Matrix<uint32_t> preflop_lut(1, 1, 0);
+  iarchive(preflop_lut);
 
   // Test Preflop LUT
-  // uint8_t c1 = hand_strengths::ISOCardFromStr("4s");
-  // uint8_t c2 = hand_strengths::ISOCardFromStr("4h");
-  // hand_strengths::Indexer handcalc(1, {2});
-  // uint32_t index = handcalc.index({c1, c2});
-  // std::cout << preflop_lut(index) << std::endl;
+  uint8_t c1 = hand_strengths::ISOCardFromStr("4s");
+  uint8_t c2 = hand_strengths::ISOCardFromStr("4h");
+  hand_strengths::Indexer handcalc(1, {2});
+  uint32_t index = handcalc.index({c1, c2});
+  std::cout << preflop_lut(index) << std::endl;
 
   return 0;
 }

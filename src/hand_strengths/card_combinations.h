@@ -22,6 +22,9 @@ class CardCombinations {
     Reset(exclude, true);
   }
 
+  /* Reset the card combination generator and exclude the given cards.
+     Constructor should only be true if this function is being called from the
+     constructor. */
   template <typename T>
   void Reset(T&& exclude, bool constructor = false) {
     if (!constructor) {
@@ -47,6 +50,8 @@ class CardCombinations {
   static uint32_t N_Choose_K(uint32_t n, uint32_t k);
 
   uint8_t operator()(uint8_t idx) const { return state_[idx]; }
+  uint8_t* begin() { return state_.data(); }
+  uint8_t* end() { return state_.data() + r_; }
 
   CardCombinations& operator++() {
     IncrementState(r_-1);
