@@ -21,10 +21,20 @@ struct ShowdownStrength {
   }
 };
 
-std::vector<ShowdownStrength> ShowdownLUT(bool verbose = false);
+std::vector<ShowdownStrength> ShowdownLUT(const bool verbose = false);
+
+utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
+    const uint32_t simulation_size, const uint32_t lut_round,
+    const std::vector<ShowdownStrength>& showdown_lut,
+    const bool verbose = false);
 
 utils::Matrix<uint32_t> PreflopLUT(
-    const std::vector<ShowdownStrength>& showdown_lut, bool verbose = false);
+    const std::vector<ShowdownStrength>& showdown_lut,
+    const bool verbose = false);
+
+utils::Matrix<uint32_t> FlopLUT(
+    const std::vector<ShowdownStrength>& showdown_lut,
+    const bool verbose = false);
 
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<ShowdownStrength>& v);
