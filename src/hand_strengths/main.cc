@@ -64,5 +64,22 @@ int main() {
   // Test Flop LUT
   // std::cout << flop_lut(397600) << std::endl;
 
+  // Generate Turn LUT
+  // std::cout << "Generating Turn LUT..." << std::endl;
+  // utils::Matrix<uint32_t> turn_lut = TurnLUT(showdown_lut, true);
+  // std::ofstream os("luts/turn_lut.cereal", std::ios::binary);
+  // cereal::PortableBinaryOutputArchive archive(os);
+  // archive(turn_lut);
+
+  // Load Turn LUT
+  std::cout << "Loading Turn LUT..." << std::endl;
+  std::ifstream ins("luts/turn_lut.cereal", std::ios::binary);
+  cereal::PortableBinaryInputArchive iarchive(ins);
+  utils::Matrix<uint32_t> turn_lut(1, 1, 0);
+  iarchive(turn_lut);
+
+  // Test Turn LUT
+  std::cout << turn_lut(12867386) << std::endl;
+
   return 0;
 }

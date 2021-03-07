@@ -36,6 +36,10 @@ utils::Matrix<uint32_t> FlopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
+utils::Matrix<uint32_t> TurnLUT(
+    const std::vector<ShowdownStrength>& showdown_lut,
+    const bool verbose = false);
+
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<ShowdownStrength>& v);
 

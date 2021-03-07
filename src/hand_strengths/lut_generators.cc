@@ -79,12 +79,13 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
   @param lut_size The number of rows in the LUT to generate.
   @param buckets The number of buckets per row in the LUT to generate.
   @param simulation_cards The number of cards to simulate per row in the LUT.
-  @param lut_round The isocalc round that the LUT should generate rows from.
+  @param iso_round The isocalc round that the LUT should generate rows from.
+  @param isocalc The Indexer object to generate rows from.
   @param showdown_lut The showdown LUT to use.
   @param verbose Option to print progress.
 */
 utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
-    const uint32_t simulation_cards, const uint32_t lut_round,
+    const uint32_t simulation_cards, const uint32_t iso_round, Indexer* isocalc,
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
 
   const uint32_t simulation_size = CardCombinations::N_Choose_K(
@@ -95,7 +96,7 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
   utils::Matrix<uint32_t> ehs_lut(lut_size, buckets, 0);
 
   Indexer showdown_calc(2, {2, 5});
-  Indexer isocalc(4, {2, 3, 1, 1});
+  // Indexer isocalc(4, {2, 3, 1, 1});
   std::array<uint8_t, 7> rollout;
   std::array<uint64_t, 2> indicies;
   CardCombinations simulations(simulation_cards);
@@ -103,7 +104,7 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
   uint32_t sd_count = 0;
   utils::Timer t;
   for (uint32_t idx = 0; idx < lut_size; ++idx) {
-    isocalc.unindex(lut_round, idx, &rollout);
+    isocalc->unindex(iso_round, idx, &rollout);
     uint32_t not_simulated = 7 - simulation_cards;
     utils::VectorView<uint8_t> hand(rollout.data(), not_simulated);
 
@@ -137,9 +138,10 @@ utils::Matrix<uint32_t> PreflopLUT(
   const uint32_t lut_size = kUniqueHands;
   const uint32_t buckets = 50;
   const uint32_t simulation_size = 5;
-  const uint32_t lut_round = 0;
-  return EHS_LUT(lut_size, buckets, simulation_size, lut_round, showdown_lut,
-                 verbose);
+  const uint32_t iso_round = 0;
+  Indexer isocalc(1, {2});
+  return EHS_LUT(lut_size, buckets, simulation_size, iso_round, &isocalc,
+                 showdown_lut, verbose);
 }
 
 utils::Matrix<uint32_t> FlopLUT(
@@ -147,9 +149,21 @@ utils::Matrix<uint32_t> FlopLUT(
   const uint32_t lut_size = 1286792;
   const uint32_t buckets = 50;
   const uint32_t simulation_size = 2;
-  const uint32_t lut_round = 1;
-  return EHS_LUT(lut_size, buckets, simulation_size, lut_round, showdown_lut,
-                 verbose);
+  const uint32_t iso_round = 1;
+  Indexer isocalc(2, {2, 3});
+  return EHS_LUT(lut_size, buckets, simulation_size, iso_round, &isocalc,
+                 showdown_lut, verbose);
+}
+
+utils::Matrix<uint32_t> TurnLUT(
+    const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  const uint32_t lut_size = 13960050;
+  const uint32_t buckets = 50;
+  const uint32_t simulation_size = 1;
+  const uint32_t iso_round = 1;
+  Indexer isocalc(2, {2, 4});
+  return EHS_LUT(lut_size, buckets, simulation_size, iso_round, &isocalc,
+                 showdown_lut, verbose);
 }
 
 std::ostream& operator<<(std::ostream& os,
