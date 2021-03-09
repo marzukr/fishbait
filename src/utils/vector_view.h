@@ -48,7 +48,7 @@ template <typename T>
 std::ostream& operator<<(std::ostream& os, const VectorView<T>& v) {
   os << "[";
   for (uint32_t i = 0; i < v.n(); ++i) {
-    os << v(i);
+    os << +v(i);
     if (i < v.n() - 1) {
       os << ", ";
     }

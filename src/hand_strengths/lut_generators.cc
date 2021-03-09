@@ -23,9 +23,8 @@ namespace hand_strengths {
 std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
   utils::CombinationMatrix<uint8_t> op_clusters = SKClusterLUT();
 
-  const uint32_t kNShowdowns = 123156254;
-  const uint32_t kOneHandApprox = kNShowdowns / kUniqueHands;
-  const uint32_t kNOpHands = 990;  // 45 choose 2
+  const uint32_t one_hand_approx = kNShowdowns / kUniqueHands;
+  const uint32_t n_op_hands = 990;  // 45 choose 2
 
   std::vector<ShowdownStrength> showdown_lut(kNShowdowns);
 
@@ -56,15 +55,14 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
 
       uint8_t cluster = op_clusters(op_hands(0), op_hands(1));
       showdown_lut[idx].ehs += win_value;
-      showdown_lut[idx].ochs[cluster] += win_value;
+      showdown_lut[idx].ochs_wins[cluster] += win_value;
+      showdown_lut[idx].ochs_totals[cluster] += 1;
     }
 
-    showdown_lut[idx].ehs /= kNOpHands;
-    std::for_each(showdown_lut[idx].ochs, showdown_lut[idx].ochs + kOCHS_N,
-        [](double& a) { a /= kNOpHands; });
+    showdown_lut[idx].ehs /= n_op_hands;
 
     sd_count += 1;
-    if (verbose && sd_count % kOneHandApprox == 0) {
+    if (verbose && sd_count % one_hand_approx == 0) {
       std::cout << 100.0 * sd_count / kNShowdowns << "%" << std::endl;
       t.StopAndReset(true);
     }
@@ -96,7 +94,6 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
   utils::Matrix<uint32_t> ehs_lut(lut_size, buckets, 0);
 
   Indexer showdown_calc(2, {2, 5});
-  // Indexer isocalc(4, {2, 3, 1, 1});
   std::array<uint8_t, 7> rollout;
   std::array<uint64_t, 2> indicies;
   CardCombinations simulations(simulation_cards);
@@ -166,22 +163,43 @@ utils::Matrix<uint32_t> TurnLUT(
                  showdown_lut, verbose);
 }
 
-std::ostream& operator<<(std::ostream& os,
-                         const std::vector<ShowdownStrength>& v) {
-  os << "[";
-  for (uint32_t i = 0; i < v.size(); ++i) {
-    os << "{ehs: " << v[i].ehs << ", ";
-    os << "ochs: [" << v[i].ochs[0];
-    for (uint8_t j = 1; j < kOCHS_N; ++j) {
-      os << ", " << v[i].ochs[j];
+utils::Matrix<double> RiverLUT(
+    const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  const uint32_t one_percent_approx = kNShowdowns / 100;
+  utils::Matrix<double> river_lut(kNShowdowns, kOCHS_N, 0);
+
+  utils::Timer t;
+  for (uint32_t idx = 0; idx < kNShowdowns; ++idx) {
+    for (uint32_t j = 0; j < kOCHS_N; ++j) {
+      river_lut(idx, j) = showdown_lut[idx].ochs_wins[j] /
+                          showdown_lut[idx].ochs_totals[j];
     }
-    os << "]}";
-    if (i < v.size() - 1) {
-      os << ", ";
+
+    if (verbose && idx % one_percent_approx == 0) {
+      std::cout << 100.0 * idx / (kNShowdowns * 1.0)
+                << "%" << std::endl;
+      t.StopAndReset(true);
     }
   }
-  os << "]";
-  return os;
+  return river_lut;
 }
+
+// std::ostream& operator<<(std::ostream& os,
+//                          const std::vector<ShowdownStrength>& v) {
+//   os << "[";
+//   for (uint32_t i = 0; i < v.size(); ++i) {
+//     os << "{ehs: " << v[i].ehs << ", ";
+//     os << "ochs: [" << v[i].ochs[0];
+//     for (uint8_t j = 1; j < kOCHS_N; ++j) {
+//       os << ", " << v[i].ochs[j];
+//     }
+//     os << "]}";
+//     if (i < v.size() - 1) {
+//       os << ", ";
+//     }
+//   }
+//   os << "]";
+//   return os;
+// }
 
 }  // namespace hand_strengths

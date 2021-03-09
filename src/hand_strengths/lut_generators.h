@@ -11,13 +11,16 @@
 
 namespace hand_strengths {
 
+const uint32_t kNShowdowns = 123156254;
+
 struct ShowdownStrength {
   double ehs = 0;
-  double ochs[kOCHS_N] = {0, 0, 0, 0, 0, 0, 0, 0};
+  double ochs_wins[kOCHS_N] = {0, 0, 0, 0, 0, 0, 0, 0};
+  uint32_t ochs_totals[kOCHS_N] = {0, 0, 0, 0, 0, 0, 0, 0};
 
   template <class Archive>
   void serialize(Archive& ar) {  // NOLINT(runtime/references)
-    ar(ehs, ochs);
+    ar(ehs, ochs_wins, ochs_totals);
   }
 };
 
@@ -37,6 +40,10 @@ utils::Matrix<uint32_t> FlopLUT(
     const bool verbose = false);
 
 utils::Matrix<uint32_t> TurnLUT(
+    const std::vector<ShowdownStrength>& showdown_lut,
+    const bool verbose = false);
+
+utils::Matrix<double> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 

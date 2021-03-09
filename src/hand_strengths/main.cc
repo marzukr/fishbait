@@ -41,8 +41,8 @@ int main() {
   // iarchive(preflop_lut);
 
   // Test Preflop LUT
-  // uint8_t c1 = hand_strengths::ISOCardFromStr("Ts");
-  // uint8_t c2 = hand_strengths::ISOCardFromStr("Js");
+  // uint8_t c1 = hand_strengths::ISOCardFromStr("Qs");
+  // uint8_t c2 = hand_strengths::ISOCardFromStr("Ks");
   // hand_strengths::Indexer handcalc(1, {2});
   // uint32_t index = handcalc.index({c1, c2});
   // std::cout << preflop_lut(index) << std::endl;
@@ -62,7 +62,7 @@ int main() {
   // iarchive(flop_lut);
 
   // Test Flop LUT
-  // std::cout << flop_lut(397600) << std::endl;
+  // std::cout << flop_lut(302847) << std::endl;
 
   // Generate Turn LUT
   // std::cout << "Generating Turn LUT..." << std::endl;
@@ -72,14 +72,36 @@ int main() {
   // archive(turn_lut);
 
   // Load Turn LUT
-  std::cout << "Loading Turn LUT..." << std::endl;
-  std::ifstream ins("luts/turn_lut.cereal", std::ios::binary);
-  cereal::PortableBinaryInputArchive iarchive(ins);
-  utils::Matrix<uint32_t> turn_lut(1, 1, 0);
-  iarchive(turn_lut);
+  // std::cout << "Loading Turn LUT..." << std::endl;
+  // std::ifstream ins("luts/turn_lut.cereal", std::ios::binary);
+  // cereal::PortableBinaryInputArchive iarchive(ins);
+  // utils::Matrix<uint32_t> turn_lut(1, 1, 0);
+  // iarchive(turn_lut);
 
   // Test Turn LUT
-  std::cout << turn_lut(12867386) << std::endl;
+  // std::cout << turn_lut(12867386) << std::endl;
+
+  // Generate River LUT
+  // std::cout << "Generating River LUT..." << std::endl;
+  // utils::Matrix<double> river_lut = RiverLUT(showdown_lut, true);
+  // std::ofstream os("luts/river_lut.cereal", std::ios::binary);
+  // cereal::PortableBinaryOutputArchive archive(os);
+  // archive(river_lut);
+
+  // Load River LUT
+  std::cout << "Loading River LUT..." << std::endl;
+  std::ifstream ins("luts/river_lut.cereal", std::ios::binary);
+  cereal::PortableBinaryInputArchive iarchive(ins);
+  utils::Matrix<double> river_lut(1, 1, 0);
+  iarchive(river_lut);
+
+  // Test River LUT
+  std::cout.precision(16);
+  std::cout << river_lut(567) << std::endl;
+  std::cout << river_lut(84729) << std::endl;
+  std::cout << river_lut(8372956) << std::endl;
+  std::cout << river_lut(74629159) << std::endl;
+  std::cout << river_lut(112294656) << std::endl;
 
   return 0;
 }
