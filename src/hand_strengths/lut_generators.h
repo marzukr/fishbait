@@ -47,6 +47,10 @@ utils::Matrix<double> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
+utils::Matrix<double> OCHS_PreflopLUT(
+    const std::vector<ShowdownStrength>& showdown_lut,
+    const bool verbose = false);
+
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<ShowdownStrength>& v);
 

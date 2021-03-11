@@ -89,19 +89,41 @@ int main() {
   // archive(river_lut);
 
   // Load River LUT
-  std::cout << "Loading River LUT..." << std::endl;
-  std::ifstream ins("luts/river_lut.cereal", std::ios::binary);
-  cereal::PortableBinaryInputArchive iarchive(ins);
-  utils::Matrix<double> river_lut(1, 1, 0);
-  iarchive(river_lut);
+  // std::cout << "Loading River LUT..." << std::endl;
+  // std::ifstream ins("luts/river_lut.cereal", std::ios::binary);
+  // cereal::PortableBinaryInputArchive iarchive(ins);
+  // utils::Matrix<double> river_lut(1, 1, 0);
+  // iarchive(river_lut);
 
   // Test River LUT
+  // std::cout.precision(16);
+  // std::cout << river_lut(567) << std::endl;
+  // std::cout << river_lut(84729) << std::endl;
+  // std::cout << river_lut(8372956) << std::endl;
+  // std::cout << river_lut(74629159) << std::endl;
+  // std::cout << river_lut(112294656) << std::endl;
+
+  // Generate OCHS Preflop LUT
+  // std::cout << "Generating OCHS Preflop LUT..." << std::endl;
+  // utils::Matrix<double> ochs_pflop_lut = OCHS_PreflopLUT(showdown_lut, true);
+  // std::ofstream os("luts/ochs_preflop_lut.cereal", std::ios::binary);
+  // cereal::PortableBinaryOutputArchive archive(os);
+  // archive(ochs_pflop_lut);
+
+  // Load OCHS Preflop LUT
+  std::cout << "Loading OCHS Preflop LUT..." << std::endl;
+  std::ifstream ins("luts/ochs_preflop_lut.cereal", std::ios::binary);
+  cereal::PortableBinaryInputArchive iarchive(ins);
+  utils::Matrix<double> ochs_pflop_lut(1, 1, 0);
+  iarchive(ochs_pflop_lut);
+
+  // Test OCHS Preflop LUT
+  uint8_t c1 = hand_strengths::ISOCardFromStr("Ts");
+  uint8_t c2 = hand_strengths::ISOCardFromStr("Js");
+  hand_strengths::Indexer handcalc(1, {2});
+  uint32_t index = handcalc.index({c1, c2});
   std::cout.precision(16);
-  std::cout << river_lut(567) << std::endl;
-  std::cout << river_lut(84729) << std::endl;
-  std::cout << river_lut(8372956) << std::endl;
-  std::cout << river_lut(74629159) << std::endl;
-  std::cout << river_lut(112294656) << std::endl;
+  std::cout << ochs_pflop_lut(index) << std::endl;
 
   return 0;
 }

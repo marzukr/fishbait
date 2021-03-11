@@ -184,6 +184,55 @@ utils::Matrix<double> RiverLUT(
   return river_lut;
 }
 
+utils::Matrix<double> OCHS_PreflopLUT(
+    const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  const uint32_t simulation_size = CardCombinations::N_Choose_K(50, 5);
+  const uint32_t one_percent_approx = kUniqueHands * simulation_size / 100;
+
+  utils::Matrix<double> ochs_preflop_lut(kUniqueHands, kOCHS_N, 0);
+
+  Indexer showdown_calc(2, {2, 5});
+  std::array<uint8_t, 7> rollout;
+  std::array<uint64_t, 2> indicies;
+  std::array<uint32_t, kOCHS_N> sim_totals;
+  CardCombinations simulations(5);
+
+  uint32_t sd_count = 0;
+  utils::Timer t;
+  for (uint32_t idx = 0; idx < kUniqueHands; ++idx) {
+    showdown_calc.unindex(0, idx, &rollout);
+    utils::VectorView<uint8_t> hand(rollout.data(), 2);
+    std::fill(sim_totals.begin(), sim_totals.end(), 0);
+
+    for (simulations.Reset(hand); !simulations.is_done(); ++simulations) {
+      for (uint32_t j = 0; j < 5; ++j) {
+        rollout[2 + j] = simulations(j);
+      }
+
+      // Get the appropriate showdown LUT index
+      showdown_calc.index(rollout, &indicies);
+
+      for (uint32_t k = 0; k < kOCHS_N; ++k) {
+        ochs_preflop_lut(idx, k) += showdown_lut[indicies[1]].ochs_wins[k];
+        sim_totals[k] += showdown_lut[indicies[1]].ochs_totals[k];
+      }
+
+      sd_count += 1;
+      if (verbose && sd_count % one_percent_approx == 0) {
+        std::cout << 100.0 * sd_count / (kUniqueHands * simulation_size)
+                  << "%" << std::endl;
+        t.StopAndReset(true);
+      }
+    }
+
+    for (uint32_t k = 0; k < kOCHS_N; ++k) {
+      ochs_preflop_lut(idx, k) /= sim_totals[k];
+    }
+  }
+
+  return ochs_preflop_lut;
+}
+
 // std::ostream& operator<<(std::ostream& os,
 //                          const std::vector<ShowdownStrength>& v) {
 //   os << "[";
