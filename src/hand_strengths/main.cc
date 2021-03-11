@@ -41,8 +41,8 @@ int main() {
   // iarchive(preflop_lut);
 
   // Test Preflop LUT
-  // uint8_t c1 = hand_strengths::ISOCardFromStr("Qs");
-  // uint8_t c2 = hand_strengths::ISOCardFromStr("Ks");
+  // uint8_t c1 = hand_strengths::ISOCardFromStr("4s");
+  // uint8_t c2 = hand_strengths::ISOCardFromStr("4h");
   // hand_strengths::Indexer handcalc(1, {2});
   // uint32_t index = handcalc.index({c1, c2});
   // std::cout << preflop_lut(index) << std::endl;
@@ -62,7 +62,7 @@ int main() {
   // iarchive(flop_lut);
 
   // Test Flop LUT
-  // std::cout << flop_lut(302847) << std::endl;
+  // std::cout << flop_lut(397600) << std::endl;
 
   // Generate Turn LUT
   // std::cout << "Generating Turn LUT..." << std::endl;
@@ -79,7 +79,7 @@ int main() {
   // iarchive(turn_lut);
 
   // Test Turn LUT
-  // std::cout << turn_lut(12867386) << std::endl;
+  // std::cout << turn_lut(970) << std::endl;
 
   // Generate River LUT
   // std::cout << "Generating River LUT..." << std::endl;
@@ -111,19 +111,19 @@ int main() {
   // archive(ochs_pflop_lut);
 
   // Load OCHS Preflop LUT
-  std::cout << "Loading OCHS Preflop LUT..." << std::endl;
-  std::ifstream ins("luts/ochs_preflop_lut.cereal", std::ios::binary);
-  cereal::PortableBinaryInputArchive iarchive(ins);
-  utils::Matrix<double> ochs_pflop_lut(1, 1, 0);
-  iarchive(ochs_pflop_lut);
+  // std::cout << "Loading OCHS Preflop LUT..." << std::endl;
+  // std::ifstream ins("luts/ochs_preflop_lut.cereal", std::ios::binary);
+  // cereal::PortableBinaryInputArchive iarchive(ins);
+  // utils::Matrix<double> ochs_pflop_lut(1, 1, 0);
+  // iarchive(ochs_pflop_lut);
 
   // Test OCHS Preflop LUT
-  uint8_t c1 = hand_strengths::ISOCardFromStr("Ts");
-  uint8_t c2 = hand_strengths::ISOCardFromStr("Js");
-  hand_strengths::Indexer handcalc(1, {2});
-  uint32_t index = handcalc.index({c1, c2});
-  std::cout.precision(16);
-  std::cout << ochs_pflop_lut(index) << std::endl;
+  // uint8_t c1 = hand_strengths::ISOCardFromStr("Ts");
+  // uint8_t c2 = hand_strengths::ISOCardFromStr("Js");
+  // hand_strengths::Indexer handcalc(1, {2});
+  // uint32_t index = handcalc.index({c1, c2});
+  // std::cout.precision(16);
+  // std::cout << ochs_pflop_lut(index) << std::endl;
 
   return 0;
 }
