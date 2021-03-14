@@ -68,7 +68,7 @@ class CardCombinations {
 
   std::vector<uint8_t> state_;
   std::vector<bool> included_;
-  const uint8_t r_;
+  uint8_t r_;
   bool is_done_;
 };  // class CardCombinations
 
