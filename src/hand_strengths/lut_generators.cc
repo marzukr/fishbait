@@ -57,7 +57,7 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
       showdown_lut[idx].ehs += win_value;
       showdown_lut[idx].ochs_wins[cluster] += win_value;
       showdown_lut[idx].ochs_totals[cluster] += 1;
-    }
+    }  // for op_hands
 
     showdown_lut[idx].ehs /= n_op_hands;
 
@@ -66,22 +66,11 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
       std::cout << 100.0 * sd_count / kNShowdowns << "%" << std::endl;
       t.StopAndReset(true);
     }
-  }
+  }  // for idx
 
   return showdown_lut;
-}
+}  // ShowdownLUT()
 
-/*
-  @brief Generic EHS LUT generating function.
-
-  @param lut_size The number of rows in the LUT to generate.
-  @param buckets The number of buckets per row in the LUT to generate.
-  @param simulation_cards The number of cards to simulate per row in the LUT.
-  @param iso_round The isocalc round that the LUT should generate rows from.
-  @param isocalc The Indexer object to generate rows from.
-  @param showdown_lut The showdown LUT to use.
-  @param verbose Option to print progress.
-*/
 utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
     const uint32_t simulation_cards, const uint32_t iso_round, Indexer* isocalc,
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
@@ -124,11 +113,11 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
                   << "%" << std::endl;
         t.StopAndReset(true);
       }
-    }
-  }
+    }  // for simulations
+  }  // for idx
 
   return ehs_lut;
-}
+}  // EHS_LUT()
 
 utils::Matrix<uint32_t> PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
@@ -180,9 +169,9 @@ utils::Matrix<double> RiverLUT(
                 << "%" << std::endl;
       t.StopAndReset(true);
     }
-  }
+  }  // for idx
   return river_lut;
-}
+}  // RiverLUT()
 
 utils::Matrix<double> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
@@ -223,15 +212,15 @@ utils::Matrix<double> OCHS_PreflopLUT(
                   << "%" << std::endl;
         t.StopAndReset(true);
       }
-    }
+    }  // for simulations
 
     for (uint32_t k = 0; k < kOCHS_N; ++k) {
       ochs_preflop_lut(idx, k) /= sim_totals[k];
     }
-  }
+  }  // for idx
 
   return ochs_preflop_lut;
-}
+}  // OCHS_PreflopLUT
 
 // std::ostream& operator<<(std::ostream& os,
 //                          const std::vector<ShowdownStrength>& v) {

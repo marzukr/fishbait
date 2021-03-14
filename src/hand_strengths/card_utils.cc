@@ -48,6 +48,6 @@ uint8_t ISOCardFromStr(const std::string& card_str) {
   }
 
   return deck_make_card(suit, rank);
-}
+}  // ISOCardFromStr()
 
 }  // namespace hand_strengths
