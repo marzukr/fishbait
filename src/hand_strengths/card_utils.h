@@ -12,7 +12,7 @@ namespace hand_strengths {
 
 const uint8_t kDeckSize = 52;
 
-inline std::string SKCardStr(uint8_t i) {
+inline std::string SKCardPretty(uint8_t i) {
   return pretty_card[i];
 }
 
