@@ -28,12 +28,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(src)
 include_directories(external)
+include_directories(external/Catch2/single_include)
+include_directories(external/cereal/include)
 
-add_subdirectory(external/OMPEval)
 add_subdirectory(external/hand-isomorphism)
 
 add_subdirectory(src/clustering)
-add_subdirectory(src/hand_evaluator)
+add_subdirectory(src/hand_strengths)
 add_subdirectory(src/poker_engine)
 
 add_subdirectory(tests)

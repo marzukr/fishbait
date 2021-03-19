@@ -6,10 +6,10 @@
 #include <memory>
 #include <string>
 
-#include "clustering/Distance.h"
-#include "clustering/KMeans.h"
-#include "clustering/LoadData.h"
-#include "utils/Matrix.h"
+#include "clustering/distance.h"
+#include "clustering/k_means.h"
+#include "clustering/load_data.h"
+#include "utils/matrix.h"
 
 int main() {
   std::string uri = "mongodb://localhost:27017";
