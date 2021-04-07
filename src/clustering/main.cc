@@ -8,21 +8,18 @@
 
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
-#include "clustering/load_data.h"
+#include "hand_strengths/lut_generators.h"
 #include "utils/matrix.h"
 
 int main() {
-  std::string uri = "mongodb://localhost:27017";
-  std::string db_name = "pluribus";
-  std::string street = "flops";
-  std::string list_name = "hist";
-  typedef uint16_t data_type;
+  std::string path = "luts/flop_lut.cereal";
+  typedef uint32_t data_type;
 
-  auto data_points = clustering::LoadData<data_type>(uri, db_name, street,
-                                                     list_name, true);
+  utils::Matrix<data_type> data_points(1, 1, 0);
+  hand_strengths::LoadLUT(path, &data_points, true);
 
   clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
-  k.Elkan(*data_points, true);
+  k.Elkan(data_points, true);
 
   // std::cout << "Done." << std::endl;
   // // should be 36

@@ -13,7 +13,7 @@ TEST_CASE("Basic flop indexer tests", "[hand_strengths][indexer]") {
   hand_strengths::Indexer flop(2, {2, 3});
   std::array<uint8_t, 5> rollout;
   std::array<uint64_t, 2> indicies;
-  
+
   uint32_t i = 0;
   for (uint32_t idx = 0; idx < 1500000; ++idx) {
     flop.unindex(1, idx, &rollout);
