@@ -6,6 +6,7 @@ add_executable(tests.out main.cc
   hand_strengths/card_utils_test.cc
   hand_strengths/card_combinations_test.cc
   hand_strengths/indexer_test.cc
+  hand_strengths/lut_generators_test.cc
 
   utils/combination_matrix_test.cc
   utils/matrix_test.cc

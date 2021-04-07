@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "SKPokerEval/src/SevenEval.h"
+
 #include "hand_strengths/ochs.h"
 #include "hand_strengths/indexer.h"
 #include "hand_strengths/card_combinations.h"
@@ -21,6 +22,10 @@
 namespace hand_strengths {
 
 std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
+  if (verbose) {
+    std::cout << "Generating Showdown LUT..." << std::endl;
+  }
+
   utils::CombinationMatrix<uint8_t> op_clusters = SKClusterLUT();
 
   const uint32_t one_hand_approx = kNShowdowns / kUniqueHands;
@@ -121,6 +126,10 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
 
 utils::Matrix<uint32_t> PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  if (verbose) {
+    std::cout << "Generating Preflop LUT..." << std::endl;
+  }
+
   const uint32_t lut_size = kUniqueHands;
   const uint32_t buckets = 50;
   const uint32_t simulation_size = 5;
@@ -132,6 +141,10 @@ utils::Matrix<uint32_t> PreflopLUT(
 
 utils::Matrix<uint32_t> FlopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  if (verbose) {
+    std::cout << "Generating Flop LUT..." << std::endl;
+  }
+
   const uint32_t lut_size = 1286792;
   const uint32_t buckets = 50;
   const uint32_t simulation_size = 2;
@@ -143,6 +156,10 @@ utils::Matrix<uint32_t> FlopLUT(
 
 utils::Matrix<uint32_t> TurnLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  if (verbose) {
+    std::cout << "Generating Turn LUT..." << std::endl;
+  }
+
   const uint32_t lut_size = 13960050;
   const uint32_t buckets = 50;
   const uint32_t simulation_size = 1;
@@ -154,6 +171,10 @@ utils::Matrix<uint32_t> TurnLUT(
 
 utils::Matrix<double> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  if (verbose) {
+    std::cout << "Generating River LUT..." << std::endl;
+  }
+
   const uint32_t one_percent_approx = kNShowdowns / 100;
   utils::Matrix<double> river_lut(kNShowdowns, kOCHS_N, 0);
 
@@ -175,6 +196,10 @@ utils::Matrix<double> RiverLUT(
 
 utils::Matrix<double> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
+  if (verbose) {
+    std::cout << "Generating OCHS Preflop LUT..." << std::endl;
+  }
+
   const uint32_t simulation_size = CardCombinations::N_Choose_K(50, 5);
   const uint32_t one_percent_approx = kUniqueHands * simulation_size / 100;
 
@@ -221,23 +246,5 @@ utils::Matrix<double> OCHS_PreflopLUT(
 
   return ochs_preflop_lut;
 }  // OCHS_PreflopLUT
-
-// std::ostream& operator<<(std::ostream& os,
-//                          const std::vector<ShowdownStrength>& v) {
-//   os << "[";
-//   for (uint32_t i = 0; i < v.size(); ++i) {
-//     os << "{ehs: " << v[i].ehs << ", ";
-//     os << "ochs: [" << v[i].ochs[0];
-//     for (uint8_t j = 1; j < kOCHS_N; ++j) {
-//       os << ", " << v[i].ochs[j];
-//     }
-//     os << "]}";
-//     if (i < v.size() - 1) {
-//       os << ", ";
-//     }
-//   }
-//   os << "]";
-//   return os;
-// }
 
 }  // namespace hand_strengths
