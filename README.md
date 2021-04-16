@@ -25,3 +25,6 @@ All executables will now be located in `build/bin`. So, for example, to execute
 ## Other Notes
 
 * Do not put commas in the Catch2 tester descriptions
+* Confirmed compilers and commits
+  * Apple clang version 12.0.0 (confirmed on [94cfe7c](https://github.com/marzukr/fishbait/commit/94cfe7c57874cad74f9fde03517343c92538d8c5))
+  * gcc version 10.2.0 (confirmed on [94cfe7c](https://github.com/marzukr/fishbait/commit/94cfe7c57874cad74f9fde03517343c92538d8c5))
