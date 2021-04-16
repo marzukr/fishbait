@@ -21,3 +21,7 @@ From the root directory:
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `simulator.out`, simply run `./bin/simulator.out` from the `build` directory.
+
+## Other Notes
+
+* Do not put commas in the Catch2 tester descriptions

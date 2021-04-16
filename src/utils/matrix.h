@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <iostream>
 
 #include "utils/vector_view.h"
 
@@ -96,6 +97,17 @@ class Matrix {
   template <class Archive>
   void serialize(Archive& ar) {  // NOLINT(runtime/references)
     ar(n_, m_, data_);
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Matrix<T>& mx) {
+    for (uint32_t i = 0; i < mx.n_; ++i) {
+      os << mx(i, 0);
+      for (uint32_t j = 1; j < mx.m_; ++j) {
+        os << "," << mx(i, j);
+      }
+      os << std::endl;
+    }
+    return os;
   }
 
  private:

@@ -582,8 +582,8 @@ TEST_CASE("kmeans++ 10 double points 2 dimensions 3 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(3);
-  std::unique_ptr<utils::Matrix<double>> centers = k.InitPlusPlus(features,
-                                                                  false, 42);
+  k.InitPlusPlus(features, false, 42);
+  const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{2.44595585, 3.44402974};
   std::vector<double> c1{1.99651652, 1.71079686};
@@ -623,8 +623,8 @@ TEST_CASE("kmeans++ 10 int points 2 dimensions 5 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(5);
-  std::unique_ptr<utils::Matrix<double>> centers = k.InitPlusPlus(features,
-                                                                  false, 18);
+  k.InitPlusPlus(features, false, 18);
+  const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{3, 6};
   std::vector<double> c1{4, 1};
@@ -848,8 +848,8 @@ TEST_CASE("kmeans++ 100 double points 2 dimensions 5 clusters",
   features.SetRow(99, utils::VectorView(d99));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(5);
-  std::unique_ptr<utils::Matrix<double>> centers = k.InitPlusPlus(features,
-                                                                  false, 78);
+  k.InitPlusPlus(features, false, 78);
+  const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{0.36555605, 0.30401102};
   std::vector<double> c1{0.91904247, 0.06708523};
@@ -893,8 +893,8 @@ TEST_CASE("kmeans++ 10 double points 1 dimension 2 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(2);
-  std::unique_ptr<utils::Matrix<double>> centers = k.InitPlusPlus(features,
-                                                                  false, 31);
+  k.InitPlusPlus(features, false, 31);
+  const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-4.6183699};
   std::vector<double> c1{5.43029939};
@@ -932,8 +932,8 @@ TEST_CASE("kmeans++ 10 int points 10 dimensions 3 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
-  std::unique_ptr<utils::Matrix<double>> centers = k.InitPlusPlus(features,
-                                                                  false, 44);
+  k.InitPlusPlus(features, false, 44);
+  const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-1, -1, -3, -4, -8, -5, -3, 2, -7, -12};
   std::vector<double> c1{-8, -9, 1, -4, -4, 1, -6, -9, -4, -2};
@@ -973,8 +973,8 @@ TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(2);
-  std::unique_ptr<utils::Matrix<double>> centers = k.InitPlusPlus(features,
-                                                                  false);
+  k.InitPlusPlus(features, false);
+  const utils::Matrix<double>* centers = k.clusters();
 
   utils::Matrix<double> correct_centers_1(2, 2);
   correct_centers_1.SetRow(0, utils::VectorView(d0));
@@ -987,3 +987,98 @@ TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   REQUIRE((*centers == correct_centers_1 || *centers == correct_centers_2));
 }  // TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions
    //            2 clusters") NOLINT(whitespace/indent)
+
+TEST_CASE("RandomSumInit 10 int points sum 10", "[clustering][kmeans]") {
+  std::vector<int8_t> d0{2,  8};
+  std::vector<int8_t> d1{3,  7};
+  std::vector<int8_t> d2{1,  9};
+  std::vector<int8_t> d3{4,  6};
+  std::vector<int8_t> d4{5,  5};
+  std::vector<int8_t> d5{6,  4};
+  std::vector<int8_t> d6{7,  3};
+  std::vector<int8_t> d7{8,  2};
+  std::vector<int8_t> d8{9,  1};
+  std::vector<int8_t> d9{0, 10};
+
+  utils::Matrix<int8_t> features(10, 2);
+  features.SetRow(0, utils::VectorView(d0));
+  features.SetRow(1, utils::VectorView(d1));
+  features.SetRow(2, utils::VectorView(d2));
+  features.SetRow(3, utils::VectorView(d3));
+  features.SetRow(4, utils::VectorView(d4));
+  features.SetRow(5, utils::VectorView(d5));
+  features.SetRow(6, utils::VectorView(d6));
+  features.SetRow(7, utils::VectorView(d7));
+  features.SetRow(8, utils::VectorView(d8));
+  features.SetRow(9, utils::VectorView(d9));
+
+  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(10);
+  k.RandomSumInit(features);
+  const utils::Matrix<double>* centers = k.clusters();
+
+  REQUIRE(centers->n() == 10);
+  REQUIRE(centers->m() == 2);
+  for (uint32_t c = 0; c < centers->n(); ++c) {
+    double row_sum = 0;
+    for (uint32_t j = 0; j < centers->m(); ++j) {
+      row_sum += (*centers)(c, j);
+    }
+    REQUIRE(row_sum == 10.0);
+  }
+}  // TEST_CASE "RandomSumInit 10 int points, sum 10"
+
+TEST_CASE("RandomSumInit 10 double points sum 10", "[clustering][kmeans]") {
+  std::vector<double> d0{2,  8};
+  std::vector<double> d1{3,  7};
+  std::vector<double> d2{1,  9};
+  std::vector<double> d3{4,  6};
+  std::vector<double> d4{5,  5};
+  std::vector<double> d5{6,  4};
+  std::vector<double> d6{7,  3};
+  std::vector<double> d7{8,  2};
+  std::vector<double> d8{9,  1};
+  std::vector<double> d9{0, 10};
+
+  utils::Matrix<double> features(10, 2);
+  features.SetRow(0, utils::VectorView(d0));
+  features.SetRow(1, utils::VectorView(d1));
+  features.SetRow(2, utils::VectorView(d2));
+  features.SetRow(3, utils::VectorView(d3));
+  features.SetRow(4, utils::VectorView(d4));
+  features.SetRow(5, utils::VectorView(d5));
+  features.SetRow(6, utils::VectorView(d6));
+  features.SetRow(7, utils::VectorView(d7));
+  features.SetRow(8, utils::VectorView(d8));
+  features.SetRow(9, utils::VectorView(d9));
+
+  clustering::KMeans<double, clustering::EuclideanDistance> k(10);
+  k.RandomSumInit(features);
+  const utils::Matrix<double>* centers = k.clusters();
+
+  REQUIRE(centers->n() == 10);
+  REQUIRE(centers->m() == 2);
+  for (uint32_t c = 0; c < centers->n(); ++c) {
+    double row_sum = 0;
+    for (uint32_t j = 0; j < centers->m(); ++j) {
+      row_sum += (*centers)(c, j);
+    }
+    REQUIRE(row_sum == 10.0);
+  }
+}  // TEST_CASE "RandomSumInit 10 double points, sum 10"
+
+TEST_CASE("RandomProbInit 10 int points", "[clustering][kmeans]") {
+  utils::Matrix<int8_t> features(1000, 1000, 10);
+
+  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(900);
+  k.RandomProbInit(features);
+  const utils::Matrix<double>* centers = k.clusters();
+
+  REQUIRE(centers->n() == 900);
+  REQUIRE(centers->m() == 1000);
+  for (uint32_t c = 0; c < centers->n(); ++c) {
+    for (uint32_t j = 0; j < centers->m(); ++j) {
+      REQUIRE((*centers)(c, j) >= 0.0);
+      REQUIRE((*centers)(c, j) < 1.0);
+    }
+  }
+}  // TEST_CASE "RandomProbInit 10 int points"

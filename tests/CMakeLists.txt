@@ -10,6 +10,7 @@ add_executable(tests.out main.cc
 
   utils/combination_matrix_test.cc
   utils/matrix_test.cc
+  utils/random_test.cc
   utils/vector_view_test.cc
 
   )
