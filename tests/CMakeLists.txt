@@ -15,7 +15,6 @@ add_executable(tests.out main.cc
 
   )
 
-set_property(TARGET tests.out PROPERTY CXX_STANDARD 17)
 target_link_libraries(tests.out hand_strengths)
 
 add_custom_target(tests ALL)

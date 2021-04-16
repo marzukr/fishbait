@@ -10,11 +10,9 @@ add_library(
   ochs.cc
   ochs.h
   )
-set_property(TARGET hand_strengths PROPERTY CXX_STANDARD 17)
 target_link_libraries(hand_strengths handisomorphism)
 
 add_executable(hand_strengths.out main.cc)
-set_property(TARGET hand_strengths.out PROPERTY CXX_STANDARD 17)
 target_link_libraries(hand_strengths.out handisomorphism hand_strengths)
 
 add_custom_target(hand_strengths_gen ALL)

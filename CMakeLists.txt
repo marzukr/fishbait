@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.10.0)
 project(fishbait)
+
+set(CMAKE_CXX_STANDARD 17)
 
 # DOWNLOAD ALL THE SUBMODULES
 option(GIT_SUBMODULE "Check submodules during build" ON)
