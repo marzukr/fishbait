@@ -19,8 +19,11 @@ int main() {
   hand_strengths::LoadLUT(path, &data_points, true);
 
   clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
-  k.RandomSumInit(data_points, 6789);
-  k.Elkan(data_points, true, 43555);
+  // k.RandomSumInit(data_points, 6789);
+  k.RandomSumInit(data_points, 12345);
+  // k.InitPlusPlus(data_points, true, 6789);
+  // k.Elkan(data_points, true, 43555);
+  k.Elkan(data_points, true, 54321);
 
   // std::cout << "Done." << std::endl;
   // // should be 36

@@ -97,6 +97,10 @@ class KMeans {
       upper_bound_loose[x] = false;
     }  // for x
 
+    // Initialize random number generator for filling empty clusters
+    utils::Random rng(seed);
+    std::uniform_real_distribution<> std_unif(0.0, 1.0);
+
     if (verbose) {
       std::cout << "initialized data structures";
       std::cout << std::endl;
@@ -174,7 +178,7 @@ class KMeans {
       std::vector<uint32_t> cluster_counts(k_, 0);
       for (uint32_t x = 0; x < data.n(); ++x) {
         uint32_t c = (*assignments)[x];
-        means->template AddToRow<T>(c, data(x));
+        means->AddToRow(c, data(x));
         cluster_counts[c] += 1;
       }
       // Find any empty clusters
@@ -186,6 +190,9 @@ class KMeans {
       }
       // If there are empty clusters, fill them with the kmeans++ algorithm
       if (empty_clusters.size() > 0) {
+        if (verbose) {
+          std::cout << "empty clusters: " << empty_clusters.size() << std::endl;
+        }
         // Calculate the squared distances between each point and it's assigned
         // cluster, and the sum of those distances. These values are needed for
         // kmeans++.
@@ -196,21 +203,18 @@ class KMeans {
           squared_sum += squared_dists[x];
         }
 
-        // Initialize random number generator
-        utils::Random rng(seed);
-        std::uniform_real_distribution<> std_unif(0.0, 1.0);
-
         // Fill each empty cluster by selecting a point with kmeans++, removing
         // that point from its current cluster, then adding it to the empty
         // cluster.
-        for (uint32_t new_c = 0; new_c < empty_clusters.size(); ++new_c) {
+        for (uint32_t i = 0; i < empty_clusters.size(); ++i) {
           double selection = std_unif(rng());
           uint32_t x = InitPlusPlusIter(
             data, &squared_dists, &squared_sum, selection);
           uint32_t old_c = (*assignments)[x];
+          uint32_t new_c = empty_clusters[i];
 
-          means->template SubtractFromRow<T>(old_c, data(x));
-          means->template AddToRow<T>(new_c, data(x));
+          means->SubtractFromRow(old_c, data(x));
+          means->AddToRow(new_c, data(x));
 
           cluster_counts[old_c] += -1;
           cluster_counts[new_c] += 1;
