@@ -69,7 +69,7 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
     sd_count += 1;
     if (verbose && sd_count % one_hand_approx == 0) {
       std::cout << 100.0 * sd_count / kNShowdowns << "%" << std::endl;
-      t.StopAndReset(true);
+      t.StopAndReset("iteration time");
     }
   }  // for idx
 
@@ -116,7 +116,7 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
       if (verbose && sd_count % one_percent_approx == 0) {
         std::cout << 100.0 * sd_count / (lut_size * simulation_size)
                   << "%" << std::endl;
-        t.StopAndReset(true);
+        t.StopAndReset("iteration time");
       }
     }  // for simulations
   }  // for idx
@@ -188,7 +188,7 @@ utils::Matrix<double> RiverLUT(
     if (verbose && idx % one_percent_approx == 0) {
       std::cout << 100.0 * idx / (kNShowdowns * 1.0)
                 << "%" << std::endl;
-      t.StopAndReset(true);
+      t.StopAndReset("iteration time");
     }
   }  // for idx
   return river_lut;
@@ -235,7 +235,7 @@ utils::Matrix<double> OCHS_PreflopLUT(
       if (verbose && sd_count % one_percent_approx == 0) {
         std::cout << 100.0 * sd_count / (kUniqueHands * simulation_size)
                   << "%" << std::endl;
-        t.StopAndReset(true);
+        t.StopAndReset("iteration time");
       }
     }  // for simulations
 

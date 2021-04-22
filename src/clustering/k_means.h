@@ -12,11 +12,13 @@
 #include <vector>
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 
 #include "utils/matrix.h"
 #include "utils/combination_matrix.h"
 #include "utils/vector_view.h"
 #include "utils/random.h"
+#include "utils/timer.h"
 
 namespace clustering {
 
@@ -97,6 +99,10 @@ class KMeans {
       upper_bound_loose[x] = false;
     }  // for x
 
+    // Initialize random number generator for filling empty clusters
+    utils::Random rng(seed);
+    std::uniform_real_distribution<> std_unif(0.0, 1.0);
+
     if (verbose) {
       std::cout << "initialized data structures";
       std::cout << std::endl;
@@ -104,6 +110,7 @@ class KMeans {
 
     bool converged = false;
     uint32_t iteration = 0;
+    utils::Timer t;
     while (!converged) {
       // Step 1
       // For all centers c and c', compute the distance between them
@@ -128,6 +135,7 @@ class KMeans {
           }
         }
       }
+      t.StopAndReset("step 1");
 
       // Step 3
       for (uint32_t x = 0; x < data.n(); ++x) {
@@ -167,6 +175,7 @@ class KMeans {
           }
         }  // for c
       }  // for x
+      t.StopAndReset("step 2,3");
 
       // Step 4
       // First, sum the data points assigned to each cluster
@@ -203,11 +212,12 @@ class KMeans {
         // Fill each empty cluster by selecting a point with kmeans++, removing
         // that point from its current cluster, then adding it to the empty
         // cluster.
-        for (uint32_t new_c = 0; new_c < empty_clusters.size(); ++new_c) {
+        for (uint32_t i = 0; i < empty_clusters.size(); ++i) {
           double selection = std_unif(rng());
           uint32_t x = InitPlusPlusIter(
             data, &squared_dists, &squared_sum, selection);
           uint32_t old_c = (*assignments)[x];
+          uint32_t new_c = empty_clusters[i];
 
           means->template SubtractFromRow<T>(old_c, data(x));
           means->template AddToRow<T>(new_c, data(x));
@@ -217,6 +227,7 @@ class KMeans {
         }
       }
       means->Divide(utils::VectorView(cluster_counts));
+      t.StopAndReset("step 4");
 
       // Step 5
       std::vector<double> cluster_to_means(k_);
@@ -228,6 +239,7 @@ class KMeans {
                                         0.0);
         }
       }
+      t.StopAndReset("step 5");
 
       // Step 6
       for (uint32_t x = 0; x < data.n(); ++x) {
@@ -235,18 +247,19 @@ class KMeans {
         upper_bounds[x] = upper_bounds[x] + cluster_to_means[c_x];
         upper_bound_loose[x] = true;
       }
+      t.StopAndReset("step 6");
 
       // Step 7
       converged = (*clusters) == (*means);
       clusters = std::move(means);
       loss_ = ComputeLoss(data, *clusters, *assignments);
+      t.StopAndReset("step 7");
 
       iteration += 1;
       if (verbose) {
         std::cout << "computed iteration " << iteration;
         std::cout << ", converged: " << converged << std::endl;
-        std::cout.precision(17);
-        std::cout << loss_ << std::endl;
+        std::cout << std::setprecision(17) << loss_ << std::endl;
       }
     }  // while !converged
 
