@@ -25,8 +25,10 @@ int main() {
   // clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
   clustering::KMeans<data_type, clustering::EuclideanDistance> k(200);
   // k.RandomSumInit(data_points, 6789);
+  // k.RandomSumInit(data_points, 12345);
   k.InitPlusPlus(data_points, true, 6789);
-  k.Elkan(data_points, true, 43555);
+  // k.Elkan(data_points, true, 43555);
+  k.Elkan(data_points, true, 54321);
 
   // std::cout << "Done." << std::endl;
   // // should be 36

@@ -25,26 +25,78 @@ namespace clustering {
 template <typename T, template<class, class> class Distance>
 class KMeans {
  public:
+  enum InitProc { PlusPlus, RandomSum, RandomProb };
+
   explicit KMeans(uint32_t k)
-      : k_(k), clusters_(nullptr), assignments_(nullptr), loss_(-1) {}
+      : k_(k), clusters_(nullptr), assignments_(nullptr), loss_(INFINITY) {}
   KMeans(uint32_t k, std::unique_ptr<utils::Matrix<double>> initial_clusters)
       : k_(k), clusters_(std::move(initial_clusters)), assignments_(nullptr),
-        loss_(-1) {}
+        loss_(INFINITY) {}
+
+  void MultipleRestarts(const utils::Matrix<T>& data, uint32_t restarts,
+                        InitProc initializer = PlusPlus, bool verbose = false,
+                        int32_t seed = -1) {
+    // Variables to store the clustering with the lowest loss
+    std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
+    std::unique_ptr<std::vector<uint32_t>> assignments(nullptr);
+    double loss = INFINITY;
+
+    // Random number generator to generate seeds
+    utils::Random rng(seed);
+    std::uniform_int_distribution<> seed_gen(0, 65535);
+
+    // Repeat the clustering the specified number of times
+    for (uint32_t t = 0; t < restarts; ++t) {
+      if (verbose) {
+        std::cout << "starting trial " << t << std::endl;
+      }
+
+      // Set the starting clusters
+      switch (initializer) {
+        case PlusPlus:
+          InitPlusPlus(data, verbose, seed_gen(rng()));
+          break;
+        case RandomSum:
+          RandomSumInit(data, seed_gen(rng()));
+          break;
+        case RandomProb:
+          RandomProbInit(data, seed_gen(rng()));
+          break;
+      }  // switch (initializer)
+
+      // Run kmeans until convergence
+      Elkan(data, verbose, seed_gen(rng()));
+
+      // If the new clustering is better than the best one so far, replace it
+      if (loss_ < loss) {
+        loss = loss_;
+        clusters = std::move(clusters_);
+        assignments = std::move(assignments_);
+      }
+    }  // for t
+
+    // Set the instance variables to the best clustering found
+    loss_ = loss;
+    clusters_ = std::move(clusters);
+    assignments_ = std::move(assignments);
+  }  // MultipleRestarts()
 
   /*
     @brief Run kmeans clustering with Elkan's algorithm
 
     @param data The data points to cluster.
     @param verbose Print diagnostics information.
-    @param seed Seed to use for assigning empty clusters.
+    @param seed Seed to use for assigning empty clusters and initializing
+      clusters if they are not already initialized.
   */
   void Elkan(const utils::Matrix<T>& data, bool verbose = false,
              int32_t seed = -1) {
     std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
     if (clusters_ == nullptr) {
-      InitPlusPlus(data, verbose);
+      InitPlusPlus(data, verbose, seed);
     }
     clusters = std::make_unique<utils::Matrix<double>>(*clusters_);
+    double loss = INFINITY;
 
     // Initialize the lower bounds of the distance between x and every
     // cluster to 0
@@ -183,7 +235,7 @@ class KMeans {
       std::vector<uint32_t> cluster_counts(k_, 0);
       for (uint32_t x = 0; x < data.n(); ++x) {
         uint32_t c = (*assignments)[x];
-        means->template AddToRow<T>(c, data(x));
+        means->AddToRow(c, data(x));
         cluster_counts[c] += 1;
       }
       // Find any empty clusters
@@ -195,6 +247,9 @@ class KMeans {
       }
       // If there are empty clusters, fill them with the kmeans++ algorithm
       if (empty_clusters.size() > 0) {
+        if (verbose) {
+          std::cout << "empty clusters: " << empty_clusters.size() << std::endl;
+        }
         // Calculate the squared distances between each point and it's assigned
         // cluster, and the sum of those distances. These values are needed for
         // kmeans++.
@@ -204,10 +259,6 @@ class KMeans {
           squared_dists[x] = upper_bounds[x] * upper_bounds[x];
           squared_sum += squared_dists[x];
         }
-
-        // Initialize random number generator
-        utils::Random rng(seed);
-        std::uniform_real_distribution<> std_unif(0.0, 1.0);
 
         // Fill each empty cluster by selecting a point with kmeans++, removing
         // that point from its current cluster, then adding it to the empty
@@ -219,8 +270,8 @@ class KMeans {
           uint32_t old_c = (*assignments)[x];
           uint32_t new_c = empty_clusters[i];
 
-          means->template SubtractFromRow<T>(old_c, data(x));
-          means->template AddToRow<T>(new_c, data(x));
+          means->SubtractFromRow(old_c, data(x));
+          means->AddToRow(new_c, data(x));
 
           cluster_counts[old_c] += -1;
           cluster_counts[new_c] += 1;
@@ -252,22 +303,22 @@ class KMeans {
       // Step 7
       converged = (*clusters) == (*means);
       clusters = std::move(means);
-      loss_ = ComputeLoss(data, *clusters, *assignments);
+      loss = ComputeLoss(data, *clusters, *assignments);
       t.StopAndReset("step 7");
 
       iteration += 1;
       if (verbose) {
         std::cout << "computed iteration " << iteration;
         std::cout << ", converged: " << converged << std::endl;
-        std::cout << std::setprecision(17) << loss_ << std::endl;
+        std::cout << std::setprecision(17) << loss << std::endl;
       }
     }  // while !converged
 
-    // Compute the loss and set the instance variables to the clusters and
-    // assignments we just computed
+    // Update the clusters, assignments, and loss.
     clusters_ = std::move(clusters);
     assignments_ = std::move(assignments);
-  }  // Elkan
+    loss_ = loss;
+  }  // Elkan()
 
   /*
     @brief Initialize clusters with the kmeans++ algorithm
@@ -307,7 +358,7 @@ class KMeans {
       filled_clusters->template SetRow<T>(c, data(clusters[c]));
     }
     clusters_ = std::move(filled_clusters);
-  }  // InitPlusPlus
+  }  // InitPlusPlus()
 
   void RandomSumInit(const utils::Matrix<T>& data, int32_t seed = -1) {
     T row_sum = 0;
@@ -336,7 +387,7 @@ class KMeans {
     }  // for c
 
     clusters_ = std::move(clusters);
-  }  // RandomSumInit
+  }  // RandomSumInit()
 
   void RandomProbInit(const utils::Matrix<T>& data, int32_t seed = -1) {
     utils::Random rng(seed);
@@ -352,7 +403,7 @@ class KMeans {
     }  // for c
 
     clusters_ = std::move(clusters);
-  }  // RandomProbInit
+  }  // RandomProbInit()
 
   const utils::Matrix<double>* clusters() const {
     return clusters_.get();
@@ -417,7 +468,7 @@ class KMeans {
     }
 
     return new_cluster;
-  }  // InitPlusPlusIter
+  }  // InitPlusPlusIter()
 
   double ComputeLoss(const utils::Matrix<T>& data,
                      const utils::Matrix<double>& clusters,
@@ -430,7 +481,7 @@ class KMeans {
       squared_sum += std::pow(dist_to_cluster, 2);
     }
     return squared_sum/data.n();
-  }
+  }  // ComputeLoss()
 
   const uint32_t k_;
   std::unique_ptr<utils::Matrix<double>> clusters_;
