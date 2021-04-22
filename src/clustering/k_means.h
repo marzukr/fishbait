@@ -33,6 +33,16 @@ class KMeans {
       : k_(k), clusters_(std::move(initial_clusters)), assignments_(nullptr),
         loss_(INFINITY) {}
 
+  /*
+    @brief Run kmeans clustering several times and pick the best one.
+
+    @param data The data points to cluster.
+    @param restarts The number of times to run kmeans.
+    @param initializer The algorithm to use to genereate the initial clusters.
+    @param verbose Print diagnostics information.
+    @param seed Seed to use for assigning empty clusters and initializing
+      clusters.
+  */
   void MultipleRestarts(const utils::Matrix<T>& data, uint32_t restarts,
                         InitProc initializer = PlusPlus, bool verbose = false,
                         int32_t seed = -1) {
