@@ -14,8 +14,6 @@
 int main() {
   // std::string path = "luts/flop_lut.cereal";
   std::string path = "luts/river_lut.cereal";
-  std::cout << path << std::endl;
-  return 0;
   // typedef uint32_t data_type;
   typedef double data_type;
 
