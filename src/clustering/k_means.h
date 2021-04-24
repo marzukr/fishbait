@@ -322,6 +322,9 @@ class KMeans {
         std::cout << ", converged: " << converged << std::endl;
         std::cout << std::setprecision(17) << loss << std::endl;
       }
+      if (iteration >= 10) {
+        break;
+      }
     }  // while !converged
 
     // Update the clusters, assignments, and loss.
