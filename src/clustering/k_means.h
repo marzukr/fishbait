@@ -295,7 +295,9 @@ class KMeans {
       for (uint32_t c = 0; c < k_; ++c) {
         cluster_to_means[c] = Distance<double, double>::Compute((*clusters)(c),
                                                                 (*means)(c));
-        for (uint32_t x = 0; x < data.n(); ++x) {
+      }
+      for (uint32_t x = 0; x < data.n(); ++x) {
+        for (uint32_t c = 0; c < k_; ++c) {
           lower_bounds(x, c) = std::max(lower_bounds(x, c)-cluster_to_means[c],
                                         0.0);
         }
