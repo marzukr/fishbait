@@ -115,20 +115,22 @@ class Matrix {
   using const_data_iter = typename std::vector<T>::const_iterator;
   using data_iter_diff = typename std::iterator_traits<data_iter>
                                      ::difference_type;
+
   data_iter begin() { return data_.begin(); }
   const_data_iter begin() const { return data_.begin(); }
   data_iter end() { return data_.end(); }
   const_data_iter end() const { return data_.end(); }
 
   data_iter_diff pos(const_data_iter it) const { return it - begin(); }
+  data_iter_diff pos(const T* it) const { return it - data_.data(); }
+
   uint32_t row(const_data_iter it) const { return pos(it) / m_; }
-  uint32_t row(const_data_iter it, data_iter_diff pos) const {
-    return pos / m_;
-  }
+  uint32_t row(const T* it) const { return pos(it) / m_; }
+  uint32_t row(data_iter_diff pos) const { return pos / m_; }
+
   uint32_t col(const_data_iter it) const { return pos(it) % m_; }
-  uint32_t col(const_data_iter it, data_iter_diff pos) const {
-    return pos % m_;
-  }
+  uint32_t col(const T* it) const { return pos(it) % m_; }
+  uint32_t col(data_iter_diff pos) const { return pos % m_; }
 
  private:
   uint32_t n_;  // rows

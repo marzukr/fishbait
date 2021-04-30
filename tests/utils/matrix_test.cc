@@ -161,15 +161,21 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
     }  // SECTION("Verify Fill")
     SECTION("Verify iterators") {
       for (auto it = points.begin(); it != points.end(); ++it) {
-        auto pos = points.pos(it);
+        auto pos1 = points.pos(it);
+        auto pos2 = points.pos(&*it);
+        REQUIRE(pos1 == pos2);
 
         uint32_t row1 = points.row(it);
-        uint32_t row2 = points.row(it, pos);
+        uint32_t row2 = points.row(pos1);
+        uint32_t row3 = points.row(&*it);
         REQUIRE(row1 == row2);
+        REQUIRE(row1 == row3);
 
         uint32_t col1 = points.col(it);
-        uint32_t col2 = points.col(it, pos);
+        uint32_t col2 = points.col(pos1);
+        uint32_t col3 = points.col(&*it);
         REQUIRE(col1 == col2);
+        REQUIRE(col1 == col3);
 
         if (row1 == points_i_new && col1 == points_j_new) {
           REQUIRE(*it == points_val_new);
@@ -208,15 +214,21 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
   }  // SECTION("Verify that unequal const Matrixes are not equal")
   SECTION("Verify iterators on const Matrix") {
     for (auto it = const_points.begin(); it != const_points.end(); ++it) {
-      auto pos = const_points.pos(it);
+      auto pos1 = const_points.pos(it);
+      auto pos2 = const_points.pos(&*it);
+      REQUIRE(pos1 == pos2);
 
       uint32_t row1 = const_points.row(it);
-      uint32_t row2 = const_points.row(it, pos);
+      uint32_t row2 = const_points.row(pos1);
+      uint32_t row3 = const_points.row(&*it);
       REQUIRE(row1 == row2);
+      REQUIRE(row1 == row3);
 
       uint32_t col1 = const_points.col(it);
-      uint32_t col2 = const_points.col(it, pos);
+      uint32_t col2 = const_points.col(pos1);
+      uint32_t col3 = const_points.col(&*it);
       REQUIRE(col1 == col2);
+      REQUIRE(col1 == col3);
 
       REQUIRE(*it == c_points_val);
     }  // for it
