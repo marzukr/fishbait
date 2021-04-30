@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <iterator>
 
 #include "utils/vector_view.h"
 
@@ -108,6 +109,25 @@ class Matrix {
       os << std::endl;
     }
     return os;
+  }
+
+  using data_iter = typename std::vector<T>::iterator;
+  using const_data_iter = typename std::vector<T>::const_iterator;
+  using data_iter_diff = typename std::iterator_traits<data_iter>
+                                     ::difference_type;
+  data_iter begin() { return data_.begin(); }
+  const_data_iter begin() const { return data_.begin(); }
+  data_iter end() { return data_.end(); }
+  const_data_iter end() const { return data_.end(); }
+
+  data_iter_diff pos(const_data_iter it) const { return it - begin(); }
+  uint32_t row(const_data_iter it) const { return pos(it) / m_; }
+  uint32_t row(const_data_iter it, data_iter_diff pos) const {
+    return pos / m_;
+  }
+  uint32_t col(const_data_iter it) const { return pos(it) % m_; }
+  uint32_t col(const_data_iter it, data_iter_diff pos) const {
+    return pos % m_;
   }
 
  private:

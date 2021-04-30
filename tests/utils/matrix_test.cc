@@ -28,7 +28,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
     REQUIRE(points.m() == points_m);
     REQUIRE(const_points.n() == c_points_n);
     REQUIRE(const_points.m() == c_points_m);
-  }
+  }  // SECTION("Verify that the dimensions are correct")
   SECTION("Verify that modifying values works") {
     const int points_i_new = 475;
     const int points_j_new = 30;
@@ -47,7 +47,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
           }
         }
       }
-    }
+    }  // SECTION("Verify that Access and () work on a Matrix")
     SECTION("Verify that row access works with VectorView") {
       utils::VectorView<int> v = points(points_i_new);
       for (uint32_t j = 0; j < points.m(); ++j) {
@@ -57,19 +57,19 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
           REQUIRE(v(j) == points_val);
         }
       }
-    }
+    }  // SECTION("Verify that row access works with VectorView")
     SECTION("Verify that equal matrixes are equal") {
       utils::Matrix<int> temp_points(points_n, points_m, points_val);
       temp_points(points_i_new, points_j_new) = points_val_new;
       REQUIRE(points == temp_points);
       REQUIRE(temp_points == points);
-    }
+    }  // SECTION("Verify that equal matrixes are equal")
     SECTION("Verify that unequal matrixes are not equal") {
       utils::Matrix<int> temp_points(points_m, points_n, points_val);
       temp_points(points_j_new, points_i_new) = points_val_new;
       REQUIRE(!(points == temp_points));
       REQUIRE(!(temp_points == points));
-    }
+    }  // SECTION("Verify that unequal matrixes are not equal")
     SECTION("Verify SetRow") {
       const double new_row_val = 6.99;
       const int row_number = 578;
@@ -88,7 +88,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
           }
         }
       }
-    }
+    }  // SECTION("Verify SetRow")
     SECTION("Verify AddToRow") {
       const double add_val = 6.99;
       const int row_number = 0;
@@ -107,7 +107,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
           }
         }
       }
-    }
+    }  // SECTION("Verify AddToRow")
     SECTION("Verify SubtractFromRow") {
       const int subtract_val = 101;
       const int row_number = points_n - 1;
@@ -126,7 +126,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
           }
         }
       }
-    }
+    }  // SECTION("Verify SubtractFromRow")
     SECTION("Verify Divide") {
       const double divide_val = 6;
       const double divide_val_2 = 10;
@@ -147,7 +147,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
           }
         }
       }
-    }
+    }  // SECTION("Verify Divide")
     SECTION("Verify Fill") {
       const int fill_val = 256;
 
@@ -158,7 +158,26 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
           REQUIRE(points(i, j) == fill_val);
         }
       }
-    }
+    }  // SECTION("Verify Fill")
+    SECTION("Verify iterators") {
+      for (auto it = points.begin(); it != points.end(); ++it) {
+        auto pos = points.pos(it);
+
+        uint32_t row1 = points.row(it);
+        uint32_t row2 = points.row(it, pos);
+        REQUIRE(row1 == row2);
+
+        uint32_t col1 = points.col(it);
+        uint32_t col2 = points.col(it, pos);
+        REQUIRE(col1 == col2);
+
+        if (row1 == points_i_new && col1 == points_j_new) {
+          REQUIRE(*it == points_val_new);
+        } else {
+          REQUIRE(*it == points_val);
+        }
+      }  // for it
+    }  // SECTION("Verify iterators")
   }  // SECTION("Verify that modifying values works")
 
   // Const Matrix Tests
@@ -169,24 +188,39 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
         REQUIRE(const_points(i, j) == c_points_val);
       }
     }
-  }
+  }  // SECTION("Verify () and Access on const Matrix")
   SECTION("Verify that row access works with VectorView on const Matrix") {
     const int row_number = 178;
     utils::VectorView<double> v = const_points(row_number);
     for (const double* it = v.begin(); it < v.end(); ++it) {
       REQUIRE(*it == c_points_val);
     }
-  }
+  }  // SECTION("Verify that row access works with VectorView on const Matrix")
   SECTION("Verify that equal const Matrixes are equal") {
     utils::Matrix<double> temp_points(c_points_n, c_points_m, c_points_val);
     REQUIRE(const_points == temp_points);
     REQUIRE(temp_points == const_points);
-  }
+  }  // SECTION("Verify that equal const Matrixes are equal")
   SECTION("Verify that unequal const Matrixes are not equal") {
     utils::Matrix<double> temp_points(c_points_m, c_points_n, c_points_val);
     REQUIRE(!(const_points == temp_points));
     REQUIRE(!(temp_points == const_points));
-  }
+  }  // SECTION("Verify that unequal const Matrixes are not equal")
+  SECTION("Verify iterators on const Matrix") {
+    for (auto it = const_points.begin(); it != const_points.end(); ++it) {
+      auto pos = const_points.pos(it);
+
+      uint32_t row1 = const_points.row(it);
+      uint32_t row2 = const_points.row(it, pos);
+      REQUIRE(row1 == row2);
+
+      uint32_t col1 = const_points.col(it);
+      uint32_t col2 = const_points.col(it, pos);
+      REQUIRE(col1 == col2);
+
+      REQUIRE(*it == c_points_val);
+    }  // for it
+  }  // SECTION("Verify iterators on const Matrix")
 
   // Copy Constructor Test
   SECTION("Copy constructor") {
@@ -204,7 +238,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
         REQUIRE(points2(i, j) == change_val);
       }
     }
-  }
+  }  // SECTION("Copy constructor")
 
   // Assignment Operator Test
   SECTION("Assignment operator") {
@@ -223,5 +257,5 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
         REQUIRE(points2(i, j) == change_val);
       }
     }
-  }
+  }  // SECTION("Assignment operator")
 }  // TEST_CASE("Test Matrix", "[utils][matrix]")

@@ -14,8 +14,8 @@
 int main() {
   std::string path = "luts/flop_lut.cereal";
   // std::string path = "luts/river_lut.cereal";
-  typedef uint32_t data_type;
-  // typedef double data_type;
+  using data_type = uint32_t;
+  // using data_type = double;
 
   utils::Matrix<data_type> data_points(1, 1, 0);
   hand_strengths::LoadLUT(path, &data_points, true);
