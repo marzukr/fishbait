@@ -9,6 +9,7 @@ add_executable(tests.out main.cc
   hand_strengths/lut_generators_test.cc
 
   utils/combination_matrix_test.cc
+  utils/loop_iterator_test.cc
   utils/matrix_test.cc
   utils/random_test.cc
   utils/vector_view_test.cc
