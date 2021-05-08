@@ -1023,7 +1023,7 @@ TEST_CASE("RandomSumInit 10 int points sum 10", "[clustering][kmeans]") {
     for (uint32_t j = 0; j < centers->m(); ++j) {
       row_sum += (*centers)(c, j);
     }
-    REQUIRE(row_sum == 10.0);
+    REQUIRE(std::abs(row_sum - 10.0) < 1e-6);
   }
 }  // TEST_CASE "RandomSumInit 10 int points, sum 10"
 
@@ -1062,7 +1062,7 @@ TEST_CASE("RandomSumInit 10 double points sum 10", "[clustering][kmeans]") {
     for (uint32_t j = 0; j < centers->m(); ++j) {
       row_sum += (*centers)(c, j);
     }
-    REQUIRE(row_sum == 10.0);
+    REQUIRE(std::abs(row_sum - 10.0) < 1e-6);
   }
 }  // TEST_CASE "RandomSumInit 10 double points, sum 10"
 
