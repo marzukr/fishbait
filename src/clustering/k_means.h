@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
+#include <thread>
 
 #include "utils/matrix.h"
 #include "utils/combination_matrix.h"
@@ -200,43 +201,53 @@ class KMeans {
       t.StopAndReset("step 1");
 
       // Step 3
-      for (uint32_t x = 0; x < data.n(); ++x) {
-        uint32_t& c_x = (*assignments)[x];
+      const uint8_t n_threads = std::min(data.n(), (uint64_t) 16);
+      std::thread threads[n_threads];
+      for (uint8_t thread = 0; thread < n_threads; ++thread) {
+        threads[thread] = std::thread([&, thread](){
+            for (uint64_t x = thread; x < data.n(); x += n_threads) {
+              uint32_t& c_x = (*assignments)[x];
 
-        // Step 2
-        if (upper_bounds[x] <= half_min_cluster_dists[c_x]) continue;
+              // Step 2
+              if (upper_bounds[x] <= half_min_cluster_dists[c_x]) continue;
 
-        for (uint32_t c = 0; c < k_; ++c) {
-          // Step 3(i)
-          if (c == c_x) continue;
+              for (uint32_t c = 0; c < k_; ++c) {
+                // Step 3(i)
+                if (c == c_x) continue;
 
-          // Step 3(ii)
-          if (upper_bounds[x] <= lower_bounds(x, c)) continue;
+                // Step 3(ii)
+                if (upper_bounds[x] <= lower_bounds(x, c)) continue;
 
-          // Step 3(iii)
-          if (upper_bounds[x] <= cluster_dists(c_x, c)/2) continue;
+                // Step 3(iii)
+                if (upper_bounds[x] <= cluster_dists(c_x, c)/2) continue;
 
-          // Step 3a
-          if (upper_bound_loose[x]) {
-            upper_bounds[x] = Distance<T, double>::Compute(data(x),
-                                                           (*clusters)(c_x));
-            lower_bounds(x, c_x) = upper_bounds[x];
-            upper_bound_loose[x] = false;
-          }
+                // Step 3a
+                if (upper_bound_loose[x]) {
+                  upper_bounds[x] = Distance<T, double>::Compute(
+                      data(x), (*clusters)(c_x));
+                  lower_bounds(x, c_x) = upper_bounds[x];
+                  upper_bound_loose[x] = false;
+                }
 
-          // Step 3b
-          if (upper_bounds[x] > lower_bounds(x, c) ||
-              upper_bounds[x] > cluster_dists(c_x, c)/2) {
-            double x_c_dist = Distance<T, double>::Compute(data(x),
-                                                           (*clusters)(c));
-            lower_bounds(x, c) = x_c_dist;
-            if (x_c_dist < upper_bounds[x]) {
-              c_x = c;
-              upper_bounds[x] = x_c_dist;
-            }
-          }
-        }  // for c
-      }  // for x
+                // Step 3b
+                if (upper_bounds[x] > lower_bounds(x, c) ||
+                    upper_bounds[x] > cluster_dists(c_x, c)/2) {
+                  double x_c_dist = Distance<T, double>::Compute(
+                      data(x), (*clusters)(c));
+                  lower_bounds(x, c) = x_c_dist;
+                  if (x_c_dist < upper_bounds[x]) {
+                    c_x = c;
+                    upper_bounds[x] = x_c_dist;
+                  }
+                }
+              }  // for c
+            }  // for x
+          }  // [&]()
+        );  // std::thread
+      }  // for thread
+      for (uint8_t thread = 0; thread < n_threads; ++thread) {
+        threads[thread].join();
+      }  // for thread
       t.StopAndReset("step 2,3");
 
       // Step 4
@@ -323,9 +334,6 @@ class KMeans {
         std::cout << "computed iteration " << iteration;
         std::cout << ", converged: " << converged << std::endl;
         std::cout << std::setprecision(17) << loss << std::endl;
-      }
-      if (iteration >= 10) {
-        break;
       }
     }  // while !converged
 

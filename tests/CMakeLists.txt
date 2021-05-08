@@ -16,7 +16,9 @@ add_executable(tests.out main.cc
 
   )
 
-target_link_libraries(tests.out hand_strengths)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(tests.out hand_strengths Threads::Threads)
 
 add_custom_target(tests ALL)
 add_dependencies(tests tests.out)

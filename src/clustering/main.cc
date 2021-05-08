@@ -12,19 +12,20 @@
 #include "utils/matrix.h"
 
 int main() {
-  std::string path = "luts/flop_lut.cereal";
-  // std::string path = "luts/river_lut.cereal";
-  using data_type = uint32_t;
-  // using data_type = double;
+  // std::string path = "luts/flop_lut_64.cereal";
+  std::string path = "luts/river_lut_64.cereal";
+  // using data_type = uint32_t;
+  using data_type = double;
 
   utils::Matrix<data_type> data_points(1, 1, 0);
   hand_strengths::LoadLUT(path, &data_points, true);
 
-  clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
-  // clustering::KMeans<data_type, clustering::EuclideanDistance> k(200);
+  // clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
+  clustering::KMeans<data_type, clustering::EuclideanDistance> k(200);
   // k.RandomSumInit(data_points, 6789);
   // k.RandomSumInit(data_points, 12345);
   k.InitPlusPlus(data_points, true, 6789);
+  // k.RandomProbInit(data_points, 6789);
   // k.Elkan(data_points, true, 43555);
   k.Elkan(data_points, true, 54321);
 
