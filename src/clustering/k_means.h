@@ -171,11 +171,14 @@ class KMeans {
       std::cout << std::endl;
     }
 
+    const uint64_t cores = std::max(std::thread::hardware_concurrency(),
+        (uint32_t) 1);
+    const uint32_t n_threads = std::min(data.n(), cores);
+    std::vector<std::thread> threads(n_threads);
+    
     bool converged = false;
     uint32_t iteration = 0;
     utils::Timer t;
-    const uint8_t n_threads = std::min(data.n(), (uint64_t) 16);
-    std::vector<std::thread> threads(n_threads);
     while (!converged) {
       // Step 1
       // For all centers c and c', compute the distance between them
@@ -203,7 +206,7 @@ class KMeans {
       if (verbose) t.StopAndReset("step 1");
 
       // Step 3
-      for (uint8_t thread = 0; thread < n_threads; ++thread) {
+      for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread] = std::thread([&, thread]() {
               for (uint64_t x = thread; x < data.n(); x += n_threads) {
                 uint32_t& c_x = (*assignments)[x];
@@ -245,7 +248,7 @@ class KMeans {
             }  // [&, thread]()
         );  // std::thread  NOLINT(whitespace/parens)
       }  // for thread
-      for (uint8_t thread = 0; thread < n_threads; ++thread) {
+      for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread].join();
       }  // for thread
       if (verbose) t.StopAndReset("step 2,3");
@@ -307,7 +310,7 @@ class KMeans {
         cluster_to_means[c] = Distance<double, double>::Compute((*clusters)(c),
                                                                 (*means)(c));
       }
-      for (uint8_t thread = 0; thread < n_threads; ++thread) {
+      for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread] = std::thread([&, thread]() {
               for (uint64_t x = thread; x < data.n(); x += n_threads) {
                 for (uint32_t c = 0; c < k_; ++c) {
@@ -318,7 +321,7 @@ class KMeans {
             }  // [&, thread]()
         );  // std::thread  NOLINT(whitespace/parens)
       }  // for thread
-      for (uint8_t thread = 0; thread < n_threads; ++thread) {
+      for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread].join();
       }  // for thread
       if (verbose) t.StopAndReset("step 5");
