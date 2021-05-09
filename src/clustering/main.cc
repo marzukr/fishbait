@@ -7,9 +7,9 @@
 
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
-#include "hand_strengths/lut_generators.h"
 #include "utils/matrix.h"
 #include "utils/random.h"
+#include "utils/cereal.h"
 
 int main() {
   // std::string path = "luts/flop_lut_64.cereal";
@@ -18,7 +18,7 @@ int main() {
   using data_type = double;
 
   utils::Matrix<data_type> data_points(1, 1, 0);
-  hand_strengths::LoadLUT(path, &data_points, true);
+  utils::CerealLoad(path, &data_points, true);
 
   // clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
   clustering::KMeans<data_type, clustering::EuclideanDistance> k(200);

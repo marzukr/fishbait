@@ -5,6 +5,8 @@
 
 #include <iterator>
 
+namespace utils {
+
 template <typename T>
 class LoopIterator {
  public:
@@ -53,5 +55,7 @@ class LoopIterator {
  private:
   T value;
 };
+
+}  // namespace utils
 
 #endif  // SRC_UTILS_LOOP_ITERATOR_H_

@@ -2,8 +2,6 @@
 
 #include "hand_strengths/lut_generators.h"
 
-// #include <omp.h>
-
 #include <vector>
 #include <algorithm>
 #include <ostream>
@@ -39,7 +37,6 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
 
   uint32_t sd_count = 0;
   utils::Timer t;
-  // #pragma omp parallel for firstprivate(rollout, op_hands)
   for (uint32_t idx = 0; idx < kNShowdowns; ++idx) {
     isocalc.unindex(1, idx, &rollout);
     std::transform(rollout.begin(), rollout.end(), rollout.begin(),
