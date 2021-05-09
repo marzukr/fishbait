@@ -39,14 +39,18 @@ class VectorView {
 
   uint32_t n() const { return n_; }
 
-  bool operator<(const VectorView& other) const {
+  bool operator<(const VectorView& other) const { return compare(other) < 0; }
+  bool operator==(const VectorView& other) const { return compare(other) == 0; }
+
+ private:
+  int compare(const VectorView& other) const {
     /* If this has more elements, it's greater than other. If it has less
        elements then it is less than other. If they have the same number of
        elements, we compare the contents. */
     if (n() > other.n()) {
-      return false;
+      return 1;
     } else if (n() < other.n()) {
-      return true;
+      return -1;
     } else {
       /* If the first element of this is less than the first element of other,
          then this is less than other. If it is greater, then this is greater
@@ -54,9 +58,9 @@ class VectorView {
          all elements. */
       for (uint32_t i = 0; i < n(); ++i) {
         if (operator()(i) < other(i)) {
-          return true;
+          return -1;
         } else if (operator()(i) > other(i)) {
-          return false;
+          return 1;
         } else {
           continue;
         }
@@ -64,11 +68,10 @@ class VectorView {
     }  // else
 
     /* If all elements are the same and they are of the same length, they are
-       equal. Thus lhs is not less than rhs. */
-    return false;
+       equal. */
+    return 0;
   }
 
- private:
   const T* const start_;
   const uint32_t n_;
 };  // VectorView

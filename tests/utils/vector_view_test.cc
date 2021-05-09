@@ -89,7 +89,7 @@ TEST_CASE("Test VectorView with array", "[utils][vectorview]") {
   }
 }  // TEST_CASE("Test VectorView with array", "[utils][vectorview]")
 
-TEST_CASE("Test < operator on different size arrays", "[utils][vectorview]") {
+TEST_CASE("Test operators on different size arrays", "[utils][vectorview]") {
   const std::size_t array_size_1 = 10;
   const std::array<double, array_size_1> arr_1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   utils::VectorView arr_1_view(arr_1);
@@ -100,9 +100,10 @@ TEST_CASE("Test < operator on different size arrays", "[utils][vectorview]") {
 
   REQUIRE(arr_2_view < arr_1_view);
   REQUIRE(!(arr_1_view < arr_2_view));
-}  // TEST_CASE "Test less than operator"
+  REQUIRE(!(arr_1_view == arr_2_view));
+}  // TEST_CASE "Test operators on different size arrays"
 
-TEST_CASE("Test < operator on same size arrays different contents",
+TEST_CASE("Test operators on same size arrays different contents",
           "[utils][vectorview]") {
   const std::size_t array_size_1 = 10;
   const std::array<double, array_size_1> arr_1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -114,9 +115,10 @@ TEST_CASE("Test < operator on same size arrays different contents",
 
   REQUIRE(arr_1_view < arr_2_view);
   REQUIRE(!(arr_2_view < arr_1_view));
-}  // TEST_CASE "Test less than operator"
+  REQUIRE(!(arr_2_view == arr_1_view));
+}  // TEST_CASE "Test operators on same size arrays different contents"
 
-TEST_CASE("Test < operator on same size arrays same contents",
+TEST_CASE("Test operators on same size arrays same contents",
           "[utils][vectorview]") {
   const std::size_t array_size_1 = 10;
   const std::array<double, array_size_1> arr_1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -128,4 +130,5 @@ TEST_CASE("Test < operator on same size arrays same contents",
 
   REQUIRE(!(arr_1_view < arr_2_view));
   REQUIRE(!(arr_2_view < arr_1_view));
-}  // TEST_CASE "Test less than operator"
+  REQUIRE(arr_2_view == arr_1_view);
+}  // TEST_CASE "Test operators on same size arrays same contents"
