@@ -10,7 +10,7 @@
 #include "utils/matrix.h"
 #include "utils/cereal.h"
 
-TEST_CASE("Save and load vector test", "[hand_strengths][lut_generators]") {
+TEST_CASE("Save and load vector test", "[utils][cereal]") {
   const uint32_t n = 100;
 
   std::vector<double> save_vect(n);
@@ -28,7 +28,7 @@ TEST_CASE("Save and load vector test", "[hand_strengths][lut_generators]") {
   }
 }  // TEST_CASE "Save and load vector test"
 
-TEST_CASE("Save and load matrix test", "[hand_strengths][lut_generators]") {
+TEST_CASE("Save and load matrix test", "[utils][cereal]") {
   const uint32_t n = 100;
   const uint32_t m = 100;
 
