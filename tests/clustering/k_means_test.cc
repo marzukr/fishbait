@@ -583,7 +583,7 @@ TEST_CASE("kmeans++ 10 double points 2 dimensions 3 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(3);
-  k.InitPlusPlus(features, false, 42);
+  k.InitPlusPlus(features, false, utils::Random::Seed(42));
   const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{2.44595585, 3.44402974};
@@ -624,7 +624,7 @@ TEST_CASE("kmeans++ 10 int points 2 dimensions 5 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(5);
-  k.InitPlusPlus(features, false, 18);
+  k.InitPlusPlus(features, false, utils::Random::Seed(18));
   const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{3, 6};
@@ -849,7 +849,7 @@ TEST_CASE("kmeans++ 100 double points 2 dimensions 5 clusters",
   features.SetRow(99, utils::VectorView(d99));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(5);
-  k.InitPlusPlus(features, false, 78);
+  k.InitPlusPlus(features, false, utils::Random::Seed(78));
   const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{0.36555605, 0.30401102};
@@ -894,7 +894,7 @@ TEST_CASE("kmeans++ 10 double points 1 dimension 2 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(2);
-  k.InitPlusPlus(features, false, 31);
+  k.InitPlusPlus(features, false, utils::Random::Seed(31));
   const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-4.6183699};
@@ -933,7 +933,7 @@ TEST_CASE("kmeans++ 10 int points 10 dimensions 3 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
-  k.InitPlusPlus(features, false, 44);
+  k.InitPlusPlus(features, false, utils::Random::Seed(44));
   const utils::Matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-1, -1, -3, -4, -8, -5, -3, 2, -7, -12};

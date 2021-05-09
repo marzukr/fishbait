@@ -9,6 +9,7 @@
 #include "clustering/k_means.h"
 #include "hand_strengths/lut_generators.h"
 #include "utils/matrix.h"
+#include "utils/random.h"
 
 int main() {
   // std::string path = "luts/flop_lut_64.cereal";
@@ -23,10 +24,10 @@ int main() {
   clustering::KMeans<data_type, clustering::EuclideanDistance> k(200);
   // k.RandomSumInit(data_points, 6789);
   // k.RandomSumInit(data_points, 12345);
-  k.InitPlusPlus(data_points, true, 6789);
+  k.InitPlusPlus(data_points, true, utils::Random::Seed(6789));
   // k.RandomProbInit(data_points, 6789);
   // k.Elkan(data_points, true, 43555);
-  k.Elkan(data_points, true, 54321);
+  k.Elkan(data_points, true, utils::Random::Seed(54321));
 
   // std::cout << "Done." << std::endl;
   // // should be 36

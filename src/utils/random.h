@@ -12,7 +12,7 @@ class Random {
   class Seed {
    public:
     Seed() : seed_(GenerateSeed()) {}
-    Seed(const uint32_t seed) : seed_(seed) {}
+    explicit Seed(const uint32_t seed) : seed_(seed) {}
     uint32_t operator()() {
       return seed_;
     }

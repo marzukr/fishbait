@@ -175,7 +175,7 @@ class KMeans {
         (uint32_t) 1);
     const uint32_t n_threads = std::min(data.n(), cores);
     std::vector<std::thread> threads(n_threads);
-    
+
     bool converged = false;
     uint32_t iteration = 0;
     utils::Timer t;
@@ -403,7 +403,7 @@ class KMeans {
     @param seed Seed to use for the random number generation. If no seed is
       passed then a random one is chosen.
   */
-  void RandomSumInit(const utils::Matrix<T>& data, 
+  void RandomSumInit(const utils::Matrix<T>& data,
       utils::Random::Seed seed = utils::Random::Seed()) {
     T row_sum = 0;
     for (uint32_t j = 0; j < data.m(); ++j) {
