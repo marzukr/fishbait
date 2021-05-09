@@ -9,20 +9,28 @@ namespace utils {
 
 class Random {
  public:
-  explicit Random(int32_t seed = -1) : rng_(UnsignedSeed(seed)) {}
+  class Seed {
+   public:
+    Seed() : seed_(GenerateSeed()) {}
+    Seed(const uint32_t seed) : seed_(seed) {}
+    uint32_t operator()() {
+      return seed_;
+    }
+    static uint32_t GenerateSeed() {
+      std::random_device dev;
+      return dev();
+    }
+   private:
+    uint32_t seed_;
+  };  // Seed
+
+  Random() : rng_(Seed::GenerateSeed()) {}
+  explicit Random(Seed seed) : rng_(seed()) {}
   std::mt19937& operator()() {
     return rng_;
   }
 
  private:
-  uint16_t UnsignedSeed(int32_t seed = -1) {
-    if (seed < 0) {
-      std::random_device dev;
-      seed = dev();
-    }
-    uint16_t unsigned_seed = seed;
-    return unsigned_seed;
-  }
   std::mt19937 rng_;
 };  // Random
 

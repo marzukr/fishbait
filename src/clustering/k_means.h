@@ -42,11 +42,11 @@ class KMeans {
     @param initializer The algorithm to use to genereate the initial clusters.
     @param verbose Print diagnostics information.
     @param seed Seed to use for assigning empty clusters and initializing
-      clusters.
+      clusters. If no seed is passed then a random seed is chosen.
   */
   void MultipleRestarts(const utils::Matrix<T>& data, uint32_t restarts,
-                        InitProc initializer = PlusPlus, bool verbose = false,
-                        int32_t seed = -1) {
+      InitProc initializer = PlusPlus, bool verbose = false,
+      utils::Random::Seed seed = utils::Random::Seed()) {
     // Variables to store the clustering with the lowest loss
     std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
     std::unique_ptr<std::vector<uint32_t>> assignments(nullptr);
@@ -54,7 +54,7 @@ class KMeans {
 
     // Random number generator to generate seeds
     utils::Random rng(seed);
-    std::uniform_int_distribution<> seed_gen(0, 65535);
+    std::uniform_int_distribution<uint32_t> seed_gen;
 
     // Repeat the clustering the specified number of times
     for (uint32_t t = 0; t < restarts; ++t) {
@@ -65,18 +65,18 @@ class KMeans {
       // Set the starting clusters
       switch (initializer) {
         case PlusPlus:
-          InitPlusPlus(data, verbose, seed_gen(rng()));
+          InitPlusPlus(data, verbose, utils::Random::Seed(seed_gen(rng())));
           break;
         case RandomSum:
-          RandomSumInit(data, seed_gen(rng()));
+          RandomSumInit(data, utils::Random::Seed(seed_gen(rng())));
           break;
         case RandomProb:
-          RandomProbInit(data, seed_gen(rng()));
+          RandomProbInit(data, utils::Random::Seed(seed_gen(rng())));
           break;
       }  // switch (initializer)
 
       // Run kmeans until convergence
-      Elkan(data, verbose, seed_gen(rng()));
+      Elkan(data, verbose, utils::Random::Seed(seed_gen(rng())));
 
       // If the new clustering is better than the best one so far, replace it
       if (loss_ < loss) {
@@ -101,7 +101,7 @@ class KMeans {
       clusters if they are not already initialized.
   */
   void Elkan(const utils::Matrix<T>& data, bool verbose = false,
-             int32_t seed = -1) {
+      utils::Random::Seed seed = utils::Random::Seed()) {
     std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
     if (clusters_ == nullptr) {
       InitPlusPlus(data, verbose, seed);
@@ -356,10 +356,11 @@ class KMeans {
 
     @param data The data points to select from.
     @param verbose Print diagnostics information.
-    @param seed Seed to use for the random number generation.
+    @param seed Seed to use for the random number generation. If no seed is
+      passed then a random one is chosen.
   */
   void InitPlusPlus(const utils::Matrix<T>& data, bool verbose = false,
-                    int32_t seed = -1) {
+      utils::Random::Seed seed = utils::Random::Seed()) {
     utils::Random rng(seed);
     std::uniform_real_distribution<> std_unif(0.0, 1.0);
 
@@ -391,7 +392,16 @@ class KMeans {
     clusters_ = std::move(filled_clusters);
   }  // InitPlusPlus()
 
-  void RandomSumInit(const utils::Matrix<T>& data, int32_t seed = -1) {
+  /*
+    @brief Initialize clusters where the elements in each cluster sum to the
+      same value as the data elements.
+
+    @param data The data points whose sum to mimic.
+    @param seed Seed to use for the random number generation. If no seed is
+      passed then a random one is chosen.
+  */
+  void RandomSumInit(const utils::Matrix<T>& data, 
+      utils::Random::Seed seed = utils::Random::Seed()) {
     T row_sum = 0;
     for (uint32_t j = 0; j < data.m(); ++j) {
       row_sum += data(0, j);
@@ -420,7 +430,16 @@ class KMeans {
     clusters_ = std::move(clusters);
   }  // RandomSumInit()
 
-  void RandomProbInit(const utils::Matrix<T>& data, int32_t seed = -1) {
+  /*
+    @brief Initialize clusters whose values are probabilities (i.e. in the range
+      [0,1]).
+
+    @param data The data points to derive dimensionality from.
+    @param seed Seed to use for the random number generation. If no seed is
+      passed then a random one is chosen.
+  */
+  void RandomProbInit(const utils::Matrix<T>& data,
+      utils::Random::Seed seed = utils::Random::Seed()) {
     utils::Random rng(seed);
     std::uniform_real_distribution<double> choose_amount(0.0, 1.0);
 
