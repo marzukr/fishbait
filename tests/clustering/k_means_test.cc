@@ -11,6 +11,7 @@
 #include "clustering/distance.h"
 #include "utils/matrix.h"
 #include "utils/vector_view.h"
+#include "utils/random.h"
 
 // Elkan test cases generated with python and the kmeans from scikit learn after
 // disabling the mean centering and changing the cluster mean computation to
@@ -1082,3 +1083,287 @@ TEST_CASE("RandomProbInit 10 int points", "[clustering][kmeans]") {
     }
   }
 }  // TEST_CASE "RandomProbInit 10 int points"
+
+TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters",
+          "[clustering][kmeans]") {
+  std::vector<int8_t> d0{-2, -7,  6, -3,  -9, -1,  2, -8,  6,  8};
+  std::vector<int8_t> d1{-5, -7,  4,  0,  10, -2, -1, -7,  7, -8};
+  std::vector<int8_t> d2{-3,  4, -5,  2,  -1,  8,  7,  7, -6,  6};
+  std::vector<int8_t> d3{-4, -8,  6, -1,  11,  0,  2, -8,  7, -7};
+  std::vector<int8_t> d4{ 0,  4, -2,  3,  -4,  6,  6,  9,  4,  7};
+  std::vector<int8_t> d5{-5, -8,  7, -1,  -9, -1,  1, -6,  7, -5};
+  std::vector<int8_t> d6{-5,  9, -2, -4,  -3, -7, -9,  7,  0,  3};
+  std::vector<int8_t> d7{-5, 10,  2, -3,  -2, -6, -8,  8,  1,  0};
+  std::vector<int8_t> d8{-4,  7, -4, -5,  -5, -6, -9,  8,  0,  3};
+  std::vector<int8_t> d9{-4,  3, -5,  3,  -3,  6,  7,  6, -6, -6};
+
+  utils::Matrix<int8_t> features(10, 10);
+  features.SetRow(0, utils::VectorView(d0));
+  features.SetRow(1, utils::VectorView(d1));
+  features.SetRow(2, utils::VectorView(d2));
+  features.SetRow(3, utils::VectorView(d3));
+  features.SetRow(4, utils::VectorView(d4));
+  features.SetRow(5, utils::VectorView(d5));
+  features.SetRow(6, utils::VectorView(d6));
+  features.SetRow(7, utils::VectorView(d7));
+  features.SetRow(8, utils::VectorView(d8));
+  features.SetRow(9, utils::VectorView(d9));
+
+  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
+  k.MultipleRestarts(features, 10, clustering::PlusPlus, false,
+      utils::Random::Seed(773202));
+
+  std::vector<double> correct_c0{-4.666666666666667, 8.666666666666666,
+      -1.3333333333333333, -4.0, -3.3333333333333335, -6.333333333333333,
+      -8.666666666666666, 7.666666666666667, 0.3333333333333333, 2.0};
+  std::vector<double> correct_c1{-2.3333333333333335, 3.6666666666666665, -4.0,
+      2.6666666666666665, -2.6666666666666665, 6.666666666666667,
+      6.666666666666667, 7.333333333333333, -2.6666666666666665,
+      2.3333333333333335};
+  std::vector<double> correct_c2{-4.0, -7.5, 5.75, -1.25, 0.75, -1.0, 1.0,
+      -7.25, 6.75, -3.0};
+
+  utils::Matrix<double> correct_centers(3, 10);
+  correct_centers.SetRow(0, utils::VectorView(correct_c0));
+  correct_centers.SetRow(1, utils::VectorView(correct_c1));
+  correct_centers.SetRow(2, utils::VectorView(correct_c2));
+
+  REQUIRE(*k.clusters() == correct_centers);
+
+  std::vector<uint32_t> correct_assignments{2, 2, 1, 2, 1, 2, 0, 0, 0, 1};
+
+  REQUIRE(*k.assignments() == correct_assignments);
+
+  REQUIRE(k.loss() == 81.40833333333333);
+}  // TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters")
+
+TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters",
+          "[clustering][kmeans]") {
+  std::vector<double> d0 {0.7117444656751225, 0.5183947791378705};
+  std::vector<double> d1 {0.3683820048027214, 0.2758919719768448};
+  std::vector<double> d2 {0.3606068333376234, 0.343701138228881 };
+  std::vector<double> d3 {0.605397363905246 , 0.1812424936090702};
+  std::vector<double> d4 {0.394823733567829 , 0.5192721351593128};
+  std::vector<double> d5 {0.9267989822984419, 0.8376291732866885};
+  std::vector<double> d6 {0.2494657345036164, 0.8792340737337748};
+  std::vector<double> d7 {0.7137327860604881, 0.963436211264801 };
+  std::vector<double> d8 {0.3967483489552037, 0.6604328362086366};
+  std::vector<double> d9 {0.5788303723558041, 0.1567570606457652};
+  std::vector<double> d10{0.3889847914805548, 0.5987040705556782};
+  std::vector<double> d11{0.4183007589999629, 0.5999431317964626};
+  std::vector<double> d12{0.363402538846292 , 0.5374887830505308};
+  std::vector<double> d13{0.703516271208595 , 0.2553658046598557};
+  std::vector<double> d14{0.3392038816991938, 0.576132634150041 };
+  std::vector<double> d15{0.724910948884376 , 0.7737254520758118};
+  std::vector<double> d16{0.9901463654087268, 0.6313908499110841};
+  std::vector<double> d17{0.2273056041153998, 0.8932279467134294};
+  std::vector<double> d18{0.8512646766658555, 0.0742652894565435};
+  std::vector<double> d19{0.6973504766759098, 0.6835561750265661};
+  std::vector<double> d20{0.0462928181713017, 0.7869564943748537};
+  std::vector<double> d21{0.1829031491191065, 0.7898980206373674};
+  std::vector<double> d22{0.6770044147942196, 0.2208140753821454};
+  std::vector<double> d23{0.7805828204727754, 0.4200552713640886};
+  std::vector<double> d24{0.0459343516214856, 0.4240711537925039};
+  std::vector<double> d25{0.9340183835779665, 0.9371206974546742};
+  std::vector<double> d26{0.7458112165746832, 0.2545000192185359};
+  std::vector<double> d27{0.1933477922329649, 0.4635757908447039};
+  std::vector<double> d28{0.7485134750863119, 0.5377953982480412};
+  std::vector<double> d29{0.3568986929694667, 0.800531759880144 };
+  std::vector<double> d30{0.1449727395912375, 0.4673522761214912};
+  std::vector<double> d31{0.5831442621509152, 0.0302401074112227};
+  std::vector<double> d32{0.7760349683917125, 0.9434374370752877};
+  std::vector<double> d33{0.1755422136584146, 0.1143881025366336};
+  std::vector<double> d34{0.1660926811128252, 0.1993804863476211};
+  std::vector<double> d35{0.7118130510098497, 0.6776984302147946};
+  std::vector<double> d36{0.4373271014215695, 0.1532806131048251};
+  std::vector<double> d37{0.0460291703212988, 0.2430582709014697};
+  std::vector<double> d38{0.945515332074665 , 0.5660148012249867};
+  std::vector<double> d39{0.4459976453376328, 0.4595375284300286};
+  std::vector<double> d40{0.4005218062530335, 0.9204860413607193};
+  std::vector<double> d41{0.5817478892430803, 0.0985910571546714};
+  std::vector<double> d42{0.9730003550203142, 0.1571217836381159};
+  std::vector<double> d43{0.2571362142708927, 0.0200259211210193};
+  std::vector<double> d44{0.7853007930068963, 0.6118658437247185};
+  std::vector<double> d45{0.4007133556506983, 0.0086973554477714};
+  std::vector<double> d46{0.2796334433275163, 0.5142614057244773};
+  std::vector<double> d47{0.104780519085062 , 0.678591726687258 };
+  std::vector<double> d48{0.0744652883679295, 0.8238919273047925};
+  std::vector<double> d49{0.0327731487277781, 0.7328648603649979};
+  std::vector<double> d50{0.4557027037085982, 0.5041393988733084};
+  std::vector<double> d51{0.0997131124184311, 0.3221171661485792};
+  std::vector<double> d52{0.2691412000915313, 0.2220832243796228};
+  std::vector<double> d53{0.721867945214847 , 0.369287668783555 };
+  std::vector<double> d54{0.9590424988540428, 0.9581663936948601};
+  std::vector<double> d55{0.1738608749251775, 0.2231762496126273};
+  std::vector<double> d56{0.4902420084706361, 0.0909015185739526};
+  std::vector<double> d57{0.030842458784927 , 0.0665764584780152};
+  std::vector<double> d58{0.2401116551508806, 0.5533436747100818};
+  std::vector<double> d59{0.6881889735101843, 0.2064310207295679};
+  std::vector<double> d60{0.521745053423386 , 0.6970514797167666};
+  std::vector<double> d61{0.1971725579219639, 0.7604125149477484};
+  std::vector<double> d62{0.026954026838871 , 0.7215396422726154};
+  std::vector<double> d63{0.7843208902325638, 0.6856080204630505};
+  std::vector<double> d64{0.7123574825364504, 0.0022181990391646};
+  std::vector<double> d65{0.283699618054434 , 0.5969913308311623};
+  std::vector<double> d66{0.6707996881740695, 0.171529393982821 };
+  std::vector<double> d67{0.5408695268890366, 0.4092059836495721};
+  std::vector<double> d68{0.2013658278431493, 0.4891230629310168};
+  std::vector<double> d69{0.7464634644647593, 0.5205078095118937};
+  std::vector<double> d70{0.5193223374990981, 0.7796635627602038};
+  std::vector<double> d71{0.1447536417346845, 0.0538472899229593};
+  std::vector<double> d72{0.5147106090516818, 0.3872140562620865};
+  std::vector<double> d73{0.079847726128716 , 0.9433932485471429};
+  std::vector<double> d74{0.4624806034764272, 0.2897054440575902};
+  std::vector<double> d75{0.6727059339110086, 0.8320649052034932};
+  std::vector<double> d76{0.5174703840143786, 0.629397367367882 };
+  std::vector<double> d77{0.5283287931663228, 0.8956719351793212};
+  std::vector<double> d78{0.8535087037787867, 0.2359592472634928};
+  std::vector<double> d79{0.1291835268812417, 0.992884853932646 };
+  std::vector<double> d80{0.6678326852076982, 0.7960005412945941};
+  std::vector<double> d81{0.3600296609387231, 0.4209761770652614};
+  std::vector<double> d82{0.6653200780895066, 0.2954459446749802};
+  std::vector<double> d83{0.8531467150660482, 0.8766776324743616};
+  std::vector<double> d84{0.1010530237184628, 0.2986856545628958};
+  std::vector<double> d85{0.5792893928961358, 0.8176636600766691};
+  std::vector<double> d86{0.3840323491226068, 0.4755325278650355};
+  std::vector<double> d87{0.5372936560624523, 0.8425648499018098};
+  std::vector<double> d88{0.7302695161782243, 0.1038967837396756};
+  std::vector<double> d89{0.9765587192179228, 0.6383282652763711};
+  std::vector<double> d90{0.9826588281343266, 0.5764182533673311};
+  std::vector<double> d91{0.3359238531672544, 0.634864876434738 };
+  std::vector<double> d92{0.627900487734526 , 0.3603771575308298};
+  std::vector<double> d93{0.2379033733779484, 0.801714208729408 };
+  std::vector<double> d94{0.0322130728520428, 0.394781510559754 };
+  std::vector<double> d95{0.4864807118073925, 0.1148085616261003};
+  std::vector<double> d96{0.2403717127079792, 0.8158357032467249};
+  std::vector<double> d97{0.6277989691431987, 0.9500833071545923};
+  std::vector<double> d98{0.157682723172287 , 0.6838146973978699};
+  std::vector<double> d99{0.8738585658551963, 0.8194934229360593};
+
+  utils::Matrix<double> features(100, 2);
+  features.SetRow(0, utils::VectorView(d0));
+  features.SetRow(1, utils::VectorView(d1));
+  features.SetRow(2, utils::VectorView(d2));
+  features.SetRow(3, utils::VectorView(d3));
+  features.SetRow(4, utils::VectorView(d4));
+  features.SetRow(5, utils::VectorView(d5));
+  features.SetRow(6, utils::VectorView(d6));
+  features.SetRow(7, utils::VectorView(d7));
+  features.SetRow(8, utils::VectorView(d8));
+  features.SetRow(9, utils::VectorView(d9));
+  features.SetRow(10, utils::VectorView(d10));
+  features.SetRow(11, utils::VectorView(d11));
+  features.SetRow(12, utils::VectorView(d12));
+  features.SetRow(13, utils::VectorView(d13));
+  features.SetRow(14, utils::VectorView(d14));
+  features.SetRow(15, utils::VectorView(d15));
+  features.SetRow(16, utils::VectorView(d16));
+  features.SetRow(17, utils::VectorView(d17));
+  features.SetRow(18, utils::VectorView(d18));
+  features.SetRow(19, utils::VectorView(d19));
+  features.SetRow(20, utils::VectorView(d20));
+  features.SetRow(21, utils::VectorView(d21));
+  features.SetRow(22, utils::VectorView(d22));
+  features.SetRow(23, utils::VectorView(d23));
+  features.SetRow(24, utils::VectorView(d24));
+  features.SetRow(25, utils::VectorView(d25));
+  features.SetRow(26, utils::VectorView(d26));
+  features.SetRow(27, utils::VectorView(d27));
+  features.SetRow(28, utils::VectorView(d28));
+  features.SetRow(29, utils::VectorView(d29));
+  features.SetRow(30, utils::VectorView(d30));
+  features.SetRow(31, utils::VectorView(d31));
+  features.SetRow(32, utils::VectorView(d32));
+  features.SetRow(33, utils::VectorView(d33));
+  features.SetRow(34, utils::VectorView(d34));
+  features.SetRow(35, utils::VectorView(d35));
+  features.SetRow(36, utils::VectorView(d36));
+  features.SetRow(37, utils::VectorView(d37));
+  features.SetRow(38, utils::VectorView(d38));
+  features.SetRow(39, utils::VectorView(d39));
+  features.SetRow(40, utils::VectorView(d40));
+  features.SetRow(41, utils::VectorView(d41));
+  features.SetRow(42, utils::VectorView(d42));
+  features.SetRow(43, utils::VectorView(d43));
+  features.SetRow(44, utils::VectorView(d44));
+  features.SetRow(45, utils::VectorView(d45));
+  features.SetRow(46, utils::VectorView(d46));
+  features.SetRow(47, utils::VectorView(d47));
+  features.SetRow(48, utils::VectorView(d48));
+  features.SetRow(49, utils::VectorView(d49));
+  features.SetRow(50, utils::VectorView(d50));
+  features.SetRow(51, utils::VectorView(d51));
+  features.SetRow(52, utils::VectorView(d52));
+  features.SetRow(53, utils::VectorView(d53));
+  features.SetRow(54, utils::VectorView(d54));
+  features.SetRow(55, utils::VectorView(d55));
+  features.SetRow(56, utils::VectorView(d56));
+  features.SetRow(57, utils::VectorView(d57));
+  features.SetRow(58, utils::VectorView(d58));
+  features.SetRow(59, utils::VectorView(d59));
+  features.SetRow(60, utils::VectorView(d60));
+  features.SetRow(61, utils::VectorView(d61));
+  features.SetRow(62, utils::VectorView(d62));
+  features.SetRow(63, utils::VectorView(d63));
+  features.SetRow(64, utils::VectorView(d64));
+  features.SetRow(65, utils::VectorView(d65));
+  features.SetRow(66, utils::VectorView(d66));
+  features.SetRow(67, utils::VectorView(d67));
+  features.SetRow(68, utils::VectorView(d68));
+  features.SetRow(69, utils::VectorView(d69));
+  features.SetRow(70, utils::VectorView(d70));
+  features.SetRow(71, utils::VectorView(d71));
+  features.SetRow(72, utils::VectorView(d72));
+  features.SetRow(73, utils::VectorView(d73));
+  features.SetRow(74, utils::VectorView(d74));
+  features.SetRow(75, utils::VectorView(d75));
+  features.SetRow(76, utils::VectorView(d76));
+  features.SetRow(77, utils::VectorView(d77));
+  features.SetRow(78, utils::VectorView(d78));
+  features.SetRow(79, utils::VectorView(d79));
+  features.SetRow(80, utils::VectorView(d80));
+  features.SetRow(81, utils::VectorView(d81));
+  features.SetRow(82, utils::VectorView(d82));
+  features.SetRow(83, utils::VectorView(d83));
+  features.SetRow(84, utils::VectorView(d84));
+  features.SetRow(85, utils::VectorView(d85));
+  features.SetRow(86, utils::VectorView(d86));
+  features.SetRow(87, utils::VectorView(d87));
+  features.SetRow(88, utils::VectorView(d88));
+  features.SetRow(89, utils::VectorView(d89));
+  features.SetRow(90, utils::VectorView(d90));
+  features.SetRow(91, utils::VectorView(d91));
+  features.SetRow(92, utils::VectorView(d92));
+  features.SetRow(93, utils::VectorView(d93));
+  features.SetRow(94, utils::VectorView(d94));
+  features.SetRow(95, utils::VectorView(d95));
+  features.SetRow(96, utils::VectorView(d96));
+  features.SetRow(97, utils::VectorView(d97));
+  features.SetRow(98, utils::VectorView(d98));
+  features.SetRow(99, utils::VectorView(d99));
+
+  clustering::KMeans<double, clustering::EuclideanDistance> k(3);
+  k.MultipleRestarts(features, 10, clustering::RandomProb, false,
+      utils::Random::Seed(1029384));
+
+  std::vector<double> correct_c0{0.5204443935870346, 0.19430779443165194};
+  std::vector<double> correct_c1{0.22296618475567098, 0.630273664551855};
+  std::vector<double> correct_c2{0.7515275770955788, 0.7385338595306439};
+
+  utils::Matrix<double> correct_centers(3, 2);
+  correct_centers.SetRow(0, utils::VectorView(correct_c0));
+  correct_centers.SetRow(1, utils::VectorView(correct_c1));
+  correct_centers.SetRow(2, utils::VectorView(correct_c2));
+
+  REQUIRE(*k.clusters() == correct_centers);
+
+  std::vector<uint32_t> correct_assignments{2, 0, 0, 0, 1, 2, 1, 2, 1, 0, 1, 1,
+      1, 0, 1, 2, 2, 1, 0, 2, 1, 1, 0, 2, 1, 2, 0, 1, 2, 1, 1, 0, 2, 0, 0, 2, 0,
+      1, 2, 0, 1, 0, 0, 0, 2, 0, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0, 0, 0, 1, 0, 2, 1,
+      1, 2, 0, 1, 0, 0, 1, 2, 2, 0, 0, 1, 0, 2, 2, 2, 0, 1, 2, 1, 0, 2, 1, 2, 1,
+      2, 0, 2, 2, 1, 0, 1, 1, 0, 1, 2, 1, 2};
+
+  REQUIRE(*k.assignments() == correct_assignments);
+
+  REQUIRE(k.loss() == Approx(0.05509715642422428));
+}  // TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters")

@@ -23,11 +23,11 @@
 
 namespace clustering {
 
+enum InitProc { PlusPlus, RandomSum, RandomProb };
+
 template <typename T, template<class, class> class Distance>
 class KMeans {
  public:
-  enum InitProc { PlusPlus, RandomSum, RandomProb };
-
   explicit KMeans(uint32_t k)
       : k_(k), clusters_(nullptr), assignments_(nullptr), loss_(INFINITY) {}
   KMeans(uint32_t k, std::unique_ptr<utils::Matrix<double>> initial_clusters)
