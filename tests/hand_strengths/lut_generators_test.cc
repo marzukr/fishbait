@@ -138,7 +138,7 @@ TEST_CASE("River LUT", "[.][hand_strengths][lut_generators]") {
   // Test River LUT
   std::array<double, 8> python{0.0871559633027523, 0, 0.4496124031007752,
       0.16551724137931034, 0.9, 0.36875, 0.8589743589743589, 0};
-  REQUIRE(river_lut(970) == utils::VectorView(python));
+  REQUIRE(river_lut(567) == utils::VectorView(python));
 
   python = {0.7720588235294118, 0.7105263157894737, 0.75, 0.9276315789473685,
       0.9327731092436975, 0.8427672955974843, 0.94, 0.8333333333333334};
