@@ -9,6 +9,7 @@
 #include "hand_strengths/card_utils.h"
 #include "hand_strengths/indexer.h"
 #include "utils/cereal.h"
+#include "utils/matrix.h"
 
 int main(int argc, char *argv[]) {
   bool error = true;

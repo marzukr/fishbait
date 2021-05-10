@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "hand_strengths/ochs.h"
+#include "hand_strengths/indexer.h"
 #include "utils/matrix.h"
 
 namespace hand_strengths {
@@ -36,10 +37,9 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose = false);
   @param showdown_lut The showdown LUT to use.
   @param verbose Option to print progress.
 */
-utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
-    const uint32_t simulation_size, const uint32_t lut_round,
-    const std::vector<ShowdownStrength>& showdown_lut,
-    const bool verbose = false);
+utils::Matrix<uint32_t> EHS_LUT(const uint64_t lut_size, const uint32_t buckets,
+    const uint32_t simulation_cards, const uint32_t iso_round, Indexer* isocalc,
+    const std::vector<ShowdownStrength>& showdown_lut, const bool verbose);
 
 utils::Matrix<uint32_t> PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,

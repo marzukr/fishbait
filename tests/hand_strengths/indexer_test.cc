@@ -17,9 +17,9 @@ TEST_CASE("Basic flop indexer tests", "[hand_strengths][indexer]") {
   uint32_t i = 0;
   for (uint32_t idx = 0; idx < 1500000; ++idx) {
     flop.unindex(1, idx, &rollout);
-    uint32_t array_index_last = flop.index(rollout);
-    uint32_t array_index = flop.index(rollout, &indicies);
-    uint32_t init_list = flop.index({rollout[0], rollout[1], rollout[2],
+    uint64_t array_index_last = flop.index(rollout);
+    uint64_t array_index = flop.index(rollout, &indicies);
+    uint64_t init_list = flop.index({rollout[0], rollout[1], rollout[2],
                                      rollout[3], rollout[4]});
     REQUIRE(array_index_last == array_index);
     REQUIRE(array_index == init_list);
