@@ -6,3 +6,5 @@ target_link_libraries(clustering.out PRIVATE Threads::Threads)
 
 add_custom_target(clustering ALL)
 add_dependencies(clustering clustering.out)
+
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/out/clustering)

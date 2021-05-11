@@ -18,4 +18,4 @@ target_link_libraries(hand_strengths.out handisomorphism hand_strengths)
 add_custom_target(hand_strengths_gen ALL)
 add_dependencies(hand_strengths_gen hand_strengths.out hand_strengths)
 
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/luts)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/out/hand_strengths)
