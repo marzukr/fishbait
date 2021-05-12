@@ -1,0 +1,23 @@
+name: checks
+on: [push, pull_request]
+jobs:
+  cpplint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install cpplint
+      - run: cpplint --recursive .
+  build_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: create build directory
+        run: mkdir build
+      - name: build
+        working-directory: build
+        run: cmake -DCMAKE_BUILD_TYPE=Release ..
+      - name: test
+        working-directory: build
+        run: ./bin/tests.out
