@@ -2,27 +2,32 @@
 
 #include <stdint.h>
 
-// #include <iostream>
 #include <memory>
 #include <string>
 
-#include "clustering/EarthMoverDistance.h"
-#include "clustering/KMeans.h"
-#include "clustering/LoadData.h"
-#include "utils/Matrix.h"
+#include "clustering/distance.h"
+#include "clustering/k_means.h"
+#include "utils/matrix.h"
+#include "utils/random.h"
+#include "utils/cereal.h"
 
 int main() {
-  std::string uri = "mongodb://localhost:27017";
-  std::string db_name = "pluribus";
-  std::string street = "flops";
-  std::string list_name = "hist";
-  typedef uint16_t data_type;
+  // std::string path = "luts/flop_lut_64.cereal";
+  std::string path = "luts/river_lut_64.cereal";
+  // using data_type = uint32_t;
+  using data_type = double;
 
-  auto data_points = clustering::LoadData<data_type>(uri, db_name, street,
-                                                     list_name, true);
+  utils::Matrix<data_type> data_points(1, 1, 0);
+  utils::CerealLoad(path, &data_points, true);
 
-  clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
-  k.Elkan(*data_points, true);
+  // clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
+  clustering::KMeans<data_type, clustering::EuclideanDistance> k(200);
+  // k.RandomSumInit(data_points, 6789);
+  // k.RandomSumInit(data_points, 12345);
+  k.InitPlusPlus(data_points, true, utils::Random::Seed(6789));
+  // k.RandomProbInit(data_points, 6789);
+  // k.Elkan(data_points, true, 43555);
+  k.Elkan(data_points, true, utils::Random::Seed(54321));
 
   // std::cout << "Done." << std::endl;
   // // should be 36

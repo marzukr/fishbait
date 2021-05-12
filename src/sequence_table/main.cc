@@ -3,12 +3,12 @@
 #include <iostream>
 #include <chrono>  // NOLINT(*)
 
-#include "sequence_table/SequenceTable.h"
+#include "sequence_table/sequence_table.h"
 
 int main() {
   std::vector<char> num_raise_sizes = {4, 2, 1, 1};
   std::vector<float> raise_sizes =
-  {0.5,1,1.5,2,
+  {0.5, 1, 1.5, 2,
   0.5, 1,
   1,
   1};

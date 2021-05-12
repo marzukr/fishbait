@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.10.0)
 project(fishbait)
+
+set(CMAKE_CXX_STANDARD 17)
 
 # DOWNLOAD ALL THE SUBMODULES
 option(GIT_SUBMODULE "Check submodules during build" ON)
@@ -28,12 +30,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(src)
 include_directories(external)
+include_directories(external/Catch2/single_include)
+include_directories(external/cereal/include)
 
-add_subdirectory(external/OMPEval)
 add_subdirectory(external/hand-isomorphism)
 
 add_subdirectory(src/clustering)
-add_subdirectory(src/hand_evaluator)
+add_subdirectory(src/hand_strengths)
 add_subdirectory(src/poker_engine)
 add_subdirectory(src/sequence_table)
 

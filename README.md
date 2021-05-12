@@ -1,4 +1,4 @@
-# FISHBAIT
+# FISHBAIT 🐟
 **F**ully **I**nsightful **S**uperhuman **H**old'em **B**ot with
 **A**rtificially **I**ntelligent **T**hought. An AI agent designed to play
 poker. Inspired by the Pluribus poker bot developed by CMU and Facebook.
@@ -15,9 +15,16 @@ From the root directory:
     - `cmake ..` will use the last value specified for `CMAKE_BUILD_TYPE`. If no
       value is specified, it will use release mode by default.
 4. `make`
-    - Note: You can also run `make clustering`, `make distribution_gen`,
+    - Note: You can also run `make clustering`, `make hand_strengths_gen`,
       `make simulator`, or `make tests` to only build those respective parts of
       the project.
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `simulator.out`, simply run `./bin/simulator.out` from the `build` directory.
+
+## Other Notes
+
+* Do not put commas in the Catch2 tester descriptions
+* Confirmed compilers and commits
+  * Apple clang version 12.0.0 (confirmed on [94cfe7c](https://github.com/marzukr/fishbait/commit/94cfe7c57874cad74f9fde03517343c92538d8c5))
+  * gcc version 10.2.0 (confirmed on [94cfe7c](https://github.com/marzukr/fishbait/commit/94cfe7c57874cad74f9fde03517343c92538d8c5))

@@ -5,9 +5,9 @@
 [submodule "external/hand-isomorphism"]
 	path = external/hand-isomorphism
 	url = https://github.com/marzukr/hand-isomorphism
-[submodule "external/OMPEval"]
-	path = external/OMPEval
-	url = https://github.com/marzukr/OMPEval
 [submodule "external/SKPokerEval"]
 	path = external/SKPokerEval
 	url = https://github.com/marzukr/SKPokerEval
+[submodule "external/cereal"]
+	path = external/cereal
+	url = https://github.com/marzukr/cereal.git

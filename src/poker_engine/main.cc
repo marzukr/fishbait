@@ -1,7 +1,7 @@
 // copyright Emily Dale 2021
 #include <iostream>
 
-#include "poker_engine/Game.h"
+#include "poker_engine/game.h"
 
 int main() {
     // game with 6 players, 4 rounds, 0.5 sb, 100 bb / player,
