@@ -15,9 +15,12 @@ jobs:
         uses: actions/checkout@v2
       - name: create build directory
         run: mkdir build
-      - name: build
+      - name: generate build files
         working-directory: build
         run: cmake -DCMAKE_BUILD_TYPE=Release ..
+      - name: build
+        working-directory: build
+        run: make
       - name: test
         working-directory: build
         run: ./bin/tests.out
