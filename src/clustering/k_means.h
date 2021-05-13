@@ -51,6 +51,7 @@ class KMeans {
     std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
     std::unique_ptr<std::vector<uint32_t>> assignments(nullptr);
     double loss = INFINITY;
+    uint32_t best_trial = 0;
 
     // Random number generator to generate seeds
     utils::Random rng(seed);
@@ -83,6 +84,7 @@ class KMeans {
         loss = loss_;
         clusters = std::move(clusters_);
         assignments = std::move(assignments_);
+        best_trial = t;
       }
     }  // for t
 
@@ -90,6 +92,9 @@ class KMeans {
     loss_ = loss;
     clusters_ = std::move(clusters);
     assignments_ = std::move(assignments);
+
+    std::cout << "best trial: " << best_trial << std::endl;
+    std::cout << "best loss: " << loss_ << std::endl;
   }  // MultipleRestarts()
 
   /*

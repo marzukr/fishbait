@@ -22,23 +22,23 @@ class Indexer {
   }
   ~Indexer() { delete isocalc_; }
 
-  uint32_t index(const std::initializer_list<uint8_t> cards) {
+  uint64_t index(const std::initializer_list<uint8_t> cards) {
     return hand_index_last(isocalc_, cards.begin());
   }
 
   template <std::size_t kN>
-  uint32_t index(const std::array<uint8_t, kN>& cards) {
+  uint64_t index(const std::array<uint8_t, kN>& cards) {
     return hand_index_last(isocalc_, cards.data());
   }
 
   template <std::size_t kN, std::size_t kR>
-  uint32_t index(const std::array<uint8_t, kN>& cards,
+  uint64_t index(const std::array<uint8_t, kN>& cards,
                  std::array<uint64_t, kR>* indicies) {
     return hand_index_all(isocalc_, cards.data(), indicies->data());
   }
 
   template <std::size_t kN>
-  uint32_t unindex(uint32_t round, uint32_t index,
+  uint64_t unindex(uint32_t round, uint64_t index,
                    std::array<uint8_t, kN>* cards) {
     return hand_unindex(isocalc_, round, index, cards->data());
   }
