@@ -13,7 +13,8 @@
 TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {
   // Load Preflop LUT
   utils::Matrix<uint32_t> preflop_lut(1, 1, 0);
-  utils::CerealLoad("luts/preflop_lut_64.cereal", &preflop_lut, true);
+  utils::CerealLoad("out/hand_strengths/preflop_lut_64.cereal",
+        &preflop_lut, true);
 
   // Test Preflop LUT
   uint8_t c1;
@@ -69,7 +70,7 @@ TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {
 TEST_CASE("Flop LUT", "[.][hand_strengths][lut_generators]") {
   // Load Flop LUT
   utils::Matrix<uint32_t> flop_lut(1, 1, 0);
-  utils::CerealLoad("luts/flop_lut_64.cereal", &flop_lut, true);
+  utils::CerealLoad("out/hand_strengths/flop_lut_64.cereal", &flop_lut, true);
 
   // Test Flop LUT
   std::array<uint32_t, 50> python{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -96,7 +97,7 @@ TEST_CASE("Flop LUT", "[.][hand_strengths][lut_generators]") {
 TEST_CASE("Turn LUT", "[.][hand_strengths][lut_generators]") {
   // Load Turn LUT
   utils::Matrix<uint32_t> turn_lut(1, 1, 0);
-  utils::CerealLoad("luts/turn_lut_64.cereal", &turn_lut, true);
+  utils::CerealLoad("out/hand_strengths/turn_lut_64.cereal", &turn_lut, true);
 
   // Test Turn LUT
   std::array<uint32_t, 50> python{0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 8, 12, 0, 0, 0,
@@ -133,7 +134,7 @@ TEST_CASE("Turn LUT", "[.][hand_strengths][lut_generators]") {
 TEST_CASE("River LUT", "[.][hand_strengths][lut_generators]") {
   // Load River LUT
   utils::Matrix<double> river_lut(1, 1, 0);
-  utils::CerealLoad("luts/river_lut_64.cereal", &river_lut, true);
+  utils::CerealLoad("out/hand_strengths/river_lut_64.cereal", &river_lut, true);
 
   // Test River LUT
   std::array<double, 8> python{0.0871559633027523, 0, 0.4496124031007752,
@@ -161,7 +162,8 @@ TEST_CASE("River LUT", "[.][hand_strengths][lut_generators]") {
 TEST_CASE("OCHS preflop LUT", "[.][hand_strengths][lut_generators]") {
   // Load OCHS Preflop LUT
   utils::Matrix<double> ochs_pflop_lut(1, 1, 0);
-  utils::CerealLoad("luts/ochs_preflop_lut_64.cereal", &ochs_pflop_lut, true);
+  utils::CerealLoad("out/hand_strengths/ochs_preflop_lut_64.cereal",
+        &ochs_pflop_lut, true);
 
   // Test OCHS Preflop LUT
   uint8_t c1;

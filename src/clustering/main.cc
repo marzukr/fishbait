@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <cstring>
 
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
