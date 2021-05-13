@@ -4,8 +4,6 @@ add_library(
   agent.h
   game.cc
   game.h
-  game_state.cc
-  game_state.h
   )
 
 add_executable(poker_demo.out main.cc)

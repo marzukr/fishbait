@@ -1,29 +1,49 @@
-// Copyright Marzuk Rashid, Emily Dale 2021
+// Copyright 2021 Marzuk Rashid
 
 #ifndef SRC_POKER_ENGINE_GAME_H_
 #define SRC_POKER_ENGINE_GAME_H_
 
-#include "deck/constants.h"
+#include "SKPokerEval/src/Constants.h"
 #include "poker_engine/agent.h"
-#include "poker_engine/game_state.h"
+
+#define NUM_PLAYERS 6
+#define FLOP_1 12
+#define FLOP_2 13
+#define FLOP_3 14
+#define TURN 15
+#define RIVER 16
 
 namespace poker_engine {
 
 class Game {
- public:
-  Game(char num_players, char num_rounds, int32_t small_blind,
-       int32_t big_blind, int32_t starting_amounts, char small_blind_pos);
-  void Play();
  private:
-  int deck_[deck::kDeckSize];
-  Agent** agents_;
-  GameState game_state_;
-  char deck_index_;  // index of next card to be dealt
-  void ShuffleDeck();
-  void AwardPot();
-  void Preflop();
-  void DealCard(char num_cards);
-};  // class Game
+  int deck[DECK_SIZE];
+  Agent* agents[NUM_PLAYERS];
+  int button;
+
+  double pot;
+  double max_bet;
+  double min_raise;
+  bool in_game[NUM_PLAYERS];
+  int players_left;
+
+  void shuffle_deck();
+
+  // returns true if the game is complete, false otherwise
+  bool main_game_loop(int first_to_act);
+  void award_pot();
+
+  // each street function returns true if the game is complete, false
+  // otherwise
+  bool preflop(int button_pos);
+  bool flop();
+  bool turn();
+  void river();
+
+ public:
+  explicit Game(double bb_per_player);
+  void play(int button_pos);
+};  // Game
 
 }  // namespace poker_engine
 

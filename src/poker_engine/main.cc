@@ -1,12 +1,13 @@
-// copyright Emily Dale 2021
+// Copyright 2021 Marzuk Rashid
+
 #include <iostream>
 
 #include "poker_engine/game.h"
 
 int main() {
-    // game with 6 players, 4 rounds, 0.5 sb, 100 bb / player,
-    // player 0 small blind
-    poker_engine::Game g(6, 4, 1, 2, 200, 0);
-    g.Play();
+    // game with 100 bb / player, player 0 on the button
+    poker_engine::Game g(100);
+    g.play(0);
+
     return 0;
 }
