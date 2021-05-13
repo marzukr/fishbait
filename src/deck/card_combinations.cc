@@ -1,17 +1,18 @@
 // Copyright 2021 Marzuk Rashid
 
-#include "hand_strengths/card_combinations.h"
+#include "deck/card_combinations.h"
 
 #include <cstdint>
 #include <cassert>
 #include <algorithm>
 
-#include "hand_strengths/card_utils.h"
+#include "deck/card_utils.h"
+#include "deck/constants.h"
 
-namespace hand_strengths {
+namespace deck {
 
-CardCombinations::CardCombinations(uint8_t r)
-    : state_(r+1, 0), included_(kDeckSize, true), r_(r), is_done_(false) {
+CardCombinations::CardCombinations(uint8_t r) : state_(r+1, 0),
+    included_(kDeckSize, true), r_(r), is_done_(false) {
   for (uint8_t i = 0; i < r; ++i) {
     state_[i] = i;
   }
@@ -66,4 +67,4 @@ bool CardCombinations::MoveToNextIncluded(uint8_t i) {
   }
 }
 
-}  // namespace hand_strengths
+}  // namespace deck

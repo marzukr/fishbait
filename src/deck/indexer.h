@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_HAND_STRENGTHS_INDEXER_H_
-#define SRC_HAND_STRENGTHS_INDEXER_H_
+#ifndef SRC_DECK_INDEXER_H_
+#define SRC_DECK_INDEXER_H_
 
 #include <cstdint>
 #include <numeric>
@@ -12,7 +12,7 @@ extern "C" {
   #include "hand-isomorphism/src/hand_index.h"
 }
 
-namespace hand_strengths {
+namespace deck {
 
 class Indexer {
  public:
@@ -47,6 +47,6 @@ class Indexer {
   hand_indexer_t* isocalc_;
 };  // class Indexer
 
-}  // namespace hand_strengths
+}  // namespace deck
 
-#endif  // SRC_HAND_STRENGTHS_INDEXER_H_
+#endif  // SRC_DECK_INDEXER_H_

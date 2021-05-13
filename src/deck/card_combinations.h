@@ -1,24 +1,24 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_
-#define SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_
+#ifndef SRC_DECK_CARD_COMBINATIONS_H_
+#define SRC_DECK_CARD_COMBINATIONS_H_
 
 #include <cstdint>
 #include <cassert>
 #include <vector>
 
-#include "hand_strengths/card_utils.h"
+#include "deck/card_utils.h"
+#include "deck/constants.h"
 
-namespace hand_strengths {
+namespace deck {
 
 class CardCombinations {
  public:
   explicit CardCombinations(uint8_t r);
 
   template <typename T>
-  CardCombinations(uint8_t r, T&& exclude)
-      : state_(r+1, kDeckSize), included_(kDeckSize, true), r_(r),
-        is_done_(false) {
+  CardCombinations(uint8_t r, T&& exclude) : state_(r+1, kDeckSize),
+      included_(kDeckSize, true), r_(r), is_done_(false) {
     Reset(exclude, true);
   }
 
@@ -72,6 +72,6 @@ class CardCombinations {
   bool is_done_;
 };  // class CardCombinations
 
-}  // namespace hand_strengths
+}  // namespace deck
 
-#endif  // SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_
+#endif  // SRC_DECK_CARD_COMBINATIONS_H_

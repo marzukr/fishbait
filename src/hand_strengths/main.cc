@@ -5,9 +5,10 @@
 #include <iostream>
 #include <cstring>
 
+#include "deck/card_utils.h"
+#include "deck/indexer.h"
 #include "hand_strengths/lut_generators.h"
-#include "hand_strengths/card_utils.h"
-#include "hand_strengths/indexer.h"
+#include "hand_strengths/ochs.h"
 #include "utils/cereal.h"
 
 int main(int argc, char *argv[]) {

@@ -1,16 +1,14 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_HAND_STRENGTHS_CARD_UTILS_H_
-#define SRC_HAND_STRENGTHS_CARD_UTILS_H_
+#ifndef SRC_DECK_CARD_UTILS_H_
+#define SRC_DECK_CARD_UTILS_H_
 
 #include <cstdint>
 #include <string>
 
 #include "SKPokerEval/src/Deckcards.h"
 
-namespace hand_strengths {
-
-const uint8_t kDeckSize = 52;
+namespace deck {
 
 inline std::string SKCardPretty(uint8_t i) {
   return pretty_card[i];
@@ -28,6 +26,6 @@ inline uint8_t ConvertISOtoSK(uint8_t iso_card) {
 
 uint8_t ISOCardFromStr(const std::string& card_str);
 
-}  // namespace hand_strengths
+}  // namespace deck
 
-#endif  // SRC_HAND_STRENGTHS_CARD_UTILS_H_
+#endif  // SRC_DECK_CARD_UTILS_H_

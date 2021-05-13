@@ -1,6 +1,6 @@
 // Copyright 2021 Marzuk Rashid
 
-#include "hand_strengths/card_utils.h"
+#include "deck/card_utils.h"
 
 #include <string>
 
@@ -8,7 +8,7 @@ extern "C" {
   #include "hand-isomorphism/src/deck.h"
 }
 
-namespace hand_strengths {
+namespace deck {
 
 uint8_t ISOCardFromStr(const std::string& card_str) {
   uint32_t suit = 0;
@@ -50,4 +50,4 @@ uint8_t ISOCardFromStr(const std::string& card_str) {
   return deck_make_card(suit, rank);
 }  // ISOCardFromStr()
 
-}  // namespace hand_strengths
+}  // namespace deck

@@ -1,14 +1,11 @@
-// copyright Emily Dale 2021
+// Copyright Marzuk Rashid, Emily Dale 2021
 
 #ifndef SRC_POKER_ENGINE_GAME_H_
 #define SRC_POKER_ENGINE_GAME_H_
 
-#include "SKPokerEval/src/Constants.h"
-
+#include "deck/constants.h"
 #include "poker_engine/agent.h"
 #include "poker_engine/game_state.h"
-
-const int kDeckSize = 52;
 
 namespace poker_engine {
 
@@ -18,7 +15,7 @@ class Game {
        int32_t big_blind, int32_t starting_amounts, char small_blind_pos);
   void Play();
  private:
-  int deck_[kDeckSize];
+  int deck_[deck::kDeckSize];
   Agent** agents_;
   GameState game_state_;
   char deck_index_;  // index of next card to be dealt

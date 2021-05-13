@@ -10,19 +10,6 @@
 
 namespace hand_strengths {
 
-const uint32_t kNShowdowns = 123156254;
-
-struct ShowdownStrength {
-  double ehs = 0;
-  double ochs_wins[kOCHS_N] = {0, 0, 0, 0, 0, 0, 0, 0};
-  uint32_t ochs_totals[kOCHS_N] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-  template <class Archive>
-  void serialize(Archive& ar) {  // NOLINT(runtime/references)
-    ar(ehs, ochs_wins, ochs_totals);
-  }
-};
-
 std::vector<ShowdownStrength> ShowdownLUT(const bool verbose = false);
 
 /*

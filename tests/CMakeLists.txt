@@ -3,9 +3,9 @@ add_executable(tests.out main.cc
   clustering/distance_test.cc
   clustering/k_means_test.cc
 
-  hand_strengths/card_utils_test.cc
-  hand_strengths/card_combinations_test.cc
-  hand_strengths/indexer_test.cc
+  deck/card_combinations_test.cc
+  deck/card_utils_test.cc
+  deck/indexer_test.cc
 
   utils/cereal_test.cc
   utils/combination_matrix_test.cc
@@ -16,9 +16,4 @@ add_executable(tests.out main.cc
 
   )
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(tests.out hand_strengths Threads::Threads)
-
-add_custom_target(tests ALL)
-add_dependencies(tests tests.out)
+target_link_libraries(tests.out clustering deck hand_strengths)

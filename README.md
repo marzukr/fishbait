@@ -15,12 +15,19 @@ From the root directory:
     - `cmake ..` will use the last value specified for `CMAKE_BUILD_TYPE`. If no
       value is specified, it will use release mode by default.
 4. `make`
-    - Note: You can also run `make clustering`, `make hand_strengths_gen`,
-      `make simulator`, or `make tests` to only build those respective parts of
-      the project.
+    - Note: You can also run `make <target>` to only build a specific part of
+      the project where `<target>` is one of the following:
+      - `clustering.out`
+      - `deck`
+      - `hand_strengths`
+      - `hand_strengths.out`
+      - `poker_engine`
+      - `poker_demo.out`
+      - `sequence_table`
+      - `tests.out`
 
 All executables will now be located in `build/bin`. So, for example, to execute
-`simulator.out`, simply run `./bin/simulator.out` from the `build` directory.
+`poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.
 
 ## Other Notes
 

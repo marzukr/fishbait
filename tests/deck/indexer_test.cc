@@ -5,12 +5,13 @@
 
 #include "catch2/catch.hpp"
 
-#include "hand_strengths/indexer.h"
+#include "deck/indexer.h"
+#include "deck/constants.h"
 #include "hand_strengths/ochs.h"
 
-TEST_CASE("Basic flop indexer tests", "[hand_strengths][indexer]") {
+TEST_CASE("Basic flop indexer tests", "[deck][indexer]") {
   const uint32_t n_flops = 1286792;
-  hand_strengths::Indexer flop(2, {2, 3});
+  deck::Indexer flop(2, {2, 3});
   std::array<uint8_t, 5> rollout;
   std::array<uint64_t, 2> indicies;
 
@@ -28,7 +29,7 @@ TEST_CASE("Basic flop indexer tests", "[hand_strengths][indexer]") {
       break;
     }
     REQUIRE(indicies[0] >= 0);
-    REQUIRE(indicies[0] < hand_strengths::kUniqueHands);
+    REQUIRE(indicies[0] < deck::kUniqueHands);
     REQUIRE(indicies[1] >= 0);
     REQUIRE(indicies[1] < n_flops);
     ++i;

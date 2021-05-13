@@ -1,4 +1,4 @@
-// Copyright Emily Dale 2021
+// Copyright Marzuk Rashid, Emily Dale 2021
 
 #include <iostream>
 #include <random>
@@ -9,6 +9,7 @@
 #include "SKPokerEval/src/Deckcards.h"
 #include "SKPokerEval/src/Constants.h"
 
+#include "deck/constants.h"
 #include "poker_engine/game.h"
 
 namespace poker_engine {
@@ -18,7 +19,7 @@ Game::Game(char num_players, char num_rounds, int32_t small_blind,
            game_state_(num_players, num_rounds, small_blind, big_blind,
            starting_amounts, small_blind_pos) {
   // initialize the deck
-  for (int i = 0; i < kDeckSize; ++i) {
+  for (int i = 0; i < deck::kDeckSize; ++i) {
     deck_[i] = i;
   }
   deck_index_ = 0;
