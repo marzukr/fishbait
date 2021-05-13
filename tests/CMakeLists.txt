@@ -16,4 +16,4 @@ add_executable(tests.out main.cc
 
   )
 
-target_link_libraries(tests.out clustering deck hand_strengths)
+target_link_libraries(tests.out clustering deck hand_strengths utils)
