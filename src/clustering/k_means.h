@@ -93,8 +93,10 @@ class KMeans {
     clusters_ = std::move(clusters);
     assignments_ = std::move(assignments);
 
-    std::cout << "best trial: " << best_trial << std::endl;
-    std::cout << "best loss: " << loss_ << std::endl;
+    if (verbose) {
+      std::cout << "best trial: " << best_trial << std::endl;
+      std::cout << "best loss: " << loss_ << std::endl;
+    }
   }  // MultipleRestarts()
 
   /*
