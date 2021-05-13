@@ -1,6 +1,6 @@
 // Copyright Emily Dale 2021
 
-#include "sequence_table/sequence_table.h"
+#include "blueprint/sequence_table.h"
 
 #include <stdint.h>
 #include <math.h>
@@ -14,7 +14,7 @@ const uint32_t kFold = 0;
 const uint32_t kCall = 1;
 const uint32_t kAllIn = 2;
 
-namespace blueprint_strategy {
+namespace blueprint {
 
 SequenceTable::SequenceTable(const std::vector<float> &raise_sizes,
                              const std::vector<char> &num_raise_sizes,
@@ -272,4 +272,4 @@ std::ostream& operator<<(std::ostream &strm, const SequenceTable &s) {
               total << " gb";
 }
 
-}  // namespace blueprint_strategy
+}  // namespace blueprint

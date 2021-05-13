@@ -35,11 +35,11 @@ include_directories(external/cereal/include)
 
 add_subdirectory(external/hand-isomorphism)
 
+add_subdirectory(src/blueprint)
 add_subdirectory(src/clustering)
 add_subdirectory(src/deck)
 add_subdirectory(src/hand_strengths)
 add_subdirectory(src/poker_engine)
-add_subdirectory(src/sequence_table)
 add_subdirectory(src/utils)
 
 add_subdirectory(tests)

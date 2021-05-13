@@ -3,7 +3,7 @@
 #include <iostream>
 #include <chrono>  // NOLINT(*)
 
-#include "sequence_table/sequence_table.h"
+#include "blueprint/sequence_table.h"
 
 int main() {
   std::vector<char> num_raise_sizes = {4, 2, 1, 1};
@@ -19,7 +19,7 @@ int main() {
   char num_rounds = 4;
   std::vector<float> late_raises = {0.5, 1};
   auto start = std::chrono::high_resolution_clock::now();
-  blueprint_strategy::SequenceTable seq = blueprint_strategy::SequenceTable
+  blueprint::SequenceTable seq = blueprint::SequenceTable
                                          (raise_sizes, num_raise_sizes,
                                           starting_chips, small_blind,
                                           big_blind, num_players, num_rounds,

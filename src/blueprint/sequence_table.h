@@ -1,16 +1,17 @@
 // Copyright Emily Dale 2021
 
-#ifndef SRC_SEQUENCE_TABLE_SEQUENCE_TABLE_H_
-#define SRC_SEQUENCE_TABLE_SEQUENCE_TABLE_H_
+#ifndef SRC_BLUEPRINT_SEQUENCE_TABLE_H_
+#define SRC_BLUEPRINT_SEQUENCE_TABLE_H_
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
+
 #include "poker_engine/game_state.h"
 #include "utils/matrix.h"
 
 const uint32_t kIllegalActionVal = 0;
 
-namespace blueprint_strategy {
+namespace blueprint {
 
 class SequenceTable {
  public:
@@ -70,6 +71,6 @@ class SequenceTable {
   }
 };  // class SequenceTable
 
-}  // namespace blueprint_strategy
+}  // namespace blueprint
 
-#endif  // SRC_SEQUENCE_TABLE_SEQUENCE_TABLE_H_
+#endif  // SRC_BLUEPRINT_SEQUENCE_TABLE_H_
