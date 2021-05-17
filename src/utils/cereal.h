@@ -3,12 +3,12 @@
 #ifndef SRC_UTILS_CEREAL_H_
 #define SRC_UTILS_CEREAL_H_
 
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
 
-#include "cereal/types/vector.hpp"
 #include "cereal/archives/portable_binary.hpp"
+#include "cereal/types/vector.hpp"
 
 namespace utils {
 

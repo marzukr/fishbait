@@ -5,11 +5,11 @@
 
 #include <stdint.h>
 
-#include <cassert>
-#include <vector>
 #include <array>
+#include <cassert>
 #include <initializer_list>
 #include <ostream>
+#include <vector>
 
 namespace utils {
 

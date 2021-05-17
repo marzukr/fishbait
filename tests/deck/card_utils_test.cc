@@ -4,7 +4,6 @@
 #include <cstdint>
 
 #include "catch2/catch.hpp"
-
 #include "deck/card_utils.h"
 #include "deck/constants.h"
 

@@ -1,10 +1,9 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 #include "catch2/catch.hpp"
-
 #include "utils/loop_iterator.h"
 
 TEST_CASE("LoopIterator 100 in order", "[utils][loopiterator]") {

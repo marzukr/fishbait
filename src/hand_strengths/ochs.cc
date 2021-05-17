@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "deck/card_utils.h"
 #include "deck/card_combinations.h"
+#include "deck/card_utils.h"
 #include "deck/constants.h"
 #include "deck/indexer.h"
 #include "utils/combination_matrix.h"

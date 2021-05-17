@@ -3,10 +3,10 @@
 #ifndef SRC_DECK_INDEXER_H_
 #define SRC_DECK_INDEXER_H_
 
-#include <cstdint>
-#include <numeric>
-#include <initializer_list>
 #include <array>
+#include <cstdint>
+#include <initializer_list>
+#include <numeric>
 
 extern "C" {
   #include "hand-isomorphism/src/hand_index.h"

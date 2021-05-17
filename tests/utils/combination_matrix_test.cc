@@ -1,7 +1,6 @@
 // Copyright 2021 Marzuk Rashid
 
 #include "catch2/catch.hpp"
-
 #include "utils/combination_matrix.h"
 
 TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]") {

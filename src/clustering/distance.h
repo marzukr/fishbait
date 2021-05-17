@@ -7,8 +7,8 @@
 
 #include <cassert>
 #include <cmath>
-#include <numeric>
 #include <functional>
+#include <numeric>
 
 #include "utils/vector_view.h"
 

@@ -1,10 +1,9 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 #include "catch2/catch.hpp"
-
 #include "clustering/distance.h"
 #include "utils/vector_view.h"
 

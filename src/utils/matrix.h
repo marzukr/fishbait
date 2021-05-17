@@ -5,12 +5,12 @@
 
 #include <stdint.h>
 
-#include <cassert>
-#include <vector>
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <vector>
 
 #include "utils/vector_view.h"
 

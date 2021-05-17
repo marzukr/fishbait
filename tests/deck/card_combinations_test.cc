@@ -1,13 +1,12 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <set>
 #include <iostream>
+#include <set>
 
 #include "catch2/catch.hpp"
-
 #include "deck/card_combinations.h"
-#include "utils/vector_view.h"
 #include "utils/matrix.h"
+#include "utils/vector_view.h"
 
 TEST_CASE("card_combinations test", "[deck][card_combinations]") {
   uint32_t n;

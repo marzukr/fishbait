@@ -3,23 +3,23 @@
 #ifndef SRC_CLUSTERING_K_MEANS_H_
 #define SRC_CLUSTERING_K_MEANS_H_
 
-#include <iostream>
-#include <memory>
-#include <random>
-#include <cassert>
 #include <algorithm>
-#include <utility>
-#include <vector>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
+#include <iostream>
+#include <memory>
+#include <random>
 #include <thread>  // NOLINT(build/c++11)
+#include <utility>
+#include <vector>
 
-#include "utils/matrix.h"
 #include "utils/combination_matrix.h"
-#include "utils/vector_view.h"
+#include "utils/matrix.h"
 #include "utils/random.h"
 #include "utils/timer.h"
+#include "utils/vector_view.h"
 
 namespace clustering {
 

@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 #include <cassert>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 namespace utils {
 

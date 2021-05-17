@@ -1,9 +1,9 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <vector>
+#include <cstring>
 #include <fstream>
 #include <iostream>
-#include <cstring>
+#include <vector>
 
 #include "deck/card_utils.h"
 #include "deck/indexer.h"

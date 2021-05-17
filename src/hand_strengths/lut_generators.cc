@@ -2,13 +2,12 @@
 
 #include "hand_strengths/lut_generators.h"
 
-#include <vector>
 #include <algorithm>
-#include <ostream>
 #include <iostream>
+#include <ostream>
+#include <vector>
 
 #include "SKPokerEval/src/SevenEval.h"
-
 #include "deck/card_combinations.h"
 #include "deck/card_utils.h"
 #include "deck/constants.h"

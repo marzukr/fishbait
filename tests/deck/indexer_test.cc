@@ -4,9 +4,8 @@
 #include <cstdint>
 
 #include "catch2/catch.hpp"
-
-#include "deck/indexer.h"
 #include "deck/constants.h"
+#include "deck/indexer.h"
 #include "hand_strengths/ochs.h"
 
 TEST_CASE("Basic flop indexer tests", "[deck][indexer]") {

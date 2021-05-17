@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "catch2/catch.hpp"
-
 #include "utils/matrix.h"
 #include "utils/vector_view.h"
 

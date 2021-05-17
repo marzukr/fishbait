@@ -1,14 +1,13 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <vector>
 #include <cstdint>
-#include <iostream>
 #include <filesystem>
+#include <iostream>
+#include <vector>
 
 #include "catch2/catch.hpp"
-
-#include "utils/matrix.h"
 #include "utils/cereal.h"
+#include "utils/matrix.h"
 
 TEST_CASE("Save and load vector test", "[utils][cereal]") {
   const uint32_t n = 100;

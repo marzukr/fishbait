@@ -2,8 +2,9 @@
 
 #include "blueprint/sequence_table.h"
 
-#include <stdint.h>
 #include <math.h>
+#include <stdint.h>
+
 #include <iostream>
 
 #include "utils/matrix.h"

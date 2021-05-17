@@ -2,12 +2,11 @@
 
 #include <stdint.h>
 
-#include <vector>
-#include <memory>
 #include <array>
+#include <memory>
+#include <vector>
 
 #include "catch2/catch.hpp"
-
 #include "utils/vector_view.h"
 
 TEST_CASE("Test VectorView with heap array", "[utils][vectorview]") {

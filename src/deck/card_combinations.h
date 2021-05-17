@@ -3,8 +3,8 @@
 #ifndef SRC_DECK_CARD_COMBINATIONS_H_
 #define SRC_DECK_CARD_COMBINATIONS_H_
 
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 #include <vector>
 
 #include "deck/card_utils.h"

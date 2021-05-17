@@ -7,9 +7,9 @@
 
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
+#include "utils/cereal.h"
 #include "utils/matrix.h"
 #include "utils/random.h"
-#include "utils/cereal.h"
 
 int main() {
   // std::string path = "luts/flop_lut_64.cereal";

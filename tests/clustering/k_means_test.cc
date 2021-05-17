@@ -1,17 +1,16 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <vector>
+#include <iostream>
 #include <memory>
 #include <utility>
-#include <iostream>
+#include <vector>
 
 #include "catch2/catch.hpp"
-
-#include "clustering/k_means.h"
 #include "clustering/distance.h"
+#include "clustering/k_means.h"
 #include "utils/matrix.h"
-#include "utils/vector_view.h"
 #include "utils/random.h"
+#include "utils/vector_view.h"
 
 // Elkan test cases generated with python and the kmeans from scikit learn after
 // disabling the mean centering and changing the cluster mean computation to

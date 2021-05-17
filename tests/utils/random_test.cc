@@ -1,10 +1,9 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <random>
 #include <cstdint>
+#include <random>
 
 #include "catch2/catch.hpp"
-
 #include "utils/random.h"
 
 TEST_CASE("Random doubles with same seed", "[utils][random]") {
