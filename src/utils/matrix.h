@@ -19,10 +19,10 @@ namespace utils {
 template <typename T>
 class Matrix {
  public:
-  Matrix(uint64_t n, uint64_t m, T filler = 0)
-      : n_(n), m_(m), data_(n*m, filler) {}
-  Matrix(const Matrix<T>& other)
-      : n_(other.n_), m_(other.m_), data_(other.data_) {}
+  Matrix(uint64_t n, uint64_t m, T filler = 0) : n_(n), m_(m),
+                                                 data_(n*m, filler) {}
+  Matrix(const Matrix<T>& other) : n_(other.n_), m_(other.m_),
+                                   data_(other.data_) {}
   ~Matrix() {}
   Matrix<T>& operator=(const Matrix<T>& other) {
     n_ = other.n_;

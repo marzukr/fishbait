@@ -1110,7 +1110,7 @@ TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters",
   features.SetRow(9, utils::VectorView(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
-  k.MultipleRestarts(features, 10, clustering::PlusPlus, false,
+  k.MultipleRestarts(features, 10, clustering::kPlusPlus, false,
       utils::Random::Seed(773202));
 
   std::vector<double> correct_c0{-4.666666666666667, 8.666666666666666,
@@ -1343,7 +1343,7 @@ TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters",
   features.SetRow(99, utils::VectorView(d99));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(3);
-  k.MultipleRestarts(features, 10, clustering::RandomProb, false,
+  k.MultipleRestarts(features, 10, clustering::kRandomProb, false,
       utils::Random::Seed(1029384));
 
   std::vector<double> correct_c0{0.5204443935870346, 0.19430779443165194};

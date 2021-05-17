@@ -23,7 +23,7 @@
 
 namespace clustering {
 
-enum InitProc { PlusPlus, RandomSum, RandomProb };
+enum InitProc { kPlusPlus, kRandomSum, kRandomProb };
 
 template <typename T, template<class, class> class Distance>
 class KMeans {
@@ -42,11 +42,11 @@ class KMeans {
     @param initializer The algorithm to use to genereate the initial clusters.
     @param verbose Print diagnostics information.
     @param seed Seed to use for assigning empty clusters and initializing
-      clusters. If no seed is passed then a random seed is chosen.
+        clusters. If no seed is passed then a random seed is chosen.
   */
   void MultipleRestarts(const utils::Matrix<T>& data, uint32_t restarts,
-      InitProc initializer = PlusPlus, bool verbose = false,
-      utils::Random::Seed seed = utils::Random::Seed()) {
+                        InitProc initializer = kPlusPlus, bool verbose = false,
+                        utils::Random::Seed seed = utils::Random::Seed()) {
     // Variables to store the clustering with the lowest loss
     std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
     std::unique_ptr<std::vector<uint32_t>> assignments(nullptr);
@@ -64,13 +64,13 @@ class KMeans {
 
       // Set the starting clusters
       switch (initializer) {
-        case PlusPlus:
+        case kPlusPlus:
           InitPlusPlus(data, verbose, utils::Random::Seed(seed_gen(rng())));
           break;
-        case RandomSum:
+        case kRandomSum:
           RandomSumInit(data, utils::Random::Seed(seed_gen(rng())));
           break;
-        case RandomProb:
+        case kRandomProb:
           RandomProbInit(data, utils::Random::Seed(seed_gen(rng())));
           break;
       }  // switch (initializer)
@@ -98,10 +98,10 @@ class KMeans {
     @param data The data points to cluster.
     @param verbose Print diagnostics information.
     @param seed Seed to use for assigning empty clusters and initializing
-      clusters if they are not already initialized.
+        clusters if they are not already initialized.
   */
   void Elkan(const utils::Matrix<T>& data, bool verbose = false,
-      utils::Random::Seed seed = utils::Random::Seed()) {
+             utils::Random::Seed seed = utils::Random::Seed()) {
     std::unique_ptr<utils::Matrix<double>> clusters(nullptr);
     if (clusters_ == nullptr) {
       InitPlusPlus(data, verbose, seed);
@@ -360,10 +360,10 @@ class KMeans {
     @param data The data points to select from.
     @param verbose Print diagnostics information.
     @param seed Seed to use for the random number generation. If no seed is
-      passed then a random one is chosen.
+        passed then a random one is chosen.
   */
   void InitPlusPlus(const utils::Matrix<T>& data, bool verbose = false,
-      utils::Random::Seed seed = utils::Random::Seed()) {
+                    utils::Random::Seed seed = utils::Random::Seed()) {
     utils::Random rng(seed);
     std::uniform_real_distribution<> std_unif(0.0, 1.0);
 
@@ -397,14 +397,14 @@ class KMeans {
 
   /*
     @brief Initialize clusters where the elements in each cluster sum to the
-      same value as the data elements.
+        same value as the data elements.
 
     @param data The data points whose sum to mimic.
     @param seed Seed to use for the random number generation. If no seed is
-      passed then a random one is chosen.
+        passed then a random one is chosen.
   */
   void RandomSumInit(const utils::Matrix<T>& data,
-      utils::Random::Seed seed = utils::Random::Seed()) {
+                     utils::Random::Seed seed = utils::Random::Seed()) {
     T row_sum = 0;
     for (uint32_t j = 0; j < data.m(); ++j) {
       row_sum += data(0, j);
@@ -435,14 +435,14 @@ class KMeans {
 
   /*
     @brief Initialize clusters whose values are probabilities (i.e. in the range
-      [0,1]).
+        [0,1]).
 
     @param data The data points to derive dimensionality from.
     @param seed Seed to use for the random number generation. If no seed is
-      passed then a random one is chosen.
+        passed then a random one is chosen.
   */
   void RandomProbInit(const utils::Matrix<T>& data,
-      utils::Random::Seed seed = utils::Random::Seed()) {
+                      utils::Random::Seed seed = utils::Random::Seed()) {
     utils::Random rng(seed);
     std::uniform_real_distribution<double> choose_amount(0.0, 1.0);
 
@@ -476,8 +476,8 @@ class KMeans {
 
     @param data The data points to select from.
     @param squared_dists The squared distances between each point and the
-      closest cluster. Set all values to INFINITY if this is the first
-      iteration.
+        closest cluster. Set all values to INFINITY if this is the first
+        iteration.
     @param squared_sum The sum of the squared distances.
     @param selection A randomly selected number on the interval [0,1).
 
@@ -485,8 +485,7 @@ class KMeans {
   */
   uint32_t InitPlusPlusIter(const utils::Matrix<T>& data,
                             std::vector<double>* squared_dists,
-                            double* squared_sum,
-                            double selection) {
+                            double* squared_sum, double selection) {
     uint32_t new_cluster = 0;
 
     // Select the next cluster based on the D^2 probability distribution
