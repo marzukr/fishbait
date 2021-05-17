@@ -36,7 +36,7 @@ void CardCombinations::IncrementState(uint8_t i) {
   if (MoveToNextIncluded(i)) {
     for (uint8_t j = i + 1; j < r_; ++j) {
       state_[j] = state_[j-1];
-      bool moved = MoveToNextIncluded(j);
+      [[maybe_unused]] bool moved = MoveToNextIncluded(j);
       assert(moved);
     }
     return;

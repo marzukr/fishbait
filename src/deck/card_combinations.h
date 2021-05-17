@@ -39,7 +39,7 @@ class CardCombinations {
     }
 
     state_[0] = -1;
-    bool moved = MoveToNextIncluded(0);
+    [[maybe_unused]] bool moved = MoveToNextIncluded(0);
     assert(moved);
     for (uint8_t i = 1; i < r_; ++i) {
       state_[i] = state_[i-1];

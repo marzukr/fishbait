@@ -27,9 +27,7 @@ TEST_CASE("Basic flop indexer tests", "[deck][indexer]") {
     if (array_index_last != idx || array_index != idx || init_list != idx) {
       break;
     }
-    REQUIRE(indicies[0] >= 0);
     REQUIRE(indicies[0] < deck::kUniqueHands);
-    REQUIRE(indicies[1] >= 0);
     REQUIRE(indicies[1] < n_flops);
     ++i;
   }
