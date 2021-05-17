@@ -24,8 +24,8 @@ uint32_t CardCombinations::N_Choose_K(uint32_t n, uint32_t k) {
   if (k * 2 > n) k = n-k;
   if (k == 0) return 1;
 
-  int32_t result = n;
-  for (int32_t i = 2; i <= k; ++i) {
+  uint32_t result = n;
+  for (uint32_t i = 2; i <= k; ++i) {
     result *= (n-i+1);
     result /= i;
   }

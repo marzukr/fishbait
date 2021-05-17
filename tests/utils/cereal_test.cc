@@ -46,7 +46,7 @@ TEST_CASE("Save and load matrix test", "[utils][cereal]") {
   REQUIRE(load_matrix.m() == m);
   for (uint32_t i = 0; i < n; ++i) {
     for (uint32_t j = 0; j < m; ++j) {
-      REQUIRE(load_matrix(i, j) == (i + j));
+      REQUIRE(load_matrix(i, j) == (int)(i + j));
     }
   }
 }  // TEST_CASE "Save and load matrix test"

@@ -11,8 +11,8 @@ TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]") {
 
   REQUIRE(cm.n() == n_items);
 
-  for (int i = 0; i < cm.n(); ++i) {
-    for (int j = 0; j < cm.n(); ++j) {
+  for (uint32_t i = 0; i < cm.n(); ++i) {
+    for (uint32_t j = 0; j < cm.n(); ++j) {
       if (i == j) {
         continue;
       }
@@ -21,8 +21,8 @@ TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]") {
     }
   }
 
-  for (int i = 0; i < cm.n(); ++i) {
-    for (int j = i + 1; j < cm.n(); ++j) {
+  for (uint32_t i = 0; i < cm.n(); ++i) {
+    for (uint32_t j = i + 1; j < cm.n(); ++j) {
       REQUIRE(cm(i, j) == cm(j, i));
     }
   }

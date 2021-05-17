@@ -35,8 +35,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
     points(points_i_new, points_j_new) = points_val_new;
 
     SECTION("Verify that Access and () work on a Matrix") {
-      for (int i = 0; i < points.n(); ++i) {
-        for (int j = 0; j < points.m(); ++j) {
+      for (uint64_t i = 0; i < points.n(); ++i) {
+        for (uint64_t j = 0; j < points.m(); ++j) {
           if (i == points_i_new && j == points_j_new) {
             REQUIRE(points.Access(i, j) == points_val_new);
             REQUIRE(points(i, j) == points_val_new);
@@ -49,7 +49,7 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
     }  // SECTION("Verify that Access and () work on a Matrix")
     SECTION("Verify that row access works with VectorView") {
       utils::VectorView<int> v = points(points_i_new);
-      for (uint32_t j = 0; j < points.m(); ++j) {
+      for (uint64_t j = 0; j < points.m(); ++j) {
         if (j == points_j_new) {
           REQUIRE(v(j) == points_val_new);
         } else {
@@ -76,8 +76,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
       std::vector<double> row(points_m, new_row_val);
       points.SetRow(row_number, utils::VectorView(row));
 
-      for (int i = 0; i < points.n(); ++i) {
-        for (int j = 0; j < points.m(); ++j) {
+      for (uint64_t i = 0; i < points.n(); ++i) {
+        for (uint64_t j = 0; j < points.m(); ++j) {
           if (i == points_i_new && j == points_j_new) {
             REQUIRE(points(i, j) == points_val_new);
           } else if (i == row_number) {
@@ -95,8 +95,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
       std::vector<double> row(points_m, add_val);
       points.AddToRow(row_number, utils::VectorView(row));
 
-      for (int i = 0; i < points.n(); ++i) {
-        for (int j = 0; j < points.m(); ++j) {
+      for (uint64_t i = 0; i < points.n(); ++i) {
+        for (uint64_t j = 0; j < points.m(); ++j) {
           if (i == points_i_new && j == points_j_new) {
             REQUIRE(points(i, j) == points_val_new);
           } else if (i == row_number) {
@@ -114,8 +114,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
       std::vector<double> row(points_m, subtract_val);
       points.SubtractFromRow(row_number, utils::VectorView(row));
 
-      for (int i = 0; i < points.n(); ++i) {
-        for (int j = 0; j < points.m(); ++j) {
+      for (uint64_t i = 0; i < points.n(); ++i) {
+        for (uint64_t j = 0; j < points.m(); ++j) {
           if (i == points_i_new && j == points_j_new) {
             REQUIRE(points(i, j) == points_val_new);
           } else if (i == row_number) {
@@ -135,8 +135,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
       row[divide_row] = divide_val_2;
       points.Divide(utils::VectorView(row));
 
-      for (int i = 0; i < points.n(); ++i) {
-        for (int j = 0; j < points.m(); ++j) {
+      for (uint64_t i = 0; i < points.n(); ++i) {
+        for (uint64_t j = 0; j < points.m(); ++j) {
           if (i == points_i_new && j == points_j_new) {
             REQUIRE(points(i, j) == (int)(points_val_new / divide_val));
           } else if (i == divide_row) {
@@ -152,8 +152,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
 
       points.Fill(fill_val);
 
-      for (int i = 0; i < points.n(); ++i) {
-        for (int j = 0; j < points.m(); ++j) {
+      for (uint64_t i = 0; i < points.n(); ++i) {
+        for (uint64_t j = 0; j < points.m(); ++j) {
           REQUIRE(points(i, j) == fill_val);
         }
       }
@@ -164,15 +164,15 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
         auto pos2 = points.pos(&*it);
         REQUIRE(pos1 == pos2);
 
-        uint32_t row1 = points.row(it);
-        uint32_t row2 = points.row(pos1);
-        uint32_t row3 = points.row(&*it);
+        uint64_t row1 = points.row(it);
+        uint64_t row2 = points.row(pos1);
+        uint64_t row3 = points.row(&*it);
         REQUIRE(row1 == row2);
         REQUIRE(row1 == row3);
 
-        uint32_t col1 = points.col(it);
-        uint32_t col2 = points.col(pos1);
-        uint32_t col3 = points.col(&*it);
+        uint64_t col1 = points.col(it);
+        uint64_t col2 = points.col(pos1);
+        uint64_t col3 = points.col(&*it);
         REQUIRE(col1 == col2);
         REQUIRE(col1 == col3);
 
@@ -187,8 +187,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
 
   // Const Matrix Tests
   SECTION("Verify () and Access on const Matrix") {
-    for (int i = 0; i < const_points.n(); ++i) {
-      for (int j = 0; j < const_points.m(); ++j) {
+    for (uint64_t i = 0; i < const_points.n(); ++i) {
+      for (uint64_t j = 0; j < const_points.m(); ++j) {
         REQUIRE(const_points.Access(i, j) == c_points_val);
         REQUIRE(const_points(i, j) == c_points_val);
       }
@@ -217,15 +217,15 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
       auto pos2 = const_points.pos(&*it);
       REQUIRE(pos1 == pos2);
 
-      uint32_t row1 = const_points.row(it);
-      uint32_t row2 = const_points.row(pos1);
-      uint32_t row3 = const_points.row(&*it);
+      uint64_t row1 = const_points.row(it);
+      uint64_t row2 = const_points.row(pos1);
+      uint64_t row3 = const_points.row(&*it);
       REQUIRE(row1 == row2);
       REQUIRE(row1 == row3);
 
-      uint32_t col1 = const_points.col(it);
-      uint32_t col2 = const_points.col(pos1);
-      uint32_t col3 = const_points.col(&*it);
+      uint64_t col1 = const_points.col(it);
+      uint64_t col2 = const_points.col(pos1);
+      uint64_t col3 = const_points.col(&*it);
       REQUIRE(col1 == col2);
       REQUIRE(col1 == col3);
 
@@ -243,8 +243,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
     REQUIRE(points2.n() == points.n());
     REQUIRE(points2.m() == points.m());
 
-    for (int i = 0; i < points.n(); ++i) {
-      for (int j = 0; j < points.m(); ++j) {
+    for (uint64_t i = 0; i < points.n(); ++i) {
+      for (uint64_t j = 0; j < points.m(); ++j) {
         REQUIRE(points(i, j) == points_val);
         REQUIRE(points2(i, j) == change_val);
       }
@@ -262,8 +262,8 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
     REQUIRE(points2.n() == points.n());
     REQUIRE(points2.m() == points.m());
 
-    for (int i = 0; i < points.n(); ++i) {
-      for (int j = 0; j < points.m(); ++j) {
+    for (uint64_t i = 0; i < points.n(); ++i) {
+      for (uint64_t j = 0; j < points.m(); ++j) {
         REQUIRE(points(i, j) == points_val);
         REQUIRE(points2(i, j) == change_val);
       }
