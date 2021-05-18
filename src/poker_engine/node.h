@@ -102,6 +102,8 @@ class Node {
         move has ended the game.
   */
   bool Apply(Move next) {
+    if (!in_progress_) return in_progress_;
+
     // Process the move
     uint32_t prev_bet = bets_[acting_player_];
     uint32_t chips = stack_[acting_player_];

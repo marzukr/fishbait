@@ -16,21 +16,16 @@ From the root directory:
       value is specified, it will use neither.
 4. `make`
     - Note: You can also run `make <target>` to only build a specific part of
-      the project where `<target>` is one of the following:
-      - `clustering.out`
-      - `deck`
-      - `hand_strengths`
-      - `hand_strengths.out`
-      - `sequence_table`
-      - `tests.out`
+      the project. Run `make help` for a list of targets.
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.
 
 ## Testing
 Unit tests can be run with `./bin/tests.out` from the `build` directory.
-A code coverage report can be generated with `make coverage` from the `build`
-directory. `gcov` and `lcov` need to be installed for code coverage.
+If the project is built in debug mode, a code coverage report can be generated
+with `make coverage` from the `build` directory. `gcov` and `lcov` need to be
+installed for code coverage.
 
 ## Other Notes
 * Do not put commas in the Catch2 tester descriptions
