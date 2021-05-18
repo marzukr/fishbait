@@ -32,7 +32,7 @@ TEST_CASE("Random ints with random seeds", "[utils][random]") {
   utils::Random r2(utils::Random::Seed{});
   std::uniform_int_distribution<uint32_t> thousand(0, 999);
   if (thousand(r1()) == thousand(r2())) {
-    FAIL("The random seeds generated the same integer. This is unlikely but "
+    WARN("The random seeds generated the same integer. This is unlikely but "
         "not impossible. If this test consistently fails then there is a "
         "problem.");
   }
@@ -43,8 +43,19 @@ TEST_CASE("Random ints with random seeds 2", "[utils][random]") {
   utils::Random r2;
   std::uniform_int_distribution<uint32_t> thousand(0, 999);
   if (thousand(r1()) == thousand(r2())) {
-    FAIL("The random seeds generated the same integer. This is unlikely but "
+    WARN("The random seeds generated the same integer. This is unlikely but "
         "not impossible. If this test consistently fails then there is a "
         "problem.");
+  }
+}  // TEST_CASE "Random ints with same seed"
+
+TEST_CASE("Random seed produces different consecutive results",
+          "[utils][random]") {
+  utils::Random r1;
+  std::uniform_int_distribution<uint32_t> thousand(0, 999);
+  if (thousand(r1()) == thousand(r1())) {
+    WARN("The random seed generated the same integer twice in a row. This is "
+         "unlikely but not impossible. If this test consistently fails then "
+         "there is a problem.");
   }
 }  // TEST_CASE "Random ints with same seed"
