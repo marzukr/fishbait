@@ -27,34 +27,69 @@ template <uint8_t kPlayers = 6>
 class Node {
  public:
   /*
-    @brief Construct a node with arbitrary card information.
+    @brief Construct a node with arbitrary card information. By default,
+        constructs a standard 50/100 game with each player starting with 100 big
+        blinds, with arbitrary card information.
 
-    @param button The index of the player on the button. Defaults to 0.
-    @param big_blind How many chips the big blind is. Defaults to 100.
-    @param small_blind How many chips the small blind is. Defaults to 50.
-    @param default_stack How many chips each player starts with. Defaults to
-        10,000.
+    @param button The index of the player on the button.
+    @param big_blind How many chips the big blind is.
+    @param small_blind How many chips the small blind is.
+    @param ante How many chips each player pays as an ante each hand.
+    @param big_blind_ante If the big blind pays the ante for all players
+    @param default_stack How many chips each player starts with.
+    @param hands 2d array of each player's hand. Rows for each player, columns
+        for each card. i.e. row 2 column 0 is player 2's 0th card. If nullptr is
+        passed then each player get's an arbitrary hand.
+    @param board Array of the public board cards. Follows the standard order.
+        i.e. indexes [0,2] are the flop, index 3 is the turn, and index 4 is the
+        river. If nullptr is passed then the board is filled with arbitrary
+        cards.
   */
   Node(uint8_t button = 0, uint32_t big_blind = 100, uint32_t small_blind = 50,
-       uint32_t default_stack = 10000)
+       uint32_t ante = 0, bool big_blind_ante = false,
+       bool blind_before_ante = true, uint32_t default_stack = 10000,
+       uint8_t hands[kPlayers][2] = nullptr, uint8_t board[5] = nullptr)
        : acting_player_{(button + 3) % kPlayers}, button_{button},
-       big_blind_{big_blind}, small_blind_{small_blind},
-       pot_{big_blind + small_blind}, bets_{0}, stack_{default_stack},
-       min_raise_{big_blind}, max_bet_{big_blind} {
-    bets_[PlayerIndex(1)] = small_blind;
-    bets_[PlayerIndex(2)] = big_blind;
-    stack_[PlayerIndex(1)] -= small_blind;
-    stack_[PlayerIndex(2)] -= big_blind;
+         big_blind_{big_blind}, small_blind_{small_blind}, ante_{ante},
+         big_blind_ante_{big_blind_ante}, blind_before_ante_{blind_before_ante},
+         pot_{0}, bets_{0}, stack_{default_stack}, min_raise_{big_blind} {
+    // pot_, max_bet_
+    if (blind_before_ante_) PostAnte();
+    PostBlind(PlayerIndex(1), small_blind_);
+    PostBlind(PlayerIndex(2), big_blind_);
+    if (!blind_before_ante_) PostAnte();
 
-    for (uint8_t i = 0; i < kPlayers; ++i) {
-      hands_[i][0] = 2*i;
-      hands_[i][1] = 2*i + 1;
+    max_bet_ = big_blind_ + effective_ante_;
+
+    if (hands != nullptr) {
+      std::copy(&hands, &hands + 2*kPlayers, hands_);
+    } else {
+      for (uint8_t i = 0; i < kPlayers; ++i) {
+        hands_[i][0] = 2*i;
+        hands_[i][1] = 2*i + 1;
+      }
     }
-    uint8_t first_deck_card = 2*kPlayers;
-    for (uint8_t i = 0; i < 5; ++i) {
-      board_[i] = first_deck_card + i;
+
+    if (board != nullptr) {
+      std::copy(&board, &board + 5, board_);
+    } else {
+      uint8_t first_deck_card = 2*kPlayers;
+      for (uint8_t i = 0; i < 5; ++i) {
+        board_[i] = first_deck_card + i;
+      }
     }
   }  // Node()
+
+  /*
+    @brief Get the index of a player relative to the button where default
+        position is when the button is at index 0.
+
+    @param default_position The default position of the player to get the index
+        of. Button is 0, small blind 1, big blind 2, etc.
+  */
+  uint8_t PlayerIndex(uint8_t default_position) const {
+    return (button_ + default_position) % kPlayers;
+  }
 
   bool InProgress() const { return in_progress_; }
 
@@ -105,8 +140,6 @@ class Node {
     if (!in_progress_) return in_progress_;
 
     // Process the move
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t chips = stack_[acting_player_];
     switch (next.play) {
       case Action::kFold:
         Fold();
@@ -142,15 +175,58 @@ class Node {
 
  private:
   /*
-    @brief Get the index of a player relative to the button where default
-        position is when the button is at index 0.
-
-    @param default_position The default position of the player to get the index
-        of. Button is 0, small blind 1, big blind 2, etc.
+    @brief Make the given player post the given blind. If the player doesn't
+        have enough chips to post the blind, the player goes all in.
+        
+    @returns The actual size of the blind posted.
   */
-  uint8_t PlayerIndex(uint8_t default_position) const {
-    return (button_ + default_position) % kPlayers;
+  uint32_t PostBlind(uint8_t player, uint32_t size) {
+    uint32_t blind = std::min(size, stack_[player]);
+    bets_[player] += blind;
+    stack_[player] -= blind;
+    pot_ += blind;
+    return blind;
   }
+
+  /*
+    @brief Have the appropriate players pay the ante. If it is a big blind ante
+        and the amount the big blind can put in is not divisibly by the number
+        of players, then the change is counted towards the big blind's bet
+        total.
+  */
+  void PostAnte() {
+    if (big_blind_ante_) {
+      // Determine the effective_ante_
+      uint32_t bb_stack = stack_[PlayerIndex(2)];
+      uint32_t effective_ante_sum = std::min(bb_stack, ante_*kPlayers);
+      effective_ante_ = effective_ante_sum / kPlayers;
+
+      /* Mark the big blind's ante in their bet, and charge them for the antes
+         of all other players */
+      bets_[PlayerIndex(2)] += effective_ante_;
+      stack_[PlayerIndex(2)] -= effective_ante_sum;
+      pot_ += effective_ante_sum;
+
+      /* Assign any change in the ante amount as counting towards the big
+         blind's bet. */
+      bets_[PlayerIndex(2)] += effective_ante_sum % kPlayers;
+
+      // Mark the ante in the bet of all other players
+      for (uint8_t i = 0; i < kPlayers; ++i) {
+        if (i != PlayerIndex(2)) {
+          bets_[i] += effective_ante_;
+        }
+      }
+    } else {
+      effective_ante_ = ante_;
+      for (uint8_t i = 0; i < kPlayers; ++i) {
+        uint32_t affordable_ante = std::min(stack_[i], effective_ante_);
+        bets_[i] += affordable_ante;
+        stack_[i] -= affordable_ante;
+        pot_ += affordable_ante;
+      }
+    }
+  }  // PostAnte()
 
   /*
     @brief Fold the current acting player
@@ -394,11 +470,18 @@ class Node {
   }  // AwardPot()
 
   // Attributes
-  const uint8_t button_;             // index of player on the button
   const uint32_t big_blind_;         // how many chips the big blind is
   const uint32_t small_blind_;       // how many chips the small blind is
+  const uint32_t ante_;              /* how many chips each player must
+                                        contribute to the pot on each hand */
+  const bool big_blind_ante_;        /* true if the big blind pays the ante for
+                                        everyone in the game */
+  const bool blind_before_ante_;     /* true if the player should cover the
+                                        blind instead of the ante if they don't
+                                        have enough chips to pay both */
 
   // Progress information
+  uint8_t button_;                   // index of player on the button
   bool in_progress_{true};           /* true if a hand is in progress, false if
                                         the hand ended */
   Round round_{Round::kPreFlop};     // the current betting round
@@ -423,10 +506,13 @@ class Node {
   uint32_t min_raise_;               // the minimum bet amount
   uint32_t max_bet_;                 /* the maximum amount that has been bet so
                                         far */
+  uint32_t effective_ante_;          /* usually the same as ante_, except if
+                                        it is a big blind ante and the big blind
+                                        cannot post the full ante */
 
   // Card Information
-  uint8_t hands_[kPlayers][2];       // each player's hand
-  uint8_t board_[5];                 // the public board cards
+  uint8_t hands_[kPlayers][2];       // each player's hand, SKEval indexing
+  uint8_t board_[5];                 // the public board cards, SKEval indexing
 };  // Node
 
 }  // namespace poker_engine
