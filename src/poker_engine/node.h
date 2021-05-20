@@ -65,15 +65,49 @@ class Node {
          
          // Card Information
          hands_{0}, board_{0} {
+    NewHand(hands, board);
+  }  // Node()
+
+  /*
+    @brief Reset the state variables for the start of a new hand.
+
+    @param hands 2d array of each player's hand. Rows for each player, columns
+        for each card. i.e. row 2 column 0 is player 2's 0th card. If nullptr is
+        passed then each player get's an arbitrary hand.
+    @param board Array of the public board cards. Follows the standard order.
+        i.e. indexes [0,2] are the flop, index 3 is the turn, and index 4 is the
+        river. If nullptr is passed then the board is filled with arbitrary
+        cards.
+  */
+  void NewHand(uint8_t hands[kPlayers][2] = nullptr,
+               uint8_t board[5] = nullptr) {
+    if (in_progress_) return;
+
+    // Attributes are constants and don't need to be set
+
+    // Progress Information
+    button_ = (button_ + 1) % kPlayers;
+    in_progress_ = true;
+    round_ = Round::kPreFlop;
+    cycled_ = 0;
     acting_player_ = PlayerIndex(3);
-    
-    if (blind_before_ante_) PostAnte();
-    PostBlind(PlayerIndex(1), small_blind_);
-    PostBlind(PlayerIndex(2), big_blind_);
-    if (!blind_before_ante_) PostAnte();
+    pot_good_ = kPlayers;
+    no_raise_ = 0;
+    folded_ = std::fill(&folded_, &folded_ + kPlayers, false);
+    players_left_ = kPlayers;
 
-    max_bet_ = big_blind_ + effective_ante_;
+    // Chip Information
+    /* pot_ should already be zero from either the constructor or AwardPot() on
+       the previous hand */
+    /* bets_ should already be all zero from either the constructor or
+       AwardPot() on the previous hand */
+    /* stack_ should already set to the right amounts from either the
+       constructor or AwardPot() on the previous hand */
+    min_raise_ = big_blind_;
+    // max_bet_ will be set after the blinds and antes are posted
+    // effective_ante_ will be set when the antes are posted
 
+    // Card Information
     if (hands != nullptr) {
       std::copy(&hands, &hands + 2*kPlayers, hands_);
     } else {
@@ -82,7 +116,6 @@ class Node {
         hands_[i][1] = 2*i + 1;
       }
     }
-
     if (board != nullptr) {
       std::copy(&board, &board + 5, board_);
     } else {
@@ -92,8 +125,15 @@ class Node {
       }
     }
 
+    // Post Blinds and Antes
+    if (ante_ > 0 && blind_before_ante_) PostAntes();
+    PostBlind(PlayerIndex(1), small_blind_);
+    PostBlind(PlayerIndex(2), big_blind_);
+    if (ante_ > 0 && !blind_before_ante_) PostAntes();
+    max_bet_ = big_blind_ + effective_ante_;
+
     CyclePlayers(false);
-  }  // Node()
+  }  // NewHand()
 
   /*
     @brief Get the index of a player relative to the button where default
@@ -203,7 +243,7 @@ class Node {
         of players, then the change is counted towards the big blind's bet
         total.
   */
-  void PostAnte() {
+  void PostAntes() {
     if (big_blind_ante_) {
       // Determine the effective_ante_
       uint32_t bb_stack = stack_[PlayerIndex(2)];
@@ -235,7 +275,7 @@ class Node {
         pot_ += affordable_ante;
       }
     }
-  }  // PostAnte()
+  }  // PostAntes()
 
   /*
     @brief Fold the current acting player
