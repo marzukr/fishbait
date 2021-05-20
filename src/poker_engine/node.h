@@ -49,11 +49,23 @@ class Node {
        uint32_t ante = 0, bool big_blind_ante = false,
        bool blind_before_ante = true, uint32_t default_stack = 10000,
        uint8_t hands[kPlayers][2] = nullptr, uint8_t board[5] = nullptr)
-       : acting_player_{(button + 3) % kPlayers}, button_{button},
-         big_blind_{big_blind}, small_blind_{small_blind}, ante_{ante},
+
+         // Attributes
+       : big_blind_{big_blind}, small_blind_{small_blind}, ante_{ante},
          big_blind_ante_{big_blind_ante}, blind_before_ante_{blind_before_ante},
-         pot_{0}, bets_{0}, stack_{default_stack}, min_raise_{big_blind} {
-    // pot_, max_bet_
+
+         // Progress Information
+         button_{button}, in_progress_{true}, round_{Round::kPreFlop},
+         cycled_{0}, acting_player_{(button + 3) % kPlayers},
+         pot_good_{kPlayers}, no_raise_{0}, folded_{false},
+         players_left_{kPlayers},
+
+         // Chip Information
+         pot_{0}, bets_{0}, stack_{default_stack}, min_raise_{big_blind},
+         max_bet_{big_blind}, effective_ante_{ante},
+         
+         // Card Information
+         hands_{0}, board_{0} {
     if (blind_before_ante_) PostAnte();
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
@@ -78,6 +90,8 @@ class Node {
         board_[i] = first_deck_card + i;
       }
     }
+
+    CyclePlayers(false);
   }  // Node()
 
   /*
@@ -139,7 +153,6 @@ class Node {
   bool Apply(Move next) {
     if (!in_progress_) return in_progress_;
 
-    // Process the move
     switch (next.play) {
       case Action::kFold:
         Fold();
@@ -162,14 +175,7 @@ class Node {
         }
         break;
     }  // switch next.play
-
     CyclePlayers(true);
-
-    // The round has ended
-    if (pot_good_ + no_raise_ == 0) {
-      NextRound();
-    }
-
     return in_progress_;
   }  // Apply()
 
@@ -327,6 +333,11 @@ class Node {
       acting_player_ = (acting_player_ + 1) % kPlayers;
     } while (pot_good_ + no_raise_ > 0 &&
              (folded_[acting_player_] || stack_[acting_player_] == 0));
+
+    // The round has ended
+    if (pot_good_ + no_raise_ == 0) {
+      NextRound();
+    }
   }  // CyclePlayers()
 
   /*
@@ -482,22 +493,22 @@ class Node {
 
   // Progress information
   uint8_t button_;                   // index of player on the button
-  bool in_progress_{true};           /* true if a hand is in progress, false if
+  bool in_progress_;                 /* true if a hand is in progress, false if
                                         the hand ended */
-  Round round_{Round::kPreFlop};     // the current betting round
-  uint8_t cycled_{0};                /* how many players have been cycled
+  Round round_;                      // the current betting round
+  uint8_t cycled_;                   /* how many players have been cycled
                                         through on this betting round */
   uint8_t acting_player_;            // index of player whose turn it is
-  uint8_t pot_good_{kPlayers};       /* the number of players who still need to
+  uint8_t pot_good_;                 /* the number of players who still need to
                                         act before this round is over */
-  uint8_t no_raise_{0};              /* the number of players who still need to
+  uint8_t no_raise_;                 /* the number of players who still need to
                                         act, but can only call or fold because
                                         another player went all in less than the
                                         min-raise */
-  bool folded_[kPlayers] = {false};  /* true for each player that is folded,
+  bool folded_[kPlayers];            /* true for each player that is folded,
                                         false for each player still in the
                                         game */
-  uint8_t players_left_{kPlayers};   // the number of players who haven’t folded
+  uint8_t players_left_;             // the number of players who haven’t folded
 
   // Chip information
   uint32_t pot_;                     // how many chips are in the pot
