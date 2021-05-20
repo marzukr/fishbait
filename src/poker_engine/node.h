@@ -56,9 +56,8 @@ class Node {
 
          // Progress Information
          button_{button}, in_progress_{true}, round_{Round::kPreFlop},
-         cycled_{0}, acting_player_{(button + 3) % kPlayers},
-         pot_good_{kPlayers}, no_raise_{0}, folded_{false},
-         players_left_{kPlayers},
+         cycled_{0}, acting_player_{0}, pot_good_{kPlayers}, no_raise_{0},
+         folded_{false}, players_left_{kPlayers},
 
          // Chip Information
          pot_{0}, bets_{0}, stack_{default_stack}, min_raise_{big_blind},
@@ -66,6 +65,8 @@ class Node {
          
          // Card Information
          hands_{0}, board_{0} {
+    acting_player_ = PlayerIndex(3);
+    
     if (blind_before_ante_) PostAnte();
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
@@ -99,9 +100,11 @@ class Node {
         position is when the button is at index 0.
 
     @param default_position The default position of the player to get the index
-        of. Button is 0, small blind 1, big blind 2, etc.
+        of. Button is 0, small blind 1, big blind 2, etc. If it's heads up, 0
+        and 1 return the same index.
   */
   uint8_t PlayerIndex(uint8_t default_position) const {
+    if (kPlayers == 2 && default_position > 0) default_position -= 1; 
     return (button_ + default_position) % kPlayers;
   }
 
