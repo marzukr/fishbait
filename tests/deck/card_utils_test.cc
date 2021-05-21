@@ -59,3 +59,19 @@ TEST_CASE("ISOCardFromStr Test", "[hand_strengths][cardutils]") {
     REQUIRE(+deck::ISOCardFromStr(strings[i]) == +correct[i]);
   }
 }  // TEST_CASE "ISOCardFromStr Test"
+
+TEST_CASE("SKCardFromStr Test", "[hand_strengths][cardutils]") {
+  std::array<std::string, deck::kDeckSize> strings{"As", "Ah", "Ad", "Ac", "Ks",
+      "Kh", "Kd", "Kc", "Qs", "Qh", "Qd", "Qc", "Js", "Jh", "Jd", "Jc", "Ts",
+      "Th", "Td", "Tc", "9s", "9h", "9d", "9c", "8s", "8h", "8d", "8c", "7s",
+      "7h", "7d", "7c", "6s", "6h", "6d", "6c", "5s", "5h", "5d", "5c", "4s",
+      "4h", "4d", "4c", "3s", "3h", "3d", "3c", "2s", "2h", "2d", "2c"};
+  std::array<uint8_t, deck::kDeckSize> correct{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+      11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+      29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
+      47, 48, 49, 50, 51};
+
+  for (uint8_t i = 0; i < deck::kDeckSize; ++i) {
+    REQUIRE(+deck::SKCardFromStr(strings[i]) == +correct[i]);
+  }
+}  // TEST_CASE "SKCardFromStr Test"

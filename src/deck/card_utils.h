@@ -26,6 +26,8 @@ inline uint8_t ConvertISOtoSK(uint8_t iso_card) {
 
 uint8_t ISOCardFromStr(const std::string& card_str);
 
+uint8_t SKCardFromStr(const std::string& card_str);
+
 }  // namespace deck
 
 #endif  // SRC_DECK_CARD_UTILS_H_

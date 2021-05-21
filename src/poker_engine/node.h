@@ -55,16 +55,19 @@ class Node {
          big_blind_ante_{big_blind_ante}, blind_before_ante_{blind_before_ante},
 
          // Progress Information
-         button_{button}, in_progress_{true}, round_{Round::kPreFlop},
+         button_{button}, in_progress_{false}, round_{Round::kPreFlop},
          cycled_{0}, acting_player_{0}, pot_good_{kPlayers}, no_raise_{0},
-         folded_{false}, players_left_{kPlayers},
+         folded_{}, players_left_{kPlayers},
 
          // Chip Information
-         pot_{0}, bets_{0}, stack_{default_stack}, min_raise_{big_blind},
-         max_bet_{big_blind}, effective_ante_{ante},
-         
+         pot_{0}, bets_{}, stack_{}, min_raise_{big_blind}, max_bet_{big_blind},
+         effective_ante_{ante},
+
          // Card Information
-         hands_{0}, board_{0} {
+         hands_{}, board_{} {
+    button_ = button_ + kPlayers - 1; /* Since NewHand() increments the button
+                                         position. */
+    std::fill(stack_, stack_ + kPlayers, default_stack);
     NewHand(hands, board);
   }  // Node()
 
@@ -93,7 +96,7 @@ class Node {
     acting_player_ = PlayerIndex(3);
     pot_good_ = kPlayers;
     no_raise_ = 0;
-    folded_ = std::fill(&folded_, &folded_ + kPlayers, false);
+    std::fill(folded_, folded_ + kPlayers, false);
     players_left_ = kPlayers;
 
     // Chip Information
@@ -109,7 +112,7 @@ class Node {
 
     // Card Information
     if (hands != nullptr) {
-      std::copy(&hands, &hands + 2*kPlayers, hands_);
+      std::copy_n(&hands[0][0], 2*kPlayers, &hands_[0][0]);
     } else {
       for (uint8_t i = 0; i < kPlayers; ++i) {
         hands_[i][0] = 2*i;
@@ -117,7 +120,7 @@ class Node {
       }
     }
     if (board != nullptr) {
-      std::copy(&board, &board + 5, board_);
+      std::copy(board, board + 5, board_);
     } else {
       uint8_t first_deck_card = 2*kPlayers;
       for (uint8_t i = 0; i < 5; ++i) {
@@ -144,11 +147,9 @@ class Node {
         and 1 return the same index.
   */
   uint8_t PlayerIndex(uint8_t default_position) const {
-    if (kPlayers == 2 && default_position > 0) default_position -= 1; 
+    if (kPlayers == 2 && default_position > 0) default_position -= 1;
     return (button_ + default_position) % kPlayers;
   }
-
-  bool InProgress() const { return in_progress_; }
 
   /* 
     @brief How many times the betting has gone around on this betting round.
@@ -221,6 +222,44 @@ class Node {
     CyclePlayers(true);
     return in_progress_;
   }  // Apply()
+
+  /*
+    Attribute getter functions
+  */
+  uint32_t big_blind() const { return big_blind_; }
+  uint32_t small_blind() const { return small_blind_; }
+  uint32_t ante() const { return ante_; }
+  bool big_blind_ante() const { return big_blind_ante_; }
+  bool blind_before_ante() const { return blind_before_ante_; }
+
+  /*
+    Progress getter functions
+  */
+  uint8_t button() const { return button_; }
+  bool in_progress() const { return in_progress_; }
+  Round round() const { return round_; }
+  uint8_t cycled() const { return cycled_; }
+  uint8_t acting_player() const { return acting_player_; }
+  // no pot_good_ getter
+  // no no_raise_ getter
+  bool folded(uint8_t player) const { return folded_[player]; }
+  uint8_t players_left() const { return players_left_; }
+
+  /*
+    Chip information getter functions
+  */
+  uint32_t pot() const { return pot_; }
+  uint32_t bets(uint8_t player) const { return bets_[player]; }
+  uint32_t stack(uint8_t player) const { return stack_[player]; }
+  // no min_raise_ getter
+  // no max_bet_ getter
+  // no effective_ante_ getter
+
+  /*
+    Card information getter functions
+  */
+  // no hands_ getter
+  // no board_ getter
 
  private:
   /*
@@ -429,7 +468,7 @@ class Node {
     if (players_left_ == 1) {
       stack_[acting_player_] += pot_;
       pot_ = 0;
-      std::fill(&bets_, &bets_ + kPlayers, 0);
+      std::fill(bets_, bets_ + kPlayers, 0);
       return;
     }
 
@@ -448,7 +487,7 @@ class Node {
     utils::Random rng;
     std::uniform_int_distribution<uint8_t> random_player(0, kPlayers - 1);
     bool processed[kPlayers];
-    std::copy(&folded_, &folded_ + kPlayers, &processed);
+    std::copy(folded_, folded_ + kPlayers, processed);
     uint8_t players_to_award = players_left_;
 
     // Loop through each side pot and award it to the appropriate player(s)

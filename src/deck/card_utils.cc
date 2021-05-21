@@ -50,4 +50,44 @@ uint8_t ISOCardFromStr(const std::string& card_str) {
   return deck_make_card(suit, rank);
 }  // ISOCardFromStr()
 
+uint8_t SKCardFromStr(const std::string& card_str) {
+  uint32_t suit = 0;
+  if (card_str[1] == 'h') {
+    suit = 1;
+  } else if (card_str[1] == 'd') {
+    suit = 2;
+  } else if (card_str[1] == 'c') {
+    suit = 3;
+  }
+
+  uint32_t rank = 0;
+  if (card_str[0] == 'K') {
+    rank = 4;
+  } else if (card_str[0] == 'Q') {
+    rank = 8;
+  } else if (card_str[0] == 'J') {
+    rank = 12;
+  } else if (card_str[0] == 'T') {
+    rank = 16;
+  } else if (card_str[0] == '9') {
+    rank = 20;
+  } else if (card_str[0] == '8') {
+    rank = 24;
+  } else if (card_str[0] == '7') {
+    rank = 28;
+  } else if (card_str[0] == '6') {
+    rank = 32;
+  } else if (card_str[0] == '5') {
+    rank = 36;
+  } else if (card_str[0] == '4') {
+    rank = 40;
+  } else if (card_str[0] == '3') {
+    rank = 44;
+  } else if (card_str[0] == '2') {
+    rank = 48;
+  }
+
+  return suit + rank;
+}  // SKCardFromStr()
+
 }  // namespace deck
