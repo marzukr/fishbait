@@ -57,7 +57,7 @@ class Node {
          // Progress Information
          button_{button}, in_progress_{false}, round_{Round::kPreFlop},
          cycled_{0}, acting_player_{0}, pot_good_{kPlayers}, no_raise_{0},
-         folded_{}, players_left_{kPlayers},
+         folded_{}, players_left_{kPlayers}, players_all_in_{0},
 
          // Chip Information
          pot_{0}, bets_{}, stack_{}, min_raise_{big_blind}, max_bet_{big_blind},
@@ -98,6 +98,7 @@ class Node {
     no_raise_ = 0;
     std::fill(folded_, folded_ + kPlayers, false);
     players_left_ = kPlayers;
+    players_all_in_ = 0;
 
     // Chip Information
     /* pot_ should already be zero from either the constructor or AwardPot() on
@@ -129,10 +130,10 @@ class Node {
     }
 
     // Post Blinds and Antes
-    if (ante_ > 0 && blind_before_ante_) PostAntes();
+    if (ante_ > 0 && !blind_before_ante_) PostAntes();
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
-    if (ante_ > 0 && !blind_before_ante_) PostAntes();
+    if (ante_ > 0 && blind_before_ante_) PostAntes();
     max_bet_ = big_blind_ + effective_ante_;
 
     CyclePlayers(false);
@@ -244,6 +245,7 @@ class Node {
   // no no_raise_ getter
   bool folded(uint8_t player) const { return folded_[player]; }
   uint8_t players_left() const { return players_left_; }
+  uint8_t players_all_in() const { return players_all_in_; }
 
   /*
     Chip information getter functions
@@ -273,6 +275,7 @@ class Node {
     bets_[player] += blind;
     stack_[player] -= blind;
     pot_ += blind;
+    if (stack_[player] == 0) players_all_in_ += 1;
     return blind;
   }
 
@@ -294,6 +297,7 @@ class Node {
       bets_[PlayerIndex(2)] += effective_ante_;
       stack_[PlayerIndex(2)] -= effective_ante_sum;
       pot_ += effective_ante_sum;
+      if (stack_[PlayerIndex(2)] == 0) players_all_in_ += 1;
 
       /* Assign any change in the ante amount as counting towards the big
          blind's bet. */
@@ -312,6 +316,7 @@ class Node {
         bets_[i] += affordable_ante;
         stack_[i] -= affordable_ante;
         pot_ += affordable_ante;
+        if (stack_[i] == 0) players_all_in_ += 1;
       }
     }
   }  // PostAntes()
@@ -354,6 +359,7 @@ class Node {
     pot_ += chips;
     stack_[acting_player_] -= chips;
     bets_[acting_player_] += chips;
+    players_all_in_ += 1;
   }  // AllIn()
 
   /*
@@ -432,6 +438,12 @@ class Node {
         AwardPot();
         in_progress_ = false;
         return;
+
+    /* If all players are all in, then we can skip to the showdown. If all but
+       one player is all in, we can also skip to showdown because that player
+       can no longer take any actions. */
+    } else if (players_left_ - players_all_in_ <= 1) {
+      round_ = Round::kRiver;
     }
 
     switch (round_) {
@@ -591,6 +603,7 @@ class Node {
                                         false for each player still in the
                                         game */
   uint8_t players_left_;             // the number of players who haven’t folded
+  uint8_t players_all_in_;           // the number of players who are all in
 
   // Chip information
   uint32_t pot_;                     // how many chips are in the pot
