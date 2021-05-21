@@ -6,14 +6,14 @@ add_library(
   ochs.h
   )
 target_link_libraries(hand_strengths handisomorphism deck)
+coverage_counter_zero(hand_strengths)
 
-add_executable(hand_strengths.out main.cc)
+add_executable(hand_strengths.out main.cc
+               ${CMAKE_BINARY_DIR}/out/hand_strengths)
 target_link_libraries(hand_strengths.out hand_strengths deck)
+coverage_counter_zero(hand_strengths.out)
 
-add_custom_target(hand_strengths_directory ALL
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/out/hand_strengths
   COMMAND ${CMAKE_COMMAND} -E make_directory
           ${CMAKE_BINARY_DIR}/out/hand_strengths
   )
-set_target_properties(hand_strengths.out PROPERTIES ADDITIONAL_CLEAN_FILES
-                      ${CMAKE_BINARY_DIR}/out/hand_strengths/)
-add_dependencies(hand_strengths.out hand_strengths_directory)
