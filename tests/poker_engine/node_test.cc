@@ -23,14 +23,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
 
   // Construct the initial Node
   auto Card = deck::SKCardFromStr;
-  uint8_t cards0[8][2] = {{/*     Loeliger     */}, {/*      Cates       */},
-                          {Card("Qh"), Card("Js")}, {Card("Td"), Card("5s")},
-                          {Card("Kc"), Card("8h")}, {Card("Jc"), Card("7h")},
-                          {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}};
-  uint8_t board0[5] = {Card("8c"), Card("6c"), Card("Ks"), Card("5c"),
-                       Card("4d")};
-  poker_engine::Node<8> triton(0, 4000, 2000, 500, true, true, 500000, 0,
-                               cards0, board0);
+  poker_engine::Node<8> triton(0, 4000, 2000, 500, true, true, 500000, 0);
 
   // Verify that the constructor worked correctly
   REQUIRE(triton.big_blind() == 4000);
@@ -258,9 +251,17 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.folded(6) == true);
   REQUIRE(triton.players_left() == 1);
-  REQUIRE(triton.pot() == 0);
-  REQUIRE(triton.bets(6) == 0);
+  REQUIRE(triton.pot() == 196000);
+  REQUIRE(triton.bets(6) == 40500);
   REQUIRE(triton.stack(6) == 460000);
+
+  uint8_t cards0[8][2] = {{/*     Loeliger     */}, {/*      Cates       */},
+                          {Card("Qh"), Card("Js")}, {Card("Td"), Card("5s")},
+                          {Card("Kc"), Card("8h")}, {Card("Jc"), Card("7h")},
+                          {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}};
+  uint8_t board0[5] = {Card("8c"), Card("6c"), Card("Ks"), Card("5c"),
+                       Card("4d")};
+  triton.AwardPot(cards0, board0);
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 2 --------------------------------- */
@@ -276,12 +277,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
     7. Badziakouski
   */
 
-  uint8_t cards1[8][2] = {{Card("Qd"), Card("6c")}, {Card("Ah"), Card("8d")},
-                          {/*     Kuznetsov    */}, {Card("8c"), Card("6h")},
-                          {Card("Kc"), Card("4s")}, {Card("7c"), Card("6s")},
-                          {Card("7s"), Card("3s")}, {Card("Tc"), Card("8h")}};
-  uint8_t board1[5] = {/*Flop1*/ /*Flop2*/ /*Flop3*/ /*Turn*/ /*River*/};
-  triton.NewHand(cards1, board1);
+  triton.NewHand();
 
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
@@ -399,9 +395,16 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(3) == true);
   REQUIRE(triton.players_left() == 1);
-  REQUIRE(triton.pot() == 0);
-  REQUIRE(triton.bets(3) == 0);
+  REQUIRE(triton.pot() == 22000);
+  REQUIRE(triton.bets(3) == 4500);
   REQUIRE(triton.stack(3) == 492000);
+
+  uint8_t cards1[8][2] = {{Card("Qd"), Card("6c")}, {Card("Ah"), Card("8d")},
+                          {/*     Kuznetsov    */}, {Card("8c"), Card("6h")},
+                          {Card("Kc"), Card("4s")}, {Card("7c"), Card("6s")},
+                          {Card("7s"), Card("3s")}, {Card("Tc"), Card("8h")}};
+  uint8_t board1[5] = {/*Flop1*/ /*Flop2*/ /*Flop3*/ /*Turn*/ /*River*/};
+  triton.AwardPot(cards1, board1);
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 3 --------------------------------- */
@@ -417,12 +420,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
     7. Badziakouski
   */
 
-  uint8_t cards2[8][2] = {{Card("Kc"), Card("Th")}, {Card("Ah"), Card("9d")},
-                          {Card("As"), Card("5d")}, {Card("4h"), Card("2d")},
-                          {Card("Qd"), Card("8h")}, {Card("Tc"), Card("4s")},
-                          {Card("5s"), Card("4d")}, {Card("9c"), Card("3d")}};
-  uint8_t board2[5] = {Card("Kd"), Card("3s"), Card("7d") /*Turn*/ /*River*/};
-  triton.NewHand(cards2, board2);
+  triton.NewHand();
 
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
@@ -585,18 +583,38 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(4) == true);
   REQUIRE(triton.players_left() == 1);
+  REQUIRE(triton.pot() == 40000);
+
+  // uint8_t cards2[8][2] =
+  //     {{Card("Kc"), Card("Th")}, {Card("Ah"), Card("9d")},
+  //      {Card("As"), Card("5d")}, {Card("4h"), Card("2d")},
+  //      {Card("Qd"), Card("8h")}, {Card("Tc"), Card("4s")},
+  //      {Card("5s"), Card("4d")}, {Card("9c"), Card("3d")}};
+  // uint8_t board2[5] = {Card("Kd"), Card("3s"), Card("7d") /*Turn*/
+  //                      /*River*/};
+  triton.AwardPot();
   REQUIRE(triton.pot() == 0);
+  REQUIRE(triton.bets(0) == 0);
+  REQUIRE(triton.stack(0) == 500000);
+  REQUIRE(triton.bets(1) == 0);
+  REQUIRE(triton.stack(1) == 526000);
+  REQUIRE(triton.bets(2) == 0);
+  REQUIRE(triton.stack(2) == 484000);
+  REQUIRE(triton.bets(3) == 0);
+  REQUIRE(triton.stack(3) == 490000);
   REQUIRE(triton.bets(4) == 0);
   REQUIRE(triton.stack(4) == 484000);
+  REQUIRE(triton.bets(5) == 0);
+  REQUIRE(triton.stack(5) == 556000);
+  REQUIRE(triton.bets(6) == 0);
+  REQUIRE(triton.stack(6) == 460000);
+  REQUIRE(triton.bets(7) == 0);
+  REQUIRE(triton.stack(7) == 500000);
 }  // TEST_CASE "Triton cash game first 3 hands"
 
 TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   auto Card = deck::SKCardFromStr;
-  uint8_t cards0[2][2] = {{Card("7c"), Card("2h")}, {Card("Ah"), Card("As")}};
-  uint8_t board0[5] = {Card("9c"), Card("6c"), Card("Ks"), Card("5c"),
-                       Card("4d")};
-  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, true, 100, 0, cards0,
-                                 board0);
+  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, true, 100, 0);
 
   // Verify that the constructor worked correctly
   REQUIRE(heads_up.big_blind() == 4);
@@ -659,6 +677,11 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
 
+  uint8_t cards0[2][2] = {{Card("7c"), Card("2h")}, {Card("Ah"), Card("As")}};
+  uint8_t board0[5] = {Card("9c"), Card("6c"), Card("Ks"), Card("5c"),
+                       Card("4d")};
+  heads_up.AwardPot(cards0, board0);
+
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
   REQUIRE(heads_up.bets(0) == 0);
@@ -670,10 +693,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   /* ------------------------------- Hand 2 --------------------------------- */
   /* ------------------------------------------------------------------------ */
 
-  uint8_t cards1[8][2] = {{Card("5s"), Card("4s")}, {Card("Kh"), Card("Th")}};
-  uint8_t board1[5] = {Card("7h"), Card("Ah"), Card("3c"), Card("7s"),
-                       Card("6c")};
-  heads_up.NewHand(cards1, board1);
+  heads_up.NewHand();
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
@@ -693,6 +713,11 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
 
+  uint8_t cards1[8][2] = {{Card("5s"), Card("4s")}, {Card("Kh"), Card("Th")}};
+  uint8_t board1[5] = {Card("7h"), Card("Ah"), Card("3c"), Card("7s"),
+                       Card("6c")};
+  heads_up.AwardPot(cards1, board1);
+
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
   REQUIRE(heads_up.bets(0) == 0);
@@ -704,10 +729,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   /* ------------------------------- Hand 3 --------------------------------- */
   /* ------------------------------------------------------------------------ */
 
-  uint8_t cards2[8][2] = {{Card("8h"), Card("8c")}, {Card("5d"), Card("5c")}};
-  uint8_t board2[5] = {Card("9d"), Card("6h"), Card("7c"), Card("Td"),
-                       Card("Kh")};
-  heads_up.NewHand(cards2, board2);
+  heads_up.NewHand();
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
@@ -747,6 +769,11 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
 
+  uint8_t cards2[8][2] = {{Card("8h"), Card("8c")}, {Card("5d"), Card("5c")}};
+  uint8_t board2[5] = {Card("9d"), Card("6h"), Card("7c"), Card("Td"),
+                       Card("Kh")};
+  heads_up.AwardPot(cards2, board2);
+
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
   REQUIRE(heads_up.bets(0) == 0);
@@ -757,11 +784,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
 
 TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   auto Card = deck::SKCardFromStr;
-  uint8_t cards0[2][2] = {{Card("6d"), Card("6c")}, {Card("Qc"), Card("Jd")}};
-  uint8_t board0[5] = {Card("7h"), Card("4s"), Card("Js"), Card("Th"),
-                       Card("Ad")};
-  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, false, 100, 0, cards0,
-                                 board0);
+  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, false, 100, 0);
 
   // Verify that the constructor worked correctly
   REQUIRE(heads_up.big_blind() == 4);
@@ -813,6 +836,11 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
 
+  uint8_t cards0[2][2] = {{Card("6d"), Card("6c")}, {Card("Qc"), Card("Jd")}};
+  uint8_t board0[5] = {Card("7h"), Card("4s"), Card("Js"), Card("Th"),
+                       Card("Ad")};
+  heads_up.AwardPot(cards0, board0);
+
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
   REQUIRE(heads_up.bets(0) == 0);
@@ -820,14 +848,11 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(0) == 4);
   REQUIRE(heads_up.stack(1) == 196);
 
-  // /* ------------------------------------------------------------------------ */
-  // /* ------------------------------- Hand 2 --------------------------------- */
-  // /* ------------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------------ */
+  /* ------------------------------- Hand 2 --------------------------------- */
+  /* ------------------------------------------------------------------------ */
 
-  uint8_t cards1[8][2] = {{Card("Ah"), Card("Kd")}, {Card("Qc"), Card("Qh")}};
-  uint8_t board1[5] = {Card("3h"), Card("6c"), Card("9c"), Card("9d"),
-                       Card("Ad")};
-  heads_up.NewHand(cards1, board1);
+  heads_up.NewHand();
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
@@ -847,6 +872,11 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
 
+  uint8_t cards1[8][2] = {{Card("Ah"), Card("Kd")}, {Card("Qc"), Card("Qh")}};
+  uint8_t board1[5] = {Card("3h"), Card("6c"), Card("9c"), Card("9d"),
+                       Card("Ad")};
+  heads_up.AwardPot(cards1, board1);
+
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
   REQUIRE(heads_up.bets(0) == 0);
@@ -854,14 +884,11 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(0) == 4);
   REQUIRE(heads_up.stack(1) == 196);
 
-  // /* ------------------------------------------------------------------------ */
-  // /* ------------------------------- Hand 3 --------------------------------- */
-  // /* ------------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------------ */
+  /* ------------------------------- Hand 3 --------------------------------- */
+  /* ------------------------------------------------------------------------ */
 
-  uint8_t cards2[8][2] = {{Card("Qc"), Card("Qh")}, {Card("8s"), Card("8d")}};
-  uint8_t board2[5] = {Card("3d"), Card("Ac"), Card("Kh"), Card("3h"),
-                       Card("2h")};
-  heads_up.NewHand(cards2, board2);
+  heads_up.NewHand();
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
@@ -902,6 +929,11 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
+
+  uint8_t cards2[8][2] = {{Card("Qc"), Card("Qh")}, {Card("8s"), Card("8d")}};
+  uint8_t board2[5] = {Card("3d"), Card("Ac"), Card("Kh"), Card("3h"),
+                       Card("2h")};
+  heads_up.AwardPot(cards2, board2);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
