@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <optional>
 #include <random>
+#include <stdexcept>
+#include <string>
 
 #include "SKPokerEval/src/SevenEval.h"
 #include "utils/random.h"
@@ -68,9 +70,12 @@ class Node {
     @param straddles The number of players straddling on this hand.
   */
   void NewHand(uint8_t straddles = 0) {
-    /* If the pot isn't 0, this means AwardPot() hasn't been called yet. The
-       last pot must be awarded before a new hand starts. */
-    if (pot_ != 0) return;
+    if (pot_ != 0) {
+      throw std::logic_error("NewHand() called when pot is not empty. If the "
+                             "pot isn't 0, this means AwardPot() hasn't been "
+                             "called yet. The last pot must be awarded before "
+                             "a new hand starts.");
+    }
 
     // Attributes are constants and don't need to be set
 
@@ -157,16 +162,18 @@ class Node {
   }  // CanBet()
 
   /*
-    @brief Apply the given move to this Node object.
+    @brief Apply the given move to this Node object. Must only be called when
+        the game is in progress.
 
-    @param next The Move to apply to this Node. If the move is invalid, the
-        acting_player_ is folded.
+    @param next The Move to apply to this Node.
 
     @return True if the game is still in progress after this move, false if this
         move has ended the game.
   */
   bool Apply(Move next) {
-    if (!in_progress_) return in_progress_;
+    if (!in_progress_) {
+      throw std::logic_error("Apply() called when a game is not in progress.");
+    }
 
     switch (next.play) {
       case Action::kFold:
@@ -179,14 +186,17 @@ class Node {
         if (CanCheckCall()) {
           CheckCall();
         } else {
-          Fold();
+          throw std::invalid_argument("Check/Call is not a valid move for the "
+                                      "current acting player.");
         }
         break;
       case Action::kBet:
         if (CanBet(next.size)) {
           Bet(next.size);
         } else {
-          Fold();
+          std::string err = "Betting " + std::to_string(next.size) + " is not "
+                            "a valid move for the current acting player.";
+          throw std::invalid_argument(err);
         }
         break;
     }  // switch next.play
@@ -197,7 +207,9 @@ class Node {
   /*
     @brief Allocate the pot to the winner(s) at the end of a hand. After
         calling, pot will be 0, all bets will be 0, and the winner(s)'s stack
-        will have increased by the appropriate amount.
+        will have increased by the appropriate amount. Must only be called when
+        the game is no longer in progress and AwardPot() hasn't already been
+        called for the current hand.
     
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
@@ -211,10 +223,15 @@ class Node {
   */
   void AwardPot(uint8_t hands[kPlayers][2] = nullptr,
                 uint8_t board[5] = nullptr) {
-    /* If the game is still in progress, we cannot award the pot yet. If the pot
-       is 0, this means we already awarded the pot for this hand and we can't do
-       it again. */
-    if (in_progress_ || pot_ == 0) return;
+    if (in_progress_) {
+      throw std::logic_error("AwardPot() called when the game is still in "
+                             "progress. If the game is still in progress, we "
+                             "cannot award the pot yet.");
+    } else if (pot_ == 0) {
+      throw std::logic_error("AwardPot() called when the pot is 0. If the pot "
+                             "is 0, this means we already awarded the pot for "
+                             "this hand and we can't do it again.");
+    }
 
     /* If everyone else has folded, the current acting_player_ is the singular
        winner. */
@@ -223,11 +240,13 @@ class Node {
       pot_ = 0;
       std::fill(bets_, bets_ + kPlayers, 0);
       return;
-
-    /* If not everyone has folded, we need hand and card information to award
-       the pot */
     } else if (hands == nullptr || board == nullptr) {
-      return;
+      throw std::invalid_argument("AwardPot() called with hands = nullptr or "
+                                  "board = nullptr when there is more than 1 "
+                                  "player remaining in the game. If there is "
+                                  "more than 1 player who has not folded, we "
+                                  "need hand and card information to award the "
+                                  "pot");
     }
 
     /* If not everyone has folded, we must conduct a showdown. First, we
