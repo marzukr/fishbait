@@ -63,7 +63,6 @@ class Node {
 
          // Chip Information
          pot_{0}, bets_{}, stack_{}, min_raise_{big_blind}, max_bet_{big_blind},
-         effective_ante_{ante},
 
          // Card Information
          hands_{}, board_{} {
@@ -112,7 +111,6 @@ class Node {
        constructor or AwardPot() on the previous hand */
     // min_raise_ will be set after the straddle is posted
     // max_bet_ will be set after the blinds and antes are posted
-    // effective_ante_ will be set when the antes are posted
 
     // Card Information
     if (hands != nullptr) {
@@ -133,13 +131,14 @@ class Node {
     }
 
     // Post Blinds, Antes, and Straddles
-    if (ante_ > 0 && !blind_before_ante_) PostAntes();
+    uint32_t effective_ante = ante_;
+    if (ante_ > 0 && !blind_before_ante_) effective_ante = PostAntes();
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
-    if (ante_ > 0 && blind_before_ante_) PostAntes();
+    if (ante_ > 0 && blind_before_ante_) effective_ante = PostAntes();
     uint32_t effective_blind = PostStraddles(straddles);
     min_raise_ = effective_blind;
-    max_bet_ = effective_blind + effective_ante_;
+    max_bet_ = effective_blind + effective_ante;
 
     CyclePlayers(false);
   }  // NewHand()
@@ -260,7 +259,6 @@ class Node {
   uint32_t stack(uint8_t player) const { return stack_[player]; }
   // no min_raise_ getter
   // no max_bet_ getter
-  // no effective_ante_ getter
 
   /*
     Card information getter functions
@@ -290,17 +288,21 @@ class Node {
         and the amount the big blind can put in is not divisibly by the number
         of players, then the change is counted towards the big blind's bet
         total. Does not change max_bet_ or min_raise_.
+
+    @returns The effective ante (can be less than the mandated ante if a player
+        must go all in to pay it).
   */
-  void PostAntes() {
+  uint32_t PostAntes() {
+    uint32_t effective_ante = ante_;
     if (big_blind_ante_) {
-      // Determine the effective_ante_
+      // Determine the effective ante
       uint32_t bb_stack = stack_[PlayerIndex(2)];
       uint32_t effective_ante_sum = std::min(bb_stack, ante_*kPlayers);
-      effective_ante_ = effective_ante_sum / kPlayers;
+      effective_ante = effective_ante_sum / kPlayers;
 
       /* Mark the big blind's ante in their bet, and charge them for the antes
          of all other players */
-      bets_[PlayerIndex(2)] += effective_ante_;
+      bets_[PlayerIndex(2)] += effective_ante;
       stack_[PlayerIndex(2)] -= effective_ante_sum;
       pot_ += effective_ante_sum;
       if (stack_[PlayerIndex(2)] == 0) players_all_in_ += 1;
@@ -312,19 +314,15 @@ class Node {
       // Mark the ante in the bet of all other players
       for (uint8_t i = 0; i < kPlayers; ++i) {
         if (i != PlayerIndex(2)) {
-          bets_[i] += effective_ante_;
+          bets_[i] += effective_ante;
         }
       }
     } else {
-      effective_ante_ = ante_;
       for (uint8_t i = 0; i < kPlayers; ++i) {
-        uint32_t affordable_ante = std::min(stack_[i], effective_ante_);
-        bets_[i] += affordable_ante;
-        stack_[i] -= affordable_ante;
-        pot_ += affordable_ante;
-        if (stack_[i] == 0) players_all_in_ += 1;
+        PostBlind(i, effective_ante);
       }
     }
+    return effective_ante;
   }  // PostAntes()
 
   /*
@@ -642,9 +640,6 @@ class Node {
   uint32_t min_raise_;               // the minimum bet amount
   uint32_t max_bet_;                 /* the maximum amount that has been bet so
                                         far */
-  uint32_t effective_ante_;          /* usually the same as ante_, except if
-                                        it is a big blind ante and the big blind
-                                        cannot post the full ante */
 
   // Card Information
   uint8_t hands_[kPlayers][2];       // each player's hand, SKEval indexing
