@@ -37,6 +37,7 @@ class Node {
     @param ante How many chips each player pays as an ante each hand.
     @param big_blind_ante If the big blind pays the ante for all players
     @param default_stack How many chips each player starts with.
+    @param straddles The number of players straddling on the first hand.
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. If nullptr is
         passed then each player get's an arbitrary hand.
@@ -48,7 +49,8 @@ class Node {
   Node(uint8_t button = 0, uint32_t big_blind = 100, uint32_t small_blind = 50,
        uint32_t ante = 0, bool big_blind_ante = false,
        bool blind_before_ante = true, uint32_t default_stack = 10000,
-       uint8_t hands[kPlayers][2] = nullptr, uint8_t board[5] = nullptr)
+       uint8_t straddles = 0, uint8_t hands[kPlayers][2] = nullptr,
+       uint8_t board[5] = nullptr)
 
          // Attributes
        : big_blind_{big_blind}, small_blind_{small_blind}, ante_{ante},
@@ -68,7 +70,7 @@ class Node {
     button_ = button_ + kPlayers - 1; /* Since NewHand() increments the button
                                          position. */
     std::fill(stack_, stack_ + kPlayers, default_stack);
-    NewHand(hands, board);
+    NewHand(hands, board, straddles);
   }  // Node()
 
   /*
@@ -81,9 +83,10 @@ class Node {
         i.e. indexes [0,2] are the flop, index 3 is the turn, and index 4 is the
         river. If nullptr is passed then the board is filled with arbitrary
         cards.
+    @param straddles The number of players straddling on this hand.
   */
   void NewHand(uint8_t hands[kPlayers][2] = nullptr,
-               uint8_t board[5] = nullptr) {
+               uint8_t board[5] = nullptr, uint8_t straddles = 0) {
     if (in_progress_) return;
 
     // Attributes are constants and don't need to be set
@@ -107,7 +110,7 @@ class Node {
        AwardPot() on the previous hand */
     /* stack_ should already set to the right amounts from either the
        constructor or AwardPot() on the previous hand */
-    min_raise_ = big_blind_;
+    // min_raise_ will be set after the straddle is posted
     // max_bet_ will be set after the blinds and antes are posted
     // effective_ante_ will be set when the antes are posted
 
@@ -129,12 +132,14 @@ class Node {
       }
     }
 
-    // Post Blinds and Antes
+    // Post Blinds, Antes, and Straddles
     if (ante_ > 0 && !blind_before_ante_) PostAntes();
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
     if (ante_ > 0 && blind_before_ante_) PostAntes();
-    max_bet_ = big_blind_ + effective_ante_;
+    uint32_t effective_blind = PostStraddles(straddles);
+    min_raise_ = effective_blind;
+    max_bet_ = effective_blind + effective_ante_;
 
     CyclePlayers(false);
   }  // NewHand()
@@ -266,9 +271,10 @@ class Node {
  private:
   /*
     @brief Make the given player post the given blind. If the player doesn't
-        have enough chips to post the blind, the player goes all in.
+        have enough chips to post the blind, the player goes all in. Does not
+        change max_bet_ or min_raise_.
         
-    @returns The actual size of the blind posted.
+    @return The actual size of the blind posted.
   */
   uint32_t PostBlind(uint8_t player, uint32_t size) {
     uint32_t blind = std::min(size, stack_[player]);
@@ -283,7 +289,7 @@ class Node {
     @brief Have the appropriate players pay the ante. If it is a big blind ante
         and the amount the big blind can put in is not divisibly by the number
         of players, then the change is counted towards the big blind's bet
-        total.
+        total. Does not change max_bet_ or min_raise_.
   */
   void PostAntes() {
     if (big_blind_ante_) {
@@ -320,6 +326,30 @@ class Node {
       }
     }
   }  // PostAntes()
+
+  /*
+    @brief Have the appropriate players straddle. If a player does not have
+        enough chips to straddle the appropriate amount, they do not straddle
+        and no players behind them can straddle either. Does not change max_bet_
+        or min_raise_.
+    
+    @return The largest amount straddled. If no player straddles, returns the
+        big blind. 
+  */
+  uint32_t PostStraddles(uint8_t n) {
+    uint32_t max_straddle_size = big_blind_;
+    for (uint8_t i = 0; i < n; ++i) {
+      uint8_t player = PlayerIndex(3 + i);
+      uint32_t straddle_size = big_blind_ * (1 << (i + 1));
+      if (straddle_size < stack_[player]) {
+        break;
+      } else {
+        PostBlind(player, straddle_size);
+        max_straddle_size = std::max(straddle_size, max_straddle_size);
+      }
+    }  // for i
+    return max_straddle_size;
+  }
 
   /*
     @brief Fold the current acting player

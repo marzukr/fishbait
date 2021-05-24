@@ -29,8 +29,8 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
                           {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}};
   uint8_t board0[5] = {Card("8c"), Card("6c"), Card("Ks"), Card("5c"),
                        Card("4d")};
-  poker_engine::Node<8> triton(0, 4000, 2000, 500, true, true, 500000, cards0,
-                               board0);
+  poker_engine::Node<8> triton(0, 4000, 2000, 500, true, true, 500000, 0,
+                               cards0, board0);
 
   // Verify that the constructor worked correctly
   REQUIRE(triton.big_blind() == 4000);
@@ -595,7 +595,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   uint8_t cards0[2][2] = {{Card("7c"), Card("2h")}, {Card("Ah"), Card("As")}};
   uint8_t board0[5] = {Card("9c"), Card("6c"), Card("Ks"), Card("5c"),
                        Card("4d")};
-  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, true, 100, cards0,
+  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, true, 100, 0, cards0,
                                  board0);
 
   // Verify that the constructor worked correctly
@@ -760,7 +760,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   uint8_t cards0[2][2] = {{Card("6d"), Card("6c")}, {Card("Qc"), Card("Jd")}};
   uint8_t board0[5] = {Card("7h"), Card("4s"), Card("Js"), Card("Th"),
                        Card("Ad")};
-  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, false, 100, cards0,
+  poker_engine::Node<2> heads_up(0, 4, 2, 2, true, false, 100, 0, cards0,
                                  board0);
 
   // Verify that the constructor worked correctly
