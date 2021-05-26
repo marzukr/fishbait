@@ -3,9 +3,8 @@
 #ifndef SRC_UTILS_COMBINATION_MATRIX_H_
 #define SRC_UTILS_COMBINATION_MATRIX_H_
 
-#include <stdint.h>
-
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 

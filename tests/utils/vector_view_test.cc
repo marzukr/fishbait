@@ -1,8 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <stdint.h>
-
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <vector>
 

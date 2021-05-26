@@ -1,7 +1,6 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <vector>
 
 #include "catch2/catch.hpp"

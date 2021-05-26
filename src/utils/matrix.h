@@ -3,10 +3,9 @@
 #ifndef SRC_UTILS_MATRIX_H_
 #define SRC_UTILS_MATRIX_H_
 
-#include <stdint.h>
-
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <iterator>

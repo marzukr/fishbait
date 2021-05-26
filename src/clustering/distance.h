@@ -3,10 +3,9 @@
 #ifndef SRC_CLUSTERING_DISTANCE_H_
 #define SRC_CLUSTERING_DISTANCE_H_
 
-#include <stdint.h>
-
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <functional>
 #include <numeric>
 

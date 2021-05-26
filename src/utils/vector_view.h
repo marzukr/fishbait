@@ -3,10 +3,9 @@
 #ifndef SRC_UTILS_VECTOR_VIEW_H_
 #define SRC_UTILS_VECTOR_VIEW_H_
 
-#include <stdint.h>
-
 #include <array>
 #include <cassert>
+#include <cstdint>
 #include <initializer_list>
 #include <ostream>
 #include <vector>
