@@ -18,6 +18,9 @@ class LoopIterator {
 
   explicit LoopIterator(T init) : value(init) {}
 
+  LoopIterator(const LoopIterator& other) = default;
+  LoopIterator& operator=(const LoopIterator& other) = default;
+
   // prefix increment
   LoopIterator<T>& operator++() {
     ++value;

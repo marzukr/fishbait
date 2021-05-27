@@ -13,6 +13,8 @@ class Random {
    public:
     Seed() : seed_(GenerateSeed()) {}
     explicit Seed(const uint32_t seed) : seed_(seed) {}
+    Seed(const Seed& other) = default;
+    Seed& operator=(const Seed& other) = default;
     uint32_t operator()() {
       return seed_;
     }
@@ -26,6 +28,8 @@ class Random {
 
   Random() : rng_(Seed::GenerateSeed()) {}
   explicit Random(Seed seed) : rng_(seed()) {}
+  Random(const Random& other) = default;
+  Random& operator=(const Random& other) = default;
   std::mt19937& operator()() {
     return rng_;
   }

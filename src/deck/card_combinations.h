@@ -23,6 +23,9 @@ class CardCombinations {
     Reset(exclude, true);
   }
 
+  CardCombinations(const CardCombinations& other) = default;
+  CardCombinations& operator=(const CardCombinations& other) = default;
+
   /* Reset the card combination generator and exclude the given cards.
      Constructor should only be true if this function is being called from the
      constructor. */

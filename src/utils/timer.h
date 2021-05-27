@@ -13,6 +13,11 @@ class Timer {
  public:
   Timer() : start_(std::chrono::high_resolution_clock::now()) {}
 
+  Timer(const Timer& other) = default;
+  Timer& operator=(const Timer& other) = default;
+  Timer(Timer&&) = delete;
+  Timer& operator=(Timer&&) = delete;
+
   int64_t StopAndReset() {
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;

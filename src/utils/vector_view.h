@@ -21,7 +21,9 @@ class VectorView {
   template <std::size_t kN>
   explicit VectorView(const std::array<T, kN>& a) : start_(a.begin()),
                                                     n_(a.size()) {}
-  ~VectorView() {}
+
+  VectorView<T>(const VectorView<T>& other) = default;
+  VectorView<T>& operator=(const VectorView<T>& other) = default;
 
   const T operator()(uint32_t i) const {
     assert(i < n_);
@@ -74,19 +76,6 @@ class VectorView {
   const T* const start_;
   const uint32_t n_;
 };  // VectorView
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const VectorView<T>& v) {
-  os << "[";
-  for (uint32_t i = 0; i < v.n(); ++i) {
-    os << +v(i);
-    if (i < v.n() - 1) {
-      os << ", ";
-    }
-  }
-  os << "]";
-  return os;
-}
 
 }  // namespace utils
 

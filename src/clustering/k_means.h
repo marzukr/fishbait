@@ -29,10 +29,16 @@ template <typename T, template<class, class> class Distance>
 class KMeans {
  public:
   explicit KMeans(uint32_t k)
-      : k_(k), clusters_(nullptr), assignments_(nullptr), loss_(INFINITY) {}
+      : k_{k}, clusters_{nullptr}, assignments_{nullptr}, loss_{INFINITY} {}
   KMeans(uint32_t k, std::unique_ptr<utils::Matrix<double>> initial_clusters)
-      : k_(k), clusters_(std::move(initial_clusters)), assignments_(nullptr),
-        loss_(INFINITY) {}
+      : k_{k}, clusters_{std::move(initial_clusters)}, assignments_{nullptr},
+        loss_{INFINITY} {}
+
+  KMeans(const KMeans& other) : k_{other.k_}, loss_{other.loss_} {
+    clusters_ = std::make_unique<utils::Matrix<double>>(*other.clusters_);
+    assignments_ = std::make_unique<std::vector<uint32_t>>(*other.assignments_);
+  }
+  KMeans& operator=(const KMeans& other) = delete;
 
   /*
     @brief Run kmeans clustering several times and pick the best one.

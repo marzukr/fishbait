@@ -15,7 +15,9 @@ class CombinationMatrix {
  public:
   explicit CombinationMatrix(uint32_t n, T filler = 0)
       : n_(n), data_((n*n-n)/2, filler) {}
-  ~CombinationMatrix() {}
+
+  CombinationMatrix<T>(const CombinationMatrix<T>& other) = default;
+  CombinationMatrix<T>& operator=(const CombinationMatrix<T>& other) = default;
 
   T& operator()(uint32_t i, uint32_t j) {
     assert(i != j);

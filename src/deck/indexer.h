@@ -22,6 +22,11 @@ class Indexer {
   }
   ~Indexer() { delete isocalc_; }
 
+  Indexer(const Indexer&) = delete;
+  Indexer& operator=(const Indexer&) = delete;
+  Indexer(Indexer&&) = delete;
+  Indexer& operator=(Indexer&&) = delete;
+
   uint32_t index(const std::initializer_list<uint8_t> cards) {
     return hand_index_last(isocalc_, cards.begin());
   }

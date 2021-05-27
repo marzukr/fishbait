@@ -22,6 +22,9 @@ class Fraction {
   */
   Fraction(int64_t n, int64_t d);
 
+  Fraction(const Fraction& other) = default;
+  Fraction& operator=(const Fraction& other) = default;
+
   int64_t numerator() { return numerator_; }
   int64_t denominator() { return denominator_; }
 
