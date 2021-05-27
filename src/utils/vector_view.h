@@ -77,6 +77,19 @@ class VectorView {
   const uint32_t n_;
 };  // VectorView
 
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const VectorView<T>& v) {
+  os << "[";
+  for (uint32_t i = 0; i < v.n(); ++i) {
+    os << +v(i);
+    if (i < v.n() - 1) {
+      os << ", ";
+    }
+  }
+  os << "]";
+  return os;
+}
+
 }  // namespace utils
 
 #endif  // SRC_UTILS_VECTOR_VIEW_H_

@@ -117,6 +117,53 @@ class Fraction {
   int64_t denominator_;  // Always greater than 0
 };
 
+// Add fractions
+Fraction operator+(Fraction lhs, const Fraction& rhs);
+
+// Add fractions and ints with each other
+Fraction operator+(int64_t lhs, Fraction rhs);
+Fraction operator+(Fraction lhs, int64_t rhs);
+
+// Add fractions and doubles with each other
+double operator+(double lhs, const Fraction& rhs);
+double operator+(const Fraction& lhs, double rhs);
+
+// Subtract fractions
+Fraction operator-(Fraction lhs, const Fraction& rhs);
+
+// Subtract fractions and ints with each other
+Fraction operator-(int64_t lhs, Fraction rhs);
+Fraction operator-(Fraction lhs, int64_t rhs);
+
+// Subtract fractions and doubles with each other
+double operator-(double lhs, const Fraction& rhs);
+double operator-(const Fraction& lhs, double rhs);
+
+// Negative fraction
+Fraction operator-(Fraction f);
+
+// Multiply fractions
+Fraction operator*(Fraction lhs, const Fraction& rhs);
+
+// Multiply fractions and ints with each other
+Fraction operator*(int64_t lhs, Fraction rhs);
+Fraction operator*(Fraction lhs, int64_t rhs);
+
+// Multiply fractions and doubles with each other
+double operator*(double lhs, const Fraction& rhs);
+double operator*(const Fraction& lhs, double rhs);
+
+// Divide fractions
+Fraction operator/(Fraction lhs, const Fraction& rhs);
+
+// Divide fractions and ints with each other
+Fraction operator/(int64_t lhs, Fraction rhs);
+Fraction operator/(Fraction lhs, int64_t rhs);
+
+// Divide fractions and doubles with each other
+double operator/(double lhs, const Fraction& rhs);
+double operator/(const Fraction& lhs, double rhs);
+
 }  // namespace utils
 
 #endif  // SRC_UTILS_FRACTION_H_

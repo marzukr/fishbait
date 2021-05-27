@@ -9,6 +9,5 @@ add_library(
   random.h
   timer.h
   vector_view.h
-  vector_view.cc
   )
 coverage_counter_zero(utils)
