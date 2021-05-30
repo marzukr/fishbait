@@ -12,6 +12,7 @@ add_executable(tests.out main.cc
 
   utils/cereal_test.cc
   utils/combination_matrix_test.cc
+  utils/fraction_test.cc
   utils/loop_iterator_test.cc
   utils/matrix_test.cc
   utils/random_test.cc

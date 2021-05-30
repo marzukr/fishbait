@@ -19,7 +19,7 @@ class CardCombinations {
   template <typename T>
   CardCombinations(uint8_t r, T&& exclude) : state_(r+1, kDeckSize),
                                              included_(kDeckSize, true),
-                                             r_(r), is_done_(false) {
+                                             r_{r}, is_done_{false} {
     Reset(exclude, true);
   }
 

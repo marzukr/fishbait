@@ -13,6 +13,11 @@ namespace utils {
 class Fraction {
  public:
   /*
+    @brief Constructs the fraction 0/1.
+  */
+  Fraction() : numerator_{0}, denominator_{1} {};
+
+  /*
     @brief Constructs the fraction n/1.
   */
   explicit Fraction(int64_t n) : numerator_{n}, denominator_{1} {};
@@ -49,29 +54,51 @@ class Fraction {
   Fraction& operator/=(const Fraction& rhs);
   Fraction& operator/=(int64_t rhs);
 
-  // Comparison operators
-  friend bool operator==(const Fraction& lhs, const Fraction& rhs) {
-    return lhs.Compare(rhs) == 0;
-  }
-  friend bool operator!=(const Fraction& lhs, const Fraction& rhs) {
-    return lhs.Compare(rhs) != 0;
-  }
-  friend bool operator<(const Fraction& lhs, const Fraction& rhs) {
-    return lhs.Compare(rhs) < 0;
-  }
-  friend bool operator>(const Fraction& lhs, const Fraction& rhs) {
-    return lhs.Compare(rhs) > 0;
-  }
-  friend bool operator<=(const Fraction& lhs, const Fraction& rhs) {
-    return lhs.Compare(rhs) <= 0;
-  }
-  friend bool operator>=(const Fraction& lhs, const Fraction& rhs) {
-    return lhs.Compare(rhs) >= 0;
-  }
+  // Equality operators
+  friend bool operator==(const Fraction& lhs, const Fraction& rhs);
+  friend bool operator==(const Fraction& lhs, int64_t rhs);
+  friend bool operator==(int64_t lhs, const Fraction& rhs);
+  friend bool operator==(const Fraction& lhs, double rhs);
+  friend bool operator==(double lhs, const Fraction& rhs);
+
+  // Inequality Operators
+  friend bool operator!=(const Fraction& lhs, const Fraction& rhs);
+  friend bool operator!=(const Fraction& lhs, int64_t rhs);
+  friend bool operator!=(int64_t lhs, const Fraction& rhs);
+  friend bool operator!=(const Fraction& lhs, double rhs);
+  friend bool operator!=(double lhs, const Fraction& rhs);
+
+  // Less than operators
+  friend bool operator<(const Fraction& lhs, const Fraction& rhs);
+  friend bool operator<(const Fraction& lhs, int64_t rhs);
+  friend bool operator<(int64_t lhs, const Fraction& rhs);
+  friend bool operator<(const Fraction& lhs, double rhs);
+  friend bool operator<(double lhs, const Fraction& rhs);
+
+  // Greater than operators
+  friend bool operator>(const Fraction& lhs, const Fraction& rhs);
+  friend bool operator>(const Fraction& lhs, int64_t rhs);
+  friend bool operator>(int64_t lhs, const Fraction& rhs);
+  friend bool operator>(const Fraction& lhs, double rhs);
+  friend bool operator>(double lhs, const Fraction& rhs);
+
+  // Less than or equal to operators
+  friend bool operator<=(const Fraction& lhs, const Fraction& rhs);
+  friend bool operator<=(const Fraction& lhs, int64_t rhs);
+  friend bool operator<=(int64_t lhs, const Fraction& rhs);
+  friend bool operator<=(const Fraction& lhs, double rhs);
+  friend bool operator<=(double lhs, const Fraction& rhs);
+
+  // Greater than or equal to operators
+  friend bool operator>=(const Fraction& lhs, const Fraction& rhs);
+  friend bool operator>=(const Fraction& lhs, int64_t rhs);
+  friend bool operator>=(int64_t lhs, const Fraction& rhs);
+  friend bool operator>=(const Fraction& lhs, double rhs);
+  friend bool operator>=(double lhs, const Fraction& rhs);
 
   // Conversion Operators
-  operator int64_t() const { return numerator_ / denominator_; }
-  operator double() const {
+  explicit operator int64_t() const { return numerator_ / denominator_; }
+  explicit operator double() const {
     return static_cast<double>(numerator_) / denominator_;
   }
 
@@ -108,10 +135,18 @@ class Fraction {
   void NumeratorSign();
 
   /*
-    @brief Returns -1 if *this < rhs, returns 0 if *this == rhs, returns 1 if
-        *this > rhs.
+    @brief Returns a negative number if *this < rhs, returns 0 if *this == rhs,
+        returns a positive number if *this > rhs.
   */
-  int Compare(const Fraction& rhs) const;
+  int64_t Compare(const Fraction& rhs) const {
+    return numerator_ * rhs.denominator_ - rhs.numerator_ * denominator_;
+  }
+  int64_t Compare(int64_t rhs) const {
+    return numerator_ - rhs * denominator_;
+  }
+  double Compare(double rhs) const {
+    return (operator double()) - rhs;
+  }
 
   int64_t numerator_;    // Can be negative, 0, or positive
   int64_t denominator_;  // Always greater than 0
@@ -121,8 +156,10 @@ class Fraction {
 Fraction operator+(Fraction lhs, const Fraction& rhs);
 
 // Add fractions and ints with each other
-Fraction operator+(int64_t lhs, Fraction rhs);
-Fraction operator+(Fraction lhs, int64_t rhs);
+template<typename T>
+Fraction operator+(T lhs, Fraction rhs);
+template<typename T>
+Fraction operator+(Fraction lhs, T rhs);
 
 // Add fractions and doubles with each other
 double operator+(double lhs, const Fraction& rhs);
@@ -132,8 +169,10 @@ double operator+(const Fraction& lhs, double rhs);
 Fraction operator-(Fraction lhs, const Fraction& rhs);
 
 // Subtract fractions and ints with each other
-Fraction operator-(int64_t lhs, Fraction rhs);
-Fraction operator-(Fraction lhs, int64_t rhs);
+template<typename T>
+Fraction operator-(T lhs, Fraction rhs);
+template<typename T>
+Fraction operator-(Fraction lhs, T rhs);
 
 // Subtract fractions and doubles with each other
 double operator-(double lhs, const Fraction& rhs);
@@ -146,8 +185,10 @@ Fraction operator-(Fraction f);
 Fraction operator*(Fraction lhs, const Fraction& rhs);
 
 // Multiply fractions and ints with each other
-Fraction operator*(int64_t lhs, Fraction rhs);
-Fraction operator*(Fraction lhs, int64_t rhs);
+template<typename T>
+Fraction operator*(T lhs, Fraction rhs);
+template<typename T>
+Fraction operator*(Fraction lhs, T rhs);
 
 // Multiply fractions and doubles with each other
 double operator*(double lhs, const Fraction& rhs);
@@ -157,8 +198,10 @@ double operator*(const Fraction& lhs, double rhs);
 Fraction operator/(Fraction lhs, const Fraction& rhs);
 
 // Divide fractions and ints with each other
-Fraction operator/(int64_t lhs, Fraction rhs);
-Fraction operator/(Fraction lhs, int64_t rhs);
+template<typename T>
+Fraction operator/(T lhs, Fraction rhs);
+template<typename T>
+Fraction operator/(Fraction lhs, T rhs);
 
 // Divide fractions and doubles with each other
 double operator/(double lhs, const Fraction& rhs);
