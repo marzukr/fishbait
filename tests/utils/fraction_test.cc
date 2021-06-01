@@ -2425,50 +2425,68 @@ TEST_CASE("fraction print operator", "[utils][fraction]") {
   ss.str(std::string());
 }  // TEST_CASE "fraction print operator"
 
-// TEST_CASE("negative fraction", "[utils][fraction]") {
-//   // positive
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // negative
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // 0
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // rational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // irrational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-// }  // TEST_CASE "negative fraction"
+TEST_CASE("negative fraction", "[utils][fraction]") {
+  // positive
+  utils::Fraction f0{9975443, 2139705};
+  f0 = -f0;
+  REQUIRE(f0.numerator() == -9975443);
+  REQUIRE(f0.denominator() == 2139705);
+  // negative
+  utils::Fraction f1{-8067385, 6090897};
+  f1 = -f1;
+  REQUIRE(f1.numerator() == 8067385);
+  REQUIRE(f1.denominator() == 6090897);
+  // 0
+  utils::Fraction f2;
+  f2 = -f2;
+  REQUIRE(f2.numerator() == 0);
+  REQUIRE(f2.denominator() == 1);
+  // rational
+  utils::Fraction f3{777, 111};
+  f3 = -f3;
+  REQUIRE(f3.numerator() == -7);
+  REQUIRE(f3.denominator() == 1);
+  // irrational
+  utils::Fraction f4{778, 111};
+  f4 = -f4;
+  REQUIRE(f4.numerator() == -778);
+  REQUIRE(f4.denominator() == 111);
+}  // TEST_CASE "negative fraction"
 
-// TEST_CASE("fraction GCD", "[utils][fraction]") {
-//   // 8, 32
-//   // 8, 12
-//   // 54827, 3716
-//   // 7, 19
-//   // 0, 0
-//   // 0, 10
-//   // 10, 0
-// }  // TEST_CASE "fraction GCD"
+TEST_CASE("fraction GCD", "[utils][fraction]") {
+  // GCD equals itself
+  REQUIRE(utils::Fraction::GCD(8, 32) == utils::Fraction::GCD(32, 8));
+  // 8, 32
+  REQUIRE(utils::Fraction::GCD(8, 32) == 8);
+  // 8, 12
+  REQUIRE(utils::Fraction::GCD(8, 12) == 4);
+  // 54827, 3716
+  REQUIRE(utils::Fraction::GCD(54827, 3716) == 1);
+  // 7, 19
+  REQUIRE(utils::Fraction::GCD(7, 19) == 1);
+  // 0, 0
+  REQUIRE(utils::Fraction::GCD(0, 0) == 0);
+  // 0, 10
+  REQUIRE(utils::Fraction::GCD(0, 10) == 10);
+  // 10, 0
+  REQUIRE(utils::Fraction::GCD(10, 0) == 10);
+}  // TEST_CASE "fraction GCD"
 
-// TEST_CASE("fraction LCM", "[utils][fraction]") {
-//   // 8, 32
-//   // 8, 12
-//   // 54827, 3716
-//   // 7, 19
-//   // 0, 0
-//   // 0, 10
-//   // 10, 0
-// }  // TEST_CASE "fraction LCM"
+TEST_CASE("fraction LCM", "[utils][fraction]") {
+  // LCM equals itself
+  REQUIRE(utils::Fraction::LCM(8, 32) == utils::Fraction::LCM(32, 8));
+  // 8, 32
+  REQUIRE(utils::Fraction::LCM(8, 32) == 32);
+  // 8, 12
+  REQUIRE(utils::Fraction::LCM(8, 12) == 24);
+  // 54827, 3716
+  REQUIRE(utils::Fraction::LCM(54827, 3716) == 203737132);
+  // 7, 19
+  REQUIRE(utils::Fraction::LCM(7, 19) == 133);
+  // 0, 0
+  REQUIRE(utils::Fraction::LCM(0, 0) == 0);
+  // 0, 10
+  REQUIRE(utils::Fraction::LCM(0, 10) == 0);
+  // 10, 0
+  REQUIRE(utils::Fraction::LCM(10, 0) == 0);
+}  // TEST_CASE "fraction LCM"

@@ -119,6 +119,7 @@ class Fraction {
         LCM(a, b) = (a x b) / GCD(a, b).
   */
   static uint64_t LCM(uint64_t a, uint64_t b) {
+    if (a == 0 || b == 0) return 0;
     return (a / GCD(a, b)) * b;
   }
 
