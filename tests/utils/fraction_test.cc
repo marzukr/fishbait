@@ -1,5 +1,8 @@
 // Copyright 2021 Marzuk Rashid
 
+#include <sstream>
+#include <string>
+
 #include "catch2/catch.hpp"
 #include "utils/fraction.h"
 
@@ -2392,33 +2395,35 @@ TEST_CASE("double conversion operator", "[utils][fraction]") {
   REQUIRE(static_cast<double>(f4) == 1.1111111111111112);
 }  // TEST_CASE "double conversion operator"
 
-// TEST_CASE("fraction print operator", "[utils][fraction]") {
-//   // positive
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // negative
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // 0
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // rational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // irrational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-// }  // TEST_CASE "fraction print operator"
+TEST_CASE("fraction print operator", "[utils][fraction]") {
+  std::stringstream ss;
+
+  // positive
+  utils::Fraction f0{486700, 6015407};
+  ss << f0;
+  REQUIRE(ss.str() == "486700/6015407");
+  ss.str(std::string());
+  // negative
+  utils::Fraction f1{-855137, 4071620};
+  ss << f1;
+  REQUIRE(ss.str() == "-855137/4071620");
+  ss.str(std::string());
+  // 0
+  utils::Fraction f2;
+  ss << f2;
+  REQUIRE(ss.str() == "0/1");
+  ss.str(std::string());
+  // rational
+  utils::Fraction f3{16, 4};
+  ss << f3;
+  REQUIRE(ss.str() == "4/1");
+  ss.str(std::string());
+  // irrational
+  utils::Fraction f4{16, 18};
+  ss << f4;
+  REQUIRE(ss.str() == "8/9");
+  ss.str(std::string());
+}  // TEST_CASE "fraction print operator"
 
 // TEST_CASE("negative fraction", "[utils][fraction]") {
 //   // positive
