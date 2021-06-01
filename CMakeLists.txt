@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20.0)
 project(fishbait)
 
+find_package(Git QUIET REQUIRED)
+
 set(CMAKE_CXX_STANDARD 17)
 
 # Helpful warning compiler flags
@@ -15,7 +17,6 @@ endif()
 # DOWNLOAD ALL THE SUBMODULES
 option(GIT_SUBMODULE "Check submodules during build" ON)
 if(GIT_SUBMODULE)
-  find_package(Git QUIET REQUIRED)
   if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
     # Update submodules as needed
     message(STATUS "Submodule update")
@@ -32,6 +33,10 @@ if(GIT_SUBMODULE)
     endif()
   endif()
 endif()
+
+# Configure git hooks to point to the tracked folder
+execute_process(COMMAND ${GIT_EXECUTABLE} 
+                config --local core.hooksPath .githooks/)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

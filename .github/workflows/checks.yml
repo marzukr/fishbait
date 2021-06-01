@@ -8,6 +8,13 @@ jobs:
       - uses: actions/setup-python@v2
       - run: pip install cpplint
       - run: cpplint --recursive .
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install pylint
+      - run: find . -type f -name "*.py" | xargs pylint
   build_test:
     runs-on: ubuntu-latest
     steps:

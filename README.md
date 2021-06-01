@@ -27,7 +27,15 @@ If the project is built in debug mode, a code coverage report can be generated
 with `make coverage` from the `build` directory. `gcov` and `lcov` need to be
 installed for code coverage.
 
+## Requirements
+- C++17
+- [CMake](https://cmake.org) >= 3.20
+- [Gcov](https://gcc.gnu.org/onlinedocs/gcc/Gcov.html) (for code coverage)
+- [LCOV](http://ltp.sourceforge.net/coverage/lcov.php) (for code coverage)
+- Python 3
+- [cpplint](https://github.com/cpplint/cpplint) (runs during the pre-commit
+  hook)
+- [pylint](https://pylint.org) (runs during the pre-commit hook)
+
 ## Other Notes
 * Do not put commas in the Catch2 tester descriptions
-* Confirmed compilers and commits
-  * Apple clang version 12.0.0
