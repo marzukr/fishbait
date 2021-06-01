@@ -2356,60 +2356,41 @@ TEST_CASE("fraction double greater than equal to", "[utils][fraction]") {
   REQUIRE((f10 >= 0.0) == true);
 }  // TEST_CASE "fraction double greater than equal to"
 
-// TEST_CASE("fraction conversion operators", "[utils][fraction]") {
-//   // int
-//   // -- positive
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- negative
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- 0
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- rational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- irrational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // double
-//   // -- positive
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- negative
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- rational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- irrational
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-//   // -- 0
-//   utils::Fraction f16{};
-//   f16 += ;
-//   REQUIRE(f16.numerator() == );
-//   REQUIRE(f16.denominator() == );
-// }  // TEST_CASE "fraction conversion operators"
+TEST_CASE("int conversion operator", "[utils][fraction]") {
+  // positive
+  utils::Fraction f0{6137775, 1898854};
+  REQUIRE(static_cast<int>(f0) == 3);
+  // negative
+  utils::Fraction f1{-1238835, 795386};
+  REQUIRE(static_cast<int>(f1) == -1);
+  // 0
+  utils::Fraction f2;
+  REQUIRE(static_cast<int>(f2) == 0);
+  // rational
+  utils::Fraction f3{100, 10};
+  REQUIRE(static_cast<int>(f3) == 10);
+  // irrational
+  utils::Fraction f4{1, 3};
+  REQUIRE(static_cast<int>(f4) == 0);
+}  // TEST_CASE "int conversion operator"
+
+TEST_CASE("double conversion operator", "[utils][fraction]") {
+  // positive
+  utils::Fraction f0{644327, 327200};
+  REQUIRE(static_cast<double>(f0) == 1.9692145476772616);
+  // negative
+  utils::Fraction f1{-447817, 289347};
+  REQUIRE(static_cast<double>(f1) == -1.547681503523451);
+  // 0
+  utils::Fraction f2;
+  REQUIRE(static_cast<double>(f2) == 0.0);
+  // rational
+  utils::Fraction f3{500, 250};
+  REQUIRE(static_cast<double>(f3) == 2.0);
+  // irrational
+  utils::Fraction f4{10, 9};
+  REQUIRE(static_cast<double>(f4) == 1.1111111111111112);
+}  // TEST_CASE "double conversion operator"
 
 // TEST_CASE("fraction print operator", "[utils][fraction]") {
 //   // positive

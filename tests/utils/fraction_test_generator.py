@@ -104,7 +104,7 @@ def end_test_case(name):
 
 def arithmetic_equal_fraction_iter(operator, sign_1, sign_2, it):
   """Single iterator for arithmetic_equal_fraction.
-  
+
   Args:
     operator: +, -, *, or /
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
@@ -137,7 +137,7 @@ def arithmetic_equal_fraction(operator):
 
 def arithmetic_equal_int_iter(operator, sign_1, sign_2, it):
   """Single iterator for arithmetic_equal_int.
-  
+
   Args:
     operator: +, -, *, or /
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
@@ -170,7 +170,7 @@ def arithmetic_equal_int(operator):
 
 def arithmetic_int_fraction_iter(operator, sign_1, sign_2, it, int_first):
   """Single iterator for arithmetic_int_fraction.
-  
+
   Args:
     operator: +, -, *, or /
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
@@ -208,7 +208,7 @@ def arithmetic_int_fraction_iter(operator, sign_1, sign_2, it, int_first):
 
 def arithmetic_int_fraction(operator, int_first):
   """Generates a tester for +, -, *, and / a fraction and an int.
-    
+
   Args:
     operator: +, -, *, or /
     int_first: True to create a tester for ints op fractions. False to create a
@@ -231,7 +231,7 @@ def arithmetic_int_fraction(operator, int_first):
 
 def arithmetic_double_fraction_iter(operator, sign_1, sign_2, it, double_first):
   """Single iterator for arithmetic_double_fraction.
-  
+
   Args:
     operator: +, -, *, or /
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
@@ -268,7 +268,7 @@ def arithmetic_double_fraction_iter(operator, sign_1, sign_2, it, double_first):
 
 def arithmetic_double_fraction(operator, double_first):
   """Generates a tester for +, -, *, and / a fraction and a double.
-  
+
   Args:
     operator: +, -, *, or /
     double_first: True to create a tester for doubles op fractions. False to
@@ -292,7 +292,7 @@ def arithmetic_double_fraction(operator, double_first):
 
 def arithmetic_fraction_fraction_iter(operator, sign_1, sign_2, it):
   """Single iterator for arithmetic_fraction_fraction.
-  
+
   Args:
     operator: +, -, *, or /
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
@@ -345,7 +345,7 @@ def comparison_test_comment(sign_1, sign_2, is_same):
 
 def comparison_fraction_fraction_iter(operator, sign_1, sign_2, it, is_same):
   """Single iterator for comparison_fraction_fraction.
-  
+
   Args:
     operator: ==, !=, <, >=, etc.
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
@@ -385,7 +385,7 @@ def comparison_fraction_fraction(operator):
 def comparison_fraction_num_iter(operator, sign_1, sign_2, it, is_same,
                                  num_first, is_double):
   """Single iterator for comparison_fraction_num.
-  
+
   Args:
     operator: ==, !=, <, >=, etc.
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare

@@ -56,60 +56,48 @@ class Fraction {
 
   // Equality operators
   friend bool operator==(const Fraction& lhs, const Fraction& rhs);
-  template<typename T>
-  friend bool operator==(const Fraction& lhs, T rhs);
-  template<typename T>
-  friend bool operator==(T lhs, const Fraction& rhs);
+  template<typename T> friend bool operator==(const Fraction& lhs, T rhs);
+  template<typename T> friend bool operator==(T lhs, const Fraction& rhs);
   friend bool operator==(const Fraction& lhs, double rhs);
   friend bool operator==(double lhs, const Fraction& rhs);
 
   // Inequality Operators
   friend bool operator!=(const Fraction& lhs, const Fraction& rhs);
-  template<typename T>
-  friend bool operator!=(const Fraction& lhs, T rhs);
-  template<typename T>
-  friend bool operator!=(T lhs, const Fraction& rhs);
+  template<typename T> friend bool operator!=(const Fraction& lhs, T rhs);
+  template<typename T> friend bool operator!=(T lhs, const Fraction& rhs);
   friend bool operator!=(const Fraction& lhs, double rhs);
   friend bool operator!=(double lhs, const Fraction& rhs);
 
   // Less than operators
   friend bool operator<(const Fraction& lhs, const Fraction& rhs);
-  template<typename T>
-  friend bool operator<(const Fraction& lhs, T rhs);
-  template<typename T>
-  friend bool operator<(T lhs, const Fraction& rhs);
+  template<typename T> friend bool operator<(const Fraction& lhs, T rhs);
+  template<typename T> friend bool operator<(T lhs, const Fraction& rhs);
   friend bool operator<(const Fraction& lhs, double rhs);
   friend bool operator<(double lhs, const Fraction& rhs);
 
   // Greater than operators
   friend bool operator>(const Fraction& lhs, const Fraction& rhs);
-  template<typename T>
-  friend bool operator>(const Fraction& lhs, T rhs);
-  template<typename T>
-  friend bool operator>(T lhs, const Fraction& rhs);
+  template<typename T> friend bool operator>(const Fraction& lhs, T rhs);
+  template<typename T> friend bool operator>(T lhs, const Fraction& rhs);
   friend bool operator>(const Fraction& lhs, double rhs);
   friend bool operator>(double lhs, const Fraction& rhs);
 
   // Less than or equal to operators
   friend bool operator<=(const Fraction& lhs, const Fraction& rhs);
-  template<typename T>
-  friend bool operator<=(const Fraction& lhs, T rhs);
-  template<typename T>
-  friend bool operator<=(T lhs, const Fraction& rhs);
+  template<typename T> friend bool operator<=(const Fraction& lhs, T rhs);
+  template<typename T> friend bool operator<=(T lhs, const Fraction& rhs);
   friend bool operator<=(const Fraction& lhs, double rhs);
   friend bool operator<=(double lhs, const Fraction& rhs);
 
   // Greater than or equal to operators
   friend bool operator>=(const Fraction& lhs, const Fraction& rhs);
-  template<typename T>
-  friend bool operator>=(const Fraction& lhs, T rhs);
-  template<typename T>
-  friend bool operator>=(T lhs, const Fraction& rhs);
+  template<typename T> friend bool operator>=(const Fraction& lhs, T rhs);
+  template<typename T> friend bool operator>=(T lhs, const Fraction& rhs);
   friend bool operator>=(const Fraction& lhs, double rhs);
   friend bool operator>=(double lhs, const Fraction& rhs);
 
   // Conversion Operators
-  explicit operator int64_t() const { return numerator_ / denominator_; }
+  template <typename T> explicit operator T() const;
   explicit operator double() const {
     return static_cast<double>(numerator_) / denominator_;
   }
@@ -153,8 +141,7 @@ class Fraction {
   int64_t Compare(const Fraction& rhs) const {
     return numerator_ * rhs.denominator_ - rhs.numerator_ * denominator_;
   }
-  template<typename T>
-  int64_t Compare(T rhs) const;
+  template<typename T> int64_t Compare(T rhs) const;
   double Compare(double rhs) const {
     return (operator double()) - rhs;
   }
@@ -167,10 +154,8 @@ class Fraction {
 Fraction operator+(Fraction lhs, const Fraction& rhs);
 
 // Add fractions and ints with each other
-template<typename T>
-Fraction operator+(T lhs, Fraction rhs);
-template<typename T>
-Fraction operator+(Fraction lhs, T rhs);
+template<typename T> Fraction operator+(T lhs, Fraction rhs);
+template<typename T> Fraction operator+(Fraction lhs, T rhs);
 
 // Add fractions and doubles with each other
 double operator+(double lhs, const Fraction& rhs);
@@ -180,10 +165,8 @@ double operator+(const Fraction& lhs, double rhs);
 Fraction operator-(Fraction lhs, const Fraction& rhs);
 
 // Subtract fractions and ints with each other
-template<typename T>
-Fraction operator-(T lhs, Fraction rhs);
-template<typename T>
-Fraction operator-(Fraction lhs, T rhs);
+template<typename T> Fraction operator-(T lhs, Fraction rhs);
+template<typename T> Fraction operator-(Fraction lhs, T rhs);
 
 // Subtract fractions and doubles with each other
 double operator-(double lhs, const Fraction& rhs);
@@ -196,10 +179,8 @@ Fraction operator-(Fraction f);
 Fraction operator*(Fraction lhs, const Fraction& rhs);
 
 // Multiply fractions and ints with each other
-template<typename T>
-Fraction operator*(T lhs, Fraction rhs);
-template<typename T>
-Fraction operator*(Fraction lhs, T rhs);
+template<typename T> Fraction operator*(T lhs, Fraction rhs);
+template<typename T> Fraction operator*(Fraction lhs, T rhs);
 
 // Multiply fractions and doubles with each other
 double operator*(double lhs, const Fraction& rhs);
@@ -209,10 +190,8 @@ double operator*(const Fraction& lhs, double rhs);
 Fraction operator/(Fraction lhs, const Fraction& rhs);
 
 // Divide fractions and ints with each other
-template<typename T>
-Fraction operator/(T lhs, Fraction rhs);
-template<typename T>
-Fraction operator/(Fraction lhs, T rhs);
+template<typename T> Fraction operator/(T lhs, Fraction rhs);
+template<typename T> Fraction operator/(Fraction lhs, T rhs);
 
 // Divide fractions and doubles with each other
 double operator/(double lhs, const Fraction& rhs);
