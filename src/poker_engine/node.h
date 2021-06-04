@@ -5,12 +5,14 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <random>
 #include <stdexcept>
 #include <string>
 
 #include "SKPokerEval/src/SevenEval.h"
+#include "utils/fraction.h"
 #include "utils/random.h"
 
 namespace poker_engine {
@@ -230,7 +232,8 @@ class Node {
   */
   void AwardPot(SameInitialStack, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
-    if (AwardPotChecks(hands, board)) return;
+    VerifyAwardablePot();
+    if (players_left_ == 1) return FoldVictory(folded_);
     uint16_t ranks[kPlayers];
     RankPlayers(hands, board, folded_, ranks);
     BestPlayersData best_players = BestPlayers(ranks, folded_);
@@ -257,66 +260,97 @@ class Node {
   */
   void AwardPot(const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
-    if (AwardPotChecks(hands, board)) return;
+    VerifyAwardablePot();
 
-    /* If not everyone has folded, we must conduct a showdown. First, we
-       identify the players we need to process (i.e. they have not folded or
-       mucked their cards) */
-    uint8_t players_to_award = kPlayers;
     bool processed[kPlayers];
-    for (uint8_t i = 0; i < kPlayers; ++i) {
-      if (folded_[i] || hands[i][0] == hands[i][1]) {
-        processed[i] = true;
-        players_to_award -= 1;
-      } else {
-        processed[i] = false;
-      }
-    }  // for i
+    uint8_t players_to_award = PlayersToProcess(hands, processed);
+    if (players_to_award == 1) {
+      return FoldVictory(processed);
+    } else if (hands == nullptr || board == nullptr) {
+      throw std::invalid_argument("AwardPot() called with hands = nullptr or "
+                                  "board = nullptr when there is more than 1 "
+                                  "player remaining in the game. If there is "
+                                  "more than 1 player who has not folded, we "
+                                  "need hand and card information to award the "
+                                  "pot.");
+    }
 
     uint16_t ranks[kPlayers];
     RankPlayers(hands, board, processed, ranks);
 
     // Loop through each side pot and award it to the appropriate player(s)
     while (players_to_award > 0) {
-      // Find the smallest non zero bet from a non processed player
-      uint32_t min_bet = pot_;
-      for (uint8_t i = 0; i < kPlayers; ++i) {
-        if (bets_[i] < min_bet && !processed[i]) min_bet = bets_[i];
-      }
-
-      /* Consider the side pot formed by the smallest bet. For instance, if
-         there are 3 players remaining, with player 1 all in for 100 chips,
-         player 2 all in for 50 chips, and player 3 all in for 25 chips, the
-         smallest bet is 25 chips. So, this forms a 75 chip (25 chips * 3
-         players) side pot out of the total 175 chip pot. */
-      uint32_t side_pot = 0;
-      for (uint8_t i = 0; i < kPlayers; ++i) {
-        if (bets_[i] >= min_bet) {
-          side_pot += min_bet;
-          bets_[i] -= min_bet;
-        } else if (bets_[i] < min_bet) {
-          side_pot += bets_[i];
-          bets_[i] -= bets_[i];
-        }
-      }
-      pot_ -= side_pot;
-
+      uint32_t side_pot = AllocateSidePot(bets_, processed);
       BestPlayersData best_players = BestPlayers(ranks, processed);
-      AwardSidePot(&side_pot, ranks, processed, best_players);
-
-      /* If this side pot allocated the remainder of a player's bet, they are no
-         longer eligible to win any more chips, so mark them as processed. In
-         the above example, if all three players tied, player 1 would win 1/3rd
-         of the 75 chip side pot, and would then be ineligible to win any of the
-         remaining 100 chips in the pot because they only contributed 25 chips
-         to the pot. */
-      for (uint8_t i = 0; i < kPlayers; ++i) {
-        if (bets_[i] == 0 && !processed[i]) {
-          players_to_award += -1;
-          processed[i] = true;
-        }
-      }
+      AwardSidePot(&side_pot, ranks, processed, best_players, stack_);
+      players_to_award -= MarkProcessedPlayers(bets_, processed);
     }  // while players_to_award > 0
+  }  // AwardPot()
+
+  /*
+    @brief Allocate the pot to the winner(s) at the end of a hand, running the
+        board multiple times. After calling, pot will be 0, all bets will be 0,
+        and the winner(s)'s stack will have increased by the appropriate amount.
+        Must only be called when the game is no longer in progress and
+        AwardPot() hasn't already been called for the current hand.
+    
+    @param hands 2d array of each player's hand. Rows for each player, columns
+        for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
+        indexing. If a player's two cards are the same, this represents a mucked
+        or folded hand.
+    @param boards Array of the public board cards. Follows the standard order.
+        i.e. columns [0,2] are the flop, column 3 is the turn, and column 4 is
+        the river. SKEval indexing. Each row is a different run out.
+    @param n_runs How many times the board is being run.
+  */
+  void AwardPot(const uint8_t hands[kPlayers][2],
+                const uint8_t boards[][5], const uint8_t n_runs) {
+    VerifyAwardablePot();
+
+    bool processed[kPlayers];
+    uint8_t players_to_award = PlayersToProcess(hands, processed);
+    if (players_to_award == 1) return FoldVictory(processed);
+
+    utils::Fraction awards[kPlayers];
+
+    uint16_t ranks_run[kPlayers];
+    bool processed_run[kPlayers];
+    uint32_t bets_run[kPlayers];
+    utils::Fraction side_pot;
+    BestPlayersData best_players_run;
+    for (uint8_t run = 0; run < n_runs; ++run) {
+      std::copy(processed, processed + kPlayers, processed_run);
+      RankPlayers(hands, boards[run], processed_run, ranks_run);
+      std::copy(bets_, bets_ + kPlayers, bets_run);
+      while (players_to_award > 0) {
+        side_pot = AllocateSidePot(bets_run, processed_run) *
+                   utils::Fraction{1, n_runs};
+        best_players_run = BestPlayers(ranks_run, processed_run);
+        AwardSidePot(&side_pot, ranks_run, processed_run, best_players_run,
+                     awards);
+        players_to_award -= MarkProcessedPlayers(bets_run, processed_run);
+      }  // while players_to_award > 0
+    }  // for run
+
+    // Add each award to the appropriate player's stack
+    uint32_t pot_awarded = 0;
+    bool awarded[kPlayers];
+    for (uint8_t i = 0; i < kPlayers; ++i) {
+      if (awards[i] > 0) {
+        uint32_t to_award = awards[i].numerator() * pot_ /
+                            awards[i].denominator();
+        stack_[i] += to_award;
+        pot_awarded += to_award;
+        awarded[i] = true;
+      } else {
+        awarded[i] = false;
+      }
+    }
+    pot_ -= pot_awarded;
+    AwardChange(pot_, awarded, stack_);
+
+    // pot_ and stacks_ have already been set, so now zero the bets
+    std::fill(bets_, bets_ + kPlayers, 0);
   }  // AwardPot()
 
   /*
@@ -336,8 +370,8 @@ class Node {
   Round round() const { return round_; }
   uint8_t cycled() const { return cycled_; }
   uint8_t acting_player() const { return acting_player_; }
-  // no pot_good_ getter
-  // no no_raise_ getter
+  // no pot_good_ getter because it is an implementation detail
+  // no no_raise_ getter because it is an implementation detail
   bool folded(uint8_t player) const { return folded_[player]; }
   uint8_t players_left() const { return players_left_; }
   uint8_t players_all_in() const { return players_all_in_; }
@@ -348,14 +382,8 @@ class Node {
   uint32_t pot() const { return pot_; }
   uint32_t bets(uint8_t player) const { return bets_[player]; }
   uint32_t stack(uint8_t player) const { return stack_[player]; }
-  // no min_raise_ getter
-  // no max_bet_ getter
-
-  /*
-    Card information getter functions
-  */
-  // no hands_ getter
-  // no board_ getter
+  // no min_raise_ getter because it is an implementation detail
+  // no max_bet_ getter because it is an implementation detail
 
  private:
   /*
@@ -587,41 +615,59 @@ class Node {
   }  // NextRound()
 
   /*
-    @brief Checks if the pot can be awarded. Throws if not. Checks if all but
-        one player has folded, and awards the pot accordingly if so. Checks if
-        hands and board are available if needed. Throws if not.
-    
-    @return If this function awarded the pot.
+    @brief Checks if the pot can be awarded (the game is not in progress and the
+        pot hasn't already been awarded yet). Throws if not.
   */
-  bool AwardPotChecks(const uint8_t hands[kPlayers][2],
-                      const uint8_t board[5]) {
+  void VerifyAwardablePot() {
     if (in_progress_) {
-      throw std::logic_error("AwardPot() called when the game is still in "
-                             "progress. If the game is still in progress, we "
-                             "cannot award the pot yet.");
+      throw std::logic_error("VerifyAwardablePot() called when the game is "
+                             "still in progress. If the game is still in "
+                             "progress, we cannot award the pot yet.");
     } else if (pot_ == 0) {
-      throw std::logic_error("AwardPot() called when the pot is 0. If the pot "
-                             "is 0, this means we already awarded the pot for "
-                             "this hand and we can't do it again.");
+      throw std::logic_error("VerifyAwardablePot() called when the pot is 0. "
+                             "If the pot is 0, this means we already awarded "
+                             "the pot for this hand and we can't do it again.");
     }
+  }  // VerifyAwardablePot()
 
-    /* If everyone else has folded, the current acting_player_ is the singular
-       winner. */
-    if (players_left_ == 1) {
-      stack_[acting_player_] += pot_;
-      pot_ = 0;
-      std::fill(bets_, bets_ + kPlayers, 0);
-      return true;
-    } else if (hands == nullptr || board == nullptr) {
-      throw std::invalid_argument("AwardPot() called with hands = nullptr or "
-                                  "board = nullptr when there is more than 1 "
-                                  "player remaining in the game. If there is "
-                                  "more than 1 player who has not folded, we "
-                                  "need hand and card information to award the "
-                                  "pot");
-    }
-    return false;
-  }  // CheckAwardPot()
+  /*
+    @brief Awards the pot to the singular player that remains (it is assumed
+        there is only one player left who hasn't folded or mucked their cards).
+
+    @param processed An array of whether each player is folded or mucked.
+  */
+  void FoldVictory(const bool processed[kPlayers]) {
+    uint8_t winner = std::find(processed, processed + kPlayers, false) -
+                     processed;
+    stack_[winner] += pot_;
+    pot_ = 0;
+    std::fill(bets_, bets_ + kPlayers, 0);
+  }  // FoldVictory()
+
+  /*
+    @brief Finds all the non folded or mucked players and marks them as
+        processed. Mark all other players as not processed.
+
+    @param hands 2d array of each player's hand. Rows for each player, columns
+        for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
+        indexing.
+    @param processed An array to write if a player has been processed or not to.
+    
+    @return The number of players that have not been processed.
+  */
+  uint8_t PlayersToProcess(const uint8_t hands[kPlayers][2],
+                           bool processed[kPlayers]) {
+    uint8_t players_to_award = kPlayers;
+    for (uint8_t i = 0; i < kPlayers; ++i) {
+      if (folded_[i] || hands[i][0] == hands[i][1]) {
+        processed[i] = true;
+        players_to_award -= 1;
+      } else {
+        processed[i] = false;
+      }
+    }  // for i
+    return players_to_award;
+  }  // PlayersToProcess()
 
   /*
     @brief Writes the hand ranking of each player to a given output array.
@@ -646,6 +692,45 @@ class Node {
       }
     }
   }  // RankPlayers()
+
+  /*
+    @brief Takes chips from each player's bets to allocate the smallest side pot
+        that still needs to be processed. Also takes this money out of the pot.
+
+    @param bets An array of how much each player's bet still hasn't been
+        awarded.
+    @param processed An array of if each player has been processed or not. When
+        forming the side pot, we do not take any chips from players who have
+        already been processed.
+    
+    @return The size of the side pot formed.
+  */
+  uint32_t AllocateSidePot(uint32_t bets[kPlayers],
+                           const bool processed[kPlayers]) {
+    // Find the smallest non zero bet from a non processed player
+    uint32_t min_bet = std::numeric_limits<uint32_t>::max();
+    for (uint8_t i = 0; i < kPlayers; ++i) {
+      if (bets[i] < min_bet && !processed[i]) min_bet = bets[i];
+    }
+
+    /* Consider the side pot formed by the smallest bet. For instance, if there
+       are 3 players remaining, with player 1 all in for 100 chips, player 2 all
+       in for 50 chips, and player 3 all in for 25 chips, the smallest bet is 25
+       chips. So, this forms a 75 chip (25 chips * 3 players) side pot out of
+       the total 175 chip pot. */
+    uint32_t side_pot = 0;
+    for (uint8_t i = 0; i < kPlayers; ++i) {
+      if (bets[i] >= min_bet) {
+        side_pot += min_bet;
+        bets[i] -= min_bet;
+      } else if (bets[i] < min_bet) {
+        side_pot += bets[i];
+        bets[i] -= bets[i];
+      }
+    }
+    pot_ -= side_pot;
+    return side_pot;
+  }  // AllocateSidePot()
 
   struct BestPlayersData { uint16_t rank; uint8_t n; };
   /*
@@ -681,36 +766,84 @@ class Node {
         divisible among the eligible winners, award the remaining change at
         random.
 
-    @param side_pot The side pot to award.
+    @param side_pot The side pot to award. Unless this function is called with
+        doubles and there are rounding errors, side_pot will be left at 0 after
+        this function is called.
     @param ranks Hand rankings for each player.
     @param filter Players marked as true in this array will not be considered.
     @param best_players Specifies the rank and number of players to award.
+    @param awards Array to add awards for each player to.
   */
-  void AwardSidePot(uint32_t* side_pot, const uint16_t ranks[kPlayers],
+  template <typename T>
+  void AwardSidePot(T* side_pot, const uint16_t ranks[kPlayers],
                     const bool filter[kPlayers],
-                    const BestPlayersData best_players) {
+                    const BestPlayersData best_players,
+                    T awards[kPlayers]) {
     // Award side pot
-    uint32_t prize = *side_pot / best_players.n;
+    T prize = *side_pot / best_players.n;
+    bool awarded[kPlayers];
     for (uint8_t i = 0; i < kPlayers; ++i) {
       if (!filter[i] && ranks[i] == best_players.rank) {
-        stack_[i] += prize;
+        awards[i] += prize;
         *side_pot -= prize;
+        awarded[i] = true;
+      } else {
+        awarded[i] = false;
       }
     }
 
-    // Award any remaining change
-    if (*side_pot > 0) {
-      utils::Random rng;
-      std::uniform_int_distribution<uint8_t> random_player(0, kPlayers - 1);
-      while (*side_pot > 0) {
-        uint8_t chosen = random_player(rng());
-        if (!filter[chosen] && ranks[chosen] == best_players.rank) {
-          stack_[chosen] += 1;
-          *side_pot -= 1;
-        }
-      }
+    /* Award any remaining change. If T is an integer type and the side pot is
+       not divisible by the number of best players, there could be change
+       remaining in the side pot. */
+    if (std::numeric_limits<T>::is_integer) {
+      AwardChange(side_pot, awarded, awards);
     }
   }  // AwardSidePot()
+
+  /*
+    @brief Award the given change evenly starting at the small blind among the
+        eligible winners.
+
+    @param change The change to distribute.
+    @param eligible If each player is eligible to receive change or not.
+    @param awards Array to add the awarded change for each player to.
+  */
+  void AwardChange(uint32_t* change, const bool eligible[kPlayers],
+                   uint32_t awards[kPlayers]) {
+    uint8_t i = 1;  // start awarding change with small blind
+    while (*change > 0) {
+      uint8_t player = PlayerIndex(i);
+      if (eligible[player]) {
+        awards[player] += 1;
+        *change -= 1;
+      }
+      i += 1;
+    }
+  }  // AwardChange()
+
+  /*
+    @brief If the entirety of a player's bet has been allocated, they are no
+       longer eligible to win any more chips because a player can only win as
+       many chips as they put in from each other player. Thus, mark them as
+       processed.
+
+    @param bets An array of how much each player's bet still hasn't been
+        awarded.
+    @param processed An array of if each player has been processed or not.
+
+    @return The number of players marked as processed.
+  */
+  uint8_t MarkProcessedPlayers(const uint32_t bets[kPlayers],
+                               bool processed[kPlayers]) {
+    uint8_t players_processed = 0;
+    for (uint8_t i = 0; i < kPlayers; ++i) {
+      if (bets[i] == 0 && !processed[i]) {
+        players_processed += 1;
+        processed[i] = true;
+      }
+    }
+    return players_processed;
+  }  // MarkProcessedPlayers()
 
   // Attributes
   const uint32_t big_blind_;         // how many chips the big blind is
