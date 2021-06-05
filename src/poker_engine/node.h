@@ -220,7 +220,7 @@ class Node {
         amount. The pot will not be awarded correctly if this is not the case.
         Note, this function will also not work with a big blind ante because the
         big blind has less effective chips than the other players.
-    
+
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
         indexing. Nullptr is a valid option if all but one player has
@@ -247,7 +247,7 @@ class Node {
         will have increased by the appropriate amount. Must only be called when
         the game is no longer in progress and AwardPot() hasn't already been
         called for the current hand.
-    
+
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
         indexing. If a player's two cards are the same, this represents a mucked
@@ -293,7 +293,7 @@ class Node {
         and the winner(s)'s stack will have increased by the appropriate amount.
         Must only be called when the game is no longer in progress and
         AwardPot() hasn't already been called for the current hand.
-    
+
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
         indexing. If a player's two cards are the same, this represents a mucked
@@ -650,7 +650,7 @@ class Node {
 
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
-        indexing.
+        indexing. Can be nullptr if all but one player has folded.
     @param processed An array to write if a player has been processed or not to.
     
     @return The number of players that have not been processed.
@@ -659,7 +659,7 @@ class Node {
                            bool processed[kPlayers]) {
     uint8_t players_to_award = kPlayers;
     for (uint8_t i = 0; i < kPlayers; ++i) {
-      if (folded_[i] || hands[i][0] == hands[i][1]) {
+      if (folded_[i] || (hands && hands[i][0] == hands[i][1])) {
         processed[i] = true;
         players_to_award -= 1;
       } else {

@@ -1,17 +1,33 @@
 #!/bin/sh
 
-RESULT=0
-
 # Lint C++ files
 cpplint --recursive --quiet src tests
-RESULT=$(($? + $RESULT))
-if [ $? -eq 0 ]
-then
+if [ $? -eq 0 ] then
   echo "cpplint returned with no errors"
+else
+  exit $?
 fi
 
 # Lint Python files
 find src tests -type f -name "*.py" | xargs pylint
-RESULT=$(($? + $RESULT))
+if [ $? -ne 0 ] then
+  exit $?
+fi
 
-exit $RESULT
+# Build and test the project
+cd build
+if [ $? -ne 0 ] then
+  res=$?
+  echo "build folder not configured"
+  exit $res
+fi
+make
+if [ $? -ne 0 ] then
+  exit $?
+fi
+./bin/tests.out
+if [ $? -ne 0 ] then
+  exit $?
+fi
+
+exit 0
