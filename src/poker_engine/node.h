@@ -209,7 +209,7 @@ class Node {
     return in_progress_;
   }  // Apply()
 
-  static struct SameInitialStack {} same_initial_stack_;
+  constexpr static struct SameInitialStack {} same_initial_stack_{};
   /*
     @brief Allocate the pot to the winner(s) at the end of a hand. After
         calling, pot will be 0, all bets will be 0, and the winner(s)'s stack
@@ -241,12 +241,13 @@ class Node {
     std::fill(bets_, bets_ + kPlayers, 0);
   }  // AwardPot()
 
+  constexpr static struct SingleRun {} single_run_{};
   /*
-    @brief Allocate the pot to the winner(s) at the end of a hand. After
-        calling, pot will be 0, all bets will be 0, and the winner(s)'s stack
-        will have increased by the appropriate amount. Must only be called when
-        the game is no longer in progress and AwardPot() hasn't already been
-        called for the current hand.
+    @brief Allocate the pot to the winner(s) at the end of a hand with at most
+        one run of the board. After calling, pot will be 0, all bets will be 0,
+        and the winner(s)'s stack will have increased by the appropriate amount.
+        Must only be called when the game is no longer in progress and
+        AwardPot() hasn't already been called for the current hand.
 
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
@@ -258,7 +259,7 @@ class Node {
         the river. SKEval indexing. Nullptr is a valid option if all but one
         player has folded.
   */
-  void AwardPot(const uint8_t hands[kPlayers][2] = nullptr,
+  void AwardPot(SingleRun, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
     VerifyAwardablePot();
 
@@ -287,6 +288,7 @@ class Node {
     }  // while players_to_award > 0
   }  // AwardPot()
 
+  constexpr static struct MultiRun {} multi_run_{};
   /*
     @brief Allocate the pot to the winner(s) at the end of a hand, running the
         board multiple times. After calling, pot will be 0, all bets will be 0,
@@ -303,7 +305,8 @@ class Node {
         the river. SKEval indexing. Each row is a different run out.
     @param n_runs How many times the board is being run.
   */
-  void AwardPot(const uint8_t hands[kPlayers][2],
+  template <typename T>
+  void AwardPot(MultiRun, const uint8_t hands[kPlayers][2],
                 const uint8_t boards[][5], const uint8_t n_runs) {
     VerifyAwardablePot();
 
@@ -311,20 +314,19 @@ class Node {
     uint8_t players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) return FoldVictory(processed);
 
-    utils::Fraction awards[kPlayers];
+    T awards[kPlayers];
 
     uint16_t ranks_run[kPlayers];
     bool processed_run[kPlayers];
     uint32_t bets_run[kPlayers];
-    utils::Fraction side_pot;
+    T side_pot;
     BestPlayersData best_players_run;
     for (uint8_t run = 0; run < n_runs; ++run) {
       std::copy(processed, processed + kPlayers, processed_run);
       RankPlayers(hands, boards[run], processed_run, ranks_run);
       std::copy(bets_, bets_ + kPlayers, bets_run);
       while (players_to_award > 0) {
-        side_pot = AllocateSidePot(bets_run, processed_run) *
-                   utils::Fraction{1, n_runs};
+        side_pot = AllocateSidePot(bets_run, processed_run) * (T{1} / n_runs);
         best_players_run = BestPlayers(ranks_run, processed_run);
         AwardSidePot(&side_pot, ranks_run, processed_run, best_players_run,
                      awards);
@@ -337,8 +339,7 @@ class Node {
     bool awarded[kPlayers];
     for (uint8_t i = 0; i < kPlayers; ++i) {
       if (awards[i] > 0) {
-        uint32_t to_award = awards[i].numerator() * pot_ /
-                            awards[i].denominator();
+        uint32_t to_award = static_cast<uint32_t>(awards[i] * pot_);
         stack_[i] += to_award;
         pot_awarded += to_award;
         awarded[i] = true;

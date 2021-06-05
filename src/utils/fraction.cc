@@ -370,6 +370,7 @@ bool operator>=(double lhs, const Fraction& rhs) {
   return rhs.Compare(lhs) <= 0;
 }
 
+// Integer conversion operator
 template <typename T> Fraction::operator T() const {
   return numerator_ / denominator_;
 }
