@@ -109,13 +109,17 @@ class Fraction {
   }
 
   /*
-    @brief Calculates the greatest common divisor with an optimized Binary GCD
-        algorithm from https://hbfs.wordpress.com/2013/12/10/the-speed-of-gcd/
+    @brief Calculates the greatest common divisor. 
+    
+    Uses an optimized Binary GCD algorithm from
+    https://hbfs.wordpress.com/2013/12/10/the-speed-of-gcd/
   */
   static uint64_t GCD(uint64_t a, uint64_t b);
 
   /*
-    @brief Calculates the least common multiple using the following fact:
+    @brief Calculates the least common multiple.
+    
+    Uses the fact that:
         LCM(a, b) = (a x b) / GCD(a, b).
   */
   static uint64_t LCM(uint64_t a, uint64_t b) {
@@ -130,13 +134,16 @@ class Fraction {
   void Reduce();
 
   /*
-    @brief Consolidates the sign of the fraction to the numerator and leaves the
-        denominator greater than 0.
+    @brief Moves the sign of the fraction to the numerator.
+    
+    Leaves the denominator greater than 0.
   */
   void NumeratorSign();
 
   /*
-    @brief Returns a negative number if *this < rhs, returns 0 if *this == rhs,
+    @brief Compare this Fraction with the given Fraction.
+
+    @return a negative number if *this < rhs, returns 0 if *this == rhs,
         returns a positive number if *this > rhs.
   */
   int64_t Compare(const Fraction& rhs) const {

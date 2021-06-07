@@ -99,7 +99,7 @@ class KMeans {
   }  // MultipleRestarts()
 
   /*
-    @brief Run kmeans clustering with Elkan's algorithm
+    @brief Run kmeans clustering with Elkan's algorithm.
 
     @param data The data points to cluster.
     @param verbose Print diagnostics information.
@@ -361,7 +361,7 @@ class KMeans {
   }  // Elkan()
 
   /*
-    @brief Initialize clusters with the kmeans++ algorithm
+    @brief Initialize clusters with the kmeans++ algorithm.
 
     @param data The data points to select from.
     @param verbose Print diagnostics information.
@@ -402,8 +402,7 @@ class KMeans {
   }  // InitPlusPlus()
 
   /*
-    @brief Initialize clusters where the elements in each cluster sum to the
-        same value as the data elements.
+    @brief Initialize clusters whose sum is the same as the data elements.
 
     @param data The data points whose sum to mimic.
     @param seed Seed to use for the random number generation. If no seed is
@@ -440,8 +439,7 @@ class KMeans {
   }  // RandomSumInit()
 
   /*
-    @brief Initialize clusters whose values are probabilities (i.e. in the range
-        [0,1]).
+    @brief Initialize clusters whose values are probabilities.
 
     @param data The data points to derive dimensionality from.
     @param seed Seed to use for the random number generation. If no seed is
@@ -478,7 +476,7 @@ class KMeans {
 
  private:
   /*
-    @brief Run one iteration of the kmeans++ algorithm
+    @brief Run one iteration of the kmeans++ algorithm.
 
     @param data The data points to select from.
     @param squared_dists The squared distances between each point and the

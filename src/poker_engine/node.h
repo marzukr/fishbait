@@ -32,9 +32,7 @@ template <uint8_t kPlayers = 6>
 class Node {
  public:
   /*
-    @brief Construct a node with arbitrary card information. By default,
-        constructs a standard 50/100 game with each player starting with 100 big
-        blinds, with arbitrary card information.
+    @brief Construct a node.
 
     @param button The index of the player on the button.
     @param big_blind How many chips the big blind is.
@@ -121,8 +119,7 @@ class Node {
   }  // NewHand()
 
   /*
-    @brief Get the index of a player relative to the button where default
-        position is when the button is at index 0.
+    @brief Get the index of a player relative to the button.
 
     @param default_position The default position of the player to get the index
         of. Button is 0, small blind 1, big blind 2, etc. If it's heads up, 0
@@ -139,8 +136,10 @@ class Node {
   uint8_t Rotation() const { return cycled_ / kPlayers; }
 
   /*
-    @brief Returns true if the current acting_player_ can check/call. Otherwise
-        returns false. Also returns false if the player must go all in to call.
+    @brief If the current acting_player_ can check/call.
+    
+    @return True if the current acting_player_ can check/call. Otherwise returns
+        false. Also returns false if the player must go all in to call.
   */
   bool CanCheckCall() const {
     uint32_t prev_bet = bets_[acting_player_];
@@ -149,12 +148,14 @@ class Node {
   }
 
   /*
-    @brief Returns true if the current acting_player_ can bet the given amount.
-        Otherwise returns false. Also returns false if the given amount is all
-        of the players remaining chips.
+    @brief If the current acting_player_ can bet the given amount.
     
     @param size The amount of additional chips that the player would put into
         the pot.
+
+    @return True if the current acting_player_ can bet the given amount.
+        Otherwise returns false. Also returns false if the given amount is all
+        of the players remaining chips.
   */
   bool CanBet(uint32_t size) const {
     uint32_t prev_bet = bets_[acting_player_];
@@ -168,8 +169,9 @@ class Node {
   }  // CanBet()
 
   /*
-    @brief Apply the given move to this Node object. Must only be called when
-        the game is in progress.
+    @brief Apply the given move to this Node object.
+    
+    Must only be called when the game is in progress. Otherwise throws.
 
     @param next The Move to apply to this Node.
 
@@ -393,9 +395,10 @@ class Node {
 
  private:
   /*
-    @brief Make the given player post the given blind. If the player doesn't
-        have enough chips to post the blind, the player goes all in. Does not
-        change max_bet_ or min_raise_.
+    @brief Make the given player post the given blind.
+    
+    If the player doesn't have enough chips to post the blind, the player goes
+    all in. Does not change max_bet_ or min_raise_.
         
     @return The actual size of the blind posted.
   */
@@ -409,10 +412,11 @@ class Node {
   }
 
   /*
-    @brief Have the appropriate players pay the ante. If it is a big blind ante
-        and the amount the big blind can put in is not divisibly by the number
-        of players, then the change is counted towards the big blind's bet
-        total. Does not change max_bet_ or min_raise_.
+    @brief Have the appropriate players pay the ante.
+    
+    If it is a big blind ante and the amount the big blind can put in is not
+    divisible by the number of players, then the change is counted towards the
+    big blind's bet total. Does not change max_bet_ or min_raise_.
 
     @return The effective ante (can be less than the mandated ante if a player
         must go all in to pay it).
@@ -451,10 +455,11 @@ class Node {
   }  // PostAntes()
 
   /*
-    @brief Have the appropriate players straddle. If a player does not have
-        enough chips to straddle the appropriate amount, they do not straddle
-        and no players behind them can straddle either. Does not change max_bet_
-        or min_raise_.
+    @brief Have the appropriate players straddle.
+    
+    If a player does not have enough chips to straddle the appropriate amount,
+    they do not straddle and no players behind them can straddle either. Does
+    not change max_bet_ or min_raise_.
     
     @return The largest amount straddled. If no player straddles, returns the
         big blind. 
@@ -475,7 +480,7 @@ class Node {
   }  // PostStraddles()
 
   /*
-    @brief Fold the current acting player
+    @brief Fold the current acting player.
   */
   void Fold() {
     folded_[acting_player_] = true;
@@ -483,7 +488,7 @@ class Node {
   }
 
   /*
-    @brief The current acting player goes all in
+    @brief The current acting player goes all in.
   */
   void AllIn() {
     uint32_t prev_bet = bets_[acting_player_];
@@ -516,7 +521,7 @@ class Node {
   }  // AllIn()
 
   /*
-    @brief The current acting player check/calls
+    @brief The current acting player check/calls.
   */
   void CheckCall() {
     uint32_t prev_bet = bets_[acting_player_];
@@ -582,7 +587,7 @@ class Node {
   }  // CyclePlayers()
 
   /*
-    @brief Continue to the next betting round
+    @brief Continue to the next betting round.
   */
   void NextRound() {
     /* If there is only one player left, the current acting_player_ is the
@@ -636,8 +641,9 @@ class Node {
   }  // VerifyAwardablePot()
 
   /*
-    @brief Finds all the non folded or mucked players and marks them as
-        processed. Mark all other players as not processed.
+    @brief Mark all non folded or mucked players as processed.
+    
+    Mark all other players as not processed.
 
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
@@ -661,8 +667,10 @@ class Node {
   }  // PlayersToProcess()
 
   /*
-    @brief Awards the pot to the singular player that remains (it is assumed
-        there is only one player left who hasn't folded or mucked their cards).
+    @brief Awards the pot to the singular player that remains.
+    
+    It is assumed there is only one player left who hasn't folded or mucked
+    their cards.
 
     @param processed An array of whether each player is folded or mucked.
   */
@@ -700,8 +708,7 @@ class Node {
   }  // RankPlayers()
 
   /*
-    @brief Takes chips from each player's bets to allocate the smallest side pot
-        that still needs to be processed.
+    @brief Take chips from each player's bets to allocate the next side pot.
 
     @param bets An array of how much each player's bet still hasn't been
         awarded.
@@ -738,8 +745,7 @@ class Node {
 
   struct BestPlayersData { uint16_t rank; uint8_t n; };
   /*
-    @brief Find the player(s) with the best hand(s). If there is a tie, count
-        how many players are tied.
+    @brief Find and count the player(s) with the best hand(s).
 
     @param ranks Hand rankings for each player.
     @param filter Players marked as true in this array will not be considered.
@@ -787,10 +793,11 @@ class Node {
   }  // DivideSidePot()
 
   /*
-    @brief If the entirety of a player's bet has been allocated, they are no
-       longer eligible to win any more chips because a player can only win as
-       many chips as they put in from each other player. Thus, mark them as
-       processed.
+    @brief Mark players whose entire bet has been awarded as processed.
+    
+    If the entirety of a player's bet has been awarded, they are no longer
+    eligible to win any more chips because a player can only win as many chips
+    as they put in from each other player.
 
     @param bets An array of how much each player's bet still hasn't been
         awarded.
@@ -815,7 +822,7 @@ class Node {
 
     Takes an array of exact awards for each player, and maps it as best as
     possible to discrete chip values while preserving the total amount of chips
-    and minimizing roundoff error.
+    and minimizing roundoff error. Uses the Hamilton apportionment method.
 
     @param pot The pot to award. It will be left at zero after this function is
         called.
