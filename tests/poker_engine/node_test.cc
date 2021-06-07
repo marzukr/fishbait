@@ -3,6 +3,7 @@
 #include "catch2/catch.hpp"
 #include "deck/card_utils.h"
 #include "poker_engine/node.h"
+#include "utils/fraction.h"
 
 TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   /* 
@@ -261,7 +262,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
                           {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}};
   uint8_t board0[5] = {Card("8c"), Card("6c"), Card("Ks"), Card("5c"),
                        Card("4d")};
-  triton.AwardPot(triton.single_run_, cards0, board0);
+  triton.AwardPot<double>(triton.single_run_, cards0, board0);
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 2 --------------------------------- */
@@ -404,7 +405,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
                           {Card("Kc"), Card("4s")}, {Card("7c"), Card("6s")},
                           {Card("7s"), Card("3s")}, {Card("Tc"), Card("8h")}};
   uint8_t board1[5] = {/*Flop1*/ /*Flop2*/ /*Flop3*/ /*Turn*/ /*River*/};
-  triton.AwardPot(triton.single_run_, cards1, board1);
+  triton.AwardPot<utils::Fraction>(triton.single_run_, cards1, board1);
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 3 --------------------------------- */
@@ -592,7 +593,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   //      {Card("5s"), Card("4d")}, {Card("9c"), Card("3d")}};
   // uint8_t board2[5] = {Card("Kd"), Card("3s"), Card("7d") /*Turn*/
   //                      /*River*/};
-  triton.AwardPot(triton.single_run_);
+  triton.AwardPot<double>(triton.single_run_);
   REQUIRE(triton.pot() == 0);
   REQUIRE(triton.bets(0) == 0);
   REQUIRE(triton.stack(0) == 500000);
@@ -680,7 +681,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   uint8_t cards0[2][2] = {{Card("7c"), Card("2h")}, {Card("Ah"), Card("As")}};
   uint8_t board0[5] = {Card("9c"), Card("6c"), Card("Ks"), Card("5c"),
                        Card("4d")};
-  heads_up.AwardPot(heads_up.single_run_, cards0, board0);
+  heads_up.AwardPot<utils::Fraction>(heads_up.single_run_, cards0, board0);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -716,7 +717,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   uint8_t cards1[8][2] = {{Card("5s"), Card("4s")}, {Card("Kh"), Card("Th")}};
   uint8_t board1[5] = {Card("7h"), Card("Ah"), Card("3c"), Card("7s"),
                        Card("6c")};
-  heads_up.AwardPot(heads_up.single_run_, cards1, board1);
+  heads_up.AwardPot<double>(heads_up.single_run_, cards1, board1);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -772,7 +773,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   uint8_t cards2[8][2] = {{Card("8h"), Card("8c")}, {Card("5d"), Card("5c")}};
   uint8_t board2[5] = {Card("9d"), Card("6h"), Card("7c"), Card("Td"),
                        Card("Kh")};
-  heads_up.AwardPot(heads_up.single_run_, cards2, board2);
+  heads_up.AwardPot<utils::Fraction>(heads_up.single_run_, cards2, board2);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -839,7 +840,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   uint8_t cards0[2][2] = {{Card("6d"), Card("6c")}, {Card("Qc"), Card("Jd")}};
   uint8_t board0[5] = {Card("7h"), Card("4s"), Card("Js"), Card("Th"),
                        Card("Ad")};
-  heads_up.AwardPot(heads_up.single_run_, cards0, board0);
+  heads_up.AwardPot<double>(heads_up.single_run_, cards0, board0);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -875,7 +876,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   uint8_t cards1[8][2] = {{Card("Ah"), Card("Kd")}, {Card("Qc"), Card("Qh")}};
   uint8_t board1[5] = {Card("3h"), Card("6c"), Card("9c"), Card("9d"),
                        Card("Ad")};
-  heads_up.AwardPot(heads_up.single_run_, cards1, board1);
+  heads_up.AwardPot<utils::Fraction>(heads_up.single_run_, cards1, board1);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -933,7 +934,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   uint8_t cards2[8][2] = {{Card("Qc"), Card("Qh")}, {Card("8s"), Card("8d")}};
   uint8_t board2[5] = {Card("3d"), Card("Ac"), Card("Kh"), Card("3h"),
                        Card("2h")};
-  heads_up.AwardPot(heads_up.single_run_, cards2, board2);
+  heads_up.AwardPot<double>(heads_up.single_run_, cards2, board2);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
