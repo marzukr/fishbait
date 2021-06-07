@@ -1,6 +1,8 @@
 // Copyright 2021 Marzuk Rashid
 
 #include <cstdint>
+#include <numeric>
+#include <sstream>
 #include <vector>
 
 #include "catch2/catch.hpp"
@@ -269,3 +271,15 @@ TEST_CASE("Test Matrix", "[utils][matrix]") {
     }
   }  // SECTION("Assignment operator")
 }  // TEST_CASE("Test Matrix", "[utils][matrix]")
+
+TEST_CASE("Test Matrix print", "[utils][matrix]") {
+  utils::Matrix<int> test_mat(5, 5);
+  std::iota(test_mat.begin(), test_mat.end(), 1);
+  std::stringstream ss;
+  ss << test_mat;
+  REQUIRE(ss.str() == "1,2,3,4,5\n"
+                      "6,7,8,9,10\n"
+                      "11,12,13,14,15\n"
+                      "16,17,18,19,20\n"
+                      "21,22,23,24,25\n");
+}  // TEST_CASE("Test Matrix print", "[utils][matrix]")
