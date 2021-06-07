@@ -169,7 +169,7 @@ Fraction operator*(Fraction lhs, const Fraction& rhs) {
 // Multiply fractions and ints with each other
 template <typename T> Fraction& Fraction::operator*=(T rhs) {
   numerator_ *= rhs;
-  if (rhs != 1 && (!std::is_signed<T>::value || rhs != -1)) Reduce();
+  Reduce();
   return *this;
 }
 template Fraction& Fraction::operator*=<int8_t>(int8_t);
@@ -225,10 +225,6 @@ Fraction operator/(Fraction lhs, const Fraction& rhs) {
 
 // Divide fractions and ints with each other
 template <typename T> Fraction& Fraction::operator/=(T rhs) {
-  if (rhs == 1 || (std::is_signed<T>::value && rhs == -1)) {
-    numerator_ *= rhs;
-    return *this;
-  }
   denominator_ *= rhs;
   NumeratorSign();
   Reduce();

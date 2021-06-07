@@ -9,14 +9,12 @@ From the root directory:
 1. `mkdir -p build`
 2. `cd build`
 3. `cmake ..`
-    - Use `cmake -DCMAKE_BUILD_TYPE=Debug ..` to debug with gdb or lldb.
-    - Use `cmake -DCMAKE_BUILD_TYPE=Release ..` to run in release mode. Release
-      mode will add optimizations that make the code run faster.
-    - `cmake ..` will use the last value specified for `CMAKE_BUILD_TYPE`. If no
-      value is specified, it will use neither.
-4. `make`
-    - Note: You can also run `make <target>` to only build a specific part of
-      the project. Run `make help` for a list of targets.
+  - Add `-D CMAKE_C_COMPILER=<c-compiler>` and 
+    `-D CMAKE_CXX_COMPILER=<cpp-compiler>` before `..` to set the compilers.
+4. `cmake --build . --config Debug`
+  - Use `--config Debug` to debug with gdb or lldb.
+  - Use `--config Release` to run in release mode. Release mode will add
+    optimizations that makes the code run faster.
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.
