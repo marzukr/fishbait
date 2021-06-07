@@ -243,7 +243,7 @@ class Node {
     uint16_t ranks[kPlayers];
     RankPlayers(hands, board, folded_, ranks);
     BestPlayersData best_players = BestPlayers(ranks, folded_);
-    T exact_awards[kPlayers];
+    T exact_awards[kPlayers]{};
     T pot_precise = static_cast<T>(pot_);
     DivideSidePot(pot_precise, ranks, folded_, best_players, exact_awards);
     DistributeChips(&pot_, exact_awards, stack_);
@@ -294,7 +294,7 @@ class Node {
     RankPlayers(hands, board, processed, ranks);
 
     // Loop through each side pot and award it to the appropriate player(s)
-    T exact_awards[kPlayers];
+    T exact_awards[kPlayers]{};
     while (players_to_award > 0) {
       T side_pot = static_cast<T>(AllocateSidePot(bets_, processed));
       BestPlayersData best_players = BestPlayers(ranks, processed);
@@ -334,7 +334,7 @@ class Node {
     uint8_t players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) return FoldVictory(processed);
 
-    T exact_awards[kPlayers];
+    T exact_awards[kPlayers]{};
 
     uint16_t ranks_run[kPlayers];
     bool processed_run[kPlayers];

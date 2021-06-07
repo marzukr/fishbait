@@ -8,13 +8,14 @@ From the root directory:
 
 1. `mkdir -p build`
 2. `cd build`
-3. `cmake ..`
-  - Add `-D CMAKE_C_COMPILER=<c-compiler>` and 
-    `-D CMAKE_CXX_COMPILER=<cpp-compiler>` before `..` to set the compilers.
-4. `cmake --build . --config Debug`
-  - Use `--config Debug` to debug with gdb or lldb.
-  - Use `--config Release` to run in release mode. Release mode will add
-    optimizations that makes the code run faster.
+3. `cmake <options> ..`
+    * Possible Options:
+        * Add `-D CMAKE_C_COMPILER=<c-compiler>` and 
+          `-D CMAKE_CXX_COMPILER=<cpp-compiler>`
+        * Use `-D CMAKE_BUILD_TYPE=Debug` to debug with gdb or lldb.
+        * Use `-D CMAKE_BUILD_TYPE=Release` to run in release mode. Release mode
+          will add optimizations that makes the code run faster.
+4. `cmake --build .`
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.

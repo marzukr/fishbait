@@ -7,7 +7,7 @@ echo "Linting Python Files..."
 find src tests -type f -name "*.py" | xargs pylint || { exit 1; }
 
 echo "Building..."
-cmake --build build --config Debug || { exit 1; }
+cmake --build build || { exit 1; }
 
 echo "Testing..."
 cd build || { exit 1; }
