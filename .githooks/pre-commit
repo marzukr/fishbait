@@ -1,38 +1,16 @@
 #!/bin/sh
 
-# Lint C++ files
-cpplint --recursive --quiet src tests
-if [ $? -eq 0 ]
-then
-  echo "cpplint returned with no errors"
-else
-  exit $?
-fi
+echo "Linting C++ Files..."
+cpplint --recursive --quiet src tests || { exit 1; }
 
-# Lint Python files
-find src tests -type f -name "*.py" | xargs pylint
-if [ $? -ne 0 ]
-then
-  exit $?
-fi
+echo "Linting Python Files..."
+find src tests -type f -name "*.py" | xargs pylint || { exit 1; }
 
-# Build and test the project
-cd build
-if [ $? -ne 0 ]
-then
-  res=$?
-  echo "build folder not configured"
-  exit $res
-fi
-make
-if [ $? -ne 0 ]
-then
-  exit $?
-fi
-./bin/tests.out
-if [ $? -ne 0 ]
-then
-  exit $?
-fi
+echo "Building..."
+cmake --build build --config Debug || { exit 1; }
+
+echo "Testing..."
+cd build || { exit 1; }
+./bin/tests.out || { exit 1; }
 
 exit 0

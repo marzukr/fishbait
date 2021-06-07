@@ -6,18 +6,26 @@ import argparse
 import fractions
 import random
 
-FRACION_UPPER_BOUND = 10000000
+FRACTION_UPPER_BOUND = 10000000
 
-def random_fraction(sign = 1):
-  numerator = random.randint(1, FRACION_UPPER_BOUND) * sign
-  denominator = random.randint(1, FRACION_UPPER_BOUND)
-  return fractions.Fraction(numerator, denominator)
-
-def random_int(sign = 1):
-  return random.randint(1, FRACION_UPPER_BOUND) * sign
+def random_int(sign = 1, bits = 32, signed = True):
+  type_upper_bound = 2**(bits - signed) - 1
+  upper_bound = min(type_upper_bound, FRACTION_UPPER_BOUND)
+  return random.randint(1, upper_bound) * sign
 
 def random_double(sign = 1):
-  return random.uniform(1, FRACION_UPPER_BOUND) * sign
+  return random.uniform(1, FRACTION_UPPER_BOUND) * sign
+
+def random_fraction(sign = 1, bits = None, signed = None):
+  numerator = None
+  denominator = None
+  if bits is not None and signed is not None:
+    numerator = random_int(sign, bits, signed)
+    denominator = random_int(1, bits, signed)
+  else:
+    numerator = random.randint(1, FRACTION_UPPER_BOUND) * sign
+    denominator = random.randint(1, FRACTION_UPPER_BOUND)
+  return fractions.Fraction(numerator, denominator)
 
 def sign_to_str(sign):
   if sign == 1:
@@ -60,11 +68,23 @@ def construct_fraction(frac_obj, it = None):
                                               frac_obj.denominator)
   else:
     return "utils::Fraction f{}{{{}, {}}};".format(it, frac_obj.numerator,
-                                                  frac_obj.denominator)
+                                                   frac_obj.denominator)
 
 def construct_fraction_arith(a1, a2, operator, it):
   """Returns C++ code to construct a fraction through arithmetic."""
   return "utils::Fraction f{} = {} {} {};".format(it, a1, operator, a2)
+
+def int_type_str(bits, signed):
+  """For instance, with bits=8 and signed = False, returns "uint8_t"."""
+  sign_str = "" if signed else "u"
+  return "{}int{}_t".format(sign_str, bits)
+
+def construct_int(n, bits, signed, it = None):
+  """Returns C++ code to construct the given integer."""
+  if it is None:
+    return "{}{{{}}}".format(int_type_str(bits, signed), n)
+  else:
+    return "{} i{}{{{}}}".format(int_type_str(bits, signed), it, n)
 
 def bool_py_to_cpp(bool_exp):
   """Given a python bool, return the equivalent C++ expression."""
@@ -135,46 +155,54 @@ def arithmetic_equal_fraction(operator):
       it += 1
   end_test_case(name)
 
-def arithmetic_equal_int_iter(operator, sign_1, sign_2, it):
+def arithmetic_equal_int_iter(operator, sign_1, sign_2, bits, signed, it):
   """Single iterator for arithmetic_equal_int.
 
   Args:
     operator: +, -, *, or /
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
     sign_2: 1, -1, or 0 for the sign of the second fraction to compare
+    bits: how many bits to use for the int
+    signed: if the int is signed or unsigned
     it: what number to start the fraction variable naming
   """
   print("  // {}".format(signs_to_str(sign_1, sign_2)))
   f1 = random_fraction(sign_1)
   print("  " + construct_fraction(f1, it))
-  i2 = random_int(sign_2)
-  print("  f{} {}= {};".format(it, operator, i2))
+  i2 = random_int(sign_2, bits, signed)
+  i2_str = construct_int(i2, bits, signed)
+  print("  f{} {}= {};".format(it, operator, i2_str))
 
   f1 = perform_operation(f1, i2, operator)
 
   print("  REQUIRE(f{}.numerator() == {});".format(it, f1.numerator))
   print("  REQUIRE(f{}.denominator() == {});".format(it, f1.denominator))
 
-def arithmetic_equal_int(operator):
+def arithmetic_equal_int(operator, bits, signed):
   """Generates a tester for +=, -=, *=, and /= an int."""
-  name = "fraction {} equals int".format(operator_to_str(operator))
+  name = "fraction {} equals {}".format(operator_to_str(operator),
+                                        int_type_str(bits, signed))
   begin_test_case(name)
   it = 0
+  int_sign_options = [1, -1, 0] if signed else [1, 0]
   for sign_1 in [1, -1, 0]:
-    for sign_2 in [1, -1, 0]:
+    for sign_2 in int_sign_options:
       if operator == "/" and sign_2 == 0:
         continue
-      arithmetic_equal_int_iter(operator, sign_1, sign_2, it)
+      arithmetic_equal_int_iter(operator, sign_1, sign_2, bits, signed, it)
       it += 1
   end_test_case(name)
 
-def arithmetic_int_fraction_iter(operator, sign_1, sign_2, it, int_first):
+def arithmetic_int_fraction_iter(operator, sign_1, sign_2, bits, signed, it,
+                                 int_first):
   """Single iterator for arithmetic_int_fraction.
 
   Args:
     operator: +, -, *, or /
     sign_1: 1, -1, or 0 for the sign of the first fraction to compare
     sign_2: 1, -1, or 0 for the sign of the second fraction to compare
+    bits: how many bits to use for the int
+    signed: if the int is signed or unsigned
     it: what number to start the fraction variable naming
     int_first: True to create a tester for ints op fractions. False to create a
         tester for fractions op ints.
@@ -186,8 +214,8 @@ def arithmetic_int_fraction_iter(operator, sign_1, sign_2, it, int_first):
   arg2_str = None
   frac = None
   if int_first:
-    arg1 = random_int(sign_1)
-    arg1_str = arg1
+    arg1 = random_int(sign_1, bits, signed)
+    arg1_str = construct_int(arg1, bits, signed)
     arg2 = random_fraction(sign_2)
     print("  " + construct_fraction(arg2, it))
     arg2_str = "f{}".format(it)
@@ -196,8 +224,8 @@ def arithmetic_int_fraction_iter(operator, sign_1, sign_2, it, int_first):
     arg1 = random_fraction(sign_1)
     print("  " + construct_fraction(arg1, it))
     arg1_str = "f{}".format(it)
-    arg2 = random_int(sign_2)
-    arg2_str = arg2
+    arg2 = random_int(sign_2, bits, signed)
+    arg2_str = construct_int(arg2, bits, signed)
     frac = arg1
   print("  f{} = {} {} {};".format(it, arg1_str, operator, arg2_str))
 
@@ -206,26 +234,35 @@ def arithmetic_int_fraction_iter(operator, sign_1, sign_2, it, int_first):
   print("  REQUIRE(f{}.numerator() == {});".format(it, frac.numerator))
   print("  REQUIRE(f{}.denominator() == {});".format(it, frac.denominator))
 
-def arithmetic_int_fraction(operator, int_first):
+def arithmetic_int_fraction(operator, bits, signed, int_first):
   """Generates a tester for +, -, *, and / a fraction and an int.
 
   Args:
     operator: +, -, *, or /
+    bits: how many bits to use for the int
+    signed: if the int is signed or unsigned
     int_first: True to create a tester for ints op fractions. False to create a
         tester for fractions op ints.
   """
   name = None
   if int_first:
-    name = "int {} fraction".format(operator_to_str(operator))
+    name = "{} {} fraction".format(int_type_str(bits, signed),
+                                   operator_to_str(operator))
   else:
-    name = "fraction {} int".format(operator_to_str(operator))
+    name = "fraction {} {}".format(operator_to_str(operator),
+                                   int_type_str(bits, signed))
   begin_test_case(name)
   it = 0
-  for sign_1 in [1, -1, 0]:
-    for sign_2 in [1, -1, 0]:
+  sign_1_options = [1, -1, 0]
+  sign_2_options = [1, -1, 0]
+  sign_1_options = [1, 0] if not signed and int_first else sign_1_options
+  sign_2_options = [1, 0] if not signed and not int_first else sign_2_options
+  for sign_1 in sign_1_options:
+    for sign_2 in sign_2_options:
       if operator == "/" and sign_2 == 0:
         continue
-      arithmetic_int_fraction_iter(operator, sign_1, sign_2, it, int_first)
+      arithmetic_int_fraction_iter(operator, sign_1, sign_2, bits, signed, it,
+                                   int_first)
       it += 1
   end_test_case(name)
 
@@ -327,9 +364,13 @@ def arithmetic_fraction_fraction(operator):
 def arithmetic_tester(operator):
   """Generates a tester for basic arithmetic (+, -, *, /)."""
   arithmetic_equal_fraction(operator)
-  arithmetic_equal_int(operator)
-  arithmetic_int_fraction(operator, True)
-  arithmetic_int_fraction(operator, False)
+  for bits in [8, 16, 32, 64]:
+    for signed in [True, False]:
+      if not signed and bits == 64:
+        continue
+      arithmetic_equal_int(operator, bits, signed)
+      arithmetic_int_fraction(operator, bits, signed, True)
+      arithmetic_int_fraction(operator, bits, signed, False)
   arithmetic_double_fraction(operator, True)
   arithmetic_double_fraction(operator, False)
   arithmetic_fraction_fraction(operator)
@@ -383,7 +424,7 @@ def comparison_fraction_fraction(operator):
   end_test_case(name)
 
 def comparison_fraction_num_iter(operator, sign_1, sign_2, it, is_same,
-                                 num_first, is_double):
+                                 num_first, is_double, bits, signed):
   """Single iterator for comparison_fraction_num.
 
   Args:
@@ -396,6 +437,8 @@ def comparison_fraction_num_iter(operator, sign_1, sign_2, it, is_same,
         tester for fractions op nums.
     is_double: True to create a tester for double numbers. False to create a
         tester for int numbers.
+    bits: how many bits to use for the int if comparing against an int
+    signed: if the int is signed or unsigned if comparing against an int
   """
   print("  " + comparison_test_comment(sign_1, sign_2, is_same))
   frac_sign = sign_1
@@ -407,16 +450,16 @@ def comparison_fraction_num_iter(operator, sign_1, sign_2, it, is_same,
   if is_double:
     num_arg = random_double(num_sign)
   else:
-    num_arg = random_int(num_sign)
+    num_arg = random_int(num_sign, bits, signed)
   frac_arg = None
   if is_same:
     frac_arg = fractions.Fraction(num_arg)
   else:
     frac_arg = random_fraction(frac_sign)
   str1 = "f{}".format(it)
-  str2 = num_arg
+  str2 = num_arg if is_double else construct_int(num_arg, bits, signed)
   if num_first:
-    str1 = num_arg
+    str1 = num_arg if is_double else construct_int(num_arg, bits, signed)
     str2 = "f{}".format(it)
   print("  " + construct_fraction(frac_arg, it))
 
@@ -428,59 +471,118 @@ def comparison_fraction_num_iter(operator, sign_1, sign_2, it, is_same,
 
   print("  REQUIRE(({} {} {}) == {});".format(str1, operator, str2, result))
 
-def comparison_fraction_num(operator, num_first, is_double):
+def comparison_fraction_num(operator, num_first, is_double, bits, signed):
   """Generates a tester for ==, !=, <, >, <=, and >= two fractions.
+
   Args:
     operator: ==, !=, <, >=, etc.
     num_first: True to create a tester for nums op fractions. False to create a
         tester for fractions op nums.
     is_double: True to create a tester for double numbers. False to create a
         tester for int numbers.
+    bits: how many bits to use for the int if comparing against an int
+    signed: if the int is signed or unsigned if comparing against an int
   """
   name = None
   if num_first:
     if is_double:
       name = "double fraction {}".format(operator_to_str(operator))
     else:
-      name = "int fraction {}".format(operator_to_str(operator))
+      name = "{} fraction {}".format(int_type_str(bits, signed),
+                                     operator_to_str(operator))
   else:
     if is_double:
       name = "fraction double {}".format(operator_to_str(operator))
     else:
-      name = "fraction int {}".format(operator_to_str(operator))
+      name = "fraction {} {}".format(operator_to_str(operator),
+                                     int_type_str(bits, signed))
   begin_test_case(name)
   it = 0
-  for sign_1 in [1, -1, 0]:
-    for sign_2 in [1, -1, 0]:
+  sign_1_options = [1, -1, 0]
+  sign_2_options = [1, -1, 0]
+  if not signed and num_first and not is_double:
+    sign_1_options = [1, 0]
+  if not signed and not num_first and not is_double:
+    sign_2_options = [1, 0]
+  for sign_1 in sign_1_options:
+    for sign_2 in sign_2_options:
       if ((sign_1 == 1 and sign_1 == sign_2) or
           (sign_1 == -1 and sign_1 == sign_2)):
         comparison_fraction_num_iter(operator, sign_1, sign_2, it, True,
-                                     num_first, is_double)
+                                     num_first, is_double, bits, signed)
         it += 1
       comparison_fraction_num_iter(operator, sign_1, sign_2, it, False,
-                                   num_first, is_double)
+                                   num_first, is_double, bits, signed)
       it += 1
   end_test_case(name)
 
 def comparison_tester(operator):
   """Generates a tester for comparisons (==, !=, <, >, <=, >=)."""
   comparison_fraction_fraction(operator)
-  comparison_fraction_num(operator, True, False)
-  comparison_fraction_num(operator, False, False)
-  comparison_fraction_num(operator, True, True)
-  comparison_fraction_num(operator, False, True)
+  for bits in [8, 16, 32, 64]:
+    for signed in [True, False]:
+      if not signed and bits == 64:
+        continue
+      comparison_fraction_num(operator, True, False, bits, signed)
+      comparison_fraction_num(operator, False, False, bits, signed)
+  comparison_fraction_num(operator, True, True, None, None)
+  comparison_fraction_num(operator, False, True, None, None)
+
+def int_conversion_iter(sign, bits, signed, it):
+  """Single iterator for int_conversion.
+
+  Args:
+    sign: 1, -1, or 0 for the sign of the fraction to convert
+    bits: how many bits to use for the int to convert to
+    signed: if the int to convert to is signed or unsigned
+    it: what number to start the fraction variable naming
+  """
+  print("  // {}".format(sign_to_str(sign)))
+  f1 = random_fraction(sign, bits, signed)
+  print("  " + construct_fraction(f1, it))
+  int_type = int_type_str(bits, signed)
+
+  result = int(f1)
+
+  print("  REQUIRE(static_cast<{}>(f{}) == {});".format(int_type, it, result))
+
+def int_conversion(bits, signed):
+  """Generates a tester for int conversions.
+
+  Args:
+    bits: how many bits to use for the int to convert to
+    signed: if the int to convert to is signed or unsigned
+  """
+  name = "{} conversion".format(int_type_str(bits, signed))
+  begin_test_case(name)
+  sign_options = [1, -1, 0] if signed else [1, 0]
+  it = 0
+  for sign in sign_options:
+    int_conversion_iter(sign, bits, signed, it)
+    it += 1
+  end_test_case(name)
+
+def int_conversion_tester():
+  """Generates a tester for int conversions."""
+  for bits in [8, 16, 32, 64]:
+    for signed in [True, False]:
+      if not signed and bits == 64:
+        continue
+      int_conversion(bits, signed)
 
 def main():
   parser = argparse.ArgumentParser(description="Generate tests for the C++ "
                                                "Fraction class.")
   parser.add_argument("operator", help="operator to generate tests for",
                       choices=["+", "-", "*", "/", "==", "!=", "<", ">", "<=",
-                               ">="])
+                               ">=", "int_conversion"])
   args = parser.parse_args()
   if args.operator in ["+", "-", "*", "/"]:
     arithmetic_tester(args.operator)
-  else:
+  elif args.operator in ["==", "!=", "<", ">", "<=", ">="]:
     comparison_tester(args.operator)
+  else:
+    int_conversion_tester()
 
 if __name__ == "__main__":
   main()

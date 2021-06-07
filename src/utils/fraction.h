@@ -40,19 +40,19 @@ class Fraction {
 
   // Addition
   Fraction& operator+=(const Fraction& rhs);
-  Fraction& operator+=(int64_t rhs);
+  template<typename T> Fraction& operator+=(T rhs);
 
   // Subtraction
   Fraction& operator-=(const Fraction& rhs);
-  Fraction& operator-=(int64_t rhs);
+  template<typename T> Fraction& operator-=(T rhs);
 
   // Multiplication
   Fraction& operator*=(const Fraction& rhs);
-  Fraction& operator*=(int64_t rhs);
+  template<typename T> Fraction& operator*=(T rhs);
 
   // Division
   Fraction& operator/=(const Fraction& rhs);
-  Fraction& operator/=(int64_t rhs);
+  template<typename T> Fraction& operator/=(T rhs);
 
   // Equality operators
   friend bool operator==(const Fraction& lhs, const Fraction& rhs);

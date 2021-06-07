@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 namespace utils {
@@ -47,12 +48,19 @@ Fraction operator+(Fraction lhs, const Fraction& rhs) {
 }
 
 // Add fractions and ints with each other
-Fraction& Fraction::operator+=(int64_t rhs) {
+template <typename T> Fraction& Fraction::operator+=(T rhs) {
   numerator_ += rhs * denominator_;
   Reduce();
   return *this;
 }
-template<typename T> Fraction operator+(T lhs, Fraction rhs) {
+template Fraction& Fraction::operator+=<int8_t>(int8_t);
+template Fraction& Fraction::operator+=<int16_t>(int16_t);
+template Fraction& Fraction::operator+=<int32_t>(int32_t);
+template Fraction& Fraction::operator+=<int64_t>(int64_t);
+template Fraction& Fraction::operator+=<uint8_t>(uint8_t);
+template Fraction& Fraction::operator+=<uint16_t>(uint16_t);
+template Fraction& Fraction::operator+=<uint32_t>(uint32_t);
+template <typename T> Fraction operator+(T lhs, Fraction rhs) {
   rhs += lhs;
   return rhs;
 }
@@ -60,7 +68,10 @@ template Fraction operator+<int8_t>(int8_t, Fraction);
 template Fraction operator+<int16_t>(int16_t, Fraction);
 template Fraction operator+<int32_t>(int32_t, Fraction);
 template Fraction operator+<int64_t>(int64_t, Fraction);
-template<typename T> Fraction operator+(Fraction lhs, T rhs) {
+template Fraction operator+<uint8_t>(uint8_t, Fraction);
+template Fraction operator+<uint16_t>(uint16_t, Fraction);
+template Fraction operator+<uint32_t>(uint32_t, Fraction);
+template <typename T> Fraction operator+(Fraction lhs, T rhs) {
   lhs += rhs;
   return lhs;
 }
@@ -68,6 +79,9 @@ template Fraction operator+<int8_t>(Fraction, int8_t);
 template Fraction operator+<int16_t>(Fraction, int16_t);
 template Fraction operator+<int32_t>(Fraction, int32_t);
 template Fraction operator+<int64_t>(Fraction, int64_t);
+template Fraction operator+<uint8_t>(Fraction, uint8_t);
+template Fraction operator+<uint16_t>(Fraction, uint16_t);
+template Fraction operator+<uint32_t>(Fraction, uint32_t);
 
 // Add fractions and doubles with each other
 double operator+(double lhs, const Fraction& rhs) {
@@ -90,12 +104,19 @@ Fraction operator-(Fraction lhs, const Fraction& rhs) {
 }
 
 // Subtract fractions and ints with each other
-Fraction& Fraction::operator-=(int64_t rhs) {
+template <typename T> Fraction& Fraction::operator-=(T rhs) {
   numerator_ -= rhs * denominator_;
   Reduce();
   return *this;
 }
-template<typename T> Fraction operator-(T lhs, Fraction rhs) {
+template Fraction& Fraction::operator-=<int8_t>(int8_t);
+template Fraction& Fraction::operator-=<int16_t>(int16_t);
+template Fraction& Fraction::operator-=<int32_t>(int32_t);
+template Fraction& Fraction::operator-=<int64_t>(int64_t);
+template Fraction& Fraction::operator-=<uint8_t>(uint8_t);
+template Fraction& Fraction::operator-=<uint16_t>(uint16_t);
+template Fraction& Fraction::operator-=<uint32_t>(uint32_t);
+template <typename T> Fraction operator-(T lhs, Fraction rhs) {
   rhs *= -1;
   rhs += lhs;
   return rhs;
@@ -104,7 +125,10 @@ template Fraction operator-<int8_t>(int8_t, Fraction);
 template Fraction operator-<int16_t>(int16_t, Fraction);
 template Fraction operator-<int32_t>(int32_t, Fraction);
 template Fraction operator-<int64_t>(int64_t, Fraction);
-template<typename T> Fraction operator-(Fraction lhs, T rhs) {
+template Fraction operator-<uint8_t>(uint8_t, Fraction);
+template Fraction operator-<uint16_t>(uint16_t, Fraction);
+template Fraction operator-<uint32_t>(uint32_t, Fraction);
+template <typename T> Fraction operator-(Fraction lhs, T rhs) {
   lhs -= rhs;
   return lhs;
 }
@@ -112,6 +136,9 @@ template Fraction operator-<int8_t>(Fraction, int8_t);
 template Fraction operator-<int16_t>(Fraction, int16_t);
 template Fraction operator-<int32_t>(Fraction, int32_t);
 template Fraction operator-<int64_t>(Fraction, int64_t);
+template Fraction operator-<uint8_t>(Fraction, uint8_t);
+template Fraction operator-<uint16_t>(Fraction, uint16_t);
+template Fraction operator-<uint32_t>(Fraction, uint32_t);
 
 // Subtract fractions and doubles with each other
 double operator-(double lhs, const Fraction& rhs) {
@@ -140,12 +167,19 @@ Fraction operator*(Fraction lhs, const Fraction& rhs) {
 }
 
 // Multiply fractions and ints with each other
-Fraction& Fraction::operator*=(int64_t rhs) {
+template <typename T> Fraction& Fraction::operator*=(T rhs) {
   numerator_ *= rhs;
-  if (rhs != 1 && rhs != -1) Reduce();
+  if (rhs != 1 && (!std::is_signed<T>::value || rhs != -1)) Reduce();
   return *this;
 }
-template<typename T> Fraction operator*(T lhs, Fraction rhs) {
+template Fraction& Fraction::operator*=<int8_t>(int8_t);
+template Fraction& Fraction::operator*=<int16_t>(int16_t);
+template Fraction& Fraction::operator*=<int32_t>(int32_t);
+template Fraction& Fraction::operator*=<int64_t>(int64_t);
+template Fraction& Fraction::operator*=<uint8_t>(uint8_t);
+template Fraction& Fraction::operator*=<uint16_t>(uint16_t);
+template Fraction& Fraction::operator*=<uint32_t>(uint32_t);
+template <typename T> Fraction operator*(T lhs, Fraction rhs) {
   rhs *= lhs;
   return rhs;
 }
@@ -153,7 +187,10 @@ template Fraction operator*<int8_t>(int8_t, Fraction);
 template Fraction operator*<int16_t>(int16_t, Fraction);
 template Fraction operator*<int32_t>(int32_t, Fraction);
 template Fraction operator*<int64_t>(int64_t, Fraction);
-template<typename T> Fraction operator*(Fraction lhs, T rhs) {
+template Fraction operator*<uint8_t>(uint8_t, Fraction);
+template Fraction operator*<uint16_t>(uint16_t, Fraction);
+template Fraction operator*<uint32_t>(uint32_t, Fraction);
+template <typename T> Fraction operator*(Fraction lhs, T rhs) {
   lhs *= rhs;
   return lhs;
 }
@@ -161,6 +198,9 @@ template Fraction operator*<int8_t>(Fraction, int8_t);
 template Fraction operator*<int16_t>(Fraction, int16_t);
 template Fraction operator*<int32_t>(Fraction, int32_t);
 template Fraction operator*<int64_t>(Fraction, int64_t);
+template Fraction operator*<uint8_t>(Fraction, uint8_t);
+template Fraction operator*<uint16_t>(Fraction, uint16_t);
+template Fraction operator*<uint32_t>(Fraction, uint32_t);
 
 // Multiply fractions and doubles with each other
 double operator*(double lhs, const Fraction& rhs) {
@@ -184,8 +224,8 @@ Fraction operator/(Fraction lhs, const Fraction& rhs) {
 }
 
 // Divide fractions and ints with each other
-Fraction& Fraction::operator/=(int64_t rhs) {
-  if (rhs == 1 || rhs == -1) {
+template <typename T> Fraction& Fraction::operator/=(T rhs) {
+  if (rhs == 1 || (std::is_signed<T>::value && rhs == -1)) {
     numerator_ *= rhs;
     return *this;
   }
@@ -194,7 +234,14 @@ Fraction& Fraction::operator/=(int64_t rhs) {
   Reduce();
   return *this;
 }
-template<typename T> Fraction operator/(T lhs, Fraction rhs) {
+template Fraction& Fraction::operator/=<int8_t>(int8_t);
+template Fraction& Fraction::operator/=<int16_t>(int16_t);
+template Fraction& Fraction::operator/=<int32_t>(int32_t);
+template Fraction& Fraction::operator/=<int64_t>(int64_t);
+template Fraction& Fraction::operator/=<uint8_t>(uint8_t);
+template Fraction& Fraction::operator/=<uint16_t>(uint16_t);
+template Fraction& Fraction::operator/=<uint32_t>(uint32_t);
+template <typename T> Fraction operator/(T lhs, Fraction rhs) {
   rhs.Invert();
   rhs *= lhs;
   return rhs;
@@ -203,7 +250,10 @@ template Fraction operator/<int8_t>(int8_t, Fraction);
 template Fraction operator/<int16_t>(int16_t, Fraction);
 template Fraction operator/<int32_t>(int32_t, Fraction);
 template Fraction operator/<int64_t>(int64_t, Fraction);
-template<typename T> Fraction operator/(Fraction lhs, T rhs) {
+template Fraction operator/<uint8_t>(uint8_t, Fraction);
+template Fraction operator/<uint16_t>(uint16_t, Fraction);
+template Fraction operator/<uint32_t>(uint32_t, Fraction);
+template <typename T> Fraction operator/(Fraction lhs, T rhs) {
   lhs /= rhs;
   return lhs;
 }
@@ -211,6 +261,9 @@ template Fraction operator/<int8_t>(Fraction, int8_t);
 template Fraction operator/<int16_t>(Fraction, int16_t);
 template Fraction operator/<int32_t>(Fraction, int32_t);
 template Fraction operator/<int64_t>(Fraction, int64_t);
+template Fraction operator/<uint8_t>(Fraction, uint8_t);
+template Fraction operator/<uint16_t>(Fraction, uint16_t);
+template Fraction operator/<uint32_t>(Fraction, uint32_t);
 
 // Divide fractions and doubles with each other
 double operator/(double lhs, const Fraction& rhs) {
@@ -224,20 +277,26 @@ double operator/(const Fraction& lhs, double rhs) {
 bool operator==(const Fraction& lhs, const Fraction& rhs) {
   return lhs.Compare(rhs) == 0;
 }
-template<typename T> bool operator==(const Fraction& lhs, T rhs) {
+template <typename T> bool operator==(const Fraction& lhs, T rhs) {
   return lhs.Compare(rhs) == 0;
 }
 template bool operator==<int8_t>(const Fraction&, int8_t);
 template bool operator==<int16_t>(const Fraction&, int16_t);
 template bool operator==<int32_t>(const Fraction&, int32_t);
 template bool operator==<int64_t>(const Fraction&, int64_t);
-template<typename T> bool operator==(T lhs, const Fraction& rhs) {
+template bool operator==<uint8_t>(const Fraction&, uint8_t);
+template bool operator==<uint16_t>(const Fraction&, uint16_t);
+template bool operator==<uint32_t>(const Fraction&, uint32_t);
+template <typename T> bool operator==(T lhs, const Fraction& rhs) {
   return rhs.Compare(lhs) == 0;
 }
 template bool operator==<int8_t>(int8_t, const Fraction&);
 template bool operator==<int16_t>(int16_t, const Fraction&);
 template bool operator==<int32_t>(int32_t, const Fraction&);
 template bool operator==<int64_t>(int64_t, const Fraction&);
+template bool operator==<uint8_t>(uint8_t, const Fraction&);
+template bool operator==<uint16_t>(uint16_t, const Fraction&);
+template bool operator==<uint32_t>(uint32_t, const Fraction&);
 bool operator==(const Fraction& lhs, double rhs) {
   return lhs.Compare(rhs) == 0;
 }
@@ -249,20 +308,26 @@ bool operator==(double lhs, const Fraction& rhs) {
 bool operator!=(const Fraction& lhs, const Fraction& rhs) {
   return lhs.Compare(rhs) != 0;
 }
-template<typename T> bool operator!=(const Fraction& lhs, T rhs) {
+template <typename T> bool operator!=(const Fraction& lhs, T rhs) {
   return lhs.Compare(rhs) != 0;
 }
 template bool operator!=<int8_t>(const Fraction&, int8_t);
 template bool operator!=<int16_t>(const Fraction&, int16_t);
 template bool operator!=<int32_t>(const Fraction&, int32_t);
 template bool operator!=<int64_t>(const Fraction&, int64_t);
-template<typename T> bool operator!=(T lhs, const Fraction& rhs) {
+template bool operator!=<uint8_t>(const Fraction&, uint8_t);
+template bool operator!=<uint16_t>(const Fraction&, uint16_t);
+template bool operator!=<uint32_t>(const Fraction&, uint32_t);
+template <typename T> bool operator!=(T lhs, const Fraction& rhs) {
   return rhs.Compare(lhs) != 0;
 }
 template bool operator!=<int8_t>(int8_t, const Fraction&);
 template bool operator!=<int16_t>(int16_t, const Fraction&);
 template bool operator!=<int32_t>(int32_t, const Fraction&);
 template bool operator!=<int64_t>(int64_t, const Fraction&);
+template bool operator!=<uint8_t>(uint8_t, const Fraction&);
+template bool operator!=<uint16_t>(uint16_t, const Fraction&);
+template bool operator!=<uint32_t>(uint32_t, const Fraction&);
 bool operator!=(const Fraction& lhs, double rhs) {
   return lhs.Compare(rhs) != 0;
 }
@@ -274,20 +339,26 @@ bool operator!=(double lhs, const Fraction& rhs) {
 bool operator<(const Fraction& lhs, const Fraction& rhs) {
   return lhs.Compare(rhs) < 0;
 }
-template<typename T> bool operator<(const Fraction& lhs, T rhs) {
+template <typename T> bool operator<(const Fraction& lhs, T rhs) {
   return lhs.Compare(rhs) < 0;
 }
 template bool operator< <int8_t>(const Fraction&, int8_t);
 template bool operator< <int16_t>(const Fraction&, int16_t);
 template bool operator< <int32_t>(const Fraction&, int32_t);
 template bool operator< <int64_t>(const Fraction&, int64_t);
-template<typename T> bool operator<(T lhs, const Fraction& rhs) {
+template bool operator< <uint8_t>(const Fraction&, uint8_t);
+template bool operator< <uint16_t>(const Fraction&, uint16_t);
+template bool operator< <uint32_t>(const Fraction&, uint32_t);
+template <typename T> bool operator<(T lhs, const Fraction& rhs) {
   return rhs.Compare(lhs) > 0;
 }
 template bool operator< <int8_t>(int8_t, const Fraction&);
 template bool operator< <int16_t>(int16_t, const Fraction&);
 template bool operator< <int32_t>(int32_t, const Fraction&);
 template bool operator< <int64_t>(int64_t, const Fraction&);
+template bool operator< <uint8_t>(uint8_t, const Fraction&);
+template bool operator< <uint16_t>(uint16_t, const Fraction&);
+template bool operator< <uint32_t>(uint32_t, const Fraction&);
 bool operator<(const Fraction& lhs, double rhs) {
   return lhs.Compare(rhs) < 0;
 }
@@ -299,20 +370,26 @@ bool operator<(double lhs, const Fraction& rhs) {
 bool operator>(const Fraction& lhs, const Fraction& rhs) {
   return lhs.Compare(rhs) > 0;
 }
-template<typename T> bool operator>(const Fraction& lhs, T rhs) {
+template <typename T> bool operator>(const Fraction& lhs, T rhs) {
   return lhs.Compare(rhs) > 0;
 }
 template bool operator> <int8_t>(const Fraction&, int8_t);
 template bool operator> <int16_t>(const Fraction&, int16_t);
 template bool operator> <int32_t>(const Fraction&, int32_t);
 template bool operator> <int64_t>(const Fraction&, int64_t);
-template<typename T> bool operator>(T lhs, const Fraction& rhs) {
+template bool operator> <uint8_t>(const Fraction&, uint8_t);
+template bool operator> <uint16_t>(const Fraction&, uint16_t);
+template bool operator> <uint32_t>(const Fraction&, uint32_t);
+template <typename T> bool operator>(T lhs, const Fraction& rhs) {
   return rhs.Compare(lhs) < 0;
 }
 template bool operator> <int8_t>(int8_t, const Fraction&);
 template bool operator> <int16_t>(int16_t, const Fraction&);
 template bool operator> <int32_t>(int32_t, const Fraction&);
 template bool operator> <int64_t>(int64_t, const Fraction&);
+template bool operator> <uint8_t>(uint8_t, const Fraction&);
+template bool operator> <uint16_t>(uint16_t, const Fraction&);
+template bool operator> <uint32_t>(uint32_t, const Fraction&);
 bool operator>(const Fraction& lhs, double rhs) {
   return lhs.Compare(rhs) > 0;
 }
@@ -324,20 +401,26 @@ bool operator>(double lhs, const Fraction& rhs) {
 bool operator<=(const Fraction& lhs, const Fraction& rhs) {
   return lhs.Compare(rhs) <= 0;
 }
-template<typename T> bool operator<=(const Fraction& lhs, T rhs) {
+template <typename T> bool operator<=(const Fraction& lhs, T rhs) {
   return lhs.Compare(rhs) <= 0;
 }
 template bool operator<= <int8_t>(const Fraction&, int8_t);
 template bool operator<= <int16_t>(const Fraction&, int16_t);
 template bool operator<= <int32_t>(const Fraction&, int32_t);
 template bool operator<= <int64_t>(const Fraction&, int64_t);
-template<typename T> bool operator<=(T lhs, const Fraction& rhs) {
+template bool operator<= <uint8_t>(const Fraction&, uint8_t);
+template bool operator<= <uint16_t>(const Fraction&, uint16_t);
+template bool operator<= <uint32_t>(const Fraction&, uint32_t);
+template <typename T> bool operator<=(T lhs, const Fraction& rhs) {
   return rhs.Compare(lhs) >= 0;
 }
 template bool operator<= <int8_t>(int8_t, const Fraction&);
 template bool operator<= <int16_t>(int16_t, const Fraction&);
 template bool operator<= <int32_t>(int32_t, const Fraction&);
 template bool operator<= <int64_t>(int64_t, const Fraction&);
+template bool operator<= <uint8_t>(uint8_t, const Fraction&);
+template bool operator<= <uint16_t>(uint16_t, const Fraction&);
+template bool operator<= <uint32_t>(uint32_t, const Fraction&);
 bool operator<=(const Fraction& lhs, double rhs) {
   return lhs.Compare(rhs) <= 0;
 }
@@ -349,20 +432,26 @@ bool operator<=(double lhs, const Fraction& rhs) {
 bool operator>=(const Fraction& lhs, const Fraction& rhs) {
   return lhs.Compare(rhs) >= 0;
 }
-template<typename T> bool operator>=(const Fraction& lhs, T rhs) {
+template <typename T> bool operator>=(const Fraction& lhs, T rhs) {
   return lhs.Compare(rhs) >= 0;
 }
 template bool operator>= <int8_t>(const Fraction&, int8_t);
 template bool operator>= <int16_t>(const Fraction&, int16_t);
 template bool operator>= <int32_t>(const Fraction&, int32_t);
 template bool operator>= <int64_t>(const Fraction&, int64_t);
-template<typename T> bool operator>=(T lhs, const Fraction& rhs) {
+template bool operator>= <uint8_t>(const Fraction&, uint8_t);
+template bool operator>= <uint16_t>(const Fraction&, uint16_t);
+template bool operator>= <uint32_t>(const Fraction&, uint32_t);
+template <typename T> bool operator>=(T lhs, const Fraction& rhs) {
   return rhs.Compare(lhs) <= 0;
 }
 template bool operator>= <int8_t>(int8_t, const Fraction&);
 template bool operator>= <int16_t>(int16_t, const Fraction&);
 template bool operator>= <int32_t>(int32_t, const Fraction&);
 template bool operator>= <int64_t>(int64_t, const Fraction&);
+template bool operator>= <uint8_t>(uint8_t, const Fraction&);
+template bool operator>= <uint16_t>(uint16_t, const Fraction&);
+template bool operator>= <uint32_t>(uint32_t, const Fraction&);
 bool operator>=(const Fraction& lhs, double rhs) {
   return lhs.Compare(rhs) >= 0;
 }
@@ -378,6 +467,9 @@ template Fraction::operator int8_t() const;
 template Fraction::operator int16_t() const;
 template Fraction::operator int32_t() const;
 template Fraction::operator int64_t() const;
+template Fraction::operator uint8_t() const;
+template Fraction::operator uint16_t() const;
+template Fraction::operator uint32_t() const;
 
 uint64_t Fraction::GCD(uint64_t a, uint64_t b) {
   if (a == 0) return b;
@@ -416,12 +508,15 @@ void Fraction::NumeratorSign() {
   denominator_ = std::abs(denominator_);
 }
 
-template<typename T> int64_t Fraction::Compare(T rhs) const {
+template <typename T> int64_t Fraction::Compare(T rhs) const {
   return numerator_ - rhs * denominator_;
 }
 template int64_t Fraction::Compare<int8_t>(int8_t) const;
 template int64_t Fraction::Compare<int16_t>(int16_t) const;
 template int64_t Fraction::Compare<int32_t>(int32_t) const;
 template int64_t Fraction::Compare<int64_t>(int64_t) const;
+template int64_t Fraction::Compare<uint8_t>(uint8_t) const;
+template int64_t Fraction::Compare<uint16_t>(uint16_t) const;
+template int64_t Fraction::Compare<uint32_t>(uint32_t) const;
 
 }  // namespace utils
