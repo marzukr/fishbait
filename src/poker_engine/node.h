@@ -4,6 +4,7 @@
 #define SRC_POKER_ENGINE_NODE_H_
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <numeric>
@@ -28,7 +29,10 @@ struct Move {
                      the pot. Otherwise it has no significance. */
 };
 
-template <uint8_t kPlayers = 6>
+/* QuotaT is used to represent exact award quotas before being apportioned into
+   discrete chips (double or utils::Fraction). This choice could impact the
+   accuracy and/or speed of the awarded chip amounts. */
+template <uint8_t kPlayers = 6, typename QuotaT = double>
 class Node {
  public:
   /*
@@ -38,18 +42,25 @@ class Node {
     @param big_blind How many chips the big blind is.
     @param small_blind How many chips the small blind is.
     @param ante How many chips each player pays as an ante each hand.
-    @param big_blind_ante If the big blind pays the ante for all players
-    @param default_stack How many chips each player starts with.
-    @param straddles The number of players straddling on the first hand.
+    @param big_blind_ante Does the big blind pays the ante for all players?
+    @param blind_before_ante Should players should cover the blind instead of
+        the ante if they don't have enough chips to pay both?
+    @param default_stack Number of chips each player starts with.
+    @param straddles Number of players straddling on the first hand.
+    @param rake Proportion of each hand taken as rake.
+    @param rake_cap Maximum number of chips that can be raked. 0 means no cap.
+    @param no_flop_no_drop Is rake taken on hands without a flop?
   */
   Node(uint8_t button = 0, uint32_t big_blind = 100, uint32_t small_blind = 50,
        uint32_t ante = 0, bool big_blind_ante = false,
        bool blind_before_ante = true, uint32_t default_stack = 10000,
-       uint8_t straddles = 0)
+       uint8_t straddles = 0, QuotaT rake = QuotaT{0}, uint32_t rake_cap = 0,
+       bool no_flop_no_drop = false)
 
          // Attributes
        : big_blind_{big_blind}, small_blind_{small_blind}, ante_{ante},
          big_blind_ante_{big_blind_ante}, blind_before_ante_{blind_before_ante},
+         rake_{rake}, rake_cap_{rake_cap}, no_flop_no_drop_{no_flop_no_drop},
 
          // Progress Information
          button_{button}, in_progress_{false}, round_{Round::kPreFlop},
@@ -166,7 +177,7 @@ class Node {
            total_bet > max_bet_ &&
            raise_size >= min_raise_ &&
            size < stack_[acting_player_];
-  }  // CanBet()
+  }
 
   /*
     @brief Apply the given move to this Node object.
@@ -212,7 +223,7 @@ class Node {
     return in_progress_;
   }  // Apply()
 
-  constexpr static struct SameInitialStack {} same_initial_stack_{};
+  constexpr static struct SameStackNoRake {} same_stack_no_rake_{};
   /*
     @brief Allocate the pot to the winner(s) at the end of a hand.
     
@@ -220,13 +231,10 @@ class Node {
     will have increased by the appropriate amount. Must only be called when the
     game is no longer in progress and AwardPot() hasn't already been called for
     the current hand. This version applies optimizations based on the assumption
-    that all players started the hand with the same stack amount. The pot will
-    not be awarded correctly if this is not the case. Note, this function will
-    also not work with a big blind ante because the big blind has less effective
-    chips than the other players. The template type determines what type is used
-    to represent exact award amounts before rounding (double or
-    utils::Fraction). This choice could impact the accuracy of the awarded chip
-    amounts.
+    that all players started the hand with the same stack amount and there is no
+    rake. The pot will not be awarded correctly if this is not the case. Note,
+    this function will also not work with a big blind ante because the big blind
+    has less effective chips than the other players.
 
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
@@ -237,20 +245,19 @@ class Node {
         the river. SKEval indexing. Nullptr is a valid option if all but one
         player has folded.
   */
-  template <typename T>
-  void AwardPot(SameInitialStack, const uint8_t hands[kPlayers][2] = nullptr,
+  void AwardPot(SameStackNoRake, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
     VerifyAwardablePot();
     if (players_left_ == 1) return FoldVictory(folded_);
     uint16_t ranks[kPlayers];
     RankPlayers(hands, board, folded_, ranks);
     BestPlayersData best_players = BestPlayers(ranks, folded_);
-    T exact_awards[kPlayers]{};
-    T pot_precise = static_cast<T>(pot_);
+    QuotaT exact_awards[kPlayers]{};
+    QuotaT pot_precise = QuotaT{1} * pot_;
     DivideSidePot(pot_precise, ranks, folded_, best_players, exact_awards);
     DistributeChips(&pot_, exact_awards, stack_);
     std::fill(bets_, bets_ + kPlayers, 0);
-  }  // AwardPot()
+  }
 
   constexpr static struct SingleRun {} single_run_{};
   /*
@@ -259,10 +266,7 @@ class Node {
     This version can only do one run of the board. After calling, pot will be 0,
     all bets will be 0, and the winner(s)'s stack will have increased by the
     appropriate amount. Must only be called when the game is no longer in
-    progress and AwardPot() hasn't already been called for the current hand. The
-    template type determines what type is used to represent exact award amounts
-    before rounding (double or utils::Fraction). This choice could impact the
-    accuracy of the awarded chip amounts.
+    progress and AwardPot() hasn't already been called for the current hand.
 
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
@@ -274,7 +278,6 @@ class Node {
         the river. SKEval indexing. Nullptr is a valid option if all but one
         player has folded.
   */
-  template <typename T>
   void AwardPot(SingleRun, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
     VerifyAwardablePot();
@@ -296,13 +299,14 @@ class Node {
     RankPlayers(hands, board, processed, ranks);
 
     // Loop through each side pot and award it to the appropriate player(s)
-    T exact_awards[kPlayers]{};
+    QuotaT exact_awards[kPlayers]{};
     while (players_to_award > 0) {
-      T side_pot = static_cast<T>(AllocateSidePot(bets_, processed));
+      QuotaT side_pot = QuotaT{1} * AllocateSidePot(bets_, processed);
       BestPlayersData best_players = BestPlayers(ranks, processed);
       DivideSidePot(side_pot, ranks, processed, best_players, exact_awards);
       players_to_award -= MarkProcessedPlayers(bets_, processed);
     }  // while players_to_award > 0
+    if (ShouldRake()) Rake(&pot_, exact_awards);
     DistributeChips(&pot_, exact_awards, stack_);
   }  // AwardPot()
 
@@ -313,10 +317,7 @@ class Node {
     This version runs the board multiple times. After calling, pot will be 0,
     all bets will be 0, and the winner(s)'s stack will have increased by the
     appropriate amount. Must only be called when the game is no longer in
-    progress and AwardPot() hasn't already been called for the current hand. The
-    template type determines what type is used to represent exact award amounts
-    before rounding (double or utils::Fraction). This choice could impact the
-    accuracy of the awarded chip amounts.
+    progress and AwardPot() hasn't already been called for the current hand.
 
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
@@ -327,7 +328,6 @@ class Node {
         the river. SKEval indexing. Each row is a different run out.
     @param n_runs How many times the board is being run.
   */
-  template <typename T>
   void AwardPot(MultiRun, const uint8_t hands[kPlayers][2],
                 const uint8_t boards[][5], const uint8_t n_runs) {
     VerifyAwardablePot();
@@ -336,27 +336,33 @@ class Node {
     uint8_t players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) return FoldVictory(processed);
 
-    T exact_awards[kPlayers]{};
+    QuotaT exact_awards[kPlayers]{};
 
+    // Variables to use throughout the loops
     uint16_t ranks_run[kPlayers];
     bool processed_run[kPlayers];
     uint32_t bets_run[kPlayers];
-    T side_pot;
+    QuotaT side_pot;
     BestPlayersData best_players_run;
     uint8_t players_to_award_run;
+
     for (uint8_t run = 0; run < n_runs; ++run) {
       std::copy(processed, processed + kPlayers, processed_run);
       RankPlayers(hands, boards[run], processed_run, ranks_run);
       std::copy(bets_, bets_ + kPlayers, bets_run);
       players_to_award_run = players_to_award;
+
+      // Loop through each side pot and award it to the appropriate player(s)
       while (players_to_award_run > 0) {
-        side_pot = AllocateSidePot(bets_run, processed_run) * (T{1} / n_runs);
+        side_pot = QuotaT{1} * AllocateSidePot(bets_run, processed_run) /
+                   n_runs;
         best_players_run = BestPlayers(ranks_run, processed_run);
         DivideSidePot(side_pot, ranks_run, processed_run, best_players_run,
                       exact_awards);
         players_to_award_run -= MarkProcessedPlayers(bets_run, processed_run);
       }  // while players_to_award_run > 0
     }  // for run
+    if (ShouldRake()) Rake(&pot_, exact_awards);
     DistributeChips(&pot_, exact_awards, stack_);
     std::fill(bets_, bets_ + kPlayers, 0);
   }  // AwardPot()
@@ -477,7 +483,7 @@ class Node {
       }
     }  // for i
     return max_straddle_size;
-  }  // PostStraddles()
+  }
 
   /*
     @brief Fold the current acting player.
@@ -537,7 +543,7 @@ class Node {
       stack_[acting_player_] -= additional_bet;
       bets_[acting_player_] += additional_bet;
     }
-  }  // CheckCall()
+  }
 
   /*
     @brief The current acting player bets.
@@ -556,7 +562,7 @@ class Node {
     pot_ += size;
     stack_[acting_player_] -= size;
     bets_[acting_player_] += size;
-  }  // Bet()
+  }
 
   /*
     @brief Cycle through the players until the next player who needs to act.
@@ -584,7 +590,7 @@ class Node {
     if (pot_good_ + no_raise_ == 0) {
       NextRound();
     }
-  }  // CyclePlayers()
+  }
 
   /*
     @brief Continue to the next betting round.
@@ -638,7 +644,7 @@ class Node {
                              "If the pot is 0, this means we already awarded "
                              "the pot for this hand and we can't do it again.");
     }
-  }  // VerifyAwardablePot()
+  }
 
   /*
     @brief Mark all non folded or mucked players as processed.
@@ -664,7 +670,7 @@ class Node {
       }
     }  // for i
     return players_to_award;
-  }  // PlayersToProcess()
+  }
 
   /*
     @brief Awards the pot to the singular player that remains.
@@ -677,10 +683,11 @@ class Node {
   void FoldVictory(const bool processed[kPlayers]) {
     uint8_t winner = std::find(processed, processed + kPlayers, false) -
                      processed;
+    if (ShouldRake()) pot_ -= CalculateRakeChips(pot_);
     stack_[winner] += pot_;
     pot_ = 0;
     std::fill(bets_, bets_ + kPlayers, 0);
-  }  // FoldVictory()
+  }
 
   /*
     @brief Writes the hand ranking of each player to a given output array.
@@ -768,7 +775,7 @@ class Node {
       }
     }
     return BestPlayersData{*best_rank, best_players};
-  }  // BestPlayers()
+  }
 
   /*
     @brief Divides the given side_pot equally among the winners.
@@ -779,12 +786,11 @@ class Node {
     @param best_players Specifies the rank and number of players to award.
     @param exact_awards Array to add awards for each player to.
   */
-  template <typename T>
-  void DivideSidePot(T side_pot, const uint16_t ranks[kPlayers],
+  void DivideSidePot(QuotaT side_pot, const uint16_t ranks[kPlayers],
                      const bool filter[kPlayers],
                      const BestPlayersData best_players,
-                     T exact_awards[kPlayers]) const {
-    T prize = side_pot / best_players.n;
+                     QuotaT exact_awards[kPlayers]) const {
+    QuotaT prize = side_pot / best_players.n;
     for (uint8_t i = 0; i < kPlayers; ++i) {
       if (!filter[i] && ranks[i] == best_players.rank) {
         exact_awards[i] += prize;
@@ -818,6 +824,47 @@ class Node {
   }  // MarkProcessedPlayers()
 
   /*
+    @brief Should any rake be taken from the pot?
+  */
+  bool ShouldRake() {
+    return rake_ && !(no_flop_no_drop_ && round_ == Round::kPreFlop);
+  }
+
+  /*
+    @brief Calculate how many chips will be raked from the pot.
+
+    @param pot The pot to rake from.
+
+    @return The number of chips raked from the given pot.
+  */
+  uint32_t CalculateRakeChips(uint32_t pot) {
+    double rake_quota = static_cast<double>(pot * rake_);
+    uint32_t rake_chips = std::rint(rake_quota);
+    uint32_t rake_chips_capped;
+    if (rake_cap_) {
+      rake_chips_capped = std::min(rake_cap_, rake_chips);
+    } else {
+      rake_chips_capped = rake_chips;
+    }
+    return rake_chips_capped;
+  }
+
+  /*
+    @brief Take the rake from the given pot and exact awards.
+
+    @param pot The pot to rake from.
+    @param exact_awards An array of awards to take rakes from.
+  */
+  void Rake(uint32_t* pot, QuotaT exact_awards[kPlayers]) {
+    uint32_t chips_to_rake = CalculateRakeChips(*pot);
+    QuotaT proportion_not_raked = 1 - (QuotaT{1} * chips_to_rake / *pot);
+    *pot -= chips_to_rake;
+    for (uint8_t i = 0; i < kPlayers; ++i) {
+      exact_awards[i] *= proportion_not_raked;
+    }
+  }
+
+  /*
     @brief Distribute the given pot to the players, minimizing roundoff error.
 
     Takes an array of exact awards for each player, and maps it as best as
@@ -831,12 +878,11 @@ class Node {
     @param distributions Where to distribute each player's actual discrete
         winnings.
   */
-  template <typename T>
-  void DistributeChips(uint32_t* pot, const T exact_awards[kPlayers],
+  void DistributeChips(uint32_t* pot, const QuotaT exact_awards[kPlayers],
                        uint32_t distributions[kPlayers]) const {
     /* Calculate the decimal part of each player's award (the decimal part of
        10.82 is 0.82). */
-    T decimals[kPlayers];
+    QuotaT decimals[kPlayers];
     for (uint8_t i = 0; i < kPlayers; ++i) {
       decimals[i] = exact_awards[i] - static_cast<uint32_t>(exact_awards[i]);
     }
@@ -875,46 +921,46 @@ class Node {
                                "awarded to players than were in the pot.");
     }
     *pot -= pot_awarded;
-  }  // DistributePot()
+  }  // DistributeChips()
 
   // Attributes
-  const uint32_t big_blind_;         // how many chips the big blind is
-  const uint32_t small_blind_;       // how many chips the small blind is
-  const uint32_t ante_;              /* how many chips each player must
-                                        contribute to the pot on each hand */
-  const bool big_blind_ante_;        /* true if the big blind pays the ante for
-                                        everyone in the game */
-  const bool blind_before_ante_;     /* true if the player should cover the
-                                        blind instead of the ante if they don't
-                                        have enough chips to pay both */
+  const uint32_t big_blind_;      // how many chips the big blind is
+  const uint32_t small_blind_;    // how many chips the small blind is
+  const uint32_t ante_;           /* how many chips each player must contribute
+                                     to the pot on each hand in expectation */
+  const bool big_blind_ante_;     /* does the big blind pays the ante for
+                                     everyone in the game? */
+  const bool blind_before_ante_;  /* should players should cover the blind
+                                     instead of the ante if they don't have
+                                     enough chips to pay both? */
+  const QuotaT rake_;             // proportion of each hand taken as rake
+  const uint32_t rake_cap_;       /* maximum number of chips that can be raked;
+                                     rake_cap_ of 0 means no cap */
+  const bool no_flop_no_drop_;    // is rake taken on hands without a flop?
 
   // Progress information
-  uint8_t button_;                   // index of player on the button
-  bool in_progress_;                 /* true if a hand is in progress, false if
-                                        the hand ended */
-  Round round_;                      // the current betting round
-  uint8_t cycled_;                   /* how many players have been cycled
-                                        through on this betting round */
-  uint8_t acting_player_;            // index of player whose turn it is
-  uint8_t pot_good_;                 /* the number of players who still need to
-                                        act before this round is over */
-  uint8_t no_raise_;                 /* the number of players who still need to
-                                        act, but can only call or fold because
-                                        another player went all in less than the
-                                        min-raise */
-  bool folded_[kPlayers];            /* true for each player that is folded,
-                                        false for each player still in the
-                                        game */
-  uint8_t players_left_;             // the number of players who haven’t folded
-  uint8_t players_all_in_;           // the number of players who are all in
+  uint8_t button_;                // index of player on the button
+  bool in_progress_;              // is a hand is in progress?
+  Round round_;                   // current betting round
+  uint8_t cycled_;                /* number of players that have been cycled
+                                     through on this betting round */
+  uint8_t acting_player_;         // index of player whose turn it is
+  uint8_t pot_good_;              /* number of players who still need to act
+                                     before this round is over */
+  uint8_t no_raise_;              /* number of players who still need to act,
+                                     but can only call or fold because another
+                                     player went all in less than the
+                                     min-raise */
+  bool folded_[kPlayers];         // has the given player folded?
+  uint8_t players_left_;          // number of players who haven’t folded
+  uint8_t players_all_in_;        // number of players who are all in
 
   // Chip information
-  uint32_t pot_;                     // how many chips are in the pot
-  uint32_t bets_[kPlayers];          // how much each player has bet
-  uint32_t stack_[kPlayers];         // how many chips each player has
-  uint32_t min_raise_;               // the minimum bet amount
-  uint32_t max_bet_;                 /* the maximum amount that has been bet so
-                                        far */
+  uint32_t pot_;                  // number of chips in the pot
+  uint32_t bets_[kPlayers];       // number of chips each player has bet
+  uint32_t stack_[kPlayers];      // number of chips each player has behind
+  uint32_t min_raise_;            // minimum bet amount
+  uint32_t max_bet_;              // maximum amount that has been bet so far
 };  // Node
 
 }  // namespace poker_engine
