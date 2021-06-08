@@ -101,6 +101,7 @@ class Fraction {
   explicit operator double() const {
     return static_cast<double>(numerator_) / denominator_;
   }
+  explicit operator bool() const { return numerator_ != 0; }
 
   // Print function
   friend std::ostream& operator<<(std::ostream &strm, const Fraction &a) {

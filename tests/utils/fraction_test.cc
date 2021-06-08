@@ -7332,6 +7332,18 @@ TEST_CASE("int64_t conversion", "[utils][fraction]") {
   REQUIRE(static_cast<int64_t>(f2) == 0);
 }  // TEST_CASE "int64_t conversion"
 
+TEST_CASE("bool conversion", "[utils][fraction]") {
+  // positive
+  utils::Fraction f0{9814312, 1974185};
+  REQUIRE(static_cast<bool>(f0) == true);
+  // negative
+  utils::Fraction f1{-5042015, 7494188};
+  REQUIRE(static_cast<bool>(f1) == true);
+  // 0
+  utils::Fraction f2;
+  REQUIRE(static_cast<bool>(f2) == false);
+}  // TEST_CASE "bool conversion"
+
 TEST_CASE("double conversion operator", "[utils][fraction]") {
   // positive
   utils::Fraction f0{644327, 327200};
