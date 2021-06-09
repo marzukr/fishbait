@@ -123,6 +123,7 @@ class Node {
     PostBlind(PlayerIndex(2), big_blind_);
     if (ante_ > 0 && blind_before_ante_) effective_ante = PostAntes();
     uint32_t effective_blind = PostStraddles(straddles);
+    players_all_in_ = std::count(stack_, stack_ + kPlayers, 0);
     min_raise_ = effective_blind;
     max_bet_ = effective_blind + effective_ante;
 
@@ -413,7 +414,6 @@ class Node {
     bets_[player] += blind;
     stack_[player] -= blind;
     pot_ += blind;
-    if (stack_[player] == 0) players_all_in_ += 1;
     return blind;
   }
 
@@ -440,7 +440,6 @@ class Node {
       bets_[PlayerIndex(2)] += effective_ante;
       stack_[PlayerIndex(2)] -= effective_ante_sum;
       pot_ += effective_ante_sum;
-      if (stack_[PlayerIndex(2)] == 0) players_all_in_ += 1;
 
       /* Assign any change in the ante amount as counting towards the big
          blind's bet. */
@@ -880,23 +879,6 @@ class Node {
   */
   void DistributeChips(uint32_t* pot, const QuotaT exact_awards[kPlayers],
                        uint32_t distributions[kPlayers]) const {
-    /* Calculate the decimal part of each player's award (the decimal part of
-       10.82 is 0.82). */
-    QuotaT decimals[kPlayers];
-    for (uint8_t i = 0; i < kPlayers; ++i) {
-      decimals[i] = exact_awards[i] - static_cast<uint32_t>(exact_awards[i]);
-    }
-
-    /* Sort the player indexes in order of who will get awarded rounding change
-       first. Player's with a higher decimal part of their award are "first in
-       line" to get change. */
-    uint8_t change_line[kPlayers];
-    std::iota(change_line, change_line + kPlayers, 0);
-    std::sort(change_line, change_line + kPlayers,
-              [&](const uint8_t& a, const uint8_t& b) {
-                return decimals[a] > decimals[b];
-              });
-
     // Award each player the floor of their exact award.
     uint32_t pot_awarded = 0;
     for (uint8_t i = 0; i < kPlayers; ++i) {
@@ -906,19 +888,37 @@ class Node {
         pot_awarded += to_award;
       }
     }
+    if (pot_awarded < *pot) {
+      /* Calculate the decimal part of each player's award (the decimal part of
+         10.82 is 0.82). */
+      QuotaT decimals[kPlayers];
+      for (uint8_t i = 0; i < kPlayers; ++i) {
+        decimals[i] = exact_awards[i] - static_cast<uint32_t>(exact_awards[i]);
+      }
 
-    /* Award change in order of change_line until all the change has been
-       awarded. */
-    uint8_t position = 0;
-    while (*pot > pot_awarded) {
-      uint8_t player = change_line[position];
-      distributions[player] += 1;
-      pot_awarded += 1;
-      ++position;
+      /* Sort the player indexes in order of who will get awarded rounding
+         change first. Player's with a higher decimal part of their award are
+         "first in line" to get change. */
+      uint8_t change_line[kPlayers];
+      std::iota(change_line, change_line + kPlayers, 0);
+      std::sort(change_line, change_line + kPlayers,
+                [&](const uint8_t& a, const uint8_t& b) {
+                  return decimals[a] > decimals[b];
+                });
+
+      /* Award change in order of change_line until all the change has been
+         awarded. */
+      uint8_t position = 0;
+      while (pot_awarded < *pot) {
+        uint8_t player = change_line[position];
+        distributions[player] += 1;
+        pot_awarded += 1;
+        ++position;
+      }
     }
     if (pot_awarded > *pot) {
-      throw std::runtime_error("Rounding errors resulted in more chips being "
-                               "awarded to players than were in the pot.");
+        throw std::runtime_error("Rounding errors resulted in more chips being "
+                                 "awarded to players than were in the pot.");
     }
     *pot -= pot_awarded;
   }  // DistributeChips()

@@ -39,6 +39,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 3);
   REQUIRE(triton.folded(3) == false);
   REQUIRE(triton.players_left() == 8);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(3) == 500);
   REQUIRE(triton.stack(3) == 500000);
@@ -56,6 +57,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 4);
   REQUIRE(triton.folded(3) == true);
   REQUIRE(triton.players_left() == 7);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(3) == 500);
   REQUIRE(triton.stack(3) == 500000);
@@ -71,6 +73,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.folded(4) == true);
   REQUIRE(triton.players_left() == 6);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(4) == 500);
   REQUIRE(triton.stack(4) == 500000);
@@ -87,6 +90,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 6);
   REQUIRE(triton.folded(5) == false);
   REQUIRE(triton.players_left() == 6);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 20000);
   REQUIRE(triton.bets(5) == 10500);
   REQUIRE(triton.stack(5) == 490000);
@@ -102,6 +106,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 7);
   REQUIRE(triton.folded(6) == false);
   REQUIRE(triton.players_left() == 6);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 30000);
   REQUIRE(triton.bets(6) == 10500);
   REQUIRE(triton.stack(6) == 490000);
@@ -117,6 +122,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 0);
   REQUIRE(triton.folded(7) == true);
   REQUIRE(triton.players_left() == 5);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 30000);
   REQUIRE(triton.bets(7) == 500);
   REQUIRE(triton.stack(7) == 500000);
@@ -132,6 +138,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(0) == true);
   REQUIRE(triton.players_left() == 4);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 30000);
   REQUIRE(triton.bets(0) == 500);
   REQUIRE(triton.stack(0) == 500000);
@@ -147,6 +154,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 2);
   REQUIRE(triton.folded(1) == true);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 30000);
   REQUIRE(triton.bets(1) == 2500);
   REQUIRE(triton.stack(1) == 498000);
@@ -162,6 +170,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 2);
   REQUIRE(triton.folded(2) == false);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 36000);
   REQUIRE(triton.bets(2) == 10500);
   REQUIRE(triton.stack(2) == 486000);
@@ -178,6 +187,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.folded(2) == false);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 36000);
   REQUIRE(triton.bets(2) == 10500);
   REQUIRE(triton.stack(2) == 486000);
@@ -193,6 +203,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 6);
   REQUIRE(triton.folded(5) == false);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 66000);
   REQUIRE(triton.bets(5) == 40500);
   REQUIRE(triton.stack(5) == 460000);
@@ -207,6 +218,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 2);
   REQUIRE(triton.folded(6) == false);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 96000);
   REQUIRE(triton.bets(6) == 40500);
   REQUIRE(triton.stack(6) == 460000);
@@ -221,6 +233,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.folded(2) == true);
   REQUIRE(triton.players_left() == 2);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 96000);
   REQUIRE(triton.bets(2) == 10500);
   REQUIRE(triton.stack(2) == 486000);
@@ -238,6 +251,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 6);
   REQUIRE(triton.folded(5) == false);
   REQUIRE(triton.players_left() == 2);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 196000);
   REQUIRE(triton.bets(5) == 140500);
   REQUIRE(triton.stack(5) == 360000);
@@ -252,6 +266,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.folded(6) == true);
   REQUIRE(triton.players_left() == 1);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 196000);
   REQUIRE(triton.bets(6) == 40500);
   REQUIRE(triton.stack(6) == 460000);
@@ -285,6 +300,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.cycled() == 0);
   REQUIRE(triton.acting_player() == 4);
   REQUIRE(triton.players_left() == 8);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
 
   // Test Paul Phua's action (fold)
@@ -297,6 +313,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.folded(4) == true);
   REQUIRE(triton.players_left() == 7);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(4) == 500);
   REQUIRE(triton.stack(4) == 500000);
@@ -311,6 +328,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 6);
   REQUIRE(triton.folded(5) == true);
   REQUIRE(triton.players_left() == 6);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(5) == 500);
   REQUIRE(triton.stack(5) == 556000);
@@ -325,6 +343,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 7);
   REQUIRE(triton.folded(6) == true);
   REQUIRE(triton.players_left() == 5);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(6) == 500);
   REQUIRE(triton.stack(6) == 460000);
@@ -339,6 +358,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 0);
   REQUIRE(triton.folded(7) == true);
   REQUIRE(triton.players_left() == 4);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(7) == 500);
   REQUIRE(triton.stack(7) == 500000);
@@ -353,6 +373,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(0) == true);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(0) == 500);
   REQUIRE(triton.stack(0) == 500000);
@@ -368,6 +389,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 2);
   REQUIRE(triton.folded(1) == false);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 22000);
   REQUIRE(triton.bets(1) == 12500);
   REQUIRE(triton.stack(1) == 486000);
@@ -382,6 +404,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 3);
   REQUIRE(triton.folded(2) == true);
   REQUIRE(triton.players_left() == 2);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 22000);
   REQUIRE(triton.bets(2) == 2500);
   REQUIRE(triton.stack(2) == 484000);
@@ -396,6 +419,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(3) == true);
   REQUIRE(triton.players_left() == 1);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 22000);
   REQUIRE(triton.bets(3) == 4500);
   REQUIRE(triton.stack(3) == 492000);
@@ -428,6 +452,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.cycled() == 0);
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.players_left() == 8);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
 
   // Test Tony G's action (fold)
@@ -440,6 +465,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 6);
   REQUIRE(triton.folded(5) == true);
   REQUIRE(triton.players_left() == 7);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(5) == 500);
   REQUIRE(triton.stack(5) == 556000);
@@ -454,6 +480,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 7);
   REQUIRE(triton.folded(6) == true);
   REQUIRE(triton.players_left() == 6);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(6) == 500);
   REQUIRE(triton.stack(6) == 460000);
@@ -468,6 +495,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 0);
   REQUIRE(triton.folded(7) == true);
   REQUIRE(triton.players_left() == 5);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(7) == 500);
   REQUIRE(triton.stack(7) == 500000);
@@ -482,6 +510,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(0) == true);
   REQUIRE(triton.players_left() == 4);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(0) == 500);
   REQUIRE(triton.stack(0) == 500000);
@@ -497,6 +526,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 2);
   REQUIRE(triton.folded(1) == false);
   REQUIRE(triton.players_left() == 4);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 22000);
   REQUIRE(triton.bets(1) == 12500);
   REQUIRE(triton.stack(1) == 496000);
@@ -511,6 +541,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 3);
   REQUIRE(triton.folded(2) == true);
   REQUIRE(triton.players_left() == 3);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 22000);
   REQUIRE(triton.bets(2) == 500);
   REQUIRE(triton.stack(2) == 484000);
@@ -525,6 +556,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 4);
   REQUIRE(triton.folded(3) == true);
   REQUIRE(triton.players_left() == 2);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 22000);
   REQUIRE(triton.bets(3) == 2500);
   REQUIRE(triton.stack(3) == 490000);
@@ -539,6 +571,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 4);
   REQUIRE(triton.folded(4) == false);
   REQUIRE(triton.players_left() == 2);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 30000);
   REQUIRE(triton.bets(4) == 12500);
   REQUIRE(triton.stack(4) == 484000);
@@ -555,6 +588,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(4) == false);
   REQUIRE(triton.players_left() == 2);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 30000);
   REQUIRE(triton.bets(4) == 12500);
   REQUIRE(triton.stack(4) == 484000);
@@ -570,6 +604,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 4);
   REQUIRE(triton.folded(1) == false);
   REQUIRE(triton.players_left() == 2);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 40000);
   REQUIRE(triton.bets(1) == 22500);
   REQUIRE(triton.stack(1) == 486000);
@@ -584,6 +619,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.acting_player() == 1);
   REQUIRE(triton.folded(4) == true);
   REQUIRE(triton.players_left() == 1);
+  REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 40000);
 
   // uint8_t cards2[8][2] =
@@ -630,6 +666,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(0) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 0);
   REQUIRE(heads_up.pot() == 10);
   REQUIRE(heads_up.bets(0) == 4);
   REQUIRE(heads_up.stack(0) == 98);
@@ -659,6 +696,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.folded(0) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 108);
   REQUIRE(heads_up.bets(0) == 102);
   REQUIRE(heads_up.stack(0) == 0);
@@ -677,6 +715,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 2);
 
   uint8_t cards0[2][2] = {{Card("7c"), Card("2h")}, {Card("Ah"), Card("As")}};
   uint8_t board0[5] = {Card("9c"), Card("6c"), Card("Ks"), Card("5c"),
@@ -701,6 +740,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 6);
 
   // Test Mary's action (call)
@@ -713,6 +753,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
 
   uint8_t cards1[8][2] = {{Card("5s"), Card("4s")}, {Card("Kh"), Card("Th")}};
   uint8_t board1[5] = {Card("7h"), Card("Ah"), Card("3c"), Card("7s"),
@@ -737,6 +778,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 0);
   REQUIRE(heads_up.pot() == 10);
 
   // Test John's action (all in)
@@ -751,6 +793,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.folded(0) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 16);
   REQUIRE(heads_up.bets(0) == 10);
   REQUIRE(heads_up.stack(0) == 0);
@@ -769,6 +812,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
 
   uint8_t cards2[8][2] = {{Card("8h"), Card("8c")}, {Card("5d"), Card("5c")}};
   uint8_t board2[5] = {Card("9d"), Card("6h"), Card("7c"), Card("Td"),
@@ -800,6 +844,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(0) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 0);
   REQUIRE(heads_up.pot() == 10);
   REQUIRE(heads_up.bets(0) == 4);
   REQUIRE(heads_up.stack(0) == 98);
@@ -818,6 +863,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.folded(0) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 108);
   REQUIRE(heads_up.bets(0) == 102);
   REQUIRE(heads_up.stack(0) == 0);
@@ -836,6 +882,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 2);
 
   uint8_t cards0[2][2] = {{Card("6d"), Card("6c")}, {Card("Qc"), Card("Jd")}};
   uint8_t board0[5] = {Card("7h"), Card("4s"), Card("Js"), Card("Th"),
@@ -860,6 +907,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 6);
 
   // Test Mary's action (call)
@@ -872,6 +920,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
 
   uint8_t cards1[8][2] = {{Card("Ah"), Card("Kd")}, {Card("Qc"), Card("Qh")}};
   uint8_t board1[5] = {Card("3h"), Card("6c"), Card("9c"), Card("9d"),
@@ -896,6 +945,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 0);
   REQUIRE(heads_up.pot() == 10);
 
   // Test John's action (all in)
@@ -912,6 +962,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.folded(0) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 12);
   REQUIRE(heads_up.bets(0) == 6);
   REQUIRE(heads_up.stack(0) == 0);
@@ -930,6 +981,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
+  REQUIRE(heads_up.players_all_in() == 1);
 
   uint8_t cards2[8][2] = {{Card("Qc"), Card("Qh")}, {Card("8s"), Card("8d")}};
   uint8_t board2[5] = {Card("3d"), Card("Ac"), Card("Kh"), Card("3h"),
