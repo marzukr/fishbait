@@ -25,6 +25,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Construct the initial Node
   auto Card = deck::SKCardFromStr;
   poker_engine::Node<8, double> triton(0, 4000, 2000, 500, true, true, 500000);
+  REQUIRE_THROWS(triton.NewHand());
 
   // Verify that the constructor worked correctly
   REQUIRE(triton.big_blind() == 4000);
@@ -61,6 +62,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(3) == 500);
   REQUIRE(triton.stack(3) == 500000);
+  REQUIRE_THROWS(triton.NewHand());
 
   // Test Paul Phua's action (fold)
   REQUIRE(triton.PlayerIndex(4) == 4);
@@ -281,6 +283,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.stack(6) == 460000);
 
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(triton.NewHand());
 
   uint8_t cards0[8][2] = {{/*     Loeliger     */}, {/*      Cates       */},
                           {Card("Qh"), Card("Js")}, {Card("Td"), Card("5s")},
@@ -449,6 +452,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.stack(3) == 492000);
 
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(triton.NewHand());
 
   uint8_t cards1[8][2] = {{Card("Qd"), Card("6c")}, {Card("Ah"), Card("8d")},
                           {/*     Kuznetsov    */}, {Card("8c"), Card("6h")},
@@ -668,6 +672,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // uint8_t board2[5] = {Card("Kd"), Card("3s"), Card("7d") /*Turn*/
   //                      /*River*/};
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kAllIn));
+  REQUIRE_THROWS(triton.NewHand());
   triton.AwardPot(triton.single_run_);
   REQUIRE(triton.pot() == 0);
   REQUIRE(triton.bets(0) == 0);
@@ -697,6 +702,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
 TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   auto Card = deck::SKCardFromStr;
   poker_engine::Node<2, utils::Fraction> heads_up(0, 4, 2, 2, true, true, 100);
+  REQUIRE_THROWS(heads_up.NewHand());
 
   // Verify that the constructor worked correctly
   REQUIRE(heads_up.big_blind() == 4);
@@ -747,6 +753,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.pot() == 108);
   REQUIRE(heads_up.bets(0) == 102);
   REQUIRE(heads_up.stack(0) == 0);
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards_throw[2][2];
   uint8_t board_throw[1][5];
@@ -779,6 +786,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_all_in() == 2);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards0[2][2] = {{Card("7c"), Card("2h")}, {Card("Ah"), Card("As")}};
   uint8_t board0[1][5] = {{Card("9c"), Card("6c"), Card("Ks"), Card("5c"),
@@ -832,6 +840,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_all_in() == 1);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards1[8][2] = {{Card("5s"), Card("4s")}, {Card("Kh"), Card("Th")}};
   uint8_t board1[1][5] = {{Card("7h"), Card("Ah"), Card("3c"), Card("7s"),
@@ -911,6 +920,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_all_in() == 1);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards2[8][2] = {{Card("8h"), Card("8c")}, {Card("5d"), Card("5c")}};
   uint8_t board2[1][5] = {{Card("9d"), Card("6h"), Card("7c"), Card("Td"),
@@ -934,6 +944,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
 TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   auto Card = deck::SKCardFromStr;
   poker_engine::Node<2, double> heads_up(0, 4, 2, 2, true, false, 100, 0);
+  REQUIRE_THROWS(heads_up.NewHand());
 
   // Verify that the constructor worked correctly
   REQUIRE(heads_up.big_blind() == 4);
@@ -973,6 +984,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.pot() == 108);
   REQUIRE(heads_up.bets(0) == 102);
   REQUIRE(heads_up.stack(0) == 0);
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards_throw[2][2];
   uint8_t board_throw[1][5];
@@ -1005,6 +1017,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_all_in() == 2);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards0[2][2] = {{Card("6d"), Card("6c")}, {Card("Qc"), Card("Jd")}};
   uint8_t board0[1][5] = {{Card("7h"), Card("4s"), Card("Js"), Card("Th"),
@@ -1058,6 +1071,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_all_in() == 1);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards1[8][2] = {{Card("Ah"), Card("Kd")}, {Card("Qc"), Card("Qh")}};
   uint8_t board1[1][5] = {{Card("3h"), Card("6c"), Card("9c"), Card("9d"),
@@ -1141,6 +1155,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_all_in() == 1);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
 
   uint8_t cards2[8][2] = {{Card("Qc"), Card("Qh")}, {Card("8s"), Card("8d")}};
   uint8_t board2[1][5] = {{Card("3d"), Card("Ac"), Card("Kh"), Card("3h"),
@@ -1165,6 +1180,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   auto Card = deck::SKCardFromStr;
   poker_engine::Node<6, utils::Fraction> game(0, 100, 50, 0, true, false, 10000,
                                               3, utils::Fraction{}, 5, true);
+  REQUIRE_THROWS(game.NewHand());
 
   // Verify that the constructor worked correctly
   REQUIRE(game.button() == 0);
@@ -1211,6 +1227,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.pot() == 1550);
   REQUIRE(game.bets(0) == 0);
   REQUIRE(game.stack(0) == 10000);
+  REQUIRE_THROWS(game.NewHand());
 
   // Player 1 action (fold)
   REQUIRE(game.Rotation() == 0);
@@ -1483,6 +1500,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   /* ------------------------------ Award Pot ------------------------------- */
 
   REQUIRE_THROWS(game.Apply(poker_engine::Action::kFold));
+  REQUIRE_THROWS(game.NewHand());
 
   uint8_t cards0[6][2] = {{Card("Jc"), Card("9d")}, {0, 0}, {0, 0}, {0, 0},
                           {Card("Jh"), Card("Kd")}, {0, 0}};
@@ -1511,6 +1529,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
 
 TEST_CASE("straddle with all in", "[poker_engine][node]") {
   poker_engine::Node<6, double> game(0, 100, 50, 0, true, false, 400, 3);
+  REQUIRE_THROWS(game.NewHand());
 
   uint8_t card_throws[8][2];
   uint8_t board_throws[1][5];
@@ -1551,6 +1570,7 @@ TEST_CASE("straddle with all in", "[poker_engine][node]") {
 
 TEST_CASE("straddle with bb ante", "[poker_engine][node]") {
   poker_engine::Node<6, double> game(0, 100, 50, 100, true, false, 10000, 1);
+  REQUIRE_THROWS(game.NewHand());
 
   uint8_t card_throws[8][2];
   uint8_t board_throws[1][5];
@@ -1594,6 +1614,7 @@ TEST_CASE("straddle with bb ante", "[poker_engine][node]") {
 
 TEST_CASE("straddle with ante", "[poker_engine][node]") {
   poker_engine::Node<6, double> game(0, 100, 50, 100, false, false, 10000, 1);
+  REQUIRE_THROWS(game.NewHand());
 
   uint8_t card_throws[8][2];
   uint8_t board_throws[1][5];
