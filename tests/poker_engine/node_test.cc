@@ -50,7 +50,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(3) == 3);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 1);
@@ -66,7 +66,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(4) == 4);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 2);
@@ -83,7 +83,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanBet(10000) == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kBet, 10000}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kBet, 10000) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 3);
@@ -99,7 +99,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(6) == 6);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 4);
@@ -115,7 +115,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(7) == 7);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 5);
@@ -131,7 +131,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(0) == 0);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 6);
@@ -147,7 +147,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(1) == 1);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 7);
@@ -163,7 +163,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(2) == 2);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 1);
@@ -180,7 +180,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Kuznetsov's action (check)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 4);
@@ -196,7 +196,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanBet(30000) == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kBet, 30000}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kBet, 30000) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 5);
@@ -211,7 +211,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Haxton's action (call)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 9);
@@ -226,7 +226,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Kuznetsov's action (fold)
   REQUIRE(triton.Rotation() == 1);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kTurn);
   REQUIRE(triton.cycled() == 4);
@@ -244,7 +244,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanBet(100000));
-  REQUIRE(triton.Apply({poker_engine::Action::kBet, 100000}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kBet, 100000) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kTurn);
   REQUIRE(triton.cycled() == 5);
@@ -259,7 +259,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Haxton's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == false);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == false);
   REQUIRE(triton.in_progress() == false);
   REQUIRE(triton.round() == poker_engine::Round::kTurn);
   REQUIRE(triton.cycled() == 12);
@@ -306,7 +306,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Paul Phua's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 1);
@@ -321,7 +321,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Tony G's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 2);
@@ -336,7 +336,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Haxton's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 3);
@@ -351,7 +351,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Badziakouski's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 4);
@@ -366,7 +366,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Loeliger's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 5);
@@ -382,7 +382,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanBet(12000) == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kBet, 12000}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kBet, 12000) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 6);
@@ -397,7 +397,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Kuznetsov's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 7);
@@ -412,7 +412,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Tan Xuan's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == false);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == false);
   REQUIRE(triton.in_progress() == false);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 13);
@@ -458,7 +458,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Tony G's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 1);
@@ -473,7 +473,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Haxton's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 2);
@@ -488,7 +488,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Badziakouski's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 3);
@@ -503,7 +503,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Loeliger's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 4);
@@ -519,7 +519,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanBet(120000) == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kBet, 12000}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kBet, 12000) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 5);
@@ -534,7 +534,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Kuznetsov's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 6);
@@ -549,7 +549,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Tan Xuan's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
   REQUIRE(triton.cycled() == 7);
@@ -564,7 +564,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Paul Phua's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 1);
@@ -581,7 +581,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Paul Phua's action (fold)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 6);
@@ -597,7 +597,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanBet(10000) == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kBet, 10000}) == true);
+  REQUIRE(triton.Apply(poker_engine::Action::kBet, 10000) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 9);
@@ -612,7 +612,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   // Test Paul Phua's action (fold)
   REQUIRE(triton.Rotation() == 1);
   REQUIRE(triton.CanCheckCall() == true);
-  REQUIRE(triton.Apply({poker_engine::Action::kFold, 0}) == false);
+  REQUIRE(triton.Apply(poker_engine::Action::kFold) == false);
   REQUIRE(triton.in_progress() == false);
   REQUIRE(triton.round() == poker_engine::Round::kFlop);
   REQUIRE(triton.cycled() == 14);
@@ -689,7 +689,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanBet(6) == true);
   REQUIRE(heads_up.CanBet(97) == true);
   REQUIRE(heads_up.CanBet(98) == false);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kAllIn, 0}) == true);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kAllIn) == true);
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
   REQUIRE(heads_up.cycled() == 1);
@@ -708,7 +708,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanBet(4) == false);
   REQUIRE(heads_up.CanBet(91) == false);
   REQUIRE(heads_up.CanBet(92) == false);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kAllIn, 0}) == false);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kAllIn) == false);
   REQUIRE(heads_up.in_progress() == false);
   REQUIRE(heads_up.round() == poker_engine::Round::kRiver);
   REQUIRE(heads_up.cycled() == 2);
@@ -746,7 +746,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   // Test Mary's action (call)
   REQUIRE(heads_up.Rotation() == 0);
   REQUIRE(heads_up.CanCheckCall() == true);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kCheckCall, 0}) == false);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kCheckCall) == false);
   REQUIRE(heads_up.in_progress() == false);
   REQUIRE(heads_up.round() == poker_engine::Round::kRiver);
   REQUIRE(heads_up.cycled() == 2);
@@ -786,7 +786,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanCheckCall() == true);
   REQUIRE(heads_up.CanBet(5) == false);
   REQUIRE(heads_up.CanBet(6) == false);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kAllIn, 0}) == true);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kAllIn) == true);
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
   REQUIRE(heads_up.cycled() == 1);
@@ -805,7 +805,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanBet(6) == false);
   REQUIRE(heads_up.CanBet(7) == false);
   REQUIRE(heads_up.CanBet(8) == true);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kCheckCall, 0}) == false);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kCheckCall) == false);
   REQUIRE(heads_up.in_progress() == false);
   REQUIRE(heads_up.round() == poker_engine::Round::kRiver);
   REQUIRE(heads_up.cycled() == 2);
@@ -856,7 +856,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanBet(6) == true);
   REQUIRE(heads_up.CanBet(97) == true);
   REQUIRE(heads_up.CanBet(98) == false);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kAllIn, 0}) == true);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kAllIn) == true);
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
   REQUIRE(heads_up.cycled() == 1);
@@ -875,7 +875,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanBet(4) == false);
   REQUIRE(heads_up.CanBet(91) == false);
   REQUIRE(heads_up.CanBet(92) == false);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kAllIn, 0}) == false);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kAllIn) == false);
   REQUIRE(heads_up.in_progress() == false);
   REQUIRE(heads_up.round() == poker_engine::Round::kRiver);
   REQUIRE(heads_up.cycled() == 2);
@@ -913,7 +913,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   // Test Mary's action (call)
   REQUIRE(heads_up.Rotation() == 0);
   REQUIRE(heads_up.CanCheckCall() == true);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kCheckCall, 0}) == false);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kCheckCall) == false);
   REQUIRE(heads_up.in_progress() == false);
   REQUIRE(heads_up.round() == poker_engine::Round::kRiver);
   REQUIRE(heads_up.cycled() == 2);
@@ -955,7 +955,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanBet(1) == false);
   REQUIRE(heads_up.CanBet(2) == false);
   REQUIRE(heads_up.CanBet(3) == false);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kAllIn, 0}) == true);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kAllIn) == true);
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == poker_engine::Round::kPreFlop);
   REQUIRE(heads_up.cycled() == 1);
@@ -974,7 +974,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.CanBet(4) == true);
   REQUIRE(heads_up.CanBet(187) == true);
   REQUIRE(heads_up.CanBet(188) == false);
-  REQUIRE(heads_up.Apply({poker_engine::Action::kCheckCall, 0}) == false);
+  REQUIRE(heads_up.Apply(poker_engine::Action::kCheckCall) == false);
   REQUIRE(heads_up.in_progress() == false);
   REQUIRE(heads_up.round() == poker_engine::Round::kRiver);
   REQUIRE(heads_up.cycled() == 2);
@@ -1026,7 +1026,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.CanBet(1600) == true);
   REQUIRE(game.CanBet(9999) == true);
   REQUIRE(game.CanBet(10000) == false);
-  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kPreFlop);
   REQUIRE(game.cycled() == 1);
@@ -1046,7 +1046,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.CanBet(1550) == true);
   REQUIRE(game.CanBet(9949) == true);
   REQUIRE(game.CanBet(9950) == false);
-  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kPreFlop);
   REQUIRE(game.cycled() == 2);
@@ -1066,7 +1066,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.CanBet(1500) == true);
   REQUIRE(game.CanBet(9899) == true);
   REQUIRE(game.CanBet(9900) == false);
-  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kPreFlop);
   REQUIRE(game.cycled() == 3);
@@ -1082,7 +1082,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
   REQUIRE(game.CanBet(600) == false);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kPreFlop);
   REQUIRE(game.cycled() == 4);
@@ -1098,7 +1098,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
   REQUIRE(game.CanBet(400) == false);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kPreFlop);
   REQUIRE(game.cycled() == 5);
@@ -1113,7 +1113,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 5 action (check)
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kFlop);
   REQUIRE(game.cycled() == 2);
@@ -1132,7 +1132,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.CanCheckCall() == true);
   REQUIRE(game.CanBet(99) == false);
   REQUIRE(game.CanBet(100) == true);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kFlop);
   REQUIRE(game.cycled() == 3);
@@ -1151,7 +1151,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.CanBet(100) == true);
   REQUIRE(game.CanBet(800) == true);
   REQUIRE(game.CanBet(9200) == false);
-  REQUIRE(game.Apply({poker_engine::Action::kBet, 800}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kBet, 800) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kFlop);
   REQUIRE(game.cycled() == 4);
@@ -1166,7 +1166,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 5 action (fold)
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
-  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kFlop);
   REQUIRE(game.cycled() == 8);
@@ -1181,7 +1181,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 3 action (call)
   REQUIRE(game.Rotation() == 1);
   REQUIRE(game.CanCheckCall() == true);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kTurn);
   REQUIRE(game.cycled() == 2);
@@ -1198,7 +1198,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 3 action (check)
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kTurn);
   REQUIRE(game.cycled() == 3);
@@ -1213,7 +1213,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 4 action (check)
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kRiver);
   REQUIRE(game.cycled() == 2);
@@ -1230,7 +1230,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 3 action (check)
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
-  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kRiver);
   REQUIRE(game.cycled() == 3);
@@ -1250,7 +1250,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.CanBet(1600) == true);
   REQUIRE(game.CanBet(8399) == true);
   REQUIRE(game.CanBet(8400) == false);
-  REQUIRE(game.Apply({poker_engine::Action::kBet, 1600}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kBet, 1600) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kRiver);
   REQUIRE(game.cycled() == 8);
@@ -1265,7 +1265,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 3 action (raise all in)
   REQUIRE(game.Rotation() == 1);
   REQUIRE(game.CanCheckCall() == true);
-  REQUIRE(game.Apply({poker_engine::Action::kAllIn, 0}) == true);
+  REQUIRE(game.Apply(poker_engine::Action::kAllIn) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == poker_engine::Round::kRiver);
   REQUIRE(game.cycled() == 9);
@@ -1280,7 +1280,7 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   // Player 4 action (call all in)
   REQUIRE(game.Rotation() == 1);
   REQUIRE(game.CanCheckCall() == false);
-  REQUIRE(game.Apply({poker_engine::Action::kAllIn, 0}) == false);
+  REQUIRE(game.Apply(poker_engine::Action::kAllIn) == false);
   REQUIRE(game.in_progress() == false);
   REQUIRE(game.round() == poker_engine::Round::kRiver);
   REQUIRE(game.cycled() == 14);

@@ -20,14 +20,7 @@
 namespace poker_engine {
 
 enum class Round : uint8_t { kPreFlop, kFlop, kTurn, kRiver };
-
 enum class Action : uint8_t { kFold, kCheckCall, kBet, kAllIn };
-
-struct Move {
-  Action play;    // The action played by this move
-  uint32_t size;  /* If the play is kBet, how much more the player is adding to
-                     the pot. Otherwise it has no significance. */
-};
 
 /* QuotaT is used to represent exact award quotas before being apportioned into
    discrete chips (double or utils::Fraction). This choice could impact the
@@ -185,17 +178,19 @@ class Node {
     
     Must only be called when the game is in progress. Otherwise throws.
 
-    @param next The Move to apply to this Node.
+    @param play The Action to apply to this Node.
+    @param size How much more the player is adding to the pot if play is kBet.
+        Otherwise it has no significance.
 
     @return True if the game is still in progress after this move, false if this
         move has ended the game.
   */
-  bool Apply(Move next) {
+  bool Apply(Action play, uint32_t size = 0) {
     if (!in_progress_) {
       throw std::logic_error("Apply() called when a game is not in progress.");
     }
 
-    switch (next.play) {
+    switch (play) {
       case Action::kFold:
         Fold();
         break;
@@ -211,15 +206,15 @@ class Node {
         }
         break;
       case Action::kBet:
-        if (CanBet(next.size)) {
-          Bet(next.size);
+        if (CanBet(size)) {
+          Bet(size);
         } else {
-          std::string err = "Betting " + std::to_string(next.size) + " is not "
-                            "a valid move for the current acting player.";
+          std::string err = "Betting " + std::to_string(size) + " is not a "
+                            "valid move for the current acting player.";
           throw std::invalid_argument(err);
         }
         break;
-    }  // switch next.play
+    }  // switch play
     CyclePlayers(true);
     return in_progress_;
   }  // Apply()
