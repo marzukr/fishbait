@@ -1345,3 +1345,75 @@ TEST_CASE("straddle with all in", "[poker_engine][node]") {
   REQUIRE(game.stack(4) == 0);
   REQUIRE(game.stack(5) == 400);
 }  // TEST_CASE "straddle with all in"
+
+TEST_CASE("straddle with bb ante", "[poker_engine][node]") {
+  poker_engine::Node<6, double> game(0, 100, 50, 100, true, false, 10000, 1);
+
+  REQUIRE(game.button() == 0);
+  REQUIRE(game.big_blind() == 100);
+  REQUIRE(game.small_blind() == 50);
+  REQUIRE(game.ante() == 100);
+  REQUIRE(game.big_blind_ante() == true);
+  REQUIRE(game.blind_before_ante() == false);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.acting_player() == 4);
+  for (uint8_t i = 0; i < 6; ++i) {
+    REQUIRE(game.folded(i) == false);
+  }
+  REQUIRE(game.players_left() == 6);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 950);
+  REQUIRE(game.bets(0) == 100);
+  REQUIRE(game.bets(1) == 150);
+  REQUIRE(game.bets(2) == 200);
+  REQUIRE(game.bets(3) == 300);
+  REQUIRE(game.bets(4) == 100);
+  REQUIRE(game.bets(5) == 100);
+  REQUIRE(game.stack(0) == 10000);
+  REQUIRE(game.stack(1) == 9950);
+  REQUIRE(game.stack(2) == 9300);
+  REQUIRE(game.stack(3) == 9800);
+  REQUIRE(game.stack(4) == 10000);
+  REQUIRE(game.stack(5) == 10000);
+  REQUIRE(game.CanBet(200) == false);
+  REQUIRE(game.CanBet(399) == false);
+  REQUIRE(game.CanBet(400) == true);
+}  // TEST_CASE "straddle with ante"
+
+TEST_CASE("straddle with ante", "[poker_engine][node]") {
+  poker_engine::Node<6, double> game(0, 100, 50, 100, false, false, 10000, 1);
+
+  REQUIRE(game.button() == 0);
+  REQUIRE(game.big_blind() == 100);
+  REQUIRE(game.small_blind() == 50);
+  REQUIRE(game.ante() == 100);
+  REQUIRE(game.big_blind_ante() == false);
+  REQUIRE(game.blind_before_ante() == false);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.acting_player() == 4);
+  for (uint8_t i = 0; i < 6; ++i) {
+    REQUIRE(game.folded(i) == false);
+  }
+  REQUIRE(game.players_left() == 6);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 950);
+  REQUIRE(game.bets(0) == 100);
+  REQUIRE(game.bets(1) == 150);
+  REQUIRE(game.bets(2) == 200);
+  REQUIRE(game.bets(3) == 300);
+  REQUIRE(game.bets(4) == 100);
+  REQUIRE(game.bets(5) == 100);
+  REQUIRE(game.stack(0) == 9900);
+  REQUIRE(game.stack(1) == 9850);
+  REQUIRE(game.stack(2) == 9800);
+  REQUIRE(game.stack(3) == 9700);
+  REQUIRE(game.stack(4) == 9900);
+  REQUIRE(game.stack(5) == 9900);
+  REQUIRE(game.CanBet(200) == false);
+  REQUIRE(game.CanBet(399) == false);
+  REQUIRE(game.CanBet(400) == true);
+}  // TEST_CASE "straddle with ante"
