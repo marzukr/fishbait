@@ -472,13 +472,13 @@ class Node {
   uint32_t PostStraddles(uint8_t n) {
     uint32_t max_straddle_size = big_blind_;
     for (uint8_t i = 0; i < n; ++i) {
-      uint8_t player = PlayerIndex(3 + i);
-      uint32_t straddle_size = big_blind_ * (1 << (i + 1));
-      if (straddle_size < stack_[player]) {
+      uint32_t straddle_size = max_straddle_size * 2;
+      if (straddle_size > stack_[acting_player_]) {
         break;
       } else {
-        PostBlind(player, straddle_size);
+        PostBlind(acting_player_, straddle_size);
         max_straddle_size = std::max(straddle_size, max_straddle_size);
+        acting_player_ = NextPlayer();
       }
     }  // for i
     return max_straddle_size;
@@ -501,7 +501,7 @@ class Node {
     uint32_t total_bet = prev_bet + chips;
 
     // call
-    if (total_bet < max_bet_) {
+    if (total_bet <= max_bet_) {
       // do nothing
 
     // call + extra
@@ -564,6 +564,13 @@ class Node {
   }
 
   /*
+    @brief Returns who the next acting_player_ would be if rotated.
+  */
+  uint8_t NextPlayer() const {
+    return (acting_player_ + 1) % kPlayers;
+  }
+
+  /*
     @brief Cycle through the players until the next player who needs to act.
 
     @param cycleOnceBeforeCheck If true, this function will cycle one player
@@ -581,7 +588,7 @@ class Node {
         no_raise_ -= 1;
       }
       cycled_ += 1;
-      acting_player_ = (acting_player_ + 1) % kPlayers;
+      acting_player_ = NextPlayer();
     } while (pot_good_ + no_raise_ > 0 &&
              (folded_[acting_player_] || stack_[acting_player_] == 0));
 

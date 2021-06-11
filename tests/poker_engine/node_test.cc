@@ -995,3 +995,320 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(0) == 12);
   REQUIRE(heads_up.stack(1) == 188);
 }  // TEST_CASE "heads up big blind ante ante first"
+
+TEST_CASE("straddle", "[poker_engine][node]") {
+  auto Card = deck::SKCardFromStr;
+  poker_engine::Node<6, utils::Fraction> game(0, 100, 50, 0, true, false, 10000,
+                                              3, utils::Fraction{}, 5, true);
+
+  // Verify that the constructor worked correctly
+  REQUIRE(game.button() == 0);
+  REQUIRE(game.big_blind() == 100);
+  REQUIRE(game.small_blind() == 50);
+  REQUIRE(game.ante() == 0);
+  REQUIRE(game.big_blind_ante() == true);
+  REQUIRE(game.blind_before_ante() == false);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.acting_player() == 0);
+  REQUIRE(game.folded(0) == false);
+  REQUIRE(game.players_left() == 6);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 1550);
+  REQUIRE(game.bets(0) == 0);
+  REQUIRE(game.stack(0) == 10000);
+
+  // Player 0 action (fold)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(1599) == false);
+  REQUIRE(game.CanBet(1600) == true);
+  REQUIRE(game.CanBet(9999) == true);
+  REQUIRE(game.CanBet(10000) == false);
+  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 1);
+  REQUIRE(game.acting_player() == 1);
+  REQUIRE(game.folded(0) == true);
+  REQUIRE(game.players_left() == 5);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 1550);
+  REQUIRE(game.bets(0) == 0);
+  REQUIRE(game.stack(0) == 10000);
+
+  // Player 1 action (fold)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(800) == false);
+  REQUIRE(game.CanBet(1549) == false);
+  REQUIRE(game.CanBet(1550) == true);
+  REQUIRE(game.CanBet(9949) == true);
+  REQUIRE(game.CanBet(9950) == false);
+  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 2);
+  REQUIRE(game.acting_player() == 2);
+  REQUIRE(game.folded(1) == true);
+  REQUIRE(game.players_left() == 4);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 1550);
+  REQUIRE(game.bets(1) == 50);
+  REQUIRE(game.stack(1) == 9950);
+
+  // Player 2 action (fold)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(800) == false);
+  REQUIRE(game.CanBet(1499) == false);
+  REQUIRE(game.CanBet(1500) == true);
+  REQUIRE(game.CanBet(9899) == true);
+  REQUIRE(game.CanBet(9900) == false);
+  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 3);
+  REQUIRE(game.acting_player() == 3);
+  REQUIRE(game.folded(2) == true);
+  REQUIRE(game.players_left() == 3);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 1550);
+  REQUIRE(game.bets(2) == 100);
+  REQUIRE(game.stack(2) == 9900);
+
+  // Player 3 action (call)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(600) == false);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 4);
+  REQUIRE(game.acting_player() == 4);
+  REQUIRE(game.folded(3) == false);
+  REQUIRE(game.players_left() == 3);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 2150);
+  REQUIRE(game.bets(3) == 800);
+  REQUIRE(game.stack(3) == 9200);
+
+  // Player 4 action (call)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(400) == false);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 5);
+  REQUIRE(game.acting_player() == 5);
+  REQUIRE(game.folded(4) == false);
+  REQUIRE(game.players_left() == 3);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 2550);
+  REQUIRE(game.bets(4) == 800);
+  REQUIRE(game.stack(4) == 9200);
+
+  // Player 5 action (check)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+  REQUIRE(game.cycled() == 2);
+  REQUIRE(game.acting_player() == 3);
+  REQUIRE(game.folded(5) == false);
+  REQUIRE(game.players_left() == 3);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 2550);
+  REQUIRE(game.bets(5) == 800);
+  REQUIRE(game.stack(5) == 9200);
+
+  /* -------------------------------- Flop ---------------------------------- */
+
+  // Player 3 action (check)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(99) == false);
+  REQUIRE(game.CanBet(100) == true);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+  REQUIRE(game.cycled() == 3);
+  REQUIRE(game.acting_player() == 4);
+  REQUIRE(game.folded(3) == false);
+  REQUIRE(game.players_left() == 3);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 2550);
+  REQUIRE(game.bets(3) == 800);
+  REQUIRE(game.stack(3) == 9200);
+
+  // Player 4 action (raise 800)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(99) == false);
+  REQUIRE(game.CanBet(100) == true);
+  REQUIRE(game.CanBet(800) == true);
+  REQUIRE(game.CanBet(9200) == false);
+  REQUIRE(game.Apply({poker_engine::Action::kBet, 800}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+  REQUIRE(game.cycled() == 4);
+  REQUIRE(game.acting_player() == 5);
+  REQUIRE(game.folded(4) == false);
+  REQUIRE(game.players_left() == 3);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 3350);
+  REQUIRE(game.bets(4) == 1600);
+  REQUIRE(game.stack(4) == 8400);
+
+  // Player 5 action (fold)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.Apply({poker_engine::Action::kFold, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+  REQUIRE(game.cycled() == 8);
+  REQUIRE(game.acting_player() == 3);
+  REQUIRE(game.folded(5) == true);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 3350);
+  REQUIRE(game.bets(5) == 800);
+  REQUIRE(game.stack(5) == 9200);
+
+  // Player 3 action (call)
+  REQUIRE(game.Rotation() == 1);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kTurn);
+  REQUIRE(game.cycled() == 2);
+  REQUIRE(game.acting_player() == 3);
+  REQUIRE(game.folded(3) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 4150);
+  REQUIRE(game.bets(3) == 1600);
+  REQUIRE(game.stack(3) == 8400);
+
+  /* -------------------------------- Turn ---------------------------------- */
+
+  // Player 3 action (check)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kTurn);
+  REQUIRE(game.cycled() == 3);
+  REQUIRE(game.acting_player() == 4);
+  REQUIRE(game.folded(3) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 4150);
+  REQUIRE(game.bets(3) == 1600);
+  REQUIRE(game.stack(3) == 8400);
+
+  // Player 4 action (check)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 2);
+  REQUIRE(game.acting_player() == 3);
+  REQUIRE(game.folded(4) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 4150);
+  REQUIRE(game.bets(4) == 1600);
+  REQUIRE(game.stack(4) == 8400);
+
+  /* -------------------------------- River --------------------------------- */
+
+  // Player 3 action (check)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.Apply({poker_engine::Action::kCheckCall, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 3);
+  REQUIRE(game.acting_player() == 4);
+  REQUIRE(game.folded(3) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 4150);
+  REQUIRE(game.bets(3) == 1600);
+  REQUIRE(game.stack(3) == 8400);
+
+  // Player 4 action (raise 1600)
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.CanBet(99) == false);
+  REQUIRE(game.CanBet(100) == true);
+  REQUIRE(game.CanBet(1600) == true);
+  REQUIRE(game.CanBet(8399) == true);
+  REQUIRE(game.CanBet(8400) == false);
+  REQUIRE(game.Apply({poker_engine::Action::kBet, 1600}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 8);
+  REQUIRE(game.acting_player() == 3);
+  REQUIRE(game.folded(4) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 5750);
+  REQUIRE(game.bets(4) == 3200);
+  REQUIRE(game.stack(4) == 6800);
+
+  // Player 3 action (raise all in)
+  REQUIRE(game.Rotation() == 1);
+  REQUIRE(game.CanCheckCall() == true);
+  REQUIRE(game.Apply({poker_engine::Action::kAllIn, 0}) == true);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 9);
+  REQUIRE(game.acting_player() == 4);
+  REQUIRE(game.folded(3) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 1);
+  REQUIRE(game.pot() == 14150);
+  REQUIRE(game.bets(3) == 10000);
+  REQUIRE(game.stack(3) == 0);
+
+  // Player 4 action (call all in)
+  REQUIRE(game.Rotation() == 1);
+  REQUIRE(game.CanCheckCall() == false);
+  REQUIRE(game.Apply({poker_engine::Action::kAllIn, 0}) == false);
+  REQUIRE(game.in_progress() == false);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 14);
+  REQUIRE(game.acting_player() == 3);
+  REQUIRE(game.folded(4) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 2);
+  REQUIRE(game.pot() == 20950);
+  REQUIRE(game.bets(4) == 10000);
+  REQUIRE(game.stack(4) == 0);
+
+  /* ------------------------------ Award Pot ------------------------------- */
+
+  uint8_t cards0[6][2] = {{Card("Jc"), Card("9d")}, {0, 0}, {0, 0}, {0, 0},
+                          {Card("Jh"), Card("Kd")}, {0, 0}};
+  uint8_t board0[1][5] = {{Card("Qd"), Card("4s"), Card("Kc"), Card("6d"),
+                           Card("Tc")}};
+  game.AwardPot(game.multi_run_, cards0, board0, 1);
+
+  // Check AwardPot results
+  REQUIRE(game.pot() == 0);
+  for (uint8_t i = 0; i < 6; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.stack(0) == 10000);
+  REQUIRE(game.stack(1) == 9950);
+  REQUIRE(game.stack(2) == 9900);
+  REQUIRE(game.stack(3) == 0);
+  REQUIRE(game.stack(4) == 20950);
+  REQUIRE(game.stack(5) == 9200);
+}  // TEST_CASE "straddle"
