@@ -1312,3 +1312,36 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.stack(4) == 20950);
   REQUIRE(game.stack(5) == 9200);
 }  // TEST_CASE "straddle"
+
+TEST_CASE("straddle with all in", "[poker_engine][node]") {
+  poker_engine::Node<6, double> game(0, 100, 50, 0, true, false, 400, 3);
+
+  REQUIRE(game.button() == 0);
+  REQUIRE(game.big_blind() == 100);
+  REQUIRE(game.small_blind() == 50);
+  REQUIRE(game.ante() == 0);
+  REQUIRE(game.big_blind_ante() == true);
+  REQUIRE(game.blind_before_ante() == false);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.acting_player() == 5);
+  for (uint8_t i = 0; i < 6; ++i) {
+    REQUIRE(game.folded(i) == false);
+  }
+  REQUIRE(game.players_left() == 6);
+  REQUIRE(game.players_all_in() == 1);
+  REQUIRE(game.pot() == 750);
+  REQUIRE(game.bets(0) == 0);
+  REQUIRE(game.bets(1) == 50);
+  REQUIRE(game.bets(2) == 100);
+  REQUIRE(game.bets(3) == 200);
+  REQUIRE(game.bets(4) == 400);
+  REQUIRE(game.bets(5) == 0);
+  REQUIRE(game.stack(0) == 400);
+  REQUIRE(game.stack(1) == 350);
+  REQUIRE(game.stack(2) == 300);
+  REQUIRE(game.stack(3) == 200);
+  REQUIRE(game.stack(4) == 0);
+  REQUIRE(game.stack(5) == 400);
+}  // TEST_CASE "straddle with all in"
