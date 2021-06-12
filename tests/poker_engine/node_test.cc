@@ -1655,3 +1655,44 @@ TEST_CASE("straddle with ante", "[poker_engine][node]") {
   REQUIRE(game.CanBet(399) == false);
   REQUIRE(game.CanBet(400) == true);
 }  // TEST_CASE "straddle with ante"
+
+TEST_CASE("awardpot same stack no rake double", "[poker_engine][node]") {
+  auto Card = deck::SKCardFromStr;
+  poker_engine::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  uint8_t board[5] = {Card("As"), Card("Ks"), Card("Qs"), Card("Js"),
+                      Card("Ts")};
+  uint8_t hands[3][2] = {{Card("2s"), Card("2h")}, {Card("3s"), Card("3h")},
+                         {Card("4s"), Card("4h")}};
+  game.AwardPot(game.same_stack_no_rake_, hands, board);
+  REQUIRE(game.stack(0) == 10000);
+  REQUIRE(game.stack(1) == 10000);
+  REQUIRE(game.stack(2) == 10000);
+  for (uint8_t i = 0; i < 3; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+}  // TEST_CASE "awardpot same stack no rake double"
+
+TEST_CASE("awardpot same stack no rake fraction", "[poker_engine][node]") {
+  auto Card = deck::SKCardFromStr;
+  poker_engine::Node<3, utils::Fraction> game(0, 100, 50, 0, false, false,
+                                              10000);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  uint8_t board[5] = {Card("2d"), Card("2c"), Card("Qs"), Card("Js"),
+                      Card("Ts")};
+  uint8_t hands[3][2] = {{Card("2s"), Card("2h")}, {Card("3s"), Card("3h")},
+                         {0, 0}};
+  game.AwardPot(game.same_stack_no_rake_, hands, board);
+  REQUIRE(game.stack(0) == 30000);
+  REQUIRE(game.stack(1) == 0);
+  REQUIRE(game.stack(2) == 0);
+  for (uint8_t i = 0; i < 3; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+}  // TEST_CASE "awardpot same stack no rake fraction"
