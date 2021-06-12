@@ -1696,3 +1696,54 @@ TEST_CASE("awardpot same stack no rake fraction", "[poker_engine][node]") {
   }
   REQUIRE(game.pot() == 0);
 }  // TEST_CASE "awardpot same stack no rake fraction"
+
+TEST_CASE("awardpot single run double", "[poker_engine][node]") {
+  auto Card = deck::SKCardFromStr;
+  poker_engine::Node<3, double> game(0, 100, 50, 100, true, false,
+                                     10000);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  uint8_t board[5] = {Card("8c"), Card("9c"), Card("Ts"), Card("Js"),
+                      Card("Qs")};
+  uint8_t hands[3][2] = {{Card("2s"), Card("2h")}, {Card("3s"), Card("3h")},
+                         {Card("Ah"), Card("Kh")}};
+  game.AwardPot(game.single_run_, hands, board);
+  REQUIRE(game.stack(0) == 300);
+  REQUIRE(game.stack(1) == 300);
+  REQUIRE(game.stack(2) == 29400);
+  for (uint8_t i = 0; i < 3; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+}  // TEST_CASE "awardpot single run double"
+
+TEST_CASE("awardpot single run fraction", "[poker_engine][node]") {
+  auto Card = deck::SKCardFromStr;
+  poker_engine::Node<4, utils::Fraction> game(0, 100, 50, 100, true, false,
+                                              10000);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  uint8_t board[5] = {Card("8c"), Card("9c"), Card("Ts"), Card("Js"),
+                      Card("Qs")};
+  uint8_t hands[4][2] = {{Card("Ad"), Card("Kd")}, {Card("Ac"), Card("Kc")},
+                         {Card("Ah"), Card("Kh")}, {Card("2s"), Card("2h")}};
+  game.AwardPot(game.single_run_, hands, board);
+  REQUIRE((game.stack(0) == 13533 || game.stack(0) == 13534));
+  REQUIRE((game.stack(1) == 13533 || game.stack(1) == 13534));
+  REQUIRE((game.stack(2) == 12933 || game.stack(2) == 12934));
+  REQUIRE(game.stack(3) == 0);
+  REQUIRE(game.stack(0) + game.stack(1) + game.stack(2) + game.stack(3) ==
+          40000);
+  for (uint8_t i = 0; i < 3; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+}  // TEST_CASE "awardpot single run double"
