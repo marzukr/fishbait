@@ -1708,8 +1708,7 @@ TEST_CASE("awardpot same stack no rake fraction", "[poker_engine][node]") {
 
 TEST_CASE("awardpot single run double", "[poker_engine][node]") {
   auto Card = deck::SKCardFromStr;
-  poker_engine::Node<3, double> game(0, 100, 50, 100, true, false,
-                                     10000);
+  poker_engine::Node<3, double> game(0, 100, 50, 100, true, false, 10000);
   game.Apply(poker_engine::Action::kAllIn);
   REQUIRE(game.CanCheckCall() == false);
   game.Apply(poker_engine::Action::kAllIn);
@@ -1762,8 +1761,7 @@ TEST_CASE("awardpot single run fraction", "[poker_engine][node]") {
 TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
     utils::Fraction) {
   auto Card = deck::SKCardFromStr;
-  poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false,
-                                       11);
+  poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false, 11);
   // Preflop fold to big blind
   game.Apply(poker_engine::Action::kFold);
   game.Apply(poker_engine::Action::kFold);
@@ -1846,15 +1844,15 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
     REQUIRE(game.bets(i) == 0);
   }
   REQUIRE(game.pot() == 0);
-}  // TEST_CASE "awardpot multi run"
+}  // TEMPLATE_TEST_CASE "awardpot multi run"
 
 TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
                    "[poker_engine][node]", double, utils::Fraction) {
   auto Card = deck::SKCardFromStr;
   TestType rake{1};
   rake /= 20;
-  poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false,
-                                       11, 0, rake, 0, true);
+  poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false, 11, 0, rake, 0,
+                                       true);
   // Preflop fold to big blind
   game.Apply(poker_engine::Action::kFold);
   game.Apply(poker_engine::Action::kFold);
@@ -1937,4 +1935,36 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
     REQUIRE(game.bets(i) == 0);
   }
   REQUIRE(game.pot() == 0);
-}  // TEST_CASE "awardpot multi run rake no flop no drop"
+}  // TEMPLATE_TEST_CASE "awardpot multi run rake no flop no drop"
+
+TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker_engine][node]",
+                   double, utils::Fraction) {
+  auto Card = deck::SKCardFromStr;
+  TestType rake{1};
+  rake /= 20;
+  poker_engine::Node<4, TestType> game(0, 100, 50, 100, true, false, 10000, 0,
+                                       rake, 100, false);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE(game.CanCheckCall() == false);
+  game.Apply(poker_engine::Action::kAllIn);
+  REQUIRE_THROWS(game.AwardPot(game.single_run_));
+  uint8_t board[5] = {Card("8c"), Card("9c"), Card("Ts"), Card("Js"),
+                      Card("Qs")};
+  uint8_t hands[4][2] = {{Card("Ad"), Card("Kd")}, {Card("Ac"), Card("Kc")},
+                         {Card("Ah"), Card("Kh")}, {Card("2s"), Card("2h")}};
+  game.AwardPot(game.single_run_, hands, board);
+  REQUIRE((game.stack(0) == 13499 || game.stack(0) == 13500));
+  REQUIRE((game.stack(1) == 13499 || game.stack(1) == 13500));
+  REQUIRE(game.stack(2) == 12901);
+  REQUIRE(game.stack(3) == 0);
+  REQUIRE(game.stack(0) + game.stack(1) + game.stack(2) + game.stack(3) ==
+          39900);
+  for (uint8_t i = 0; i < 4; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+}  // TEMPLATE_TEST_CASE "awardpot single run rake rake cap"
