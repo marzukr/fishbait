@@ -1742,8 +1742,97 @@ TEST_CASE("awardpot single run fraction", "[poker_engine][node]") {
   REQUIRE(game.stack(3) == 0);
   REQUIRE(game.stack(0) + game.stack(1) + game.stack(2) + game.stack(3) ==
           40000);
-  for (uint8_t i = 0; i < 3; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     REQUIRE(game.bets(i) == 0);
   }
   REQUIRE(game.pot() == 0);
 }  // TEST_CASE "awardpot single run double"
+
+TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
+    utils::Fraction) {
+  auto Card = deck::SKCardFromStr;
+  poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false,
+                                       11);
+  // Preflop fold to big blind
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kFold);
+  // Award Pot
+  game.AwardPot(game.multi_run_);
+  REQUIRE(game.stack(0) == 11);
+  REQUIRE(game.stack(1) == 10);
+  REQUIRE(game.stack(2) == 12);
+  REQUIRE(game.stack(3) == 11);
+  REQUIRE(game.stack(4) == 11);
+  for (uint8_t i = 0; i < 5; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+
+  // Hand 2
+  game.NewHand();
+  // Preflop
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kCheckCall);
+  game.Apply(poker_engine::Action::kCheckCall);
+  // Flop
+  game.Apply(poker_engine::Action::kCheckCall);
+  game.Apply(poker_engine::Action::kCheckCall);
+  // Turn
+  game.Apply(poker_engine::Action::kCheckCall);
+  game.Apply(poker_engine::Action::kCheckCall);
+  // River
+  game.Apply(poker_engine::Action::kCheckCall);
+  game.Apply(poker_engine::Action::kCheckCall);
+  // Award Pot
+  REQUIRE_THROWS(game.AwardPot(game.multi_run_));
+  uint8_t board_0[1][5] = {{Card("8c"), Card("9c"), Card("Ts"), Card("Js"),
+                            Card("Qs")}};
+  uint8_t hands_0[5][2] = {{}, {}, {0, 0}, {Card("2s"), Card("2h")}, {}};
+  game.AwardPot(game.multi_run_, hands_0, board_0);
+  REQUIRE(game.stack(0) == 11);
+  REQUIRE(game.stack(1) == 10);
+  REQUIRE(game.stack(2) == 10);
+  REQUIRE(game.stack(3) == 13);
+  REQUIRE(game.stack(4) == 11);
+  for (uint8_t i = 0; i < 5; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+
+  // Hand 3
+  game.NewHand();
+  // Preflop everyone all in
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kAllIn);
+  // Award Pot
+  REQUIRE_THROWS(game.AwardPot(game.multi_run_));
+  uint8_t board_1[3][5] = {{Card("8c"), Card("9c"), Card("Tc"), Card("Jc"),
+                            Card("2d")}, {Card("2c"), Card("3c"), Card("4c"),
+                            Card("5d"), Card("6d")}, {Card("8s"), Card("9s"),
+                            Card("Ts"), Card("Qs"), Card("2h")}};
+  uint8_t hands_1[5][2] = {{Card("6h"), Card("7h")}, {Card("Ac"), Card("Kc")},
+                           {Card("As"), Card("Ks")}, {Card("5s"), Card("7s")},
+                           {Card("Qd"), Card("8d")}};
+  game.AwardPot(game.multi_run_, hands_1, board_1, 3);
+  REQUIRE((game.stack(0) == 1 || game.stack(0) == 0));
+  REQUIRE(game.stack(1) == 33);
+  REQUIRE(game.stack(2) == 17);
+  REQUIRE((game.stack(3) == 3 || game.stack(3) == 4));
+  REQUIRE(game.stack(4) == 1);
+  uint32_t stack_sum = 0;
+  for (uint8_t i = 0; i < 5; ++i) {
+    stack_sum += game.stack(i);
+  }
+  REQUIRE(stack_sum == 55);
+  for (uint8_t i = 0; i < 5; ++i) {
+    REQUIRE(game.bets(i) == 0);
+  }
+  REQUIRE(game.pot() == 0);
+}  // TEST_CASE "awardpot multi run"

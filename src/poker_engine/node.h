@@ -244,7 +244,11 @@ class Node {
   void AwardPot(SameStackNoRake, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
     VerifyAwardablePot();
-    if (players_left_ == 1) return FoldVictory(folded_);
+    if (players_left_ == 1) {
+      return FoldVictory(folded_);
+    } else {
+      VerifyCardInfo(hands, board);
+    }
     uint16_t ranks[kPlayers];
     RankPlayers(hands, board, folded_, ranks);
     BestPlayersData best_players = BestPlayers(ranks, folded_);
@@ -282,13 +286,8 @@ class Node {
     uint8_t players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) {
       return FoldVictory(processed);
-    } else if (hands == nullptr || board == nullptr) {
-      throw std::invalid_argument("AwardPot() called with hands = nullptr or "
-                                  "board = nullptr when there is more than 1 "
-                                  "player remaining in the game. If there is "
-                                  "more than 1 player who has not folded, we "
-                                  "need hand and card information to award the "
-                                  "pot.");
+    } else {
+      VerifyCardInfo(hands, board);
     }
 
     uint16_t ranks[kPlayers];
@@ -318,19 +317,25 @@ class Node {
     @param hands 2d array of each player's hand. Rows for each player, columns
         for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
         indexing. If a player's two cards are the same, this represents a mucked
-        or folded hand.
+        or folded hand. Nullptr is a valid option if all but one player has
+        folded.
     @param boards Array of the public board cards. Follows the standard order.
         i.e. columns [0,2] are the flop, column 3 is the turn, and column 4 is
-        the river. SKEval indexing. Each row is a different run out.
+        the river. SKEval indexing. Each row is a different run out. Nullptr is
+        a valid option if all but one player has folded.
     @param n_runs How many times the board is being run.
   */
-  void AwardPot(MultiRun, const uint8_t hands[kPlayers][2],
-                const uint8_t boards[][5], const uint8_t n_runs) {
+  void AwardPot(MultiRun, const uint8_t hands[kPlayers][2] = nullptr,
+                const uint8_t boards[][5] = nullptr, const uint8_t n_runs = 1) {
     VerifyAwardablePot();
 
     bool processed[kPlayers];
     uint8_t players_to_award = PlayersToProcess(hands, processed);
-    if (players_to_award == 1) return FoldVictory(processed);
+    if (players_to_award == 1) {
+      return FoldVictory(processed);
+    } else {
+      VerifyCardInfo(hands, boards);
+    }
 
     QuotaT exact_awards[kPlayers]{};
 
@@ -588,7 +593,7 @@ class Node {
              (folded_[acting_player_] || stack_[acting_player_] == 0));
 
     // The round has ended
-    if (pot_good_ + no_raise_ == 0) {
+    if (pot_good_ + no_raise_ == 0 || players_left_ == 1) {
       NextRound();
     }
   }
@@ -671,6 +676,20 @@ class Node {
       }
     }  // for i
     return players_to_award;
+  }
+
+  /*
+    @brief Verifies that hands and board are not null. Throws if not.
+  */
+  void VerifyCardInfo(const void* hands, const void* board) {
+    if (hands == nullptr || board == nullptr) {
+      throw std::invalid_argument("VerifyCardInfo() called with hands = "
+                                  "nullptr or board = nullptr when there is "
+                                  "more than 1 player remaining in the game. "
+                                  "If there is more than 1 player who has not "
+                                  "folded, we need hand and card information "
+                                  "to award the pot.");
+    }
   }
 
   /*
