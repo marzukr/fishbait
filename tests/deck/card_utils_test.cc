@@ -58,6 +58,10 @@ TEST_CASE("ISOCardFromStr Test", "[hand_strengths][cardutils]") {
   for (uint8_t i = 0; i < deck::kDeckSize; ++i) {
     REQUIRE(+deck::ISOCardFromStr(strings[i]) == +correct[i]);
   }
+  REQUIRE_THROWS(deck::ISOCardFromStr(""));
+  REQUIRE_THROWS(deck::ISOCardFromStr("2cc"));
+  REQUIRE_THROWS(deck::ISOCardFromStr("2l"));
+  REQUIRE_THROWS(deck::ISOCardFromStr("cc"));
 }  // TEST_CASE "ISOCardFromStr Test"
 
 TEST_CASE("SKCardFromStr Test", "[hand_strengths][cardutils]") {
@@ -74,4 +78,8 @@ TEST_CASE("SKCardFromStr Test", "[hand_strengths][cardutils]") {
   for (uint8_t i = 0; i < deck::kDeckSize; ++i) {
     REQUIRE(+deck::SKCardFromStr(strings[i]) == +correct[i]);
   }
+  REQUIRE_THROWS(deck::SKCardFromStr(""));
+  REQUIRE_THROWS(deck::SKCardFromStr("Tcc"));
+  REQUIRE_THROWS(deck::SKCardFromStr("Al"));
+  REQUIRE_THROWS(deck::SKCardFromStr("ss"));
 }  // TEST_CASE "SKCardFromStr Test"
