@@ -1968,3 +1968,42 @@ TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker_engine][node]",
   }
   REQUIRE(game.pot() == 0);
 }  // TEMPLATE_TEST_CASE "awardpot single run rake rake cap"
+
+TEMPLATE_TEST_CASE("bb ante with change", "[poker_engine][node]",
+                   double, utils::Fraction) {
+  poker_engine::Node<3, TestType> game(0, 100, 50, 100, true, false, 250);
+  REQUIRE(game.players_all_in() == 1);
+  REQUIRE(game.bets(0) == 83);
+  REQUIRE(game.bets(1) == 133);
+  REQUIRE(game.bets(2) == 84);
+  REQUIRE(game.stack(0) == 250);
+  REQUIRE(game.stack(1) == 200);
+  REQUIRE(game.stack(2) == 0);
+  REQUIRE(game.pot() == 300);
+
+  // Preflop
+
+  // Player 0 calls
+  REQUIRE(game.CanCheckCall());
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.bets(0) == 183);
+  REQUIRE(game.bets(1) == 133);
+  REQUIRE(game.bets(2) == 84);
+  REQUIRE(game.stack(0) == 150);
+  REQUIRE(game.stack(1) == 200);
+  REQUIRE(game.stack(2) == 0);
+  REQUIRE(game.pot() == 400);
+
+  // Player 1 calls
+  REQUIRE(game.CanCheckCall());
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.bets(0) == 183);
+  REQUIRE(game.bets(1) == 183);
+  REQUIRE(game.bets(2) == 84);
+  REQUIRE(game.stack(0) == 150);
+  REQUIRE(game.stack(1) == 150);
+  REQUIRE(game.stack(2) == 0);
+  REQUIRE(game.pot() == 450);
+
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+}  // TEMPLATE_TEST_CASE "bb ante with change"
