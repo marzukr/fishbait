@@ -79,8 +79,9 @@ class Node {
   */
   void NewHand(uint8_t straddles = 0) {
     if (pot_ != 0) {
-      throw std::logic_error("NewHand() called when pot is not empty. If the "
-                             "pot isn't 0, this means AwardPot() hasn't been "
+      std::string func{__func__};
+      throw std::logic_error(func + " called when pot is not empty. If the pot "
+                             "isn't 0, this means AwardPot() hasn't been "
                              "called yet. The last pot must be awarded before "
                              "a new hand starts.");
     }
@@ -187,7 +188,8 @@ class Node {
   */
   bool Apply(Action play, uint32_t size = 0) {
     if (!in_progress_) {
-      throw std::logic_error("Apply() called when a game is not in progress.");
+      std::string func{__func__};
+      throw std::logic_error(func + " called when a game is not in progress.");
     }
 
     switch (play) {
@@ -243,11 +245,11 @@ class Node {
   */
   void AwardPot(SameStackNoRake, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
-    VerifyAwardablePot();
+    VerifyAwardablePot(__func__);
     if (players_left_ == 1) {
       return FoldVictory(folded_);
     } else {
-      VerifyCardInfo(hands, board);
+      VerifyCardInfo(hands, board, __func__);
     }
     uint16_t ranks[kPlayers];
     RankPlayers(hands, board, folded_, ranks);
@@ -280,14 +282,14 @@ class Node {
   */
   void AwardPot(SingleRun, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t board[5] = nullptr) {
-    VerifyAwardablePot();
+    VerifyAwardablePot(__func__);
 
     bool processed[kPlayers];
     uint8_t players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) {
       return FoldVictory(processed);
     } else {
-      VerifyCardInfo(hands, board);
+      VerifyCardInfo(hands, board, __func__);
     }
 
     uint16_t ranks[kPlayers];
@@ -327,14 +329,14 @@ class Node {
   */
   void AwardPot(MultiRun, const uint8_t hands[kPlayers][2] = nullptr,
                 const uint8_t boards[][5] = nullptr, const uint8_t n_runs = 1) {
-    VerifyAwardablePot();
+    VerifyAwardablePot(__func__);
 
     bool processed[kPlayers];
     uint8_t players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) {
       return FoldVictory(processed);
     } else {
-      VerifyCardInfo(hands, boards);
+      VerifyCardInfo(hands, boards, __func__);
     }
 
     QuotaT exact_awards[kPlayers]{};
@@ -640,15 +642,15 @@ class Node {
   /*
     @brief Checks if the pot can be awarded. Throws if not.
   */
-  void VerifyAwardablePot() const {
+  void VerifyAwardablePot(const std::string& func) const {
     if (in_progress_) {
-      throw std::logic_error("VerifyAwardablePot() called when the game is "
-                             "still in progress. If the game is still in "
-                             "progress, we cannot award the pot yet.");
+      throw std::logic_error(func + " called when the game is still in "
+                             "progress. If the game is still in progress, we "
+                             "cannot award the pot yet.");
     } else if (pot_ == 0) {
-      throw std::logic_error("VerifyAwardablePot() called when the pot is 0. "
-                             "If the pot is 0, this means we already awarded "
-                             "the pot for this hand and we can't do it again.");
+      throw std::logic_error(func + " called when the pot is 0. If the pot is "
+                             "0, this means we already awarded the pot for "
+                             "this hand and we can't do it again.");
     }
   }
 
@@ -681,14 +683,15 @@ class Node {
   /*
     @brief Verifies that hands and board are not null. Throws if not.
   */
-  void VerifyCardInfo(const void* hands, const void* board) {
+  void VerifyCardInfo(const void* hands, const void* board,
+                      const std::string& func) {
     if (hands == nullptr || board == nullptr) {
-      throw std::invalid_argument("VerifyCardInfo() called with hands = "
-                                  "nullptr or board = nullptr when there is "
-                                  "more than 1 player remaining in the game. "
-                                  "If there is more than 1 player who has not "
-                                  "folded, we need hand and card information "
-                                  "to award the pot.");
+      throw std::invalid_argument(func + " called with hands = nullptr or "
+                                  "board = nullptr when there is more than 1 "
+                                  "player remaining in the game. If there is "
+                                  "more than 1 player who has not folded, we "
+                                  "need hand and card information to award the "
+                                  "pot.");
     }
   }
 
