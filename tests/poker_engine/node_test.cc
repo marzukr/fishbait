@@ -1984,6 +1984,9 @@ TEST_CASE("bb ante with change", "[poker_engine][node]") {
 
   // Player 0 calls
   REQUIRE(game.CanCheckCall());
+  REQUIRE(game.CanBet(100) == false);
+  REQUIRE(game.CanBet(199) == false);
+  REQUIRE(game.CanBet(200) == true);
   game.Apply(poker_engine::Action::kCheckCall);
   REQUIRE(game.bets(0) == 183);
   REQUIRE(game.bets(1) == 133);
