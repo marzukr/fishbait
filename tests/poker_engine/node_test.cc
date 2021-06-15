@@ -2267,3 +2267,60 @@ TEST_CASE("rotation in hand with several rotations", "[poker_engine][node]") {
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.round() == poker_engine::Round::kFlop);
 }  // TEST_CASE "rotation in hand with several rotations"
+
+TEST_CASE("player goes all in for less than a min raise",
+          "[poker_engine][node]") {
+  poker_engine::Node<3, utils::Fraction> game(0, 100, 50, 0, false, false,
+                                              10000);
+
+/*
+10000 bb
+15000 button
+5000 sb
+*/
+
+  INFO("Hand 1");
+
+  INFO("Preflop");
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kBet, 4950);
+  game.Apply(poker_engine::Action::kCheckCall);
+
+  INFO("Flop");
+  game.Apply(poker_engine::Action::kBet, 2000);
+  game.Apply(poker_engine::Action::kFold);
+
+  INFO("AwardPot");
+  game.AwardPot(game.same_stack_no_rake_);
+  REQUIRE(game.stack(0) == 10000);
+  REQUIRE(game.stack(1) == 15000);
+  REQUIRE(game.stack(2) == 5000);
+
+  INFO("Hand 2");
+  game.NewHand();
+
+  INFO("Preflop");
+  game.Apply(poker_engine::Action::kBet, 4900);
+  game.Apply(poker_engine::Action::kAllIn);
+  game.Apply(poker_engine::Action::kCheckCall);
+  for (uint32_t size = 0; size < game.stack(1); ++size) {
+    REQUIRE(game.CanBet(size) == false);
+    REQUIRE_THROWS(game.Apply(poker_engine::Action::kBet, size));
+  }
+  REQUIRE(game.CanCheckCall());
+  game.Apply(poker_engine::Action::kCheckCall);
+
+  INFO("Check correct results on start of the flop");
+  REQUIRE(game.bets(0) == 5000);
+  REQUIRE(game.bets(1) == 5000);
+  REQUIRE(game.bets(2) == 5000);
+  REQUIRE(game.stack(0) == 5000);
+  REQUIRE(game.stack(1) == 10000);
+  REQUIRE(game.stack(2) == 0);
+  REQUIRE(game.players_all_in() == 1);
+  REQUIRE(game.players_left() == 3);
+  REQUIRE(game.cycled() == 1);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+  REQUIRE(game.acting_player() == 0);
+}  // TEST_CASE "player goes all in for less than a min raise"
