@@ -2210,3 +2210,60 @@ TEST_CASE("regular hand heads up", "[poker_engine][node]") {
   REQUIRE(game.bets(1) == 0);
   REQUIRE(game.stack(1) == 11950);
 }  // TEST_CASE "regular hand heads up"
+
+TEST_CASE("rotation in hand with several rotations", "[poker_engine][node]") {
+  poker_engine::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
+
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.Rotation() == 0);
+  game.Apply(poker_engine::Action::kBet, 200);
+  REQUIRE(game.cycled() == 1);
+  REQUIRE(game.Rotation() == 0);
+  game.Apply(poker_engine::Action::kBet, 250);
+  REQUIRE(game.cycled() == 2);
+  REQUIRE(game.Rotation() == 0);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 3);
+  REQUIRE(game.Rotation() == 1);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 4);
+  REQUIRE(game.Rotation() == 1);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 5);
+  REQUIRE(game.Rotation() == 1);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 6);
+  REQUIRE(game.Rotation() == 2);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 7);
+  REQUIRE(game.Rotation() == 2);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 8);
+  REQUIRE(game.Rotation() == 2);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 9);
+  REQUIRE(game.Rotation() == 3);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 10);
+  REQUIRE(game.Rotation() == 3);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 11);
+  REQUIRE(game.Rotation() == 3);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 12);
+  REQUIRE(game.Rotation() == 4);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 13);
+  REQUIRE(game.Rotation() == 4);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 14);
+  REQUIRE(game.Rotation() == 4);
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.cycled() == 15);
+  REQUIRE(game.Rotation() == 5);
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+}  // TEST_CASE "rotation in hand with several rotations"
