@@ -322,6 +322,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.players_left() == 8);
   REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
+  REQUIRE(triton.button() == 1);
 
   // Test Paul Phua's action (fold)
   REQUIRE(triton.Rotation() == 0);
@@ -490,6 +491,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.players_left() == 8);
   REQUIRE(triton.players_all_in() == 0);
   REQUIRE(triton.pot() == 10000);
+  REQUIRE(triton.button() == 2);
 
   // Test Tony G's action (fold)
   REQUIRE(triton.Rotation() == 0);
@@ -820,6 +822,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 6);
+  REQUIRE(heads_up.button() == 1);
 
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
                                    board_throw[0]));
@@ -875,6 +878,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 0);
   REQUIRE(heads_up.pot() == 10);
+  REQUIRE(heads_up.button() == 0);
 
   // Test John's action (all in)
   REQUIRE(heads_up.Rotation() == 0);
@@ -1054,6 +1058,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 1);
   REQUIRE(heads_up.pot() == 6);
+  REQUIRE(heads_up.button() == 1);
 
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
                                    board_throw[0]));
@@ -1109,6 +1114,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 0);
   REQUIRE(heads_up.pot() == 10);
+  REQUIRE(heads_up.button() == 0);
 
   // Test John's action (all in)
   REQUIRE(heads_up.Rotation() == 0);
@@ -1781,6 +1787,7 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
 
   // Hand 2
   game.NewHand();
+  REQUIRE(game.button() == 1);
   // Preflop
   game.Apply(poker_engine::Action::kFold);
   game.Apply(poker_engine::Action::kFold);
@@ -1814,6 +1821,7 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
 
   // Hand 3
   game.NewHand();
+  REQUIRE(game.button() == 2);
   // Preflop everyone all in
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
@@ -1872,6 +1880,7 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
 
   // Hand 2
   game.NewHand();
+  REQUIRE(game.button() == 1);
   // Preflop
   game.Apply(poker_engine::Action::kFold);
   game.Apply(poker_engine::Action::kFold);
@@ -1905,6 +1914,7 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
 
   // Hand 3
   game.NewHand();
+  REQUIRE(game.button() == 2);
   // Preflop everyone all in
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
@@ -2023,3 +2033,180 @@ TEST_CASE("ante all players all in", "[poker_engine][node]") {
   REQUIRE(game.round() == poker_engine::Round::kRiver);
   REQUIRE(game.in_progress() == false);
 }  // TEST_CASE "bb ante with change"
+
+TEST_CASE("regular hand heads up", "[poker_engine][node]") {
+  auto Card = deck::SKCardFromStr;
+  poker_engine::Node<2, double> game(0, 100, 50, 0, false, false, 10000);
+
+  // Verify that the constructor worked correctly
+  REQUIRE(game.big_blind() == 100);
+  REQUIRE(game.small_blind() == 50);
+  REQUIRE(game.ante() == 0);
+  REQUIRE(game.big_blind_ante() == false);
+  REQUIRE(game.blind_before_ante() == false);
+  REQUIRE(game.button() == 0);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 0);
+  REQUIRE(game.folded(0) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 150);
+  REQUIRE(game.bets(0) == 50);
+  REQUIRE(game.stack(0) == 9950);
+
+  // Preflop
+
+  // Small Blind call
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kPreFlop);
+  REQUIRE(game.cycled() == 1);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 1);
+  REQUIRE(game.folded(0) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 200);
+  REQUIRE(game.bets(0) == 100);
+  REQUIRE(game.stack(0) == 9900);
+  // Big blind check
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 0);
+  REQUIRE(game.folded(1) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 200);
+  REQUIRE(game.bets(1) == 100);
+  REQUIRE(game.stack(1) == 9900);
+
+  // Flop
+
+  // Small Blind check
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kFlop);
+  REQUIRE(game.cycled() == 1);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 1);
+  REQUIRE(game.folded(0) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 200);
+  REQUIRE(game.bets(0) == 100);
+  REQUIRE(game.stack(0) == 9900);
+  // big blind check
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kTurn);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 0);
+  REQUIRE(game.folded(1) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 200);
+  REQUIRE(game.bets(1) == 100);
+  REQUIRE(game.stack(1) == 9900);
+
+  // Turn
+
+  // Small Blind bet 200
+  game.Apply(poker_engine::Action::kBet, 200);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kTurn);
+  REQUIRE(game.cycled() == 1);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 1);
+  REQUIRE(game.folded(0) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 400);
+  REQUIRE(game.bets(0) == 300);
+  REQUIRE(game.stack(0) == 9700);
+  // big blind call
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 0);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 0);
+  REQUIRE(game.folded(1) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 600);
+  REQUIRE(game.bets(1) == 300);
+  REQUIRE(game.stack(1) == 9700);
+
+  // River
+
+  // Small Blind check
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 1);
+  REQUIRE(game.Rotation() == 0);
+  REQUIRE(game.acting_player() == 1);
+  REQUIRE(game.folded(0) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 600);
+  REQUIRE(game.bets(0) == 300);
+  REQUIRE(game.stack(0) == 9700);
+  // big blind bet 300
+  game.Apply(poker_engine::Action::kBet, 300);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 2);
+  REQUIRE(game.Rotation() == 1);
+  REQUIRE(game.acting_player() == 0);
+  REQUIRE(game.folded(1) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 900);
+  REQUIRE(game.bets(1) == 600);
+  REQUIRE(game.stack(1) == 9400);
+  // Small Blind raise 1650
+  game.Apply(poker_engine::Action::kBet, 1650);
+  REQUIRE(game.in_progress() == true);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 3);
+  REQUIRE(game.Rotation() == 1);
+  REQUIRE(game.acting_player() == 1);
+  REQUIRE(game.folded(0) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 2550);
+  REQUIRE(game.bets(0) == 1950);
+  REQUIRE(game.stack(0) == 8050);
+  // big blind call
+  game.Apply(poker_engine::Action::kCheckCall);
+  REQUIRE(game.in_progress() == false);
+  REQUIRE(game.round() == poker_engine::Round::kRiver);
+  REQUIRE(game.cycled() == 4);
+  REQUIRE(game.Rotation() == 2);
+  REQUIRE(game.acting_player() == 0);
+  REQUIRE(game.folded(1) == false);
+  REQUIRE(game.players_left() == 2);
+  REQUIRE(game.players_all_in() == 0);
+  REQUIRE(game.pot() == 3900);
+  REQUIRE(game.bets(1) == 1950);
+  REQUIRE(game.stack(1) == 8050);
+
+  // AwardPot
+  uint8_t board[5] = {Card("5c"), Card("Qd"), Card("Jd"), Card("Ks"),
+                      Card("3s")};
+  uint8_t hands[2][2] = {{Card("Ac"), Card("Qh")}, {Card("Kh"), Card("Qc")}};
+  game.AwardPot(game.same_stack_no_rake_, hands, board);
+  REQUIRE(game.pot() == 0);
+  REQUIRE(game.bets(0) == 0);
+  REQUIRE(game.stack(0) == 8050);
+  REQUIRE(game.bets(1) == 0);
+  REQUIRE(game.stack(1) == 11950);
+}  // TEST_CASE "regular hand heads up"
