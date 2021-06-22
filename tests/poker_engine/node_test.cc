@@ -51,6 +51,9 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.PlayerIndex(3) == 3);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
+  REQUIRE(triton.CanBet(4000) == false);
+  REQUIRE(triton.CanBet(7999) == false);
+  REQUIRE(triton.CanBet(8000) == true);
   REQUIRE(triton.Apply(poker_engine::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == poker_engine::Round::kPreFlop);
@@ -2272,13 +2275,6 @@ TEST_CASE("player goes all in for less than a min raise",
           "[poker_engine][node]") {
   poker_engine::Node<3, utils::Fraction> game(0, 100, 50, 0, false, false,
                                               10000);
-
-/*
-10000 bb
-15000 button
-5000 sb
-*/
-
   INFO("Hand 1");
 
   INFO("Preflop");
