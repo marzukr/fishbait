@@ -342,9 +342,9 @@ class Node {
     QuotaT exact_awards[kPlayers]{};
 
     // Variables to use throughout the loops
-    uint16_t ranks_run[kPlayers];
-    bool processed_run[kPlayers];
-    uint32_t bets_run[kPlayers];
+    uint16_t ranks_run[kPlayers] = {};
+    bool processed_run[kPlayers] = {};
+    uint32_t bets_run[kPlayers] = {};
     QuotaT side_pot;
     BestPlayersData best_players_run;
     uint8_t players_to_award_run;
