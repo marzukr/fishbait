@@ -2320,3 +2320,16 @@ TEST_CASE("player goes all in for less than a min raise",
   REQUIRE(game.round() == poker_engine::Round::kFlop);
   REQUIRE(game.acting_player() == 0);
 }  // TEST_CASE "player goes all in for less than a min raise"
+
+TEST_CASE("non zero button test", "[poker_engine][node]") {
+  poker_engine::Node<4, double> game(2, 100, 50, 0, false, false, 10000);
+  REQUIRE(game.button() == 2);
+  REQUIRE(game.acting_player() == 1);
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kFold);
+  game.Apply(poker_engine::Action::kFold);
+  game.AwardPot(game.same_stack_no_rake_);
+  game.NewHand();
+  REQUIRE(game.button() == 3);
+  REQUIRE(game.acting_player() == 2);
+}  // TEST_CASE "non zero button test"
