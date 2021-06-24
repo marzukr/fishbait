@@ -1768,7 +1768,7 @@ TEST_CASE("awardpot single run fraction", "[poker_engine][node]") {
 }  // TEST_CASE "awardpot single run double"
 
 TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
-    utils::Fraction) {
+                   utils::Fraction) {
   auto Card = deck::SKCardFromStr;
   poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false, 11);
   // Preflop fold to big blind
@@ -2333,3 +2333,49 @@ TEST_CASE("non zero button test", "[poker_engine][node]") {
   REQUIRE(game.button() == 3);
   REQUIRE(game.acting_player() == 2);
 }  // TEST_CASE "non zero button test"
+
+TEMPLATE_TEST_CASE("convert bet 1", "[poker_engine][node]", double,
+                   utils::Fraction) {
+  poker_engine::Node<2, TestType> game(0, 75, 25, 0, false, false, 1000);
+
+  INFO("Preflop");
+  game.Apply(poker_engine::Action::kCheckCall);
+  game.Apply(poker_engine::Action::kCheckCall);
+
+  INFO("Flop");
+  game.Apply(poker_engine::Action::kBet, 120);
+  game.Apply(poker_engine::Action::kBet, 240);
+  TestType one{1};
+  TestType four{4};
+  REQUIRE(game.ConvertBet(one) == 750);
+  REQUIRE(game.ConvertBet(one / 2) == 435);
+  REQUIRE(game.ConvertBet(one / 5) == 246);
+  REQUIRE(game.ConvertBet(four / 11) == 349);
+  game.Apply(poker_engine::Action::kBet, 750);
+  REQUIRE(game.pot() == 1260);
+}  // TEMPLATE_TEST_CASE "convert bet 1"
+
+TEMPLATE_TEST_CASE("convert bet 2", "[poker_engine][node]", double,
+                   utils::Fraction) {
+  poker_engine::Node<3, TestType> game(0, 5, 2, 0, false, false, 500);
+
+  INFO("Preflop");
+  game.Apply(poker_engine::Action::kCheckCall);
+  game.Apply(poker_engine::Action::kCheckCall);
+  game.Apply(poker_engine::Action::kCheckCall);
+
+  INFO("Flop");
+  game.Apply(poker_engine::Action::kBet, 5);
+  game.Apply(poker_engine::Action::kBet, 15);
+  TestType one{1};
+  TestType two{2};
+  TestType three{3};
+  REQUIRE(game.ConvertBet(one) == 65);
+  REQUIRE(game.ConvertBet(one / 2) == 40);
+  REQUIRE(game.ConvertBet(one / 5) == 25);
+  REQUIRE(game.ConvertBet(two / 3) == 48);
+  REQUIRE(game.ConvertBet(three / 4) == 52);
+  REQUIRE(game.ConvertBet(one / 4) == 28);
+  game.Apply(poker_engine::Action::kBet, 65);
+  REQUIRE(game.pot() == 100);
+}  // TEMPLATE_TEST_CASE "convert bet 2"

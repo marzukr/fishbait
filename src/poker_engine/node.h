@@ -175,6 +175,19 @@ class Node {
   }
 
   /*
+    @brief Converts a pot proportion into chips for the current acting player.
+  */
+  uint32_t ConvertBet(QuotaT pot_proportion) const {
+    uint32_t prev_bet = bets_[acting_player_];
+    uint32_t needed_to_call = max_bet_ - prev_bet;
+    uint32_t new_pot = pot_ + needed_to_call;
+    QuotaT exact_bet = pot_proportion * new_pot + needed_to_call;
+    double double_bet = static_cast<double>(exact_bet);
+    uint32_t rounded_bet = std::rint(double_bet);
+    return rounded_bet;
+  }
+
+  /*
     @brief Apply the given move to this Node object.
     
     Must only be called when the game is in progress. Otherwise throws.

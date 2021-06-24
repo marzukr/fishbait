@@ -38,3 +38,10 @@ installed for code coverage.
 
 ## Other Notes
 * Do not put commas in the Catch2 tester descriptions
+* This project follows the [Google C++ Style guide](https://google.github.io/styleguide/cppguide.html)
+  with the following exceptions:
+    * Exceptions are allowed
+    * Constructors are allowed to do work and fail
+* This project follows the [Google Python Style guide](https://google.github.io/styleguide/pyguide.html)
+  with the following exceptions:
+    * 2 spaces are used for indentation
