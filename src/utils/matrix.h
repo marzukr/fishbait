@@ -7,8 +7,8 @@
 #include <cassert>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <iterator>
+#include <ostream>
 #include <vector>
 
 #include "utils/vector_view.h"
@@ -98,7 +98,9 @@ class Matrix {
       for (uint64_t j = 1; j < mx.m_; ++j) {
         os << "," << mx(i, j);
       }
-      os << std::endl;
+      if (i + 1 < mx.n_) {
+        os << std::endl;
+      }
     }
     return os;
   }

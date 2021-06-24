@@ -1,6 +1,8 @@
 add_executable(tests.out main.cc
   ${CMAKE_BINARY_DIR}/out/tests
 
+  blueprint/sequence_table_test.cc
+
   clustering/distance_test.cc
   clustering/k_means_test.cc
 
@@ -19,8 +21,8 @@ add_executable(tests.out main.cc
   utils/vector_view_test.cc
 
   )
-target_link_libraries(tests.out clustering deck hand_strengths poker_engine
-                      utils)
+target_link_libraries(tests.out blueprint clustering deck hand_strengths
+                      poker_engine utils)
 coverage_counter_zero(tests.out)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/out/tests

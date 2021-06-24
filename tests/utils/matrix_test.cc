@@ -281,5 +281,5 @@ TEST_CASE("Test Matrix print", "[utils][matrix]") {
                       "6,7,8,9,10\n"
                       "11,12,13,14,15\n"
                       "16,17,18,19,20\n"
-                      "21,22,23,24,25\n");
+                      "21,22,23,24,25");
 }  // TEST_CASE("Test Matrix print", "[utils][matrix]")

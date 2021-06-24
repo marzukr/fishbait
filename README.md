@@ -42,6 +42,7 @@ installed for code coverage.
   with the following exceptions:
     * Exceptions are allowed
     * Constructors are allowed to do work and fail
+    * Integer types other than `int` are allowed
 * This project follows the [Google Python Style guide](https://google.github.io/styleguide/pyguide.html)
   with the following exceptions:
     * 2 spaces are used for indentation
