@@ -107,13 +107,17 @@ class SequenceTable {
                       const poker_engine::Node<kPlayers>& state) const {
     if ((action.max_rotation == 0 || state.Rotation() < action.max_rotation) &&
         (state.round() <= action.max_round)) {
-      if (action.play == poker_engine::Action::kBet) {
-        uint32_t size = state.ConvertBet(action.size);
-        return state.CanBet(size) ? size : false;
-      } else if (action.play == poker_engine::Action::kCheckCall) {
-        return state.CanCheckCall();
+      switch (action.play) {
+        case poker_engine::Action::kAllIn:
+          return true;
+        case poker_engine::Action::kCheckCall:
+          return state.CanCheckCall();
+        case poker_engine::Action::kFold:
+          return state.CanFold();
+        case poker_engine::Action::kBet:
+          uint32_t size = state.ConvertBet(action.size);
+          return state.CanBet(size) ? size : false;
       }
-      return true;
     }
     return false;
   }
