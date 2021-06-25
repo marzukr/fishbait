@@ -142,6 +142,17 @@ class Node {
   uint8_t Rotation() const { return cycled_ / kPlayers; }
 
   /*
+    @brief If the current acting_player_ can fold.
+    
+    A player can always fold unless they can check instead.
+  */
+  bool CanFold() const {
+    uint32_t prev_bet = bets_[acting_player_];
+    uint32_t needed_to_call = max_bet_ - prev_bet;
+    return in_progress_ && needed_to_call > 0;
+  }
+
+  /*
     @brief If the current acting_player_ can check/call.
     
     @return True if the current acting_player_ can check/call. Otherwise returns
@@ -207,7 +218,12 @@ class Node {
 
     switch (play) {
       case Action::kFold:
-        Fold();
+        if (CanFold()) {
+          Fold();
+        } else {
+          throw std::invalid_argument("Fold is not a valid move for the "
+                                      "current acting player.");
+        }
         break;
       case Action::kAllIn:
         AllIn();
