@@ -11,3 +11,6 @@
 [submodule "external/cereal"]
 	path = external/cereal
 	url = https://github.com/marzukr/cereal.git
+[submodule "external/array"]
+	path = external/array
+	url = git@github.com:marzukr/array.git
