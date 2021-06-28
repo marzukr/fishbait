@@ -9,7 +9,6 @@
 #include "catch2/catch.hpp"
 #include "cereal/types/vector.hpp"
 #include "utils/cereal.h"
-#include "utils/matrix.h"
 
 TEST_CASE("Save and load vector test", "[utils][cereal]") {
   const uint32_t n = 100;
@@ -28,30 +27,6 @@ TEST_CASE("Save and load vector test", "[utils][cereal]") {
     REQUIRE(load_vect[i] == (i + i / 10.0));
   }
 }  // TEST_CASE "Save and load vector test"
-
-TEST_CASE("Save and load matrix test", "[utils][cereal]") {
-  const uint32_t n = 100;
-  const uint32_t m = 100;
-
-  utils::Matrix<int> save_matrix(n, m);
-  for (uint32_t i = 0; i < n; ++i) {
-    for (uint32_t j = 0; j < m; ++j) {
-      save_matrix(i, j) = i + j;
-    }
-  }
-  std::filesystem::remove("out/tests/matrix_save_test.cereal");
-  utils::CerealSave("out/tests/matrix_save_test.cereal", &save_matrix);
-
-  utils::Matrix<int> load_matrix(1, 1, 0);
-  utils::CerealLoad("out/tests/matrix_save_test.cereal", &load_matrix);
-  REQUIRE(load_matrix.n() == n);
-  REQUIRE(load_matrix.m() == m);
-  for (uint32_t i = 0; i < n; ++i) {
-    for (uint32_t j = 0; j < m; ++j) {
-      REQUIRE(load_matrix(i, j) == (int)(i + j));
-    }
-  }
-}  // TEST_CASE "Save and load matrix test"
 
 TEST_CASE("Save and load nda test", "[utils][cereal]") {
   const uint32_t n = 100;
