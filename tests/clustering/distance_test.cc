@@ -14,7 +14,7 @@ TEST_CASE("EMD identical test", "[clustering][distance]") {
   p2[49] = 1081;
 
   double dist = clustering::EarthMoverDistance<uint16_t, uint16_t>::Compute(
-      utils::VectorView(p1), utils::VectorView(p2));
+      nda::vector_ref<uint16_t>{p1}, nda::vector_ref<uint16_t>{p2});
 
   REQUIRE(dist == 0);
 }
@@ -29,7 +29,7 @@ TEST_CASE("EMD flops data test", "[clustering][distance]") {
   p2[49] = 1081;
 
   double dist = clustering::EarthMoverDistance<uint16_t, uint16_t>::Compute(
-      utils::VectorView(p1), utils::VectorView(p2));
+      nda::vector_ref<uint16_t>{p1}, nda::vector_ref<uint16_t>{p2});
 
   REQUIRE(dist == 37339);
 }
@@ -39,12 +39,12 @@ TEST_CASE("EMD int double test", "[clustering][distance]") {
   std::vector<double> p2{10.4, 1.1, 10.5};
 
   double int_double = clustering::EarthMoverDistance<uint16_t, double>::Compute(
-      utils::VectorView(p1), utils::VectorView(p2));
+      nda::vector_ref<uint16_t>{p1}, nda::vector_ref<double>{p2});
 
   REQUIRE(int_double == 12.9);
 
   double double_int = clustering::EarthMoverDistance<double, uint16_t>::Compute(
-      utils::VectorView(p2), utils::VectorView(p1));
+      nda::vector_ref<double>{p2}, nda::vector_ref<uint16_t>{p1});
 
   REQUIRE(double_int == 12.9);
 }
@@ -54,7 +54,7 @@ TEST_CASE("Euclidean distance identical test", "[clustering][distance]") {
   std::vector<int16_t> p2{6, -4, 10, -50, -247, 4};
 
   double dist = clustering::EuclideanDistance<int16_t, int16_t>::Compute(
-      utils::VectorView(p1), utils::VectorView(p2));
+      nda::vector_ref<int16_t>{p1}, nda::vector_ref<int16_t>{p2});
 
   REQUIRE(dist == 0.0);
 }
@@ -64,7 +64,7 @@ TEST_CASE("Euclidean distance int test", "[clustering][distance]") {
   std::vector<int16_t> p2{3, 1, 5, -3, 7, 2};
 
   double dist = clustering::EuclideanDistance<int16_t, int16_t>::Compute(
-      utils::VectorView(p1), utils::VectorView(p2));
+      nda::vector_ref<int16_t>{p1}, nda::vector_ref<int16_t>{p2});
 
   REQUIRE(dist == 6.8556546004010439077092087245546281337738037109375);
 }
@@ -74,12 +74,12 @@ TEST_CASE("Euclidean int double test", "[clustering][distance]") {
   std::vector<double> p2{0.8, 10.3, -100.56, 7.2, 15.4, 75.8};
 
   double int_double = clustering::EuclideanDistance<int16_t, double>::Compute(
-      utils::VectorView(p1), utils::VectorView(p2));
+      nda::vector_ref<int16_t>{p1}, nda::vector_ref<double>{p2});
 
   REQUIRE(int_double == 128.181916041226344304959638975560665130615234375);
 
   double double_int = clustering::EuclideanDistance<double, int16_t>::Compute(
-      utils::VectorView(p2), utils::VectorView(p1));
+      nda::vector_ref<double>{p2}, nda::vector_ref<int16_t>{p1});
 
   REQUIRE(double_int == 128.181916041226344304959638975560665130615234375);
 }

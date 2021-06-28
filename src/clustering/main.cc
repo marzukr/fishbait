@@ -4,23 +4,25 @@
 #include <memory>
 #include <string>
 
+#include "array/array.h"
+#include "array/matrix.h"
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
 #include "utils/cereal.h"
-#include "utils/matrix.h"
 #include "utils/random.h"
 
 int main() {
   // std::string path = "luts/flop_lut_64.cereal";
   std::string path = "luts/river_lut_64.cereal";
-  // using data_type = uint32_t;
-  using data_type = double;
+  // using DataT = uint32_t;
+  using DataT = double;
+  using DataTableT = nda::array<DataT, nda::matrix_shape<>>;
 
-  utils::Matrix<data_type> data_points(1, 1, 0);
+  DataTableT data_points({1, 1}, 0);
   utils::CerealLoad(path, &data_points, true);
 
-  // clustering::KMeans<data_type, clustering::EarthMoverDistance> k(200);
-  clustering::KMeans<data_type, clustering::EuclideanDistance> k(200);
+  // clustering::KMeans<DataT, clustering::EarthMoverDistance> k(200);
+  clustering::KMeans<DataT, clustering::EuclideanDistance> k(200);
   // k.RandomSumInit(data_points, 6789);
   // k.RandomSumInit(data_points, 12345);
   k.InitPlusPlus(data_points, true, utils::Random::Seed(6789));

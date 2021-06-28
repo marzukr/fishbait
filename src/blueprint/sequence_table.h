@@ -8,9 +8,10 @@
 #include <ostream>
 #include <vector>
 
+#include "array/array.h"
+#include "array/matrix.h"
 #include "poker_engine/node.h"
 #include "utils/fraction.h"
-#include "utils/matrix.h"
 
 namespace blueprint {
 
@@ -35,11 +36,10 @@ class SequenceTable {
 
   SequenceTable(const std::vector<Action>& actions,
                 const poker_engine::Node<kPlayers>& start_state)
-                : actions_{actions}, start_state_{start_state},
-                  table_{0, 0} {
+                : actions_{actions}, start_state_{start_state}, table_{} {
     ActionIdT rows = 0;
     Generate(start_state_, 0, &rows, [](ActionIdT, size_t, ActionIdT) {});
-    table_ = utils::Matrix<ActionIdT>{rows, actions.size()};
+    table_ = nda::matrix<ActionIdT>{{rows, actions.size()}};
     rows = 0;
     Generate(start_state_, 0, &rows,
         [&](ActionIdT id, size_t action_col, ActionIdT val) {
@@ -55,15 +55,15 @@ class SequenceTable {
   }
 
   ActionIdT States() const {
-    return table_.n();
+    return table_.rows();
   }
 
   ActionIdT Actions() const {
-    return table_.m();
+    return table_.columns();
   }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
-    uint64_t elements = s.table_.n() * s.table_.m();
+    uint64_t elements = s.table_.rows() * s.table_.columns();
     size_t bytes = sizeof(ActionIdT) * elements;
     double memory = bytes / 1.0e+9;
     os << "SequenceTable<" << +kPlayers << ">" << " { "
@@ -124,7 +124,7 @@ class SequenceTable {
 
   const std::vector<Action> actions_;
   const poker_engine::Node<kPlayers> start_state_;
-  utils::Matrix<ActionIdT> table_;
+  nda::matrix<ActionIdT> table_;
 };  // class SequenceTable
 
 }  // namespace blueprint

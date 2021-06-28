@@ -5,10 +5,11 @@
 #include <utility>
 #include <vector>
 
+#include "array/array.h"
+#include "array/matrix.h"
 #include "catch2/catch.hpp"
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
-#include "utils/matrix.h"
 #include "utils/random.h"
 #include "utils/vector_view.h"
 
@@ -29,26 +30,27 @@ TEST_CASE("Elkan 10 double points 2 dimensions 3 clusters",
   std::vector<double> d8{2.1428126285447715, -1.9106654947313197};
   std::vector<double> d9{-3.783596278287021, 7.733529305880115};
 
-  utils::Matrix<double> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<double> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
   std::vector<double> c0{0.6425235614350431, 0.898903293670528};
   std::vector<double> c1{0.4670259744021872, 3.2289955311358631};
   std::vector<double> c2{0.03126336690842668, 0.7057866456528065};
 
-  auto initial_centers = std::make_unique<utils::Matrix<double>>(3, 2);
-  initial_centers->SetRow(0, utils::VectorView(c0));
-  initial_centers->SetRow(1, utils::VectorView(c1));
-  initial_centers->SetRow(2, utils::VectorView(c2));
+  auto initial_centers = std::make_unique<nda::matrix<double>>(
+      nda::matrix_shape<>{3, 2});
+  (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  (*initial_centers)(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
 
   clustering::KMeans<double, clustering::EuclideanDistance>
       k(3, std::move(initial_centers));
@@ -58,11 +60,10 @@ TEST_CASE("Elkan 10 double points 2 dimensions 3 clusters",
   std::vector<double> correct_c1{-1.8985030548286173, 8.27933816067451};
   std::vector<double> correct_c2{-5.973232462823998, -8.291411332183563};
 
-  utils::Matrix<double> correct_centers(3, 2);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
-  correct_centers.SetRow(2, utils::VectorView(correct_c2));
-
+  nda::matrix<double> correct_centers(nda::matrix_shape<>{3, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(correct_c2));
 
   REQUIRE(*k.clusters() == correct_centers);
 
@@ -86,17 +87,17 @@ TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters",
   std::vector<int8_t> d8{5, -6};
   std::vector<int8_t> d9{-5, 0};
 
-  utils::Matrix<int8_t> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   std::vector<double> c0{4, 0};
   std::vector<double> c1{-3, -1};
@@ -104,12 +105,13 @@ TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters",
   std::vector<double> c3{-1, -6};
   std::vector<double> c4{-11, -3};
 
-  auto initial_centers = std::make_unique<utils::Matrix<double>>(5, 2);
-  initial_centers->SetRow(0, utils::VectorView(c0));
-  initial_centers->SetRow(1, utils::VectorView(c1));
-  initial_centers->SetRow(2, utils::VectorView(c2));
-  initial_centers->SetRow(3, utils::VectorView(c3));
-  initial_centers->SetRow(4, utils::VectorView(c4));
+  auto initial_centers = std::make_unique<nda::matrix<double>>(
+      nda::matrix_shape<>{5, 2});
+  (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  (*initial_centers)(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
+  (*initial_centers)(3, nda::all).copy_elems(nda::vector_ref<double>(c3));
+  (*initial_centers)(4, nda::all).copy_elems(nda::vector_ref<double>(c4));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance>
       k(5, std::move(initial_centers));
@@ -121,12 +123,12 @@ TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters",
   std::vector<double> correct_c3{3.3333333333333335, -6.333333333333333};
   std::vector<double> correct_c4{-10.5, -5};
 
-  utils::Matrix<double> correct_centers(5, 2);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
-  correct_centers.SetRow(2, utils::VectorView(correct_c2));
-  correct_centers.SetRow(3, utils::VectorView(correct_c3));
-  correct_centers.SetRow(4, utils::VectorView(correct_c4));
+  nda::matrix<double> correct_centers({5, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(correct_c2));
+  correct_centers(3, nda::all).copy_elems(nda::vector_ref<double>(correct_c3));
+  correct_centers(4, nda::all).copy_elems(nda::vector_ref<double>(correct_c4));
 
 
   REQUIRE(*k.clusters() == correct_centers);
@@ -241,107 +243,107 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
   std::vector<double> d98{0.92054913, 0.08922499};
   std::vector<double> d99{0.96321426, 0.91838007};
 
-  utils::Matrix<double> features(100, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
-  features.SetRow(10, utils::VectorView(d10));
-  features.SetRow(11, utils::VectorView(d11));
-  features.SetRow(12, utils::VectorView(d12));
-  features.SetRow(13, utils::VectorView(d13));
-  features.SetRow(14, utils::VectorView(d14));
-  features.SetRow(15, utils::VectorView(d15));
-  features.SetRow(16, utils::VectorView(d16));
-  features.SetRow(17, utils::VectorView(d17));
-  features.SetRow(18, utils::VectorView(d18));
-  features.SetRow(19, utils::VectorView(d19));
-  features.SetRow(20, utils::VectorView(d20));
-  features.SetRow(21, utils::VectorView(d21));
-  features.SetRow(22, utils::VectorView(d22));
-  features.SetRow(23, utils::VectorView(d23));
-  features.SetRow(24, utils::VectorView(d24));
-  features.SetRow(25, utils::VectorView(d25));
-  features.SetRow(26, utils::VectorView(d26));
-  features.SetRow(27, utils::VectorView(d27));
-  features.SetRow(28, utils::VectorView(d28));
-  features.SetRow(29, utils::VectorView(d29));
-  features.SetRow(30, utils::VectorView(d30));
-  features.SetRow(31, utils::VectorView(d31));
-  features.SetRow(32, utils::VectorView(d32));
-  features.SetRow(33, utils::VectorView(d33));
-  features.SetRow(34, utils::VectorView(d34));
-  features.SetRow(35, utils::VectorView(d35));
-  features.SetRow(36, utils::VectorView(d36));
-  features.SetRow(37, utils::VectorView(d37));
-  features.SetRow(38, utils::VectorView(d38));
-  features.SetRow(39, utils::VectorView(d39));
-  features.SetRow(40, utils::VectorView(d40));
-  features.SetRow(41, utils::VectorView(d41));
-  features.SetRow(42, utils::VectorView(d42));
-  features.SetRow(43, utils::VectorView(d43));
-  features.SetRow(44, utils::VectorView(d44));
-  features.SetRow(45, utils::VectorView(d45));
-  features.SetRow(46, utils::VectorView(d46));
-  features.SetRow(47, utils::VectorView(d47));
-  features.SetRow(48, utils::VectorView(d48));
-  features.SetRow(49, utils::VectorView(d49));
-  features.SetRow(50, utils::VectorView(d50));
-  features.SetRow(51, utils::VectorView(d51));
-  features.SetRow(52, utils::VectorView(d52));
-  features.SetRow(53, utils::VectorView(d53));
-  features.SetRow(54, utils::VectorView(d54));
-  features.SetRow(55, utils::VectorView(d55));
-  features.SetRow(56, utils::VectorView(d56));
-  features.SetRow(57, utils::VectorView(d57));
-  features.SetRow(58, utils::VectorView(d58));
-  features.SetRow(59, utils::VectorView(d59));
-  features.SetRow(60, utils::VectorView(d60));
-  features.SetRow(61, utils::VectorView(d61));
-  features.SetRow(62, utils::VectorView(d62));
-  features.SetRow(63, utils::VectorView(d63));
-  features.SetRow(64, utils::VectorView(d64));
-  features.SetRow(65, utils::VectorView(d65));
-  features.SetRow(66, utils::VectorView(d66));
-  features.SetRow(67, utils::VectorView(d67));
-  features.SetRow(68, utils::VectorView(d68));
-  features.SetRow(69, utils::VectorView(d69));
-  features.SetRow(70, utils::VectorView(d70));
-  features.SetRow(71, utils::VectorView(d71));
-  features.SetRow(72, utils::VectorView(d72));
-  features.SetRow(73, utils::VectorView(d73));
-  features.SetRow(74, utils::VectorView(d74));
-  features.SetRow(75, utils::VectorView(d75));
-  features.SetRow(76, utils::VectorView(d76));
-  features.SetRow(77, utils::VectorView(d77));
-  features.SetRow(78, utils::VectorView(d78));
-  features.SetRow(79, utils::VectorView(d79));
-  features.SetRow(80, utils::VectorView(d80));
-  features.SetRow(81, utils::VectorView(d81));
-  features.SetRow(82, utils::VectorView(d82));
-  features.SetRow(83, utils::VectorView(d83));
-  features.SetRow(84, utils::VectorView(d84));
-  features.SetRow(85, utils::VectorView(d85));
-  features.SetRow(86, utils::VectorView(d86));
-  features.SetRow(87, utils::VectorView(d87));
-  features.SetRow(88, utils::VectorView(d88));
-  features.SetRow(89, utils::VectorView(d89));
-  features.SetRow(90, utils::VectorView(d90));
-  features.SetRow(91, utils::VectorView(d91));
-  features.SetRow(92, utils::VectorView(d92));
-  features.SetRow(93, utils::VectorView(d93));
-  features.SetRow(94, utils::VectorView(d94));
-  features.SetRow(95, utils::VectorView(d95));
-  features.SetRow(96, utils::VectorView(d96));
-  features.SetRow(97, utils::VectorView(d97));
-  features.SetRow(98, utils::VectorView(d98));
-  features.SetRow(99, utils::VectorView(d99));
+  nda::matrix<double> features({100, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
+  features(10, nda::all).copy_elems(nda::vector_ref<double>(d10));
+  features(11, nda::all).copy_elems(nda::vector_ref<double>(d11));
+  features(12, nda::all).copy_elems(nda::vector_ref<double>(d12));
+  features(13, nda::all).copy_elems(nda::vector_ref<double>(d13));
+  features(14, nda::all).copy_elems(nda::vector_ref<double>(d14));
+  features(15, nda::all).copy_elems(nda::vector_ref<double>(d15));
+  features(16, nda::all).copy_elems(nda::vector_ref<double>(d16));
+  features(17, nda::all).copy_elems(nda::vector_ref<double>(d17));
+  features(18, nda::all).copy_elems(nda::vector_ref<double>(d18));
+  features(19, nda::all).copy_elems(nda::vector_ref<double>(d19));
+  features(20, nda::all).copy_elems(nda::vector_ref<double>(d20));
+  features(21, nda::all).copy_elems(nda::vector_ref<double>(d21));
+  features(22, nda::all).copy_elems(nda::vector_ref<double>(d22));
+  features(23, nda::all).copy_elems(nda::vector_ref<double>(d23));
+  features(24, nda::all).copy_elems(nda::vector_ref<double>(d24));
+  features(25, nda::all).copy_elems(nda::vector_ref<double>(d25));
+  features(26, nda::all).copy_elems(nda::vector_ref<double>(d26));
+  features(27, nda::all).copy_elems(nda::vector_ref<double>(d27));
+  features(28, nda::all).copy_elems(nda::vector_ref<double>(d28));
+  features(29, nda::all).copy_elems(nda::vector_ref<double>(d29));
+  features(30, nda::all).copy_elems(nda::vector_ref<double>(d30));
+  features(31, nda::all).copy_elems(nda::vector_ref<double>(d31));
+  features(32, nda::all).copy_elems(nda::vector_ref<double>(d32));
+  features(33, nda::all).copy_elems(nda::vector_ref<double>(d33));
+  features(34, nda::all).copy_elems(nda::vector_ref<double>(d34));
+  features(35, nda::all).copy_elems(nda::vector_ref<double>(d35));
+  features(36, nda::all).copy_elems(nda::vector_ref<double>(d36));
+  features(37, nda::all).copy_elems(nda::vector_ref<double>(d37));
+  features(38, nda::all).copy_elems(nda::vector_ref<double>(d38));
+  features(39, nda::all).copy_elems(nda::vector_ref<double>(d39));
+  features(40, nda::all).copy_elems(nda::vector_ref<double>(d40));
+  features(41, nda::all).copy_elems(nda::vector_ref<double>(d41));
+  features(42, nda::all).copy_elems(nda::vector_ref<double>(d42));
+  features(43, nda::all).copy_elems(nda::vector_ref<double>(d43));
+  features(44, nda::all).copy_elems(nda::vector_ref<double>(d44));
+  features(45, nda::all).copy_elems(nda::vector_ref<double>(d45));
+  features(46, nda::all).copy_elems(nda::vector_ref<double>(d46));
+  features(47, nda::all).copy_elems(nda::vector_ref<double>(d47));
+  features(48, nda::all).copy_elems(nda::vector_ref<double>(d48));
+  features(49, nda::all).copy_elems(nda::vector_ref<double>(d49));
+  features(50, nda::all).copy_elems(nda::vector_ref<double>(d50));
+  features(51, nda::all).copy_elems(nda::vector_ref<double>(d51));
+  features(52, nda::all).copy_elems(nda::vector_ref<double>(d52));
+  features(53, nda::all).copy_elems(nda::vector_ref<double>(d53));
+  features(54, nda::all).copy_elems(nda::vector_ref<double>(d54));
+  features(55, nda::all).copy_elems(nda::vector_ref<double>(d55));
+  features(56, nda::all).copy_elems(nda::vector_ref<double>(d56));
+  features(57, nda::all).copy_elems(nda::vector_ref<double>(d57));
+  features(58, nda::all).copy_elems(nda::vector_ref<double>(d58));
+  features(59, nda::all).copy_elems(nda::vector_ref<double>(d59));
+  features(60, nda::all).copy_elems(nda::vector_ref<double>(d60));
+  features(61, nda::all).copy_elems(nda::vector_ref<double>(d61));
+  features(62, nda::all).copy_elems(nda::vector_ref<double>(d62));
+  features(63, nda::all).copy_elems(nda::vector_ref<double>(d63));
+  features(64, nda::all).copy_elems(nda::vector_ref<double>(d64));
+  features(65, nda::all).copy_elems(nda::vector_ref<double>(d65));
+  features(66, nda::all).copy_elems(nda::vector_ref<double>(d66));
+  features(67, nda::all).copy_elems(nda::vector_ref<double>(d67));
+  features(68, nda::all).copy_elems(nda::vector_ref<double>(d68));
+  features(69, nda::all).copy_elems(nda::vector_ref<double>(d69));
+  features(70, nda::all).copy_elems(nda::vector_ref<double>(d70));
+  features(71, nda::all).copy_elems(nda::vector_ref<double>(d71));
+  features(72, nda::all).copy_elems(nda::vector_ref<double>(d72));
+  features(73, nda::all).copy_elems(nda::vector_ref<double>(d73));
+  features(74, nda::all).copy_elems(nda::vector_ref<double>(d74));
+  features(75, nda::all).copy_elems(nda::vector_ref<double>(d75));
+  features(76, nda::all).copy_elems(nda::vector_ref<double>(d76));
+  features(77, nda::all).copy_elems(nda::vector_ref<double>(d77));
+  features(78, nda::all).copy_elems(nda::vector_ref<double>(d78));
+  features(79, nda::all).copy_elems(nda::vector_ref<double>(d79));
+  features(80, nda::all).copy_elems(nda::vector_ref<double>(d80));
+  features(81, nda::all).copy_elems(nda::vector_ref<double>(d81));
+  features(82, nda::all).copy_elems(nda::vector_ref<double>(d82));
+  features(83, nda::all).copy_elems(nda::vector_ref<double>(d83));
+  features(84, nda::all).copy_elems(nda::vector_ref<double>(d84));
+  features(85, nda::all).copy_elems(nda::vector_ref<double>(d85));
+  features(86, nda::all).copy_elems(nda::vector_ref<double>(d86));
+  features(87, nda::all).copy_elems(nda::vector_ref<double>(d87));
+  features(88, nda::all).copy_elems(nda::vector_ref<double>(d88));
+  features(89, nda::all).copy_elems(nda::vector_ref<double>(d89));
+  features(90, nda::all).copy_elems(nda::vector_ref<double>(d90));
+  features(91, nda::all).copy_elems(nda::vector_ref<double>(d91));
+  features(92, nda::all).copy_elems(nda::vector_ref<double>(d92));
+  features(93, nda::all).copy_elems(nda::vector_ref<double>(d93));
+  features(94, nda::all).copy_elems(nda::vector_ref<double>(d94));
+  features(95, nda::all).copy_elems(nda::vector_ref<double>(d95));
+  features(96, nda::all).copy_elems(nda::vector_ref<double>(d96));
+  features(97, nda::all).copy_elems(nda::vector_ref<double>(d97));
+  features(98, nda::all).copy_elems(nda::vector_ref<double>(d98));
+  features(99, nda::all).copy_elems(nda::vector_ref<double>(d99));
 
   std::vector<double> c0{0.4348808 , 0.87695909};
   std::vector<double> c1{0.01437716, 0.69738476};
@@ -349,12 +351,13 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
   std::vector<double> c3{0.92054913, 0.08922499};
   std::vector<double> c4{0.49137035, 0.48091827};
 
-  auto initial_centers = std::make_unique<utils::Matrix<double>>(5, 2);
-  initial_centers->SetRow(0, utils::VectorView(c0));
-  initial_centers->SetRow(1, utils::VectorView(c1));
-  initial_centers->SetRow(2, utils::VectorView(c2));
-  initial_centers->SetRow(3, utils::VectorView(c3));
-  initial_centers->SetRow(4, utils::VectorView(c4));
+  auto initial_centers = std::make_unique<nda::matrix<double>>(
+      nda::matrix_shape<>{5, 2});
+  (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  (*initial_centers)(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
+  (*initial_centers)(3, nda::all).copy_elems(nda::vector_ref<double>(c3));
+  (*initial_centers)(4, nda::all).copy_elems(nda::vector_ref<double>(c4));
 
   clustering::KMeans<double, clustering::EuclideanDistance>
       k(5, std::move(initial_centers));
@@ -366,12 +369,12 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
   std::vector<double> correct_c3{0.8068981166666667 , 0.2085375242857143 };
   std::vector<double> correct_c4{0.5530856528571428 , 0.5379240435714286 };
 
-  utils::Matrix<double> correct_centers(5, 2);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
-  correct_centers.SetRow(2, utils::VectorView(correct_c2));
-  correct_centers.SetRow(3, utils::VectorView(correct_c3));
-  correct_centers.SetRow(4, utils::VectorView(correct_c4));
+  nda::matrix<double> correct_centers({5, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(correct_c2));
+  correct_centers(3, nda::all).copy_elems(nda::vector_ref<double>(correct_c3));
+  correct_centers(4, nda::all).copy_elems(nda::vector_ref<double>(correct_c4));
 
 
   REQUIRE(*k.clusters() == correct_centers);
@@ -400,24 +403,25 @@ TEST_CASE("Elkan 10 double points 1 dimension 2 clusters",
   std::vector<double> d8{7.3047543};
   std::vector<double> d9{9.41661351};
 
-  utils::Matrix<double> features(10, 1);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<double> features({10, 1});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
   std::vector<double> c0{0.64950133};
   std::vector<double> c1{0.95542778};
 
-  auto initial_centers = std::make_unique<utils::Matrix<double>>(2, 1);
-  initial_centers->SetRow(0, utils::VectorView(c0));
-  initial_centers->SetRow(1, utils::VectorView(c1));
+  auto initial_centers = std::make_unique<nda::matrix<double>>(
+      nda::matrix_shape<>{2, 1});
+  (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
 
   clustering::KMeans<double, clustering::EuclideanDistance>
       k(2, std::move(initial_centers));
@@ -426,9 +430,9 @@ TEST_CASE("Elkan 10 double points 1 dimension 2 clusters",
   std::vector<double> correct_c0{-4.120122438};
   std::vector<double> correct_c1{8.106286211999999};
 
-  utils::Matrix<double> correct_centers(2, 1);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
+  nda::matrix<double> correct_centers({2, 1});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
 
   REQUIRE(*k.clusters() == correct_centers);
 
@@ -452,26 +456,27 @@ TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters",
   std::vector<int8_t> d8{-4,  7, -4, -5,  -5, -6, -9,  8,  0,  3};
   std::vector<int8_t> d9{-2,  3, -5,  3,  -3,  6,  7,  6, -6,  6};
 
-  utils::Matrix<int8_t> features(10, 10);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 10});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   std::vector<double> c0{1, 0, 0, 1, 0, 1, 1, 1, 0, 1};
   std::vector<double> c1{0, 0, 1, 0, 0, 1, 0, 1, 0, 1};
   std::vector<double> c2{0, 0, 1, 1, 1, 0, 0, 0, 0, 0};
 
-  auto initial_centers = std::make_unique<utils::Matrix<double>>(3, 10);
-  initial_centers->SetRow(0, utils::VectorView(c0));
-  initial_centers->SetRow(1, utils::VectorView(c1));
-  initial_centers->SetRow(2, utils::VectorView(c2));
+  auto initial_centers = std::make_unique<nda::matrix<double>>(
+      nda::matrix_shape<>{3, 10});
+  (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  (*initial_centers)(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance>
       k(3, std::move(initial_centers));
@@ -487,10 +492,10 @@ TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters",
   std::vector<double> correct_c2{-4.25, -7.5, 5.75, -1.25, -4.25, -1, 1, -7.25,
       6.75, -6.5};
 
-  utils::Matrix<double> correct_centers(3, 10);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
-  correct_centers.SetRow(2, utils::VectorView(correct_c2));
+  nda::matrix<double> correct_centers({3, 10});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(correct_c2));
 
   REQUIRE(*k.clusters() == correct_centers);
 
@@ -514,24 +519,25 @@ TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   std::vector<int8_t> d8{10, 10};
   std::vector<int8_t> d9{10, 10};
 
-  utils::Matrix<int8_t> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   std::vector<double> c0{1, 0};
   std::vector<double> c1{0, 1};
 
-  auto initial_centers = std::make_unique<utils::Matrix<double>>(2, 2);
-  initial_centers->SetRow(0, utils::VectorView(c0));
-  initial_centers->SetRow(1, utils::VectorView(c1));
+  auto initial_centers = std::make_unique<nda::matrix<double>>(
+      nda::matrix_shape<>{2, 2});
+  (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance>
       k(2, std::move(initial_centers));
@@ -540,9 +546,9 @@ TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   std::vector<double> correct_c0{10, 10};
   std::vector<double> correct_c1{-7,  3};
 
-  utils::Matrix<double> correct_centers(2, 2);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
+  nda::matrix<double> correct_centers({2, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
 
   REQUIRE(*k.clusters() == correct_centers);
 
@@ -569,30 +575,30 @@ TEST_CASE("kmeans++ 10 double points 2 dimensions 3 clusters",
   std::vector<double> d8{3.36567939, 1.79443539};
   std::vector<double> d9{3.88437902, 4.68319429};
 
-  utils::Matrix<double> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<double> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(3);
   k.InitPlusPlus(features, false, utils::Random::Seed(42));
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{2.44595585, 3.44402974};
   std::vector<double> c1{1.99651652, 1.71079686};
   std::vector<double> c2{3.36567939, 1.79443539};
 
-  utils::Matrix<double> correct_centers(3, 2);
-  correct_centers.SetRow(0, utils::VectorView(c0));
-  correct_centers.SetRow(1, utils::VectorView(c1));
-  correct_centers.SetRow(2, utils::VectorView(c2));
+  nda::matrix<double> correct_centers({3, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
 
   REQUIRE(*centers == correct_centers);
 }  // TEST_CASE("kmeans++ 10 double points 2 dimensions 3 clusters")
@@ -610,21 +616,21 @@ TEST_CASE("kmeans++ 10 int points 2 dimensions 5 clusters",
   std::vector<int8_t> d8{5, 4};
   std::vector<int8_t> d9{6, 9};
 
-  utils::Matrix<int8_t> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(5);
   k.InitPlusPlus(features, false, utils::Random::Seed(18));
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{3, 6};
   std::vector<double> c1{4, 1};
@@ -632,12 +638,12 @@ TEST_CASE("kmeans++ 10 int points 2 dimensions 5 clusters",
   std::vector<double> c3{6, 9};
   std::vector<double> c4{1, 9};
 
-  utils::Matrix<double> correct_centers(5, 2);
-  correct_centers.SetRow(0, utils::VectorView(c0));
-  correct_centers.SetRow(1, utils::VectorView(c1));
-  correct_centers.SetRow(2, utils::VectorView(c2));
-  correct_centers.SetRow(3, utils::VectorView(c3));
-  correct_centers.SetRow(4, utils::VectorView(c4));
+  nda::matrix<double> correct_centers({5, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
+  correct_centers(3, nda::all).copy_elems(nda::vector_ref<double>(c3));
+  correct_centers(4, nda::all).copy_elems(nda::vector_ref<double>(c4));
 
   REQUIRE(*centers == correct_centers);
 }  // TEST_CASE("kmeans++ 10 int points 2 dimensions 5 clusters")
@@ -745,111 +751,111 @@ TEST_CASE("kmeans++ 100 double points 2 dimensions 5 clusters",
   std::vector<double> d98{0.77983398, 0.48203182};
   std::vector<double> d99{0.2474461 , 0.54835603};
 
-  utils::Matrix<double> features(100, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
-  features.SetRow(10, utils::VectorView(d10));
-  features.SetRow(11, utils::VectorView(d11));
-  features.SetRow(12, utils::VectorView(d12));
-  features.SetRow(13, utils::VectorView(d13));
-  features.SetRow(14, utils::VectorView(d14));
-  features.SetRow(15, utils::VectorView(d15));
-  features.SetRow(16, utils::VectorView(d16));
-  features.SetRow(17, utils::VectorView(d17));
-  features.SetRow(18, utils::VectorView(d18));
-  features.SetRow(19, utils::VectorView(d19));
-  features.SetRow(20, utils::VectorView(d20));
-  features.SetRow(21, utils::VectorView(d21));
-  features.SetRow(22, utils::VectorView(d22));
-  features.SetRow(23, utils::VectorView(d23));
-  features.SetRow(24, utils::VectorView(d24));
-  features.SetRow(25, utils::VectorView(d25));
-  features.SetRow(26, utils::VectorView(d26));
-  features.SetRow(27, utils::VectorView(d27));
-  features.SetRow(28, utils::VectorView(d28));
-  features.SetRow(29, utils::VectorView(d29));
-  features.SetRow(30, utils::VectorView(d30));
-  features.SetRow(31, utils::VectorView(d31));
-  features.SetRow(32, utils::VectorView(d32));
-  features.SetRow(33, utils::VectorView(d33));
-  features.SetRow(34, utils::VectorView(d34));
-  features.SetRow(35, utils::VectorView(d35));
-  features.SetRow(36, utils::VectorView(d36));
-  features.SetRow(37, utils::VectorView(d37));
-  features.SetRow(38, utils::VectorView(d38));
-  features.SetRow(39, utils::VectorView(d39));
-  features.SetRow(40, utils::VectorView(d40));
-  features.SetRow(41, utils::VectorView(d41));
-  features.SetRow(42, utils::VectorView(d42));
-  features.SetRow(43, utils::VectorView(d43));
-  features.SetRow(44, utils::VectorView(d44));
-  features.SetRow(45, utils::VectorView(d45));
-  features.SetRow(46, utils::VectorView(d46));
-  features.SetRow(47, utils::VectorView(d47));
-  features.SetRow(48, utils::VectorView(d48));
-  features.SetRow(49, utils::VectorView(d49));
-  features.SetRow(50, utils::VectorView(d50));
-  features.SetRow(51, utils::VectorView(d51));
-  features.SetRow(52, utils::VectorView(d52));
-  features.SetRow(53, utils::VectorView(d53));
-  features.SetRow(54, utils::VectorView(d54));
-  features.SetRow(55, utils::VectorView(d55));
-  features.SetRow(56, utils::VectorView(d56));
-  features.SetRow(57, utils::VectorView(d57));
-  features.SetRow(58, utils::VectorView(d58));
-  features.SetRow(59, utils::VectorView(d59));
-  features.SetRow(60, utils::VectorView(d60));
-  features.SetRow(61, utils::VectorView(d61));
-  features.SetRow(62, utils::VectorView(d62));
-  features.SetRow(63, utils::VectorView(d63));
-  features.SetRow(64, utils::VectorView(d64));
-  features.SetRow(65, utils::VectorView(d65));
-  features.SetRow(66, utils::VectorView(d66));
-  features.SetRow(67, utils::VectorView(d67));
-  features.SetRow(68, utils::VectorView(d68));
-  features.SetRow(69, utils::VectorView(d69));
-  features.SetRow(70, utils::VectorView(d70));
-  features.SetRow(71, utils::VectorView(d71));
-  features.SetRow(72, utils::VectorView(d72));
-  features.SetRow(73, utils::VectorView(d73));
-  features.SetRow(74, utils::VectorView(d74));
-  features.SetRow(75, utils::VectorView(d75));
-  features.SetRow(76, utils::VectorView(d76));
-  features.SetRow(77, utils::VectorView(d77));
-  features.SetRow(78, utils::VectorView(d78));
-  features.SetRow(79, utils::VectorView(d79));
-  features.SetRow(80, utils::VectorView(d80));
-  features.SetRow(81, utils::VectorView(d81));
-  features.SetRow(82, utils::VectorView(d82));
-  features.SetRow(83, utils::VectorView(d83));
-  features.SetRow(84, utils::VectorView(d84));
-  features.SetRow(85, utils::VectorView(d85));
-  features.SetRow(86, utils::VectorView(d86));
-  features.SetRow(87, utils::VectorView(d87));
-  features.SetRow(88, utils::VectorView(d88));
-  features.SetRow(89, utils::VectorView(d89));
-  features.SetRow(90, utils::VectorView(d90));
-  features.SetRow(91, utils::VectorView(d91));
-  features.SetRow(92, utils::VectorView(d92));
-  features.SetRow(93, utils::VectorView(d93));
-  features.SetRow(94, utils::VectorView(d94));
-  features.SetRow(95, utils::VectorView(d95));
-  features.SetRow(96, utils::VectorView(d96));
-  features.SetRow(97, utils::VectorView(d97));
-  features.SetRow(98, utils::VectorView(d98));
-  features.SetRow(99, utils::VectorView(d99));
+  nda::matrix<double> features({100, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
+  features(10, nda::all).copy_elems(nda::vector_ref<double>(d10));
+  features(11, nda::all).copy_elems(nda::vector_ref<double>(d11));
+  features(12, nda::all).copy_elems(nda::vector_ref<double>(d12));
+  features(13, nda::all).copy_elems(nda::vector_ref<double>(d13));
+  features(14, nda::all).copy_elems(nda::vector_ref<double>(d14));
+  features(15, nda::all).copy_elems(nda::vector_ref<double>(d15));
+  features(16, nda::all).copy_elems(nda::vector_ref<double>(d16));
+  features(17, nda::all).copy_elems(nda::vector_ref<double>(d17));
+  features(18, nda::all).copy_elems(nda::vector_ref<double>(d18));
+  features(19, nda::all).copy_elems(nda::vector_ref<double>(d19));
+  features(20, nda::all).copy_elems(nda::vector_ref<double>(d20));
+  features(21, nda::all).copy_elems(nda::vector_ref<double>(d21));
+  features(22, nda::all).copy_elems(nda::vector_ref<double>(d22));
+  features(23, nda::all).copy_elems(nda::vector_ref<double>(d23));
+  features(24, nda::all).copy_elems(nda::vector_ref<double>(d24));
+  features(25, nda::all).copy_elems(nda::vector_ref<double>(d25));
+  features(26, nda::all).copy_elems(nda::vector_ref<double>(d26));
+  features(27, nda::all).copy_elems(nda::vector_ref<double>(d27));
+  features(28, nda::all).copy_elems(nda::vector_ref<double>(d28));
+  features(29, nda::all).copy_elems(nda::vector_ref<double>(d29));
+  features(30, nda::all).copy_elems(nda::vector_ref<double>(d30));
+  features(31, nda::all).copy_elems(nda::vector_ref<double>(d31));
+  features(32, nda::all).copy_elems(nda::vector_ref<double>(d32));
+  features(33, nda::all).copy_elems(nda::vector_ref<double>(d33));
+  features(34, nda::all).copy_elems(nda::vector_ref<double>(d34));
+  features(35, nda::all).copy_elems(nda::vector_ref<double>(d35));
+  features(36, nda::all).copy_elems(nda::vector_ref<double>(d36));
+  features(37, nda::all).copy_elems(nda::vector_ref<double>(d37));
+  features(38, nda::all).copy_elems(nda::vector_ref<double>(d38));
+  features(39, nda::all).copy_elems(nda::vector_ref<double>(d39));
+  features(40, nda::all).copy_elems(nda::vector_ref<double>(d40));
+  features(41, nda::all).copy_elems(nda::vector_ref<double>(d41));
+  features(42, nda::all).copy_elems(nda::vector_ref<double>(d42));
+  features(43, nda::all).copy_elems(nda::vector_ref<double>(d43));
+  features(44, nda::all).copy_elems(nda::vector_ref<double>(d44));
+  features(45, nda::all).copy_elems(nda::vector_ref<double>(d45));
+  features(46, nda::all).copy_elems(nda::vector_ref<double>(d46));
+  features(47, nda::all).copy_elems(nda::vector_ref<double>(d47));
+  features(48, nda::all).copy_elems(nda::vector_ref<double>(d48));
+  features(49, nda::all).copy_elems(nda::vector_ref<double>(d49));
+  features(50, nda::all).copy_elems(nda::vector_ref<double>(d50));
+  features(51, nda::all).copy_elems(nda::vector_ref<double>(d51));
+  features(52, nda::all).copy_elems(nda::vector_ref<double>(d52));
+  features(53, nda::all).copy_elems(nda::vector_ref<double>(d53));
+  features(54, nda::all).copy_elems(nda::vector_ref<double>(d54));
+  features(55, nda::all).copy_elems(nda::vector_ref<double>(d55));
+  features(56, nda::all).copy_elems(nda::vector_ref<double>(d56));
+  features(57, nda::all).copy_elems(nda::vector_ref<double>(d57));
+  features(58, nda::all).copy_elems(nda::vector_ref<double>(d58));
+  features(59, nda::all).copy_elems(nda::vector_ref<double>(d59));
+  features(60, nda::all).copy_elems(nda::vector_ref<double>(d60));
+  features(61, nda::all).copy_elems(nda::vector_ref<double>(d61));
+  features(62, nda::all).copy_elems(nda::vector_ref<double>(d62));
+  features(63, nda::all).copy_elems(nda::vector_ref<double>(d63));
+  features(64, nda::all).copy_elems(nda::vector_ref<double>(d64));
+  features(65, nda::all).copy_elems(nda::vector_ref<double>(d65));
+  features(66, nda::all).copy_elems(nda::vector_ref<double>(d66));
+  features(67, nda::all).copy_elems(nda::vector_ref<double>(d67));
+  features(68, nda::all).copy_elems(nda::vector_ref<double>(d68));
+  features(69, nda::all).copy_elems(nda::vector_ref<double>(d69));
+  features(70, nda::all).copy_elems(nda::vector_ref<double>(d70));
+  features(71, nda::all).copy_elems(nda::vector_ref<double>(d71));
+  features(72, nda::all).copy_elems(nda::vector_ref<double>(d72));
+  features(73, nda::all).copy_elems(nda::vector_ref<double>(d73));
+  features(74, nda::all).copy_elems(nda::vector_ref<double>(d74));
+  features(75, nda::all).copy_elems(nda::vector_ref<double>(d75));
+  features(76, nda::all).copy_elems(nda::vector_ref<double>(d76));
+  features(77, nda::all).copy_elems(nda::vector_ref<double>(d77));
+  features(78, nda::all).copy_elems(nda::vector_ref<double>(d78));
+  features(79, nda::all).copy_elems(nda::vector_ref<double>(d79));
+  features(80, nda::all).copy_elems(nda::vector_ref<double>(d80));
+  features(81, nda::all).copy_elems(nda::vector_ref<double>(d81));
+  features(82, nda::all).copy_elems(nda::vector_ref<double>(d82));
+  features(83, nda::all).copy_elems(nda::vector_ref<double>(d83));
+  features(84, nda::all).copy_elems(nda::vector_ref<double>(d84));
+  features(85, nda::all).copy_elems(nda::vector_ref<double>(d85));
+  features(86, nda::all).copy_elems(nda::vector_ref<double>(d86));
+  features(87, nda::all).copy_elems(nda::vector_ref<double>(d87));
+  features(88, nda::all).copy_elems(nda::vector_ref<double>(d88));
+  features(89, nda::all).copy_elems(nda::vector_ref<double>(d89));
+  features(90, nda::all).copy_elems(nda::vector_ref<double>(d90));
+  features(91, nda::all).copy_elems(nda::vector_ref<double>(d91));
+  features(92, nda::all).copy_elems(nda::vector_ref<double>(d92));
+  features(93, nda::all).copy_elems(nda::vector_ref<double>(d93));
+  features(94, nda::all).copy_elems(nda::vector_ref<double>(d94));
+  features(95, nda::all).copy_elems(nda::vector_ref<double>(d95));
+  features(96, nda::all).copy_elems(nda::vector_ref<double>(d96));
+  features(97, nda::all).copy_elems(nda::vector_ref<double>(d97));
+  features(98, nda::all).copy_elems(nda::vector_ref<double>(d98));
+  features(99, nda::all).copy_elems(nda::vector_ref<double>(d99));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(5);
   k.InitPlusPlus(features, false, utils::Random::Seed(78));
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{0.36555605, 0.30401102};
   std::vector<double> c1{0.91904247, 0.06708523};
@@ -857,12 +863,12 @@ TEST_CASE("kmeans++ 100 double points 2 dimensions 5 clusters",
   std::vector<double> c3{0.09459185, 0.78352758};
   std::vector<double> c4{0.98813997, 0.39967672};
 
-  utils::Matrix<double> correct_centers(5, 2);
-  correct_centers.SetRow(0, utils::VectorView(c0));
-  correct_centers.SetRow(1, utils::VectorView(c1));
-  correct_centers.SetRow(2, utils::VectorView(c2));
-  correct_centers.SetRow(3, utils::VectorView(c3));
-  correct_centers.SetRow(4, utils::VectorView(c4));
+  nda::matrix<double> correct_centers({5, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
+  correct_centers(3, nda::all).copy_elems(nda::vector_ref<double>(c3));
+  correct_centers(4, nda::all).copy_elems(nda::vector_ref<double>(c4));
 
   REQUIRE(*centers == correct_centers);
 }  // TEST_CASE("kmeans++ 100 double points 2 dimensions 5 clusters")
@@ -880,28 +886,28 @@ TEST_CASE("kmeans++ 10 double points 1 dimension 2 clusters",
   std::vector<double> d8{-3.05616857};
   std::vector<double> d9{6.8349517};
 
-  utils::Matrix<double> features(10, 1);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<double> features({10, 1});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(2);
   k.InitPlusPlus(features, false, utils::Random::Seed(31));
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-4.6183699};
   std::vector<double> c1{5.43029939};
 
-  utils::Matrix<double> correct_centers(2, 1);
-  correct_centers.SetRow(0, utils::VectorView(c0));
-  correct_centers.SetRow(1, utils::VectorView(c1));
+  nda::matrix<double> correct_centers({2, 1});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
 
   REQUIRE(*centers == correct_centers);
 }  // TEST_CASE("kmeans++ 10 double points 1 dimension 2 clusters")
@@ -919,30 +925,30 @@ TEST_CASE("kmeans++ 10 int points 10 dimensions 3 clusters",
   std::vector<int8_t> d8{-7,  -5,   7,  -3,   5,  -5,   9,   7,   2,  -8};
   std::vector<int8_t> d9{-8,  -5,   5,  -5,   6,  -4,   8,   7,   2,  -8};
 
-  utils::Matrix<int8_t> features(10, 10);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 10});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
   k.InitPlusPlus(features, false, utils::Random::Seed(44));
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-1, -1, -3, -4, -8, -5, -3, 2, -7, -12};
   std::vector<double> c1{-8, -9, 1, -4, -4, 1, -6, -9, -4, -2};
   std::vector<double> c2{-7, -5, 7, -3, 5, -5, 9, 7, 2, -8};
 
-  utils::Matrix<double> correct_centers(3, 10);
-  correct_centers.SetRow(0, utils::VectorView(c0));
-  correct_centers.SetRow(1, utils::VectorView(c1));
-  correct_centers.SetRow(2, utils::VectorView(c2));
+  nda::matrix<double> correct_centers({3, 10});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
 
   REQUIRE(*centers == correct_centers);
 }  // TEST_CASE("kmeans++ 10 int points 10 dimensions 3 clusters")
@@ -960,29 +966,31 @@ TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   std::vector<int8_t> d8{-5,  0};
   std::vector<int8_t> d9{-5,  0};
 
-  utils::Matrix<int8_t> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(2);
   k.InitPlusPlus(features, false);
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
-  utils::Matrix<double> correct_centers_1(2, 2);
-  correct_centers_1.SetRow(0, utils::VectorView(d0));
-  correct_centers_1.SetRow(1, utils::VectorView(d6));
+  nda::matrix<double> correct_centers_1({2, 2});
+  std::vector<double> d0_d{ 4, -1};
+  std::vector<double> d6_d{-5,  0};
+  correct_centers_1(0, nda::all).copy_elems(nda::vector_ref<double>(d0_d));
+  correct_centers_1(1, nda::all).copy_elems(nda::vector_ref<double>(d6_d));
 
-  utils::Matrix<double> correct_centers_2(2, 2);
-  correct_centers_2.SetRow(0, utils::VectorView(d6));
-  correct_centers_2.SetRow(1, utils::VectorView(d0));
+  nda::matrix<double> correct_centers_2({2, 2});
+  correct_centers_2(0, nda::all).copy_elems(nda::vector_ref<double>(d6_d));
+  correct_centers_2(1, nda::all).copy_elems(nda::vector_ref<double>(d0_d));
 
   REQUIRE((*centers == correct_centers_1 || *centers == correct_centers_2));
 }  // TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions
@@ -1000,27 +1008,27 @@ TEST_CASE("RandomSumInit 10 int points sum 10", "[clustering][kmeans]") {
   std::vector<int8_t> d8{9,  1};
   std::vector<int8_t> d9{0, 10};
 
-  utils::Matrix<int8_t> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(10);
   k.RandomSumInit(features);
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
-  REQUIRE(centers->n() == 10);
-  REQUIRE(centers->m() == 2);
-  for (uint32_t c = 0; c < centers->n(); ++c) {
+  REQUIRE(centers->rows() == 10);
+  REQUIRE(centers->columns() == 2);
+  for (uint32_t c = 0; c < centers->rows(); ++c) {
     double row_sum = 0;
-    for (uint32_t j = 0; j < centers->m(); ++j) {
+    for (uint32_t j = 0; j < centers->columns(); ++j) {
       row_sum += (*centers)(c, j);
     }
     REQUIRE(row_sum == Approx(10.0));
@@ -1039,27 +1047,27 @@ TEST_CASE("RandomSumInit 10 double points sum 10", "[clustering][kmeans]") {
   std::vector<double> d8{9,  1};
   std::vector<double> d9{0, 10};
 
-  utils::Matrix<double> features(10, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<double> features({10, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(10);
   k.RandomSumInit(features);
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
-  REQUIRE(centers->n() == 10);
-  REQUIRE(centers->m() == 2);
-  for (uint32_t c = 0; c < centers->n(); ++c) {
+  REQUIRE(centers->rows() == 10);
+  REQUIRE(centers->columns() == 2);
+  for (uint32_t c = 0; c < centers->rows(); ++c) {
     double row_sum = 0;
-    for (uint32_t j = 0; j < centers->m(); ++j) {
+    for (uint32_t j = 0; j < centers->columns(); ++j) {
       row_sum += (*centers)(c, j);
     }
     REQUIRE(row_sum == Approx(10.0));
@@ -1067,16 +1075,16 @@ TEST_CASE("RandomSumInit 10 double points sum 10", "[clustering][kmeans]") {
 }  // TEST_CASE "RandomSumInit 10 double points, sum 10"
 
 TEST_CASE("RandomProbInit 10 int points", "[clustering][kmeans]") {
-  utils::Matrix<int8_t> features(1000, 1000, 10);
+  nda::matrix<int8_t> features({1000, 1000}, 10);
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(900);
   k.RandomProbInit(features);
-  const utils::Matrix<double>* centers = k.clusters();
+  const nda::matrix<double>* centers = k.clusters();
 
-  REQUIRE(centers->n() == 900);
-  REQUIRE(centers->m() == 1000);
-  for (uint32_t c = 0; c < centers->n(); ++c) {
-    for (uint32_t j = 0; j < centers->m(); ++j) {
+  REQUIRE(centers->rows() == 900);
+  REQUIRE(centers->columns() == 1000);
+  for (uint32_t c = 0; c < centers->rows(); ++c) {
+    for (uint32_t j = 0; j < centers->columns(); ++j) {
       REQUIRE((*centers)(c, j) >= 0.0);
       REQUIRE((*centers)(c, j) < 1.0);
     }
@@ -1096,17 +1104,17 @@ TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters",
   std::vector<int8_t> d8{-4,  7, -4, -5,  -5, -6, -9,  8,  0,  3};
   std::vector<int8_t> d9{-4,  3, -5,  3,  -3,  6,  7,  6, -6, -6};
 
-  utils::Matrix<int8_t> features(10, 10);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
+  nda::matrix<int8_t> features({10, 10});
+  features(0, nda::all).copy_elems(nda::vector_ref<int8_t>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<int8_t>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<int8_t>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<int8_t>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<int8_t>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<int8_t>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<int8_t>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<int8_t>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
   clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
   k.MultipleRestarts(features, 10, clustering::kPlusPlus, false,
@@ -1122,10 +1130,10 @@ TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters",
   std::vector<double> correct_c2{-4.0, -7.5, 5.75, -1.25, 0.75, -1.0, 1.0,
       -7.25, 6.75, -3.0};
 
-  utils::Matrix<double> correct_centers(3, 10);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
-  correct_centers.SetRow(2, utils::VectorView(correct_c2));
+  nda::matrix<double> correct_centers({3, 10});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(correct_c2));
 
   REQUIRE(*k.clusters() == correct_centers);
 
@@ -1239,107 +1247,107 @@ TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters",
   std::vector<double> d98{0.157682723172287 , 0.6838146973978699};
   std::vector<double> d99{0.8738585658551963, 0.8194934229360593};
 
-  utils::Matrix<double> features(100, 2);
-  features.SetRow(0, utils::VectorView(d0));
-  features.SetRow(1, utils::VectorView(d1));
-  features.SetRow(2, utils::VectorView(d2));
-  features.SetRow(3, utils::VectorView(d3));
-  features.SetRow(4, utils::VectorView(d4));
-  features.SetRow(5, utils::VectorView(d5));
-  features.SetRow(6, utils::VectorView(d6));
-  features.SetRow(7, utils::VectorView(d7));
-  features.SetRow(8, utils::VectorView(d8));
-  features.SetRow(9, utils::VectorView(d9));
-  features.SetRow(10, utils::VectorView(d10));
-  features.SetRow(11, utils::VectorView(d11));
-  features.SetRow(12, utils::VectorView(d12));
-  features.SetRow(13, utils::VectorView(d13));
-  features.SetRow(14, utils::VectorView(d14));
-  features.SetRow(15, utils::VectorView(d15));
-  features.SetRow(16, utils::VectorView(d16));
-  features.SetRow(17, utils::VectorView(d17));
-  features.SetRow(18, utils::VectorView(d18));
-  features.SetRow(19, utils::VectorView(d19));
-  features.SetRow(20, utils::VectorView(d20));
-  features.SetRow(21, utils::VectorView(d21));
-  features.SetRow(22, utils::VectorView(d22));
-  features.SetRow(23, utils::VectorView(d23));
-  features.SetRow(24, utils::VectorView(d24));
-  features.SetRow(25, utils::VectorView(d25));
-  features.SetRow(26, utils::VectorView(d26));
-  features.SetRow(27, utils::VectorView(d27));
-  features.SetRow(28, utils::VectorView(d28));
-  features.SetRow(29, utils::VectorView(d29));
-  features.SetRow(30, utils::VectorView(d30));
-  features.SetRow(31, utils::VectorView(d31));
-  features.SetRow(32, utils::VectorView(d32));
-  features.SetRow(33, utils::VectorView(d33));
-  features.SetRow(34, utils::VectorView(d34));
-  features.SetRow(35, utils::VectorView(d35));
-  features.SetRow(36, utils::VectorView(d36));
-  features.SetRow(37, utils::VectorView(d37));
-  features.SetRow(38, utils::VectorView(d38));
-  features.SetRow(39, utils::VectorView(d39));
-  features.SetRow(40, utils::VectorView(d40));
-  features.SetRow(41, utils::VectorView(d41));
-  features.SetRow(42, utils::VectorView(d42));
-  features.SetRow(43, utils::VectorView(d43));
-  features.SetRow(44, utils::VectorView(d44));
-  features.SetRow(45, utils::VectorView(d45));
-  features.SetRow(46, utils::VectorView(d46));
-  features.SetRow(47, utils::VectorView(d47));
-  features.SetRow(48, utils::VectorView(d48));
-  features.SetRow(49, utils::VectorView(d49));
-  features.SetRow(50, utils::VectorView(d50));
-  features.SetRow(51, utils::VectorView(d51));
-  features.SetRow(52, utils::VectorView(d52));
-  features.SetRow(53, utils::VectorView(d53));
-  features.SetRow(54, utils::VectorView(d54));
-  features.SetRow(55, utils::VectorView(d55));
-  features.SetRow(56, utils::VectorView(d56));
-  features.SetRow(57, utils::VectorView(d57));
-  features.SetRow(58, utils::VectorView(d58));
-  features.SetRow(59, utils::VectorView(d59));
-  features.SetRow(60, utils::VectorView(d60));
-  features.SetRow(61, utils::VectorView(d61));
-  features.SetRow(62, utils::VectorView(d62));
-  features.SetRow(63, utils::VectorView(d63));
-  features.SetRow(64, utils::VectorView(d64));
-  features.SetRow(65, utils::VectorView(d65));
-  features.SetRow(66, utils::VectorView(d66));
-  features.SetRow(67, utils::VectorView(d67));
-  features.SetRow(68, utils::VectorView(d68));
-  features.SetRow(69, utils::VectorView(d69));
-  features.SetRow(70, utils::VectorView(d70));
-  features.SetRow(71, utils::VectorView(d71));
-  features.SetRow(72, utils::VectorView(d72));
-  features.SetRow(73, utils::VectorView(d73));
-  features.SetRow(74, utils::VectorView(d74));
-  features.SetRow(75, utils::VectorView(d75));
-  features.SetRow(76, utils::VectorView(d76));
-  features.SetRow(77, utils::VectorView(d77));
-  features.SetRow(78, utils::VectorView(d78));
-  features.SetRow(79, utils::VectorView(d79));
-  features.SetRow(80, utils::VectorView(d80));
-  features.SetRow(81, utils::VectorView(d81));
-  features.SetRow(82, utils::VectorView(d82));
-  features.SetRow(83, utils::VectorView(d83));
-  features.SetRow(84, utils::VectorView(d84));
-  features.SetRow(85, utils::VectorView(d85));
-  features.SetRow(86, utils::VectorView(d86));
-  features.SetRow(87, utils::VectorView(d87));
-  features.SetRow(88, utils::VectorView(d88));
-  features.SetRow(89, utils::VectorView(d89));
-  features.SetRow(90, utils::VectorView(d90));
-  features.SetRow(91, utils::VectorView(d91));
-  features.SetRow(92, utils::VectorView(d92));
-  features.SetRow(93, utils::VectorView(d93));
-  features.SetRow(94, utils::VectorView(d94));
-  features.SetRow(95, utils::VectorView(d95));
-  features.SetRow(96, utils::VectorView(d96));
-  features.SetRow(97, utils::VectorView(d97));
-  features.SetRow(98, utils::VectorView(d98));
-  features.SetRow(99, utils::VectorView(d99));
+  nda::matrix<double> features({100, 2});
+  features(0, nda::all).copy_elems(nda::vector_ref<double>(d0));
+  features(1, nda::all).copy_elems(nda::vector_ref<double>(d1));
+  features(2, nda::all).copy_elems(nda::vector_ref<double>(d2));
+  features(3, nda::all).copy_elems(nda::vector_ref<double>(d3));
+  features(4, nda::all).copy_elems(nda::vector_ref<double>(d4));
+  features(5, nda::all).copy_elems(nda::vector_ref<double>(d5));
+  features(6, nda::all).copy_elems(nda::vector_ref<double>(d6));
+  features(7, nda::all).copy_elems(nda::vector_ref<double>(d7));
+  features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
+  features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
+  features(10, nda::all).copy_elems(nda::vector_ref<double>(d10));
+  features(11, nda::all).copy_elems(nda::vector_ref<double>(d11));
+  features(12, nda::all).copy_elems(nda::vector_ref<double>(d12));
+  features(13, nda::all).copy_elems(nda::vector_ref<double>(d13));
+  features(14, nda::all).copy_elems(nda::vector_ref<double>(d14));
+  features(15, nda::all).copy_elems(nda::vector_ref<double>(d15));
+  features(16, nda::all).copy_elems(nda::vector_ref<double>(d16));
+  features(17, nda::all).copy_elems(nda::vector_ref<double>(d17));
+  features(18, nda::all).copy_elems(nda::vector_ref<double>(d18));
+  features(19, nda::all).copy_elems(nda::vector_ref<double>(d19));
+  features(20, nda::all).copy_elems(nda::vector_ref<double>(d20));
+  features(21, nda::all).copy_elems(nda::vector_ref<double>(d21));
+  features(22, nda::all).copy_elems(nda::vector_ref<double>(d22));
+  features(23, nda::all).copy_elems(nda::vector_ref<double>(d23));
+  features(24, nda::all).copy_elems(nda::vector_ref<double>(d24));
+  features(25, nda::all).copy_elems(nda::vector_ref<double>(d25));
+  features(26, nda::all).copy_elems(nda::vector_ref<double>(d26));
+  features(27, nda::all).copy_elems(nda::vector_ref<double>(d27));
+  features(28, nda::all).copy_elems(nda::vector_ref<double>(d28));
+  features(29, nda::all).copy_elems(nda::vector_ref<double>(d29));
+  features(30, nda::all).copy_elems(nda::vector_ref<double>(d30));
+  features(31, nda::all).copy_elems(nda::vector_ref<double>(d31));
+  features(32, nda::all).copy_elems(nda::vector_ref<double>(d32));
+  features(33, nda::all).copy_elems(nda::vector_ref<double>(d33));
+  features(34, nda::all).copy_elems(nda::vector_ref<double>(d34));
+  features(35, nda::all).copy_elems(nda::vector_ref<double>(d35));
+  features(36, nda::all).copy_elems(nda::vector_ref<double>(d36));
+  features(37, nda::all).copy_elems(nda::vector_ref<double>(d37));
+  features(38, nda::all).copy_elems(nda::vector_ref<double>(d38));
+  features(39, nda::all).copy_elems(nda::vector_ref<double>(d39));
+  features(40, nda::all).copy_elems(nda::vector_ref<double>(d40));
+  features(41, nda::all).copy_elems(nda::vector_ref<double>(d41));
+  features(42, nda::all).copy_elems(nda::vector_ref<double>(d42));
+  features(43, nda::all).copy_elems(nda::vector_ref<double>(d43));
+  features(44, nda::all).copy_elems(nda::vector_ref<double>(d44));
+  features(45, nda::all).copy_elems(nda::vector_ref<double>(d45));
+  features(46, nda::all).copy_elems(nda::vector_ref<double>(d46));
+  features(47, nda::all).copy_elems(nda::vector_ref<double>(d47));
+  features(48, nda::all).copy_elems(nda::vector_ref<double>(d48));
+  features(49, nda::all).copy_elems(nda::vector_ref<double>(d49));
+  features(50, nda::all).copy_elems(nda::vector_ref<double>(d50));
+  features(51, nda::all).copy_elems(nda::vector_ref<double>(d51));
+  features(52, nda::all).copy_elems(nda::vector_ref<double>(d52));
+  features(53, nda::all).copy_elems(nda::vector_ref<double>(d53));
+  features(54, nda::all).copy_elems(nda::vector_ref<double>(d54));
+  features(55, nda::all).copy_elems(nda::vector_ref<double>(d55));
+  features(56, nda::all).copy_elems(nda::vector_ref<double>(d56));
+  features(57, nda::all).copy_elems(nda::vector_ref<double>(d57));
+  features(58, nda::all).copy_elems(nda::vector_ref<double>(d58));
+  features(59, nda::all).copy_elems(nda::vector_ref<double>(d59));
+  features(60, nda::all).copy_elems(nda::vector_ref<double>(d60));
+  features(61, nda::all).copy_elems(nda::vector_ref<double>(d61));
+  features(62, nda::all).copy_elems(nda::vector_ref<double>(d62));
+  features(63, nda::all).copy_elems(nda::vector_ref<double>(d63));
+  features(64, nda::all).copy_elems(nda::vector_ref<double>(d64));
+  features(65, nda::all).copy_elems(nda::vector_ref<double>(d65));
+  features(66, nda::all).copy_elems(nda::vector_ref<double>(d66));
+  features(67, nda::all).copy_elems(nda::vector_ref<double>(d67));
+  features(68, nda::all).copy_elems(nda::vector_ref<double>(d68));
+  features(69, nda::all).copy_elems(nda::vector_ref<double>(d69));
+  features(70, nda::all).copy_elems(nda::vector_ref<double>(d70));
+  features(71, nda::all).copy_elems(nda::vector_ref<double>(d71));
+  features(72, nda::all).copy_elems(nda::vector_ref<double>(d72));
+  features(73, nda::all).copy_elems(nda::vector_ref<double>(d73));
+  features(74, nda::all).copy_elems(nda::vector_ref<double>(d74));
+  features(75, nda::all).copy_elems(nda::vector_ref<double>(d75));
+  features(76, nda::all).copy_elems(nda::vector_ref<double>(d76));
+  features(77, nda::all).copy_elems(nda::vector_ref<double>(d77));
+  features(78, nda::all).copy_elems(nda::vector_ref<double>(d78));
+  features(79, nda::all).copy_elems(nda::vector_ref<double>(d79));
+  features(80, nda::all).copy_elems(nda::vector_ref<double>(d80));
+  features(81, nda::all).copy_elems(nda::vector_ref<double>(d81));
+  features(82, nda::all).copy_elems(nda::vector_ref<double>(d82));
+  features(83, nda::all).copy_elems(nda::vector_ref<double>(d83));
+  features(84, nda::all).copy_elems(nda::vector_ref<double>(d84));
+  features(85, nda::all).copy_elems(nda::vector_ref<double>(d85));
+  features(86, nda::all).copy_elems(nda::vector_ref<double>(d86));
+  features(87, nda::all).copy_elems(nda::vector_ref<double>(d87));
+  features(88, nda::all).copy_elems(nda::vector_ref<double>(d88));
+  features(89, nda::all).copy_elems(nda::vector_ref<double>(d89));
+  features(90, nda::all).copy_elems(nda::vector_ref<double>(d90));
+  features(91, nda::all).copy_elems(nda::vector_ref<double>(d91));
+  features(92, nda::all).copy_elems(nda::vector_ref<double>(d92));
+  features(93, nda::all).copy_elems(nda::vector_ref<double>(d93));
+  features(94, nda::all).copy_elems(nda::vector_ref<double>(d94));
+  features(95, nda::all).copy_elems(nda::vector_ref<double>(d95));
+  features(96, nda::all).copy_elems(nda::vector_ref<double>(d96));
+  features(97, nda::all).copy_elems(nda::vector_ref<double>(d97));
+  features(98, nda::all).copy_elems(nda::vector_ref<double>(d98));
+  features(99, nda::all).copy_elems(nda::vector_ref<double>(d99));
 
   clustering::KMeans<double, clustering::EuclideanDistance> k(3);
   k.MultipleRestarts(features, 10, clustering::kRandomProb, false,
@@ -1349,10 +1357,10 @@ TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters",
   std::vector<double> correct_c1{0.22296618475567098, 0.630273664551855};
   std::vector<double> correct_c2{0.7515275770955788, 0.7385338595306439};
 
-  utils::Matrix<double> correct_centers(3, 2);
-  correct_centers.SetRow(0, utils::VectorView(correct_c0));
-  correct_centers.SetRow(1, utils::VectorView(correct_c1));
-  correct_centers.SetRow(2, utils::VectorView(correct_c2));
+  nda::matrix<double> correct_centers({3, 2});
+  correct_centers(0, nda::all).copy_elems(nda::vector_ref<double>(correct_c0));
+  correct_centers(1, nda::all).copy_elems(nda::vector_ref<double>(correct_c1));
+  correct_centers(2, nda::all).copy_elems(nda::vector_ref<double>(correct_c2));
 
   REQUIRE(*k.clusters() == correct_centers);
 
