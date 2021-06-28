@@ -11,6 +11,7 @@
 #include <ostream>
 #include <vector>
 
+#include "cereal/types/vector.hpp"
 #include "utils/vector_view.h"
 
 namespace utils {

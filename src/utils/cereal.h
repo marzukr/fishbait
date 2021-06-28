@@ -6,9 +6,12 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <tuple>
+#include <utility>
 
+#include "array/array.h"
 #include "cereal/archives/portable_binary.hpp"
-#include "cereal/types/vector.hpp"
+#include "cereal/types/tuple.hpp"
 
 namespace utils {
 
@@ -43,5 +46,59 @@ void CerealLoad(std::string path, T* load, bool verbose = false) {
 }  // CerealLoad
 
 }  // namespace utils
+
+namespace cereal {
+
+/* nda::array cereal load/save */
+template<class Archive, class T, class Shape, class Alloc>
+void save(Archive& archive,  // NOLINT(runtime/references)
+          const nda::array<T, Shape, Alloc>& m) {
+  archive(m.get_allocator(), m.shape());
+  m.for_each_value([&](const T& x) { archive(x); });
+}
+template<class Archive, class T, class Shape, class Alloc>
+void load(Archive& archive,  // NOLINT(runtime/references)
+          nda::array<T, Shape, Alloc>& m) {  // NOLINT(runtime/references)
+  Alloc alloc;
+  Shape shape;
+  archive(alloc, shape);
+  nda::array<T, Shape, Alloc> new_array(shape, alloc);
+  new_array.for_each_value([&](T& x) { archive(x); });
+  m = std::move(new_array);
+}
+
+/* nda::shape cereal load/save */
+template <class Archive, class... Dims>
+void save(Archive& archive,  // NOLINT(runtime/references)
+          const nda::shape<Dims...>& m) {
+  archive(m.dims());
+}
+template <class Archive, class... Dims>
+void load(Archive& archive,  // NOLINT(runtime/references)
+          nda::shape<Dims...>& m) {  // NOLINT(runtime/references)
+  std::tuple<Dims...> dims;
+  archive(dims);
+  nda::shape<Dims...> shape(dims);
+  m = std::move(shape);
+}
+
+/* nda::dims cereal load/save */
+template <class Archive, nda::index_t Min_, nda::index_t Extent_,
+          nda::index_t Stride_>
+void save(Archive& archive,  // NOLINT(runtime/references)
+          const nda::dim<Min_, Extent_, Stride_>& m) {
+  archive(m.min(), m.extent(), m.stride());
+}
+template <class Archive, nda::index_t Min_, nda::index_t Extent_,
+          nda::index_t Stride_>
+void load(Archive& archive,  // NOLINT(runtime/references)
+          nda::dim<Min_, Extent_, Stride_>& m) {  // NOLINT(runtime/references)
+  nda::index_t min, extent, stride;
+  archive(min, extent, stride);
+  nda::dim<Min_, Extent_, Stride_> new_dim(min, extent, stride);
+  m = std::move(new_dim);
+}
+
+}  // namespace cereal
 
 #endif  // SRC_UTILS_CEREAL_H_

@@ -5,7 +5,9 @@
 #include <iostream>
 #include <vector>
 
+#include "array/array.h"
 #include "catch2/catch.hpp"
+#include "cereal/types/vector.hpp"
 #include "utils/cereal.h"
 #include "utils/matrix.h"
 
@@ -50,3 +52,29 @@ TEST_CASE("Save and load matrix test", "[utils][cereal]") {
     }
   }
 }  // TEST_CASE "Save and load matrix test"
+
+TEST_CASE("Save and load nda test", "[utils][cereal]") {
+  const uint32_t n = 100;
+  const uint32_t m = 100;
+
+  using dense_col_t = nda::shape<nda::dim<>, nda::dense_dim<>>;
+  nda::array<int, dense_col_t> save_matrix({n, m});
+  for (uint32_t i = 0; i < n; ++i) {
+    for (uint32_t j = 0; j < m; ++j) {
+      save_matrix(i, j) = i + j;
+    }
+  }
+  std::filesystem::remove("out/tests/nda_save_test.cereal");
+  utils::CerealSave("out/tests/nda_save_test.cereal", &save_matrix);
+
+  nda::array<int, dense_col_t> load_matrix({1, 1});
+  utils::CerealLoad("out/tests/nda_save_test.cereal", &load_matrix);
+  REQUIRE(load_matrix.rows() == n);
+  REQUIRE(load_matrix.columns() == m);
+  for (uint32_t i = 0; i < n; ++i) {
+    for (uint32_t j = 0; j < m; ++j) {
+      REQUIRE(load_matrix(i, j) == (int)(i + j));
+    }
+  }
+  REQUIRE(load_matrix == save_matrix);
+}  // TEST_CASE "Save and load nda test"
