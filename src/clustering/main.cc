@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <cstring>
 
 #include "array/array.h"
 #include "array/matrix.h"
@@ -11,31 +12,60 @@
 #include "utils/cereal.h"
 #include "utils/random.h"
 
-int main() {
-  // std::string path = "luts/flop_lut_64.cereal";
-  std::string path = "luts/river_lut_64.cereal";
-  // using DataT = uint32_t;
-  using DataT = double;
-  using DataTableT = nda::array<DataT, nda::matrix_shape<>>;
+int main(int argc, char *argv[]) {
+  // Print usage on invalid input
+  if (argc != 1 + 1 || !(!strcmp(argv[1], "flop") || !strcmp(argv[1], "turn")
+        || !strcmp(argv[1], "river"))) {
+    std::cout << "Usage: clustering.out (flop | turn | river)"
+              << std::endl;
+    return 1;
+  }
 
-  DataTableT data_points({1, 1}, 0);
-  utils::CerealLoad(path, &data_points, true);
+  // cluster flop
+  if (!strcmp(argv[1], "flop")) {
+    // load hand_strength LUT
+    nda::matrix<uint32_t> data_points({1, 1}, 0);
+    utils::CerealLoad("out/hand_strengths/flop_lut_nda.cereal",
+                      &data_points, true);
 
-  // clustering::KMeans<DataT, clustering::EarthMoverDistance> k(200);
-  clustering::KMeans<DataT, clustering::EuclideanDistance> k(200);
-  // k.RandomSumInit(data_points, 6789);
-  // k.RandomSumInit(data_points, 12345);
-  k.InitPlusPlus(data_points, true, utils::Random::Seed(6789));
-  // k.RandomProbInit(data_points, 6789);
-  // k.Elkan(data_points, true, 43555);
-  k.Elkan(data_points, true, utils::Random::Seed(54321));
+    // run clustering 10 times
+    clustering::KMeans<uint32_t, clustering::EarthMoverDistance> k(200);
+    k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
-  // std::cout << "Done." << std::endl;
-  // // should be 36
-  // std::cout << histograms[276*BIN_SIZE + 29] << std::endl;
-  // // should be 0
-  // std::cout << e->Distance(302847, 91636) << std::endl;
-  // // should be 37339
-  // std::cout << e->Distance(315, 302769) << std::endl;
+    // save best run
+    utils::CerealSave("out/clustering/flop_clusters.cereal",
+                      k.assignments(), true);
+
+  // cluster turn
+  } else if (!strcmp(argv[1], "turn")) {
+    // load hand_strength LUT
+    nda::matrix<uint32_t> data_points({1, 1}, 0);
+    utils::CerealLoad("out/hand_strengths/turn_lut_nda.cereal",
+                      &data_points, true);
+
+    // run clustering 10 times
+    clustering::KMeans<uint32_t, clustering::EarthMoverDistance> k(200);
+    k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
+
+    // save best run
+    utils::CerealSave("out/clustering/turn_clusters.cereal",
+                      k.assignments(), true);
+
+  // cluster river
+  } else if (!strcmp(argv[1], "river")) {
+    // load hand_strength LUT
+    nda::matrix<double> data_points({1, 1}, 0);
+    utils::CerealLoad("out/hand_strengths/river_lut_nda.cereal",
+                      &data_points, true);
+
+    // run clustering 10 times
+    clustering::KMeans<double, clustering::EuclideanDistance> k(200);
+    k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
+
+    // save best run
+    utils::CerealSave("out/clustering/river_clusters.cereal",
+                      k.assignments(), true);
+  }
+
   return 0;
 }

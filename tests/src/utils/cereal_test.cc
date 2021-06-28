@@ -7,7 +7,6 @@
 
 #include "array/array.h"
 #include "catch2/catch.hpp"
-#include "cereal/types/vector.hpp"
 #include "utils/cereal.h"
 
 TEST_CASE("Save and load vector test", "[utils][cereal]") {

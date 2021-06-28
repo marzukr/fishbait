@@ -7,12 +7,12 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
-#include "cereal/types/vector.hpp"
 #include "deck/card_utils.h"
 #include "deck/indexer.h"
 #include "hand_strengths/lut_generators.h"
 #include "hand_strengths/ochs.h"
 #include "utils/cereal.h"
+#include "utils/matrix.h"
 
 int main(int argc, char *argv[]) {
   bool error = true;
@@ -21,12 +21,12 @@ int main(int argc, char *argv[]) {
       // Generate Showdown LUT
       std::vector<hand_strengths::ShowdownStrength> showdown_lut =
           hand_strengths::ShowdownLUT(true);
-      utils::CerealSave("out/hand_strengths/showdown_lut_64.cereal",
+      utils::CerealSave("out/hand_strengths/showdown_lut_vector.cereal",
                         &showdown_lut, true);
       return 0;
-    } else if (!strcmp(argv[1], "preflop") | !strcmp(argv[1], "flop")
-        | !strcmp(argv[1], "turn") | !strcmp(argv[1], "river")
-        | !strcmp(argv[1], "ochs_preflop")) {
+    } else if (!strcmp(argv[1], "preflop") || !strcmp(argv[1], "flop")
+        || !strcmp(argv[1], "turn") || !strcmp(argv[1], "river")
+        || !strcmp(argv[1], "ochs_preflop")) {
       error = false;
     }
   }
@@ -35,38 +35,38 @@ int main(int argc, char *argv[]) {
   if (error) {
     std::cout << "Usage: hand_strengths.out (showdown | preflop | flop | turn"
       " | river | ochs_preflop)" << std::endl;
-    return -1;
+    return 1;
   }
 
   // Load Showdown LUT
   std::vector<hand_strengths::ShowdownStrength> showdown_lut;
-  utils::CerealLoad("out/hand_strengths/showdown_lut_64.cereal",
+  utils::CerealLoad("out/hand_strengths/showdown_lut_vector.cereal",
                     &showdown_lut, true);
 
   if (!strcmp(argv[1], "preflop")) {
     // Generate preflop LUT
     nda::matrix<uint32_t> preflop_lut = PreflopLUT(showdown_lut, true);
-    utils::CerealSave("out/hand_strengths/preflop_lut_64.cereal",
+    utils::CerealSave("out/hand_strengths/preflop_lut_nda.cereal",
                       &preflop_lut, true);
   } else if (!strcmp(argv[1], "flop")) {
     // Generate Flop LUT
     nda::matrix<uint32_t> flop_lut = FlopLUT(showdown_lut, true);
-    utils::CerealSave("out/hand_strengths/flop_lut_64.cereal",
+    utils::CerealSave("out/hand_strengths/flop_lut_nda.cereal",
                       &flop_lut, true);
   } else if (!strcmp(argv[1], "turn")) {
     // Generate Turn LUT
     nda::matrix<uint32_t> turn_lut = TurnLUT(showdown_lut, true);
-    utils::CerealSave("out/hand_strengths/turn_lut_64.cereal",
+    utils::CerealSave("out/hand_strengths/turn_lut_nda.cereal",
                       &turn_lut, true);
   } else if (!strcmp(argv[1], "river")) {
     // Generate River LUT
     nda::matrix<double> river_lut = RiverLUT(showdown_lut, true);
-    utils::CerealSave("out/hand_strengths/river_lut_64.cereal",
+    utils::CerealSave("out/hand_strengths/river_lut_nda.cereal",
                       &river_lut, true);
   } else if (!strcmp(argv[1], "ochs_preflop")) {
     // Generate OCHS Preflop LUT
     nda::matrix<double> ochs_pflop_lut = OCHS_PreflopLUT(showdown_lut, true);
-    utils::CerealSave("out/hand_strengths/ochs_preflop_lut_64.cereal",
+    utils::CerealSave("out/hand_strengths/ochs_preflop_lut_nda.cereal",
                       &ochs_pflop_lut, true);
   }
   return 0;

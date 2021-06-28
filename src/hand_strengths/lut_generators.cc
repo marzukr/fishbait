@@ -93,7 +93,7 @@ nda::matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
 
   uint32_t sd_count = 0;
   utils::Timer t;
-  for (uint32_t idx = 0; idx < lut_size; ++idx) {
+  for (uint64_t idx = 0; idx < lut_size; ++idx) {
     isocalc->unindex(iso_round, idx, &rollout);
     uint32_t not_simulated = 7 - simulation_cards;
     nda::vector_ref<uint8_t> hand{rollout.data(), not_simulated};
@@ -144,7 +144,7 @@ nda::matrix<uint32_t> FlopLUT(
     std::cout << "Generating Flop LUT..." << std::endl;
   }
 
-  const uint32_t lut_size = 1286792;
+  const uint64_t lut_size = 1286792;
   const uint32_t buckets = 50;
   const uint32_t simulation_size = 2;
   const uint32_t iso_round = 1;
@@ -159,7 +159,7 @@ nda::matrix<uint32_t> TurnLUT(
     std::cout << "Generating Turn LUT..." << std::endl;
   }
 
-  const uint32_t lut_size = 13960050;
+  const uint64_t lut_size = 13960050;
   const uint32_t buckets = 50;
   const uint32_t simulation_size = 1;
   const uint32_t iso_round = 1;
