@@ -26,7 +26,7 @@ namespace clustering {
 
 enum InitProc { kPlusPlus, kRandomSum, kRandomProb };
 
-template <typename T, template<class, class> class Distance>
+template <typename T, template <class, class> class Distance>
 class KMeans {
  public:
   explicit KMeans(uint32_t k)

@@ -3,10 +3,10 @@
 #include <iostream>
 #include <set>
 
+#include "array/array.h"
+#include "array/matrix.h"
 #include "catch2/catch.hpp"
 #include "deck/card_combinations.h"
-#include "utils/matrix.h"
-#include "utils/vector_view.h"
 
 TEST_CASE("card_combinations test", "[deck][card_combinations]") {
   uint32_t n;
@@ -67,8 +67,8 @@ TEST_CASE("card_combinations test", "[deck][card_combinations]") {
   uint32_t total = deck::CardCombinations::N_Choose_K(n, k);
   REQUIRE(total == n_choose_k);
 
-  std::set<utils::VectorView<uint8_t>> unique_cards;
-  utils::Matrix<uint8_t> unique_card_data(n_choose_k, k);
+  std::set<nda::vector_ref<uint8_t>> unique_cards;
+  nda::matrix<uint8_t> unique_card_data({n_choose_k, k});
 
   if (reset) {
     test_deck.Reset(to_exclude);
@@ -93,7 +93,7 @@ TEST_CASE("card_combinations test", "[deck][card_combinations]") {
     }  // for card
     REQUIRE(j == k);
 
-    bool inserted = unique_cards.insert(unique_card_data(i)).second;
+    bool inserted = unique_cards.insert(unique_card_data(i, nda::all)).second;
     REQUIRE(inserted == true);
 
     ++i;

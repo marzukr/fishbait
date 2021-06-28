@@ -7,6 +7,8 @@
 #include <ostream>
 #include <vector>
 
+#include "array/array.h"
+#include "array/matrix.h"
 #include "SKPokerEval/src/SevenEval.h"
 #include "deck/card_combinations.h"
 #include "deck/card_utils.h"
@@ -14,7 +16,6 @@
 #include "deck/indexer.h"
 #include "hand_strengths/ochs.h"
 #include "utils/combination_matrix.h"
-#include "utils/matrix.h"
 #include "utils/timer.h"
 
 namespace hand_strengths {
@@ -73,7 +74,7 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
   return showdown_lut;
 }  // ShowdownLUT()
 
-utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
+nda::matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
     const uint32_t simulation_cards, const uint32_t iso_round,
     deck::Indexer* isocalc, const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose) {
@@ -83,7 +84,7 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
   const uint32_t one_percent_approx = lut_size * simulation_size / 100;
   const double bucket_size = 1.0 / buckets;
 
-  utils::Matrix<uint32_t> ehs_lut(lut_size, buckets, 0);
+  nda::matrix<uint32_t> ehs_lut(nda::matrix_shape<>(lut_size, buckets), 0);
 
   deck::Indexer showdown_calc(2, {2, 5});
   std::array<uint8_t, 7> rollout;
@@ -95,7 +96,7 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
   for (uint32_t idx = 0; idx < lut_size; ++idx) {
     isocalc->unindex(iso_round, idx, &rollout);
     uint32_t not_simulated = 7 - simulation_cards;
-    utils::VectorView<uint8_t> hand(rollout.data(), not_simulated);
+    nda::vector_ref<uint8_t> hand{rollout.data(), not_simulated};
 
     for (simulations.Reset(hand); !simulations.is_done(); ++simulations) {
       for (uint32_t j = 0; j < simulation_cards; ++j) {
@@ -122,7 +123,7 @@ utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
   return ehs_lut;
 }  // EHS_LUT()
 
-utils::Matrix<uint32_t> PreflopLUT(
+nda::matrix<uint32_t> PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
   if (verbose) {
     std::cout << "Generating Preflop LUT..." << std::endl;
@@ -137,7 +138,7 @@ utils::Matrix<uint32_t> PreflopLUT(
                  showdown_lut, verbose);
 }
 
-utils::Matrix<uint32_t> FlopLUT(
+nda::matrix<uint32_t> FlopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
   if (verbose) {
     std::cout << "Generating Flop LUT..." << std::endl;
@@ -152,7 +153,7 @@ utils::Matrix<uint32_t> FlopLUT(
                  showdown_lut, verbose);
 }
 
-utils::Matrix<uint32_t> TurnLUT(
+nda::matrix<uint32_t> TurnLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
   if (verbose) {
     std::cout << "Generating Turn LUT..." << std::endl;
@@ -167,14 +168,15 @@ utils::Matrix<uint32_t> TurnLUT(
                  showdown_lut, verbose);
 }
 
-utils::Matrix<double> RiverLUT(
+nda::matrix<double> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
   if (verbose) {
     std::cout << "Generating River LUT..." << std::endl;
   }
 
   const uint32_t one_percent_approx = deck::kIsoRivers / 100;
-  utils::Matrix<double> river_lut(deck::kIsoRivers, kOCHS_N, 0);
+  nda::matrix<double> river_lut(nda::matrix_shape<>{deck::kIsoRivers, kOCHS_N},
+                                0);
 
   utils::Timer t;
   for (uint32_t idx = 0; idx < deck::kIsoRivers; ++idx) {
@@ -192,7 +194,7 @@ utils::Matrix<double> RiverLUT(
   return river_lut;
 }  // RiverLUT()
 
-utils::Matrix<double> OCHS_PreflopLUT(
+nda::matrix<double> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
   if (verbose) {
     std::cout << "Generating OCHS Preflop LUT..." << std::endl;
@@ -201,7 +203,8 @@ utils::Matrix<double> OCHS_PreflopLUT(
   const uint32_t simulation_size = deck::CardCombinations::N_Choose_K(50, 5);
   const uint32_t one_percent_approx = deck::kUniqueHands*simulation_size / 100;
 
-  utils::Matrix<double> ochs_preflop_lut(deck::kUniqueHands, kOCHS_N, 0);
+  nda::matrix<double> ochs_preflop_lut(
+      nda::matrix_shape<>(deck::kUniqueHands, kOCHS_N), 0);
 
   deck::Indexer showdown_calc(2, {2, 5});
   std::array<uint8_t, 7> rollout;
@@ -213,7 +216,7 @@ utils::Matrix<double> OCHS_PreflopLUT(
   utils::Timer t;
   for (uint32_t idx = 0; idx < deck::kUniqueHands; ++idx) {
     showdown_calc.unindex(0, idx, &rollout);
-    utils::VectorView<uint8_t> hand(rollout.data(), 2);
+    nda::vector_ref<uint8_t> hand(rollout.data(), 2);
     std::fill(sim_totals.begin(), sim_totals.end(), 0);
 
     for (simulations.Reset(hand); !simulations.is_done(); ++simulations) {

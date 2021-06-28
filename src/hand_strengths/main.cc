@@ -5,6 +5,9 @@
 #include <iostream>
 #include <vector>
 
+#include "array/array.h"
+#include "array/matrix.h"
+#include "cereal/types/vector.hpp"
 #include "deck/card_utils.h"
 #include "deck/indexer.h"
 #include "hand_strengths/lut_generators.h"
@@ -42,27 +45,27 @@ int main(int argc, char *argv[]) {
 
   if (!strcmp(argv[1], "preflop")) {
     // Generate preflop LUT
-    utils::Matrix<uint32_t> preflop_lut = PreflopLUT(showdown_lut, true);
+    nda::matrix<uint32_t> preflop_lut = PreflopLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/preflop_lut_64.cereal",
                       &preflop_lut, true);
   } else if (!strcmp(argv[1], "flop")) {
     // Generate Flop LUT
-    utils::Matrix<uint32_t> flop_lut = FlopLUT(showdown_lut, true);
+    nda::matrix<uint32_t> flop_lut = FlopLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/flop_lut_64.cereal",
                       &flop_lut, true);
   } else if (!strcmp(argv[1], "turn")) {
     // Generate Turn LUT
-    utils::Matrix<uint32_t> turn_lut = TurnLUT(showdown_lut, true);
+    nda::matrix<uint32_t> turn_lut = TurnLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/turn_lut_64.cereal",
                       &turn_lut, true);
   } else if (!strcmp(argv[1], "river")) {
     // Generate River LUT
-    utils::Matrix<double> river_lut = RiverLUT(showdown_lut, true);
+    nda::matrix<double> river_lut = RiverLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/river_lut_64.cereal",
                       &river_lut, true);
   } else if (!strcmp(argv[1], "ochs_preflop")) {
     // Generate OCHS Preflop LUT
-    utils::Matrix<double> ochs_pflop_lut = OCHS_PreflopLUT(showdown_lut, true);
+    nda::matrix<double> ochs_pflop_lut = OCHS_PreflopLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/ochs_preflop_lut_64.cereal",
                       &ochs_pflop_lut, true);
   }

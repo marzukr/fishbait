@@ -5,8 +5,9 @@
 
 #include <vector>
 
+#include "array/array.h"
+#include "array/matrix.h"
 #include "hand_strengths/ochs.h"
-#include "utils/matrix.h"
 
 namespace hand_strengths {
 
@@ -23,28 +24,28 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose = false);
   @param showdown_lut The showdown LUT to use.
   @param verbose Option to print progress.
 */
-utils::Matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
+nda::matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
     const uint32_t simulation_size, const uint32_t lut_round,
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-utils::Matrix<uint32_t> PreflopLUT(
+nda::matrix<uint32_t> PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-utils::Matrix<uint32_t> FlopLUT(
+nda::matrix<uint32_t> FlopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-utils::Matrix<uint32_t> TurnLUT(
+nda::matrix<uint32_t> TurnLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-utils::Matrix<double> RiverLUT(
+nda::matrix<double> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-utils::Matrix<double> OCHS_PreflopLUT(
+nda::matrix<double> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
