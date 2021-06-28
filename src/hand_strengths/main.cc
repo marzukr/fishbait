@@ -12,7 +12,6 @@
 #include "hand_strengths/lut_generators.h"
 #include "hand_strengths/ochs.h"
 #include "utils/cereal.h"
-#include "utils/matrix.h"
 
 int main(int argc, char *argv[]) {
   bool error = true;

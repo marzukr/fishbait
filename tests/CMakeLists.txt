@@ -12,6 +12,8 @@ add_executable(tests.out main.cc
   src/deck/card_utils_test.cc
   src/deck/indexer_test.cc
 
+  src/hand_strengths/lut_generators_test.cc
+
   src/poker_engine/node_test.cc
 
   src/utils/cereal_test.cc

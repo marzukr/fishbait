@@ -241,9 +241,8 @@ TEST_CASE("Test vector_ref operator same size arrays same contents",
 TEST_CASE("vector_ref print operator", "[external][array]") {
   const std::size_t array_size_1 = 10;
   const std::array<double, array_size_1> arr_1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  nda::const_vector_ref<double> arr_1_view{arr_1.data(), arr_1.size()};
+  nda::const_vector_ref<double> arr_1_view{arr_1};
   std::stringstream ss;
   ss << arr_1_view;
   REQUIRE(ss.str() == "0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ");
 }  // TEST_CASE "vector_ref print operator"
-

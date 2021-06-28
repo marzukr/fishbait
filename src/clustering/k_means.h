@@ -20,7 +20,6 @@
 #include "utils/combination_matrix.h"
 #include "utils/random.h"
 #include "utils/timer.h"
-#include "utils/vector_view.h"
 
 namespace clustering {
 
