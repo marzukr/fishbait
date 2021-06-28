@@ -13,4 +13,4 @@
 	url = https://github.com/marzukr/cereal.git
 [submodule "external/array"]
 	path = external/array
-	url = git@github.com:marzukr/array.git
+	url = https://github.com/marzukr/array.git
