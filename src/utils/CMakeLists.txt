@@ -5,9 +5,7 @@ add_library(
   fraction.cc
   fraction.h
   loop_iterator.h
-  matrix.h
   random.h
   timer.h
-  vector_view.h
   )
 coverage_counter_zero(utils)
