@@ -83,10 +83,10 @@ class SequenceTable {
     ++(*row_counter);
     for (size_t j = 0; j < actions_.size(); ++j) {
       Action action = actions_[j];
-      uint32_t size = ActionSize(action, state);
-      if (size) {
+      uint32_t chip_size = ActionSize(action, state);
+      if (chip_size) {
         poker_engine::Node<kPlayers> new_state = state;
-        if (new_state.Apply(action.play, action.size)) {
+        if (new_state.Apply(action.play, chip_size)) {
           row_marker(id, j, *row_counter);
           Generate(new_state, *row_counter, row_counter, row_marker);
         } else {
