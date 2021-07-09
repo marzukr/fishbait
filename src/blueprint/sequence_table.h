@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
+#include <stdexcept>
 #include <vector>
 
 #include "array/array.h"
@@ -37,11 +38,10 @@ class SequenceTable {
   SequenceTable(const std::vector<Action>& actions,
                 const poker_engine::Node<kPlayers>& start_state)
                 : actions_{actions}, start_state_{start_state}, table_{} {
-    ActionIdT rows = 0;
-    Generate(start_state_, 0, &rows, [](ActionIdT, size_t, ActionIdT) {});
+    ActionIdT rows = Count(actions_, start_state_);
     table_ = nda::matrix<ActionIdT>{{rows, actions.size()}};
     rows = 0;
-    Generate(start_state_, 0, &rows,
+    Generate(start_state_, actions_, 0, &rows,
         [&](ActionIdT id, size_t action_col, ActionIdT val) {
           this->table_(id, action_col) = val;
         });
@@ -73,22 +73,34 @@ class SequenceTable {
     return os;
   }
 
+  static ActionIdT Count(const std::vector<Action>& actions,
+      const poker_engine::Node<kPlayers>& start_state) {
+    ActionIdT rows = 0;
+    Generate(start_state, actions, 0, &rows,
+        [](ActionIdT, size_t, ActionIdT) {});
+    return rows;
+  }
+
   static constexpr ActionIdT kLeafId = 0;
   static constexpr ActionIdT kIllegalId = std::numeric_limits<ActionIdT>::max();
 
  private:
   template <typename RowMarkFn>
-  void Generate(const poker_engine::Node<kPlayers>& state, ActionIdT id,
-                ActionIdT* row_counter, RowMarkFn&& row_marker) {
+  static void Generate(const poker_engine::Node<kPlayers>& state,
+                       const std::vector<Action>& actions, ActionIdT id,
+                       ActionIdT* row_counter, RowMarkFn&& row_marker) {
+    if (*row_counter == std::numeric_limits<ActionIdT>::max()) {
+      throw std::overflow_error("Sequence table has too many rows.");
+    }
     ++(*row_counter);
-    for (size_t j = 0; j < actions_.size(); ++j) {
-      Action action = actions_[j];
+    for (size_t j = 0; j < actions.size(); ++j) {
+      Action action = actions[j];
       uint32_t chip_size = ActionSize(action, state);
       if (chip_size) {
         poker_engine::Node<kPlayers> new_state = state;
         if (new_state.Apply(action.play, chip_size)) {
           row_marker(id, j, *row_counter);
-          Generate(new_state, *row_counter, row_counter, row_marker);
+          Generate(new_state, actions, *row_counter, row_counter, row_marker);
         } else {
           row_marker(id, j, kLeafId);
         }
@@ -103,8 +115,8 @@ class SequenceTable {
 
     @return The size of the action to play if it can be played, 0 otherwise.
   */
-  uint32_t ActionSize(const Action& action,
-                      const poker_engine::Node<kPlayers>& state) const {
+  static uint32_t ActionSize(const Action& action,
+                             const poker_engine::Node<kPlayers>& state) {
     if ((action.max_rotation == 0 || state.Rotation() < action.max_rotation) &&
         (state.round() <= action.max_round)) {
       switch (action.play) {
