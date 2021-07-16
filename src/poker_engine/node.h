@@ -14,18 +14,17 @@
 #include <string>
 
 #include "SKPokerEval/src/SevenEval.h"
+#include "deck/types.h"
+#include "poker_engine/types.h"
 #include "utils/fraction.h"
 #include "utils/random.h"
 
 namespace poker_engine {
 
-enum class Round : uint8_t { kPreFlop, kFlop, kTurn, kRiver };
-enum class Action : uint8_t { kFold, kCheckCall, kBet, kAllIn };
-
 /* QuotaT is used to represent exact award quotas before being apportioned into
    discrete chips (double or utils::Fraction). This choice could impact the
    accuracy and/or speed of the awarded chip amounts. */
-template <uint8_t kPlayers = 6, typename QuotaT = double>
+template <PlayerId kPlayers = 6, typename QuotaT = double>
 class Node {
  public:
   /*
@@ -44,10 +43,10 @@ class Node {
     @param rake_cap Maximum number of chips that can be raked. 0 means no cap.
     @param no_flop_no_drop Is rake taken on hands without a flop?
   */
-  Node(uint8_t button = 0, uint32_t big_blind = 100, uint32_t small_blind = 50,
-       uint32_t ante = 0, bool big_blind_ante = false,
-       bool blind_before_ante = true, uint32_t default_stack = 10000,
-       uint8_t straddles = 0, QuotaT rake = QuotaT{0}, uint32_t rake_cap = 0,
+  Node(PlayerId button = 0, Chips big_blind = 100, Chips small_blind = 50,
+       Chips ante = 0, bool big_blind_ante = false,
+       bool blind_before_ante = true, Chips default_stack = 10000,
+       PlayerId straddles = 0, QuotaT rake = QuotaT{0}, Chips rake_cap = 0,
        bool no_flop_no_drop = false)
 
          // Attributes
@@ -77,7 +76,7 @@ class Node {
 
     @param straddles The number of players straddling on this hand.
   */
-  void NewHand(uint8_t straddles = 0) {
+  void NewHand(PlayerId straddles = 0) {
     if (pot_ != 0) {
       std::string func{__func__};
       throw std::logic_error(func + " called when pot is not empty. If the pot "
@@ -111,12 +110,12 @@ class Node {
     // max_bet_ will be set after the blinds and antes are posted
 
     // Post Blinds, Antes, and Straddles
-    uint32_t effective_ante = ante_;
+    Chips effective_ante = ante_;
     if (ante_ > 0 && !blind_before_ante_) effective_ante = PostAntes();
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
     if (ante_ > 0 && blind_before_ante_) effective_ante = PostAntes();
-    uint32_t effective_blind = PostStraddles(straddles);
+    Chips effective_blind = PostStraddles(straddles);
     players_all_in_ = std::count(stack_, stack_ + kPlayers, 0);
     min_raise_ = effective_blind;
     max_bet_ = effective_blind + effective_ante;
@@ -131,7 +130,7 @@ class Node {
         of. Button is 0, small blind 1, big blind 2, etc. If it's heads up, 0
         and 1 return the same index.
   */
-  uint8_t PlayerIndex(uint8_t default_position) const {
+  PlayerId PlayerIndex(PlayerId default_position) const {
     if (kPlayers == 2 && default_position > 0) default_position -= 1;
     return (button_ + default_position) % kPlayers;
   }
@@ -147,8 +146,8 @@ class Node {
     A player can always fold unless they can check instead.
   */
   bool CanFold() const {
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t needed_to_call = max_bet_ - prev_bet;
+    Chips prev_bet = bets_[acting_player_];
+    Chips needed_to_call = max_bet_ - prev_bet;
     return in_progress_ && needed_to_call > 0;
   }
 
@@ -159,8 +158,8 @@ class Node {
         false. Also returns false if the player must go all in to call.
   */
   bool CanCheckCall() const {
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t needed_to_call = max_bet_ - prev_bet;
+    Chips prev_bet = bets_[acting_player_];
+    Chips needed_to_call = max_bet_ - prev_bet;
     return in_progress_ && needed_to_call < stack_[acting_player_];
   }
 
@@ -174,10 +173,10 @@ class Node {
         Otherwise returns false. Also returns false if the given amount is all
         of the players remaining chips.
   */
-  bool CanBet(uint32_t size) const {
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t total_bet = size + prev_bet;
-    uint32_t raise_size = total_bet - max_bet_;
+  bool CanBet(Chips size) const {
+    Chips prev_bet = bets_[acting_player_];
+    Chips total_bet = size + prev_bet;
+    Chips raise_size = total_bet - max_bet_;
     return in_progress_ &&
            pot_good_ > 0 &&
            total_bet > max_bet_ &&
@@ -188,13 +187,13 @@ class Node {
   /*
     @brief Converts a pot proportion into chips for the current acting player.
   */
-  uint32_t ConvertBet(QuotaT pot_proportion) const {
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t needed_to_call = max_bet_ - prev_bet;
-    uint32_t new_pot = pot_ + needed_to_call;
+  Chips ConvertBet(QuotaT pot_proportion) const {
+    Chips prev_bet = bets_[acting_player_];
+    Chips needed_to_call = max_bet_ - prev_bet;
+    Chips new_pot = pot_ + needed_to_call;
     QuotaT exact_bet = pot_proportion * new_pot + needed_to_call;
     double double_bet = static_cast<double>(exact_bet);
-    uint32_t rounded_bet = std::rint(double_bet);
+    Chips rounded_bet = std::rint(double_bet);
     return rounded_bet;
   }
 
@@ -210,7 +209,7 @@ class Node {
     @return True if the game is still in progress after this move, false if this
         move has ended the game.
   */
-  bool Apply(Action play, uint32_t size = 0) {
+  bool Apply(Action play, Chips size = 0) {
     if (!in_progress_) {
       std::string func{__func__};
       throw std::logic_error(func + " called when a game is not in progress.");
@@ -272,15 +271,15 @@ class Node {
         the river. SKEval indexing. Nullptr is a valid option if all but one
         player has folded.
   */
-  void AwardPot(SameStackNoRake, const uint8_t hands[kPlayers][2] = nullptr,
-                const uint8_t board[5] = nullptr) {
+  void AwardPot(SameStackNoRake, const deck::Card hands[kPlayers][2] = nullptr,
+                const deck::Card board[5] = nullptr) {
     VerifyAwardablePot(__func__);
     if (players_left_ == 1) {
       return FoldVictory(folded_);
     } else {
       VerifyCardInfo(hands, board, __func__);
     }
-    uint16_t ranks[kPlayers];
+    SevenEval::Rank ranks[kPlayers];
     RankPlayers(hands, board, folded_, ranks);
     BestPlayersData best_players = BestPlayers(ranks, folded_);
     QuotaT exact_awards[kPlayers]{};
@@ -309,19 +308,19 @@ class Node {
         the river. SKEval indexing. Nullptr is a valid option if all but one
         player has folded.
   */
-  void AwardPot(SingleRun, const uint8_t hands[kPlayers][2] = nullptr,
-                const uint8_t board[5] = nullptr) {
+  void AwardPot(SingleRun, const deck::Card hands[kPlayers][2] = nullptr,
+                const deck::Card board[5] = nullptr) {
     VerifyAwardablePot(__func__);
 
     bool processed[kPlayers];
-    uint8_t players_to_award = PlayersToProcess(hands, processed);
+    PlayerId players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) {
       return FoldVictory(processed);
     } else {
       VerifyCardInfo(hands, board, __func__);
     }
 
-    uint16_t ranks[kPlayers];
+    SevenEval::Rank ranks[kPlayers];
     RankPlayers(hands, board, processed, ranks);
 
     // Loop through each side pot and award it to the appropriate player(s)
@@ -356,12 +355,13 @@ class Node {
         a valid option if all but one player has folded.
     @param n_runs How many times the board is being run.
   */
-  void AwardPot(MultiRun, const uint8_t hands[kPlayers][2] = nullptr,
-                const uint8_t boards[][5] = nullptr, const uint8_t n_runs = 1) {
+  void AwardPot(MultiRun, const deck::Card hands[kPlayers][2] = nullptr,
+                const deck::Card boards[][5] = nullptr,
+                const uint8_t n_runs = 1) {
     VerifyAwardablePot(__func__);
 
     bool processed[kPlayers];
-    uint8_t players_to_award = PlayersToProcess(hands, processed);
+    PlayerId players_to_award = PlayersToProcess(hands, processed);
     if (players_to_award == 1) {
       return FoldVictory(processed);
     } else {
@@ -371,12 +371,12 @@ class Node {
     QuotaT exact_awards[kPlayers]{};
 
     // Variables to use throughout the loops
-    uint16_t ranks_run[kPlayers] = {};
+    SevenEval::Rank ranks_run[kPlayers] = {};
     bool processed_run[kPlayers] = {};
-    uint32_t bets_run[kPlayers] = {};
+    Chips bets_run[kPlayers] = {};
     QuotaT side_pot;
     BestPlayersData best_players_run;
-    uint8_t players_to_award_run;
+    PlayerId players_to_award_run;
 
     for (uint8_t run = 0; run < n_runs; ++run) {
       std::copy(processed, processed + kPlayers, processed_run);
@@ -402,32 +402,32 @@ class Node {
   /*
     Attribute getter functions
   */
-  uint32_t big_blind() const { return big_blind_; }
-  uint32_t small_blind() const { return small_blind_; }
-  uint32_t ante() const { return ante_; }
+  Chips big_blind() const { return big_blind_; }
+  Chips small_blind() const { return small_blind_; }
+  Chips ante() const { return ante_; }
   bool big_blind_ante() const { return big_blind_ante_; }
   bool blind_before_ante() const { return blind_before_ante_; }
 
   /*
     Progress getter functions
   */
-  uint8_t button() const { return button_; }
+  PlayerId button() const { return button_; }
   bool in_progress() const { return in_progress_; }
   Round round() const { return round_; }
   uint8_t cycled() const { return cycled_; }
-  uint8_t acting_player() const { return acting_player_; }
+  PlayerId acting_player() const { return acting_player_; }
   // no pot_good_ getter because it is an implementation detail
   // no no_raise_ getter because it is an implementation detail
-  bool folded(uint8_t player) const { return folded_[player]; }
-  uint8_t players_left() const { return players_left_; }
-  uint8_t players_all_in() const { return players_all_in_; }
+  bool folded(PlayerId player) const { return folded_[player]; }
+  PlayerId players_left() const { return players_left_; }
+  PlayerId players_all_in() const { return players_all_in_; }
 
   /*
     Chip information getter functions
   */
-  uint32_t pot() const { return pot_; }
-  uint32_t bets(uint8_t player) const { return bets_[player]; }
-  uint32_t stack(uint8_t player) const { return stack_[player]; }
+  Chips pot() const { return pot_; }
+  Chips bets(PlayerId player) const { return bets_[player]; }
+  Chips stack(PlayerId player) const { return stack_[player]; }
   // no min_raise_ getter because it is an implementation detail
   // no max_bet_ getter because it is an implementation detail
 
@@ -440,8 +440,8 @@ class Node {
         
     @return The actual size of the blind posted.
   */
-  uint32_t PostBlind(uint8_t player, uint32_t size) {
-    uint32_t blind = std::min(size, stack_[player]);
+  Chips PostBlind(PlayerId player, Chips size) {
+    Chips blind = std::min(size, stack_[player]);
     bets_[player] += blind;
     stack_[player] -= blind;
     pot_ += blind;
@@ -458,12 +458,12 @@ class Node {
     @return The effective ante (can be less than the mandated ante if a player
         must go all in to pay it).
   */
-  uint32_t PostAntes() {
-    uint32_t effective_ante = ante_;
+  Chips PostAntes() {
+    Chips effective_ante = ante_;
     if (big_blind_ante_) {
       // Determine the effective ante
-      uint32_t bb_stack = stack_[PlayerIndex(2)];
-      uint32_t effective_ante_sum = std::min(bb_stack, ante_*kPlayers);
+      Chips bb_stack = stack_[PlayerIndex(2)];
+      Chips effective_ante_sum = std::min(bb_stack, ante_*kPlayers);
       effective_ante = effective_ante_sum / kPlayers;
 
       /* Mark the big blind's ante in their bet, and charge them for the antes
@@ -477,13 +477,13 @@ class Node {
       bets_[PlayerIndex(2)] += effective_ante_sum % kPlayers;
 
       // Mark the ante in the bet of all other players
-      for (uint8_t i = 0; i < kPlayers; ++i) {
+      for (PlayerId i = 0; i < kPlayers; ++i) {
         if (i != PlayerIndex(2)) {
           bets_[i] += effective_ante;
         }
       }
     } else {
-      for (uint8_t i = 0; i < kPlayers; ++i) {
+      for (PlayerId i = 0; i < kPlayers; ++i) {
         PostBlind(i, effective_ante);
       }
     }
@@ -500,10 +500,10 @@ class Node {
     @return The largest amount straddled. If no player straddles, returns the
         big blind. 
   */
-  uint32_t PostStraddles(uint8_t n) {
-    uint32_t max_straddle_size = big_blind_;
-    for (uint8_t i = 0; i < n; ++i) {
-      uint32_t straddle_size = max_straddle_size * 2;
+  Chips PostStraddles(PlayerId n) {
+    Chips max_straddle_size = big_blind_;
+    for (PlayerId i = 0; i < n; ++i) {
+      Chips straddle_size = max_straddle_size * 2;
       if (straddle_size > stack_[acting_player_]) {
         break;
       } else {
@@ -527,9 +527,9 @@ class Node {
     @brief The current acting player goes all in.
   */
   void AllIn() {
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t chips = stack_[acting_player_];
-    uint32_t total_bet = prev_bet + chips;
+    Chips prev_bet = bets_[acting_player_];
+    Chips chips = stack_[acting_player_];
+    Chips total_bet = prev_bet + chips;
 
     // call
     if (total_bet <= max_bet_) {
@@ -537,13 +537,13 @@ class Node {
 
     // call + extra
     } else if (total_bet < max_bet_ + min_raise_) {
-      uint8_t already_acted = kPlayers - pot_good_;
+      PlayerId already_acted = kPlayers - pot_good_;
       no_raise_ = already_acted;
       max_bet_ = total_bet;
 
     // raise
     } else {
-      uint32_t raise_amount = total_bet - max_bet_;
+      Chips raise_amount = total_bet - max_bet_;
       min_raise_ = raise_amount;
       max_bet_ = total_bet;
       pot_good_ = kPlayers;
@@ -560,8 +560,8 @@ class Node {
     @brief The current acting player check/calls.
   */
   void CheckCall() {
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t additional_bet = max_bet_ - prev_bet;
+    Chips prev_bet = bets_[acting_player_];
+    Chips additional_bet = max_bet_ - prev_bet;
 
     // check
     if (additional_bet == 0) {
@@ -581,10 +581,10 @@ class Node {
     @param size The amount of additional chips the player is contributing to
         the pot.
   */
-  void Bet(uint32_t size) {
-    uint32_t prev_bet = bets_[acting_player_];
-    uint32_t total_bet = size + prev_bet;
-    uint32_t raise_size = total_bet - max_bet_;
+  void Bet(Chips size) {
+    Chips prev_bet = bets_[acting_player_];
+    Chips total_bet = size + prev_bet;
+    Chips raise_size = total_bet - max_bet_;
     max_bet_ = total_bet;
     min_raise_ = raise_size;
     pot_good_ = kPlayers;
@@ -597,7 +597,7 @@ class Node {
   /*
     @brief Returns who the next acting_player_ would be if rotated.
   */
-  uint8_t NextPlayer() const {
+  PlayerId NextPlayer() const {
     return (acting_player_ + 1) % kPlayers;
   }
 
@@ -695,10 +695,10 @@ class Node {
     
     @return The number of players that have not been processed.
   */
-  uint8_t PlayersToProcess(const uint8_t hands[kPlayers][2],
-                           bool processed[kPlayers]) const {
-    uint8_t players_to_award = kPlayers;
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+  PlayerId PlayersToProcess(const deck::Card hands[kPlayers][2],
+                            bool processed[kPlayers]) const {
+    PlayerId players_to_award = kPlayers;
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (folded_[i] || (hands && hands[i][0] == hands[i][1])) {
         processed[i] = true;
         players_to_award -= 1;
@@ -733,8 +733,8 @@ class Node {
     @param processed An array of whether each player is folded or mucked.
   */
   void FoldVictory(const bool processed[kPlayers]) {
-    uint8_t winner = std::find(processed, processed + kPlayers, false) -
-                     processed;
+    PlayerId winner = std::find(processed, processed + kPlayers, false) -
+                      processed;
     if (ShouldRake()) pot_ -= CalculateRakeChips(pot_);
     stack_[winner] += pot_;
     pot_ = 0;
@@ -755,10 +755,10 @@ class Node {
     
     @return If this function awarded the pot.
   */
-  void RankPlayers(const uint8_t hands[kPlayers][2], const uint8_t board[5],
-                   const bool filter[kPlayers],
-                   uint16_t output[kPlayers]) const {
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+  void RankPlayers(const deck::Card hands[kPlayers][2],
+                   const deck::Card board[5], const bool filter[kPlayers],
+                   SevenEval::Rank output[kPlayers]) const {
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i]) {
         output[i] = SevenEval::GetRank(hands[i][0], hands[i][1], board[0],
                                        board[1], board[2], board[3], board[4]);
@@ -776,11 +776,11 @@ class Node {
     
     @return The size of the side pot formed.
   */
-  uint32_t AllocateSidePot(uint32_t bets[kPlayers],
-                           const bool processed[kPlayers]) const {
+  Chips AllocateSidePot(Chips bets[kPlayers],
+                        const bool processed[kPlayers]) const {
     // Find the smallest non zero bet from a non processed player
-    uint32_t min_bet = std::numeric_limits<uint32_t>::max();
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+    Chips min_bet = std::numeric_limits<Chips>::max();
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (bets[i] < min_bet && !processed[i]) min_bet = bets[i];
     }
 
@@ -789,8 +789,8 @@ class Node {
        in for 50 chips, and player 3 all in for 25 chips, the smallest bet is 25
        chips. So, this forms a 75 chip (25 chips * 3 players) side pot out of
        the total 175 chip pot. */
-    uint32_t side_pot = 0;
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+    Chips side_pot = 0;
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (bets[i] >= min_bet) {
         side_pot += min_bet;
         bets[i] -= min_bet;
@@ -802,7 +802,7 @@ class Node {
     return side_pot;
   }  // AllocateSidePot()
 
-  struct BestPlayersData { uint16_t rank; uint8_t n; };
+  struct BestPlayersData { SevenEval::Rank rank; PlayerId n; };
   /*
     @brief Find and count the player(s) with the best hand(s).
 
@@ -812,11 +812,11 @@ class Node {
     @return Struct containing the best rank (rank) and the number of players
         with that rank (n).
   */
-  BestPlayersData BestPlayers(const uint16_t ranks[kPlayers],
+  BestPlayersData BestPlayers(const SevenEval::Rank ranks[kPlayers],
                               const bool filter[kPlayers]) const {
-    std::optional<uint16_t> best_rank;
-    uint8_t best_players = 0;
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+    std::optional<SevenEval::Rank> best_rank;
+    PlayerId best_players = 0;
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i]) {
         if (!best_rank || ranks[i] > *best_rank) {
           best_rank = ranks[i];
@@ -838,12 +838,12 @@ class Node {
     @param best_players Specifies the rank and number of players to award.
     @param exact_awards Array to add awards for each player to.
   */
-  void DivideSidePot(QuotaT side_pot, const uint16_t ranks[kPlayers],
+  void DivideSidePot(QuotaT side_pot, const SevenEval::Rank ranks[kPlayers],
                      const bool filter[kPlayers],
                      const BestPlayersData best_players,
                      QuotaT exact_awards[kPlayers]) const {
     QuotaT prize = side_pot / best_players.n;
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i] && ranks[i] == best_players.rank) {
         exact_awards[i] += prize;
       }
@@ -863,10 +863,10 @@ class Node {
 
     @return The number of players marked as processed.
   */
-  uint8_t MarkProcessedPlayers(const uint32_t bets[kPlayers],
-                               bool processed[kPlayers]) const {
-    uint8_t players_processed = 0;
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+  PlayerId MarkProcessedPlayers(const Chips bets[kPlayers],
+                                bool processed[kPlayers]) const {
+    PlayerId players_processed = 0;
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (bets[i] == 0 && !processed[i]) {
         players_processed += 1;
         processed[i] = true;
@@ -889,10 +889,10 @@ class Node {
 
     @return The number of chips raked from the given pot.
   */
-  uint32_t CalculateRakeChips(uint32_t pot) {
+  Chips CalculateRakeChips(Chips pot) {
     double rake_quota = static_cast<double>(pot * rake_);
-    uint32_t rake_chips = std::rint(rake_quota);
-    uint32_t rake_chips_capped;
+    Chips rake_chips = std::rint(rake_quota);
+    Chips rake_chips_capped;
     if (rake_cap_) {
       rake_chips_capped = std::min(rake_cap_, rake_chips);
     } else {
@@ -907,11 +907,11 @@ class Node {
     @param pot The pot to rake from.
     @param exact_awards An array of awards to take rakes from.
   */
-  void Rake(uint32_t* pot, QuotaT exact_awards[kPlayers]) {
-    uint32_t chips_to_rake = CalculateRakeChips(*pot);
+  void Rake(Chips* pot, QuotaT exact_awards[kPlayers]) {
+    Chips chips_to_rake = CalculateRakeChips(*pot);
     QuotaT proportion_not_raked = 1 - (QuotaT{1} * chips_to_rake / *pot);
     *pot -= chips_to_rake;
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       exact_awards[i] *= proportion_not_raked;
     }
   }
@@ -930,13 +930,13 @@ class Node {
     @param distributions Where to distribute each player's actual discrete
         winnings.
   */
-  void DistributeChips(uint32_t* pot, const QuotaT exact_awards[kPlayers],
-                       uint32_t distributions[kPlayers]) const {
+  void DistributeChips(Chips* pot, const QuotaT exact_awards[kPlayers],
+                       Chips distributions[kPlayers]) const {
     // Award each player the floor of their exact award.
-    uint32_t pot_awarded = 0;
-    for (uint8_t i = 0; i < kPlayers; ++i) {
+    Chips pot_awarded = 0;
+    for (PlayerId i = 0; i < kPlayers; ++i) {
       if (exact_awards[i] > 0) {
-        uint32_t to_award = static_cast<uint32_t>(exact_awards[i]);
+        Chips to_award = static_cast<Chips>(exact_awards[i]);
         distributions[i] += to_award;
         pot_awarded += to_award;
       }
@@ -945,25 +945,25 @@ class Node {
       /* Calculate the decimal part of each player's award (the decimal part of
          10.82 is 0.82). */
       QuotaT decimals[kPlayers];
-      for (uint8_t i = 0; i < kPlayers; ++i) {
-        decimals[i] = exact_awards[i] - static_cast<uint32_t>(exact_awards[i]);
+      for (PlayerId i = 0; i < kPlayers; ++i) {
+        decimals[i] = exact_awards[i] - static_cast<Chips>(exact_awards[i]);
       }
 
       /* Sort the player indexes in order of who will get awarded rounding
          change first. Player's with a higher decimal part of their award are
          "first in line" to get change. */
-      uint8_t change_line[kPlayers];
+      PlayerId change_line[kPlayers];
       std::iota(change_line, change_line + kPlayers, 0);
       std::sort(change_line, change_line + kPlayers,
-                [&](const uint8_t& a, const uint8_t& b) {
+                [&](const PlayerId& a, const PlayerId& b) {
                   return decimals[a] > decimals[b];
                 });
 
       /* Award change in order of change_line until all the change has been
          awarded. */
-      uint8_t position = 0;
+      PlayerId position = 0;
       while (pot_awarded < *pot) {
-        uint8_t player = change_line[position];
+        PlayerId player = change_line[position];
         distributions[player] += 1;
         pot_awarded += 1;
         ++position;
@@ -977,9 +977,9 @@ class Node {
   }  // DistributeChips()
 
   // Attributes
-  const uint32_t big_blind_;      // how many chips the big blind is
-  const uint32_t small_blind_;    // how many chips the small blind is
-  const uint32_t ante_;           /* how many chips each player must contribute
+  const Chips big_blind_;         // how many chips the big blind is
+  const Chips small_blind_;       // how many chips the small blind is
+  const Chips ante_;              /* how many chips each player must contribute
                                      to the pot on each hand in expectation */
   const bool big_blind_ante_;     /* does the big blind pays the ante for
                                      everyone in the game? */
@@ -987,33 +987,33 @@ class Node {
                                      instead of the ante if they don't have
                                      enough chips to pay both? */
   const QuotaT rake_;             // proportion of each hand taken as rake
-  const uint32_t rake_cap_;       /* maximum number of chips that can be raked;
+  const Chips rake_cap_;          /* maximum number of chips that can be raked;
                                      rake_cap_ of 0 means no cap */
   const bool no_flop_no_drop_;    // is rake taken on hands without a flop?
 
   // Progress information
-  uint8_t button_;                // index of player on the button
+  PlayerId button_;               // index of player on the button
   bool in_progress_;              // is a hand is in progress?
   Round round_;                   // current betting round
   uint8_t cycled_;                /* number of players that have been cycled
                                      through on this betting round */
-  uint8_t acting_player_;         // index of player whose turn it is
-  uint8_t pot_good_;              /* number of players who still need to act
+  PlayerId acting_player_;        // index of player whose turn it is
+  PlayerId pot_good_;             /* number of players who still need to act
                                      before this round is over */
-  uint8_t no_raise_;              /* number of players who still need to act,
+  PlayerId no_raise_;             /* number of players who still need to act,
                                      but can only call or fold because another
                                      player went all in less than the
                                      min-raise */
   bool folded_[kPlayers];         // has the given player folded?
-  uint8_t players_left_;          // number of players who haven’t folded
-  uint8_t players_all_in_;        // number of players who are all in
+  PlayerId players_left_;         // number of players who haven’t folded
+  PlayerId players_all_in_;       // number of players who are all in
 
   // Chip information
-  uint32_t pot_;                  // number of chips in the pot
-  uint32_t bets_[kPlayers];       // number of chips each player has bet
-  uint32_t stack_[kPlayers];      // number of chips each player has behind
-  uint32_t min_raise_;            // minimum bet amount
-  uint32_t max_bet_;              // maximum amount that has been bet so far
+  Chips pot_;                     // number of chips in the pot
+  Chips bets_[kPlayers];          // number of chips each player has bet
+  Chips stack_[kPlayers];         // number of chips each player has behind
+  Chips min_raise_;               // minimum bet amount
+  Chips max_bet_;                 // maximum amount that has been bet so far
 };  // Node
 
 }  // namespace poker_engine

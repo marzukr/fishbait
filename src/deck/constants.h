@@ -5,9 +5,9 @@
 
 namespace deck {
 
-const uint8_t kDeckSize = 52;
-const uint8_t kUniqueHands = 169;
-const uint32_t kIsoRivers = 123156254;
+constexpr uint8_t kDeckSize = 52;
+constexpr uint8_t kUniqueHands = 169;
+constexpr uint32_t kIsoRivers = 123156254;
 
 }  // namespace deck
 

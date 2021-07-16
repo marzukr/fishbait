@@ -27,7 +27,7 @@ class Indexer {
   Indexer(Indexer&&) = delete;
   Indexer& operator=(Indexer&&) = delete;
 
-  uint32_t index(const std::initializer_list<uint8_t> cards) {
+  uint64_t index(const std::initializer_list<uint8_t> cards) {
     return hand_index_last(isocalc_, cards.begin());
   }
 

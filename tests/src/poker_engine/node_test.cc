@@ -3,6 +3,7 @@
 #include "catch2/catch.hpp"
 #include "deck/card_utils.h"
 #include "poker_engine/node.h"
+#include "poker_engine/types.h"
 #include "utils/fraction.h"
 
 TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {

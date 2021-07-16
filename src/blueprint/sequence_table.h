@@ -12,6 +12,7 @@
 #include "array/array.h"
 #include "array/matrix.h"
 #include "poker_engine/node.h"
+#include "poker_engine/types.h"
 #include "utils/fraction.h"
 
 namespace blueprint {

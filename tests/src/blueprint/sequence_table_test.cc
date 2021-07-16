@@ -5,6 +5,7 @@
 #include "catch2/catch.hpp"
 #include "blueprint/sequence_table.h"
 #include "poker_engine/node.h"
+#include "poker_engine/types.h"
 
 TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   std::vector<blueprint::Action> actions = {{poker_engine::Action::kFold},
