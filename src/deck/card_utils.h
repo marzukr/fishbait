@@ -7,26 +7,27 @@
 #include <string>
 
 #include "SKPokerEval/src/Deckcards.h"
+#include "deck/types.h"
 
 namespace deck {
 
-inline std::string SKCardPretty(uint8_t i) {
+inline std::string SKCardPretty(Card i) {
   return pretty_card[i];
 }
 
-inline uint8_t ConvertSKtoISO(uint8_t sk_card) {
+inline Card ConvertSKtoISO(Card sk_card) {
   uint8_t res = 51 - sk_card;
   uint8_t rem = sk_card % 4;
   return res + (rem - 3 + rem);
 }
 
-inline uint8_t ConvertISOtoSK(uint8_t iso_card) {
+inline Card ConvertISOtoSK(Card iso_card) {
   return ConvertSKtoISO(iso_card);
 }
 
-uint8_t ISOCardFromStr(const std::string& card_str);
+Card ISOCardFromStr(const std::string& card_str);
 
-uint8_t SKCardFromStr(const std::string& card_str);
+Card SKCardFromStr(const std::string& card_str);
 
 }  // namespace deck
 

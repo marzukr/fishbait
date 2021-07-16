@@ -8,6 +8,7 @@
 namespace deck {
 
 using Card = uint8_t;
+using CardN = Card;
 
 }  // namespace deck
 

@@ -8,12 +8,14 @@
 
 #include "deck/card_utils.h"
 #include "deck/constants.h"
+#include "deck/types.h"
 
 namespace deck {
 
-CardCombinations::CardCombinations(uint8_t r) : state_(r+1, 0),
-    included_(kDeckSize, true), r_(r), is_done_(false) {
-  for (uint8_t i = 0; i < r; ++i) {
+CardCombinations::CardCombinations(CardN r) : state_(r+1, 0),
+                                              included_(kDeckSize, true), r_(r),
+                                              is_done_(false) {
+  for (CardN i = 0; i < r; ++i) {
     state_[i] = i;
   }
   state_[r] = kDeckSize;
@@ -32,9 +34,9 @@ uint32_t CardCombinations::N_Choose_K(uint32_t n, uint32_t k) {
   return result;
 }
 
-void CardCombinations::IncrementState(uint8_t i) {
+void CardCombinations::IncrementState(CardN i) {
   if (MoveToNextIncluded(i)) {
-    for (uint8_t j = i + 1; j < r_; ++j) {
+    for (CardN j = i + 1; j < r_; ++j) {
       state_[j] = state_[j-1];
       [[maybe_unused]] bool moved = MoveToNextIncluded(j);
       assert(moved);
@@ -48,13 +50,13 @@ void CardCombinations::IncrementState(uint8_t i) {
   }
 }
 
-bool CardCombinations::MoveToNextIncluded(uint8_t i) {
-  uint8_t move_size = 0;
+bool CardCombinations::MoveToNextIncluded(CardN i) {
+  CardN move_size = 0;
   bool can_move = true;
   bool should_move = true;
   do {
     ++move_size;
-    uint8_t potential_location = state_[i] + move_size;
+    Card potential_location = state_[i] + move_size;
     can_move = potential_location < state_[i + 1];
     should_move = can_move && included_[potential_location];
   } while (can_move && !should_move);

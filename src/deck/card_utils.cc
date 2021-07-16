@@ -8,6 +8,7 @@
 extern "C" {
   #include "hand-isomorphism/src/deck.h"
 }
+#include "deck/types.h"
 
 namespace deck {
 
@@ -33,10 +34,10 @@ void InvalidRank(const std::string& func, const char rank) {
   throw std::invalid_argument(err);
 }
 
-uint8_t ISOCardFromStr(const std::string& card_str) {
+Card ISOCardFromStr(const std::string& card_str) {
   CheckCardLength(__func__, card_str);
 
-  uint32_t suit = 0;
+  card_t suit = 0;
   if (card_str[1] == 's') {
     suit = 0;
   } else if (card_str[1] == 'h') {
@@ -49,7 +50,7 @@ uint8_t ISOCardFromStr(const std::string& card_str) {
     InvalidSuit(__func__, card_str[1]);
   }
 
-  uint32_t rank = 0;
+  card_t rank = 0;
   if (card_str[0] == '2') {
     rank = 0;
   } else if (card_str[0] == '3') {
@@ -83,10 +84,10 @@ uint8_t ISOCardFromStr(const std::string& card_str) {
   return deck_make_card(suit, rank);
 }  // ISOCardFromStr()
 
-uint8_t SKCardFromStr(const std::string& card_str) {
+Card SKCardFromStr(const std::string& card_str) {
   CheckCardLength(__func__, card_str);
 
-  uint32_t suit = 0;
+  CardN suit = 0;
   if (card_str[1] == 's') {
     suit = 0;
   } else if (card_str[1] == 'h') {
@@ -99,7 +100,7 @@ uint8_t SKCardFromStr(const std::string& card_str) {
     InvalidSuit(__func__, card_str[1]);
   }
 
-  uint32_t rank = 0;
+  CardN rank = 0;
   if (card_str[0] == 'A') {
     rank = 0;
   } else if (card_str[0] == 'K') {

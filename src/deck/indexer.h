@@ -11,12 +11,21 @@
 extern "C" {
   #include "hand-isomorphism/src/hand_index.h"
 }
+#include "deck/types.h"
+#include "poker_engine/types.h"
 
 namespace deck {
 
 class Indexer {
  public:
-  Indexer(const uint8_t rounds, const std::initializer_list<uint8_t> cpr) {
+  /*
+    @brief Constructs an Indexer object.
+
+    @param rounds The number of rounds in the game to index.
+    @param cpr An array of the number of cards in each round.
+  */
+  Indexer(const poker_engine::RoundN rounds,
+          const std::initializer_list<CardN> cpr) {
     isocalc_ = new hand_indexer_t();
     hand_indexer_init(rounds, cpr.begin(), isocalc_);
   }
@@ -27,25 +36,37 @@ class Indexer {
   Indexer(Indexer&&) = delete;
   Indexer& operator=(Indexer&&) = delete;
 
-  uint64_t index(const std::initializer_list<uint8_t> cards) {
+  /*
+    @brief Returns the index of the given cards.
+  */
+  hand_index_t index(const std::initializer_list<Card> cards) {
     return hand_index_last(isocalc_, cards.begin());
   }
 
+  /*
+    @brief Returns the index of the given cards.
+  */
   template <std::size_t kN>
-  uint64_t index(const std::array<uint8_t, kN>& cards) {
+  hand_index_t index(const std::array<Card, kN>& cards) {
     return hand_index_last(isocalc_, cards.data());
   }
 
+  /*
+    @brief Writes the indices of the cards at each round to the given array.
+  */
   template <std::size_t kN, std::size_t kR>
-  uint64_t index(const std::array<uint8_t, kN>& cards,
-                 std::array<uint64_t, kR>* indicies) {
+  hand_index_t index(const std::array<Card, kN>& cards,
+                     std::array<hand_index_t, kR>* indicies) {
     return hand_index_all(isocalc_, cards.data(), indicies->data());
   }
 
+  /*
+    @brief Writes the cards of the given index to the given array.
+  */
   template <std::size_t kN>
-  uint64_t unindex(uint32_t round, uint64_t index,
-                   std::array<uint8_t, kN>* cards) {
-    return hand_unindex(isocalc_, round, index, cards->data());
+  void unindex(poker_engine::RoundN round, hand_index_t index,
+               std::array<Card, kN>* cards) {
+    hand_unindex(isocalc_, round, index, cards->data());
   }
 
  private:
