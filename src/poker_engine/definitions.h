@@ -9,7 +9,9 @@ namespace poker_engine {
 
 using RoundId = uint8_t;
 using RoundN = RoundId;
+using PlayCount = uint8_t;
 using PlayerId = uint8_t;
+using PlayerN = PlayerId;
 using Chips = uint32_t;
 
 enum class Round : RoundId { kPreFlop, kFlop, kTurn, kRiver };

@@ -138,7 +138,7 @@ class Node {
   /* 
     @brief How many times the betting has gone around on this betting round.
   */ 
-  uint8_t Rotation() const { return cycled_ / kPlayers; }
+  PlayCount Rotation() const { return cycled_ / kPlayers; }
 
   /*
     @brief If the current acting_player_ can fold.
@@ -415,7 +415,7 @@ class Node {
   PlayerId button() const { return button_; }
   bool in_progress() const { return in_progress_; }
   Round round() const { return round_; }
-  uint8_t cycled() const { return cycled_; }
+  PlayCount cycled() const { return cycled_; }
   PlayerId acting_player() const { return acting_player_; }
   // no pot_good_ getter because it is an implementation detail
   // no no_raise_ getter because it is an implementation detail
@@ -996,7 +996,7 @@ class Node {
   PlayerId button_;               // index of player on the button
   bool in_progress_;              // is a hand is in progress?
   Round round_;                   // current betting round
-  uint8_t cycled_;                /* number of players that have been cycled
+  PlayCount cycled_;              /* number of players that have been cycled
                                      through on this betting round */
   PlayerId acting_player_;        // index of player whose turn it is
   PlayerId pot_good_;             /* number of players who still need to act

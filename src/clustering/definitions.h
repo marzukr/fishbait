@@ -5,8 +5,6 @@
 
 #include <cstdint>
 
-#include "array/array.h"
-
 namespace clustering {
 
 using MeanId = uint32_t;

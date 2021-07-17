@@ -11,6 +11,7 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
+#include "blueprint/definitions.h"
 #include "poker_engine/definitions.h"
 #include "poker_engine/node.h"
 #include "utils/fraction.h"
@@ -25,25 +26,23 @@ struct Action {
 
   /* The largest rotation this action can be player. Not inclusive. 0 indicates
      the action can be player on any rotation. */
-  uint8_t max_rotation = 0;
+  poker_engine::PlayCount max_rotation = 0;
 
   // The latest round this action can be player. Inclusive.
   poker_engine::Round max_round = poker_engine::Round::kRiver;
 };
 
-template <uint8_t kPlayers>
+template <poker_engine::PlayerN kPlayers>
 class SequenceTable {
  public:
-  using ActionIdT = uint32_t;
-
   SequenceTable(const std::vector<Action>& actions,
                 const poker_engine::Node<kPlayers>& start_state)
                 : actions_{actions}, start_state_{start_state}, table_{} {
-    ActionIdT rows = Count(actions_, start_state_);
-    table_ = nda::matrix<ActionIdT>{{rows, actions.size()}};
+    SequenceId rows = Count(actions_, start_state_);
+    table_ = nda::matrix<SequenceId>{{rows, actions.size()}};
     rows = 0;
     Generate(start_state_, actions_, 0, &rows,
-        [&](ActionIdT id, size_t action_col, ActionIdT val) {
+        [&](SequenceId id, size_t action_col, SequenceId val) {
           this->table_(id, action_col) = val;
         });
   }  // SequenceTable()
@@ -51,21 +50,21 @@ class SequenceTable {
   SequenceTable(const SequenceTable& other) = default;
   SequenceTable& operator=(const SequenceTable& other) = default;
 
-  ActionIdT Next(ActionIdT current_node, size_t action_idx) const {
+  SequenceId Next(SequenceId current_node, size_t action_idx) const {
     return table_(current_node, action_idx);
   }
 
-  ActionIdT States() const {
+  SequenceId States() const {
     return table_.rows();
   }
 
-  ActionIdT Actions() const {
+  nda::size_t Actions() const {
     return table_.columns();
   }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
-    uint64_t elements = s.table_.rows() * s.table_.columns();
-    size_t bytes = sizeof(ActionIdT) * elements;
+    nda::size_t elements = s.table_.rows() * s.table_.columns();
+    size_t bytes = sizeof(SequenceId) * elements;
     double memory = bytes / 1.0e+9;
     os << "SequenceTable<" << +kPlayers << ">" << " { "
        << "rows: " << s.States() << "; "
@@ -74,29 +73,30 @@ class SequenceTable {
     return os;
   }
 
-  static ActionIdT Count(const std::vector<Action>& actions,
+  static SequenceId Count(const std::vector<Action>& actions,
       const poker_engine::Node<kPlayers>& start_state) {
-    ActionIdT rows = 0;
+    SequenceId rows = 0;
     Generate(start_state, actions, 0, &rows,
-        [](ActionIdT, size_t, ActionIdT) {});
+        [](SequenceId, size_t, SequenceId) {});
     return rows;
   }
 
-  static constexpr ActionIdT kLeafId = 0;
-  static constexpr ActionIdT kIllegalId = std::numeric_limits<ActionIdT>::max();
+  static constexpr SequenceId kLeafId = 0;
+  static constexpr SequenceId kIllegalId =
+      std::numeric_limits<SequenceId>::max();
 
  private:
   template <typename RowMarkFn>
   static void Generate(const poker_engine::Node<kPlayers>& state,
-                       const std::vector<Action>& actions, ActionIdT id,
-                       ActionIdT* row_counter, RowMarkFn&& row_marker) {
-    if (*row_counter == std::numeric_limits<ActionIdT>::max()) {
+                       const std::vector<Action>& actions, SequenceId id,
+                       SequenceId* row_counter, RowMarkFn&& row_marker) {
+    if (*row_counter == kIllegalId) {
       throw std::overflow_error("Sequence table has too many rows.");
     }
     ++(*row_counter);
     for (size_t j = 0; j < actions.size(); ++j) {
       Action action = actions[j];
-      uint32_t chip_size = ActionSize(action, state);
+      poker_engine::Chips chip_size = ActionSize(action, state);
       if (chip_size) {
         poker_engine::Node<kPlayers> new_state = state;
         if (new_state.Apply(action.play, chip_size)) {
@@ -116,8 +116,8 @@ class SequenceTable {
 
     @return The size of the action to play if it can be played, 0 otherwise.
   */
-  static uint32_t ActionSize(const Action& action,
-                             const poker_engine::Node<kPlayers>& state) {
+  static poker_engine::Chips ActionSize(const Action& action,
+      const poker_engine::Node<kPlayers>& state) {
     if ((action.max_rotation == 0 || state.Rotation() < action.max_rotation) &&
         (state.round() <= action.max_round)) {
       switch (action.play) {
@@ -128,7 +128,7 @@ class SequenceTable {
         case poker_engine::Action::kFold:
           return state.CanFold();
         case poker_engine::Action::kBet:
-          uint32_t size = state.ConvertBet(action.size);
+          poker_engine::Chips size = state.ConvertBet(action.size);
           return state.CanBet(size) ? size : false;
       }
     }
@@ -137,7 +137,7 @@ class SequenceTable {
 
   const std::vector<Action> actions_;
   const poker_engine::Node<kPlayers> start_state_;
-  nda::matrix<ActionIdT> table_;
+  nda::matrix<SequenceId> table_;
 };  // class SequenceTable
 
 }  // namespace blueprint
