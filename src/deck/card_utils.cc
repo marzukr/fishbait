@@ -34,7 +34,7 @@ void InvalidRank(const std::string& func, const char rank) {
   throw std::invalid_argument(err);
 }
 
-Card ISOCardFromStr(const std::string& card_str) {
+ISO_Card ISOCardFromStr(const std::string& card_str) {
   CheckCardLength(__func__, card_str);
 
   card_t suit = 0;
@@ -84,7 +84,7 @@ Card ISOCardFromStr(const std::string& card_str) {
   return deck_make_card(suit, rank);
 }  // ISOCardFromStr()
 
-Card SKCardFromStr(const std::string& card_str) {
+SK_Card SKCardFromStr(const std::string& card_str) {
   CheckCardLength(__func__, card_str);
 
   CardN suit = 0;

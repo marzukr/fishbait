@@ -7,6 +7,7 @@
 #include "array/matrix.h"
 #include "catch2/catch.hpp"
 #include "deck/card_combinations.h"
+#include "deck/definitions.h"
 
 TEST_CASE("card_combinations test", "[deck][card_combinations]") {
   uint32_t n;
@@ -14,7 +15,7 @@ TEST_CASE("card_combinations test", "[deck][card_combinations]") {
   uint32_t n_choose_k;
   bool reset;
   bool exclude;
-  std::vector<uint8_t> to_exclude;
+  std::vector<deck::Card> to_exclude;
 
   SECTION("Basic 52 choose 2 use case without reset") {
     n = 52;
@@ -67,8 +68,8 @@ TEST_CASE("card_combinations test", "[deck][card_combinations]") {
   uint32_t total = deck::CardCombinations::N_Choose_K(n, k);
   REQUIRE(total == n_choose_k);
 
-  std::set<nda::vector_ref<uint8_t>> unique_cards;
-  nda::matrix<uint8_t> unique_card_data({n_choose_k, k});
+  std::set<nda::vector_ref<deck::Card>> unique_cards;
+  nda::matrix<deck::Card> unique_card_data({n_choose_k, k});
 
   if (reset) {
     test_deck.Reset(to_exclude);
@@ -77,9 +78,10 @@ TEST_CASE("card_combinations test", "[deck][card_combinations]") {
   uint32_t i = 0;
   for (; !test_deck.is_done(); ++test_deck) {
     uint32_t j = 0;
-    uint8_t last_card = 0;
+    deck::Card last_card = 0;
     bool first_card = true;
-    for (uint8_t* card = test_deck.begin(); card != test_deck.end(); ++card) {
+    for (deck::Card* card = test_deck.begin(); card != test_deck.end();
+         ++card) {
       REQUIRE(*card == test_deck(j));
       REQUIRE(*card >= 0);
       REQUIRE(*card < 52);

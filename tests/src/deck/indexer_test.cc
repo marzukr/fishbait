@@ -9,18 +9,18 @@
 #include "hand_strengths/ochs.h"
 
 TEST_CASE("Basic flop indexer tests", "[deck][indexer]") {
-  const uint32_t n_flops = 1286792;
+  const hand_index_t n_flops = 1286792;
   deck::Indexer flop(2, {2, 3});
-  std::array<uint8_t, 5> rollout;
-  std::array<uint64_t, 2> indicies;
+  std::array<deck::ISO_Card, 5> rollout;
+  std::array<hand_index_t, 2> indicies;
 
-  uint32_t i = 0;
-  for (uint32_t idx = 0; idx < 1500000; ++idx) {
+  hand_index_t i = 0;
+  for (hand_index_t idx = 0; idx < 1500000; ++idx) {
     flop.unindex(1, idx, &rollout);
-    uint64_t array_index_last = flop.index(rollout);
-    uint64_t array_index = flop.index(rollout, &indicies);
-    uint64_t init_list = flop.index({rollout[0], rollout[1], rollout[2],
-                                     rollout[3], rollout[4]});
+    hand_index_t array_index_last = flop.index(rollout);
+    hand_index_t array_index = flop.index(rollout, &indicies);
+    hand_index_t init_list = flop.index({rollout[0], rollout[1], rollout[2],
+                                         rollout[3], rollout[4]});
     REQUIRE(array_index_last == array_index);
     REQUIRE(array_index == init_list);
     REQUIRE(init_list == indicies[1]);

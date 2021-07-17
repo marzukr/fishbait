@@ -271,8 +271,9 @@ class Node {
         the river. SKEval indexing. Nullptr is a valid option if all but one
         player has folded.
   */
-  void AwardPot(SameStackNoRake, const deck::Card hands[kPlayers][2] = nullptr,
-                const deck::Card board[5] = nullptr) {
+  void AwardPot(SameStackNoRake,
+                const deck::SK_Card hands[kPlayers][2] = nullptr,
+                const deck::SK_Card board[5] = nullptr) {
     VerifyAwardablePot(__func__);
     if (players_left_ == 1) {
       return FoldVictory(folded_);
@@ -308,8 +309,8 @@ class Node {
         the river. SKEval indexing. Nullptr is a valid option if all but one
         player has folded.
   */
-  void AwardPot(SingleRun, const deck::Card hands[kPlayers][2] = nullptr,
-                const deck::Card board[5] = nullptr) {
+  void AwardPot(SingleRun, const deck::SK_Card hands[kPlayers][2] = nullptr,
+                const deck::SK_Card board[5] = nullptr) {
     VerifyAwardablePot(__func__);
 
     bool processed[kPlayers];
@@ -355,8 +356,8 @@ class Node {
         a valid option if all but one player has folded.
     @param n_runs How many times the board is being run.
   */
-  void AwardPot(MultiRun, const deck::Card hands[kPlayers][2] = nullptr,
-                const deck::Card boards[][5] = nullptr,
+  void AwardPot(MultiRun, const deck::SK_Card hands[kPlayers][2] = nullptr,
+                const deck::SK_Card boards[][5] = nullptr,
                 const uint8_t n_runs = 1) {
     VerifyAwardablePot(__func__);
 
@@ -695,7 +696,7 @@ class Node {
     
     @return The number of players that have not been processed.
   */
-  PlayerId PlayersToProcess(const deck::Card hands[kPlayers][2],
+  PlayerId PlayersToProcess(const deck::SK_Card hands[kPlayers][2],
                             bool processed[kPlayers]) const {
     PlayerId players_to_award = kPlayers;
     for (PlayerId i = 0; i < kPlayers; ++i) {
@@ -755,8 +756,8 @@ class Node {
     
     @return If this function awarded the pot.
   */
-  void RankPlayers(const deck::Card hands[kPlayers][2],
-                   const deck::Card board[5], const bool filter[kPlayers],
+  void RankPlayers(const deck::SK_Card hands[kPlayers][2],
+                   const deck::SK_Card board[5], const bool filter[kPlayers],
                    SevenEval::Rank output[kPlayers]) const {
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i]) {

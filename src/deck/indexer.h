@@ -39,7 +39,7 @@ class Indexer {
   /*
     @brief Returns the index of the given cards.
   */
-  hand_index_t index(const std::initializer_list<Card> cards) {
+  hand_index_t index(const std::initializer_list<ISO_Card> cards) {
     return hand_index_last(isocalc_, cards.begin());
   }
 
@@ -47,7 +47,7 @@ class Indexer {
     @brief Returns the index of the given cards.
   */
   template <std::size_t kN>
-  hand_index_t index(const std::array<Card, kN>& cards) {
+  hand_index_t index(const std::array<ISO_Card, kN>& cards) {
     return hand_index_last(isocalc_, cards.data());
   }
 
@@ -55,7 +55,7 @@ class Indexer {
     @brief Writes the indices of the cards at each round to the given array.
   */
   template <std::size_t kN, std::size_t kR>
-  hand_index_t index(const std::array<Card, kN>& cards,
+  hand_index_t index(const std::array<ISO_Card, kN>& cards,
                      std::array<hand_index_t, kR>* indicies) {
     return hand_index_all(isocalc_, cards.data(), indicies->data());
   }
@@ -65,7 +65,7 @@ class Indexer {
   */
   template <std::size_t kN>
   void unindex(poker_engine::RoundN round, hand_index_t index,
-               std::array<Card, kN>* cards) {
+               std::array<ISO_Card, kN>* cards) {
     hand_unindex(isocalc_, round, index, cards->data());
   }
 
