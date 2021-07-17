@@ -171,14 +171,14 @@ nda::matrix<HistCount> TurnLUT(
                  showdown_lut, verbose);
 }
 
-nda::matrix<OCHS_VectT> RiverLUT(
+nda::matrix<double> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
   if (verbose) {
     std::cout << "Generating River LUT..." << std::endl;
   }
 
   const hand_index_t one_percent_approx = deck::kIsoRivers / 100;
-  nda::matrix<OCHS_VectT> river_lut(
+  nda::matrix<double> river_lut(
       nda::matrix_shape<>{deck::kIsoRivers, kOCHS_N}, 0);
 
   utils::Timer t;
@@ -197,7 +197,7 @@ nda::matrix<OCHS_VectT> RiverLUT(
   return river_lut;
 }  // RiverLUT()
 
-nda::matrix<OCHS_VectT> OCHS_PreflopLUT(
+nda::matrix<double> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut, const bool verbose) {
   if (verbose) {
     std::cout << "Generating OCHS Preflop LUT..." << std::endl;
@@ -208,7 +208,7 @@ nda::matrix<OCHS_VectT> OCHS_PreflopLUT(
   const hand_index_t one_percent_approx =
       deck::kUniqueHands*simulation_size / 100;
 
-  nda::matrix<OCHS_VectT> ochs_preflop_lut(
+  nda::matrix<double> ochs_preflop_lut(
       nda::matrix_shape<>(deck::kUniqueHands, kOCHS_N), 0);
 
   deck::Indexer showdown_calc(2, {2, 5});

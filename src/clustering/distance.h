@@ -22,7 +22,7 @@ class EarthMoverDistance {
 
     double prev = 0;
     double sum = 0;
-    for (uint8_t i = 1; i < p.width() + 1; ++i) {
+    for (nda::index_t i = 1; i < p.width() + 1; ++i) {
       // all flops have area of 1081
       T p_i = p(i-1);
       U q_i = q(i-1);

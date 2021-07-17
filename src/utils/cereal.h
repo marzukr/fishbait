@@ -16,6 +16,8 @@
 
 namespace utils {
 
+enum class FileAction { Load, Save };
+
 template <typename T>
 void CerealSave(std::string path, T* save, bool verbose = false) {
   if (verbose) {
@@ -45,6 +47,19 @@ void CerealLoad(std::string path, T* load, bool verbose = false) {
     std::cout << "Loaded " << path << std::endl;
   }
 }  // CerealLoad
+
+template <typename T>
+void Cereal(FileAction action, std::string path, T* data,
+            bool verbose = false) {
+  switch (action) {
+    case FileAction::Load:
+      CerealLoad(path, data, verbose);
+      break;
+    case FileAction::Save:
+      CerealSave(path, data, verbose);
+      break;
+  }
+}
 
 }  // namespace utils
 

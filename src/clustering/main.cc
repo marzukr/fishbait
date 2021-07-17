@@ -7,8 +7,11 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
+#include "clustering/definitions.h"
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
+#include "hand_strengths/definitions.h"
+#include "hand_strengths/lut_files.h"
 #include "utils/cereal.h"
 #include "utils/random.h"
 
@@ -23,13 +26,12 @@ int main(int argc, char *argv[]) {
 
   // cluster flop
   if (!strcmp(argv[1], "flop")) {
-    // load hand_strength LUT
-    nda::matrix<uint32_t> data_points({1, 1}, 0);
-    utils::CerealLoad("out/hand_strengths/flop_lut_nda.cereal",
-                      &data_points, true);
+    nda::matrix<hand_strengths::HistCount> data_points;
+    hand_strengths::FlopLUT_File(utils::FileAction::Load, &data_points, true);
 
     // run clustering 10 times
-    clustering::KMeans<uint32_t, clustering::EarthMoverDistance> k(200);
+    clustering::KMeans<hand_strengths::HistCount,
+                       clustering::EarthMoverDistance> k(200);
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run
@@ -38,13 +40,12 @@ int main(int argc, char *argv[]) {
 
   // cluster turn
   } else if (!strcmp(argv[1], "turn")) {
-    // load hand_strength LUT
-    nda::matrix<uint32_t> data_points({1, 1}, 0);
-    utils::CerealLoad("out/hand_strengths/turn_lut_nda.cereal",
-                      &data_points, true);
+    nda::matrix<hand_strengths::HistCount> data_points;
+    hand_strengths::TurnLUT_File(utils::FileAction::Load, &data_points, true);
 
     // run clustering 10 times
-    clustering::KMeans<uint32_t, clustering::EarthMoverDistance> k(200);
+    clustering::KMeans<hand_strengths::HistCount,
+                       clustering::EarthMoverDistance> k(200);
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run
@@ -53,10 +54,8 @@ int main(int argc, char *argv[]) {
 
   // cluster river
   } else if (!strcmp(argv[1], "river")) {
-    // load hand_strength LUT
-    nda::matrix<double> data_points({1, 1}, 0);
-    utils::CerealLoad("out/hand_strengths/river_lut_nda.cereal",
-                      &data_points, true);
+    nda::matrix<double> data_points;
+    hand_strengths::RiverLUT_File(utils::FileAction::Load, &data_points, true);
 
     // run clustering 10 times
     clustering::KMeans<double, clustering::EuclideanDistance> k(200);

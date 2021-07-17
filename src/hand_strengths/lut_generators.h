@@ -47,11 +47,11 @@ nda::matrix<HistCount> TurnLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-nda::matrix<OCHS_VectT> RiverLUT(
+nda::matrix<double> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-nda::matrix<OCHS_VectT> OCHS_PreflopLUT(
+nda::matrix<double> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 

@@ -8,6 +8,7 @@
 #include "array/array.h"
 #include "array/matrix.h"
 #include "catch2/catch.hpp"
+#include "clustering/definitions.h"
 #include "clustering/distance.h"
 #include "clustering/k_means.h"
 #include "utils/random.h"
@@ -66,7 +67,8 @@ TEST_CASE("Elkan 10 double points 2 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{2, 2, 0, 2, 1, 1, 1, 0, 0, 1};
+  std::vector<clustering::MeanId> correct_assignments{2, 2, 0, 2, 1, 1, 1, 0, 0,
+                                                      1};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -132,7 +134,8 @@ TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{0, 4, 0, 2, 3, 1, 4, 3, 3, 2};
+  std::vector<clustering::MeanId> correct_assignments{0, 4, 0, 2, 3, 1, 4, 3, 3,
+                                                      2};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -378,11 +381,11 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{4, 2, 4, 2, 3, 2, 4, 3, 0, 2, 0, 4,
-      1, 2, 0, 3, 0, 4, 1, 1, 0, 2, 3, 0, 3, 0, 2, 0, 1, 2, 1, 1, 3, 4, 3, 3, 0,
-      4, 0, 2, 1, 1, 1, 1, 0, 3, 2, 1, 2, 3, 3, 4, 2, 3, 1, 1, 3, 3, 1, 3, 4, 0,
-      2, 1, 1, 1, 2, 2, 3, 1, 4, 0, 1, 3, 3, 4, 4, 0, 0, 0, 4, 2, 2, 1, 0, 3, 0,
-      1, 3, 2, 4, 2, 0, 2, 1, 0, 2, 1, 3, 0};
+  std::vector<clustering::MeanId> correct_assignments{4, 2, 4, 2, 3, 2, 4, 3, 0,
+      2, 0, 4, 1, 2, 0, 3, 0, 4, 1, 1, 0, 2, 3, 0, 3, 0, 2, 0, 1, 2, 1, 1, 3, 4,
+      3, 3, 0, 4, 0, 2, 1, 1, 1, 1, 0, 3, 2, 1, 2, 3, 3, 4, 2, 3, 1, 1, 3, 3, 1,
+      3, 4, 0, 2, 1, 1, 1, 2, 2, 3, 1, 4, 0, 1, 3, 3, 4, 4, 0, 0, 0, 4, 2, 2, 1,
+      0, 3, 0, 1, 3, 2, 4, 2, 0, 2, 1, 0, 2, 1, 3, 0};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -435,7 +438,8 @@ TEST_CASE("Elkan 10 double points 1 dimension 2 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{0, 0, 0, 0, 1, 1, 0, 1, 1, 1};
+  std::vector<clustering::MeanId> correct_assignments{0, 0, 0, 0, 1, 1, 0, 1, 1,
+                                                      1};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -498,7 +502,8 @@ TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{2, 2, 0, 2, 0, 2, 1, 1, 1, 0};
+  std::vector<clustering::MeanId> correct_assignments{2, 2, 0, 2, 0, 2, 1, 1, 1,
+                                                      0};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -551,7 +556,8 @@ TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+  std::vector<clustering::MeanId> correct_assignments{1, 1, 1, 1, 1, 1, 0, 0, 0,
+                                                      0};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -1025,9 +1031,9 @@ TEST_CASE("RandomSumInit 10 int points sum 10", "[clustering][kmeans]") {
 
   REQUIRE(centers->rows() == 10);
   REQUIRE(centers->columns() == 2);
-  for (uint32_t c = 0; c < centers->rows(); ++c) {
+  for (clustering::MeanId c = 0; c < centers->rows(); ++c) {
     double row_sum = 0;
-    for (uint32_t j = 0; j < centers->columns(); ++j) {
+    for (nda::index_t j = 0; j < centers->columns(); ++j) {
       row_sum += (*centers)(c, j);
     }
     REQUIRE(row_sum == Approx(10.0));
@@ -1064,9 +1070,9 @@ TEST_CASE("RandomSumInit 10 double points sum 10", "[clustering][kmeans]") {
 
   REQUIRE(centers->rows() == 10);
   REQUIRE(centers->columns() == 2);
-  for (uint32_t c = 0; c < centers->rows(); ++c) {
+  for (clustering::MeanId c = 0; c < centers->rows(); ++c) {
     double row_sum = 0;
-    for (uint32_t j = 0; j < centers->columns(); ++j) {
+    for (nda::index_t j = 0; j < centers->columns(); ++j) {
       row_sum += (*centers)(c, j);
     }
     REQUIRE(row_sum == Approx(10.0));
@@ -1082,8 +1088,8 @@ TEST_CASE("RandomProbInit 10 int points", "[clustering][kmeans]") {
 
   REQUIRE(centers->rows() == 900);
   REQUIRE(centers->columns() == 1000);
-  for (uint32_t c = 0; c < centers->rows(); ++c) {
-    for (uint32_t j = 0; j < centers->columns(); ++j) {
+  for (clustering::MeanId c = 0; c < centers->rows(); ++c) {
+    for (nda::index_t j = 0; j < centers->columns(); ++j) {
       REQUIRE((*centers)(c, j) >= 0.0);
       REQUIRE((*centers)(c, j) < 1.0);
     }
@@ -1136,7 +1142,8 @@ TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{2, 2, 1, 2, 1, 2, 0, 0, 0, 1};
+  std::vector<clustering::MeanId> correct_assignments{2, 2, 1, 2, 1, 2, 0, 0, 0,
+                                                      1};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -1363,11 +1370,11 @@ TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<uint32_t> correct_assignments{2, 0, 0, 0, 1, 2, 1, 2, 1, 0, 1, 1,
-      1, 0, 1, 2, 2, 1, 0, 2, 1, 1, 0, 2, 1, 2, 0, 1, 2, 1, 1, 0, 2, 0, 0, 2, 0,
-      1, 2, 0, 1, 0, 0, 0, 2, 0, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0, 0, 0, 1, 0, 2, 1,
-      1, 2, 0, 1, 0, 0, 1, 2, 2, 0, 0, 1, 0, 2, 2, 2, 0, 1, 2, 1, 0, 2, 1, 2, 1,
-      2, 0, 2, 2, 1, 0, 1, 1, 0, 1, 2, 1, 2};
+  std::vector<clustering::MeanId> correct_assignments{2, 0, 0, 0, 1, 2, 1, 2, 1,
+      0, 1, 1, 1, 0, 1, 2, 2, 1, 0, 2, 1, 1, 0, 2, 1, 2, 0, 1, 2, 1, 1, 0, 2, 0,
+      0, 2, 0, 1, 2, 0, 1, 0, 0, 0, 2, 0, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0, 0, 0, 1,
+      0, 2, 1, 1, 2, 0, 1, 0, 0, 1, 2, 2, 0, 0, 1, 0, 2, 2, 2, 0, 1, 2, 1, 0, 2,
+      1, 2, 1, 2, 0, 2, 2, 1, 0, 1, 1, 0, 1, 2, 1, 2};
 
   REQUIRE(*k.assignments() == correct_assignments);
 

@@ -150,42 +150,36 @@ TEST_CASE("Turn LUT", "[.][hand_strengths][lut_generators]") {
 
 TEST_CASE("River LUT", "[.][hand_strengths][lut_generators]") {
   // Load River LUT
-  nda::matrix<hand_strengths::OCHS_VectT> river_lut({1, 1}, 0);
+  nda::matrix<double> river_lut({1, 1}, 0);
   utils::CerealLoad("out/hand_strengths/river_lut_nda.cereal",
                     &river_lut, true);
 
   // Test River LUT
-  std::array<hand_strengths::OCHS_VectT, 8> python{0.0871559633027523, 0,
-      0.4496124031007752, 0.16551724137931034, 0.9, 0.36875, 0.8589743589743589,
-      0};
-  REQUIRE(river_lut(567, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  std::array<double, 8> python{0.0871559633027523, 0, 0.4496124031007752,
+      0.16551724137931034, 0.9, 0.36875, 0.8589743589743589, 0};
+  REQUIRE(river_lut(567, nda::all) == nda::vector_ref<double>{python});
 
   python = {0.7720588235294118, 0.7105263157894737, 0.75, 0.9276315789473685,
       0.9327731092436975, 0.8427672955974843, 0.94, 0.8333333333333334};
-  REQUIRE(river_lut(84729, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(river_lut(84729, nda::all) == nda::vector_ref<double>{python});
 
   python = {1, 1, 0.8666666666666667, 1, 0.9680851063829787, 0.5714285714285714,
       0.6078431372549019, 0};
-  REQUIRE(river_lut(8372956, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(river_lut(8372956, nda::all) == nda::vector_ref<double>{python});
 
   python = {0.7470588235294118, 0.7894736842105263, 0.9508196721311475,
       0.7006369426751592, 0.5841584158415841, 0.9808917197452229,
       0.7478991596638656, 0.1935483870967742};
-  REQUIRE(river_lut(74629159, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(river_lut(74629159, nda::all) == nda::vector_ref<double>{python});
 
   python = {0.6502463054187192, 0, 0.01694915254237288, 0.08630952380952381, 0,
       0.08041958041958042, 0, 0};
-  REQUIRE(river_lut(112294656, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(river_lut(112294656, nda::all) == nda::vector_ref<double>{python});
 }  // TEST_CASE "River LUT"
 
 TEST_CASE("OCHS preflop LUT", "[.][hand_strengths][lut_generators]") {
   // Load OCHS Preflop LUT
-  nda::matrix<hand_strengths::OCHS_VectT> ochs_pflop_lut({1, 1}, 0);
+  nda::matrix<double> ochs_pflop_lut({1, 1}, 0);
   utils::CerealLoad("out/hand_strengths/ochs_preflop_lut_nda.cereal",
                     &ochs_pflop_lut, true);
 
@@ -196,15 +190,13 @@ TEST_CASE("OCHS preflop LUT", "[.][hand_strengths][lut_generators]") {
   deck::Indexer handcalc(1, {2});
 
   // Test 4s4h
-  std::array<hand_strengths::OCHS_VectT, 8> python{0.7067924301854952,
-      0.63773542235149039, 0.51629005043410425, 0.62033047285995946,
-      0.50607466814971436, 0.57061730769146102, 0.49623908415211315,
-      0.18910648209329986};
+  std::array<double, 8> python{0.7067924301854952, 0.63773542235149039,
+      0.51629005043410425, 0.62033047285995946, 0.50607466814971436,
+      0.57061730769146102, 0.49623908415211315, 0.18910648209329986};
   c1 = deck::ISOCardFromStr("4s");
   c2 = deck::ISOCardFromStr("4h");
   index = handcalc.index({c1, c2});
-  REQUIRE(ochs_pflop_lut(index, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 
   // Test 6s6h
   python = {0.80545143648256701, 0.69675317583793528, 0.58721879993272219,
@@ -213,8 +205,7 @@ TEST_CASE("OCHS preflop LUT", "[.][hand_strengths][lut_generators]") {
   c1 = deck::ISOCardFromStr("6s");
   c2 = deck::ISOCardFromStr("6h");
   index = handcalc.index({c1, c2});
-  REQUIRE(ochs_pflop_lut(index, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 
   // Test KsQs
   python = {0.66592875635067472, 0.68572378956421143, 0.65743699894924057,
@@ -223,8 +214,7 @@ TEST_CASE("OCHS preflop LUT", "[.][hand_strengths][lut_generators]") {
   c1 = deck::ISOCardFromStr("Ks");
   c2 = deck::ISOCardFromStr("Qs");
   index = handcalc.index({c1, c2});
-  REQUIRE(ochs_pflop_lut(index, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 
   // Test TsJs
   python = {0.67918141757288086, 0.71507626721815865, 0.68650369512587017,
@@ -233,6 +223,5 @@ TEST_CASE("OCHS preflop LUT", "[.][hand_strengths][lut_generators]") {
   c1 = deck::ISOCardFromStr("Ts");
   c2 = deck::ISOCardFromStr("Js");
   index = handcalc.index({c1, c2});
-  REQUIRE(ochs_pflop_lut(index, nda::all) ==
-          nda::vector_ref<hand_strengths::OCHS_VectT>{python});
+  REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 }  // TEST_CASE "OCHS preflop LUT"

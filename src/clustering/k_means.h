@@ -17,6 +17,7 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
+#include "clustering/definitions.h"
 #include "utils/combination_matrix.h"
 #include "utils/random.h"
 #include "utils/timer.h"
@@ -28,15 +29,15 @@ enum InitProc { kPlusPlus, kRandomSum, kRandomProb };
 template <typename T, template <class, class> class Distance>
 class KMeans {
  public:
-  explicit KMeans(uint32_t k)
+  explicit KMeans(MeansN k)
       : k_{k}, clusters_{nullptr}, assignments_{nullptr}, loss_{INFINITY} {}
-  KMeans(uint32_t k, std::unique_ptr<nda::matrix<double>> initial_clusters)
+  KMeans(MeansN k, std::unique_ptr<nda::matrix<double>> initial_clusters)
       : k_{k}, clusters_{std::move(initial_clusters)}, assignments_{nullptr},
         loss_{INFINITY} {}
 
   KMeans(const KMeans& other) : k_{other.k_}, loss_{other.loss_} {
     clusters_ = std::make_unique<nda::matrix<double>>(*other.clusters_);
-    assignments_ = std::make_unique<std::vector<uint32_t>>(*other.assignments_);
+    assignments_ = std::make_unique<std::vector<MeanId>>(*other.assignments_);
   }
   KMeans& operator=(const KMeans& other) = delete;
 
@@ -55,7 +56,7 @@ class KMeans {
                         utils::Random::Seed seed = utils::Random::Seed()) {
     // Variables to store the clustering with the lowest loss
     std::unique_ptr<nda::matrix<double>> clusters(nullptr);
-    std::unique_ptr<std::vector<uint32_t>> assignments(nullptr);
+    std::unique_ptr<std::vector<MeanId>> assignments(nullptr);
     double loss = INFINITY;
     uint32_t best_trial = 0;
 
@@ -129,8 +130,8 @@ class KMeans {
     // Compute and store the distance between each cluster and every other
     // cluster
     utils::CombinationMatrix<double> cluster_dists(k_);
-    for (uint32_t c1 = 0; c1 < k_; ++c1) {
-      for (uint32_t c2 = c1 + 1; c2 < k_; ++c2) {
+    for (MeanId c1 = 0; c1 < k_; ++c1) {
+      for (MeanId c2 = c1 + 1; c2 < k_; ++c2) {
         cluster_dists(c1, c2) = Distance<double, double>::Compute(
             (*clusters)(c1, nda::all), (*clusters)(c2, nda::all));
       }
@@ -145,15 +146,15 @@ class KMeans {
     // to the closest cluster as the upper bound for each point.
     std::vector<double> upper_bounds(data.rows());
     std::vector<bool> upper_bound_loose(data.rows(), true);
-    auto assignments = std::make_unique<std::vector<uint32_t>>(data.rows());
-    for (uint32_t x = 0; x < data.rows(); ++x) {
+    auto assignments = std::make_unique<std::vector<MeanId>>(data.rows());
+    for (nda::index_t x = 0; x < data.rows(); ++x) {
       (*assignments)[x] = 0;
       upper_bounds[x] = Distance<T, double>::Compute(data(x, nda::all),
                                                      (*clusters)(0, nda::all));
       lower_bounds(x, 0) = upper_bounds[x];
 
-      uint32_t& c = (*assignments)[x];
-      for (uint32_t cprime = 1; cprime < k_; ++cprime) {
+      MeanId& c = (*assignments)[x];
+      for (MeanId cprime = 1; cprime < k_; ++cprime) {
         // If this cluster might be closer than the current closest from
         // lemma 1, then calculate the distance to this cluster. Also set the
         // lower bound of the distance between x and this cluster to the
@@ -196,17 +197,17 @@ class KMeans {
     while (!converged) {
       // Step 1
       // For all centers c and c', compute the distance between them
-      for (uint32_t c1 = 0; c1 < k_; ++c1) {
-        for (uint32_t c2 = c1 + 1; c2 < k_; ++c2) {
+      for (MeanId c1 = 0; c1 < k_; ++c1) {
+        for (MeanId c2 = c1 + 1; c2 < k_; ++c2) {
           cluster_dists(c1, c2) = Distance<double, double>::Compute(
               (*clusters)(c1, nda::all), (*clusters)(c2, nda::all));
         }
       }
       // From each cluster, compute and store 1/2 the distance to the nearest
       // other cluster
-      for (uint32_t c1 = 0; c1 < k_; ++c1) {
+      for (MeanId c1 = 0; c1 < k_; ++c1) {
         bool uninitialized = true;
-        for (uint32_t c2 = 0; c2 < k_; ++c2) {
+        for (MeanId c2 = 0; c2 < k_; ++c2) {
           if (c1 == c2) continue;
           if (uninitialized) {
             half_min_cluster_dists[c1] = cluster_dists(c1, c2)/2;
@@ -223,12 +224,12 @@ class KMeans {
       for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread] = std::thread([&, thread]() {
               for (nda::index_t x = thread; x < data.rows(); x += n_threads) {
-                uint32_t& c_x = (*assignments)[x];
+                MeanId& c_x = (*assignments)[x];
 
                 // Step 2
                 if (upper_bounds[x] <= half_min_cluster_dists[c_x]) continue;
 
-                for (uint32_t c = 0; c < k_; ++c) {
+                for (MeanId c = 0; c < k_; ++c) {
                   // Step 3(i)
                   if (c == c_x) continue;
 
@@ -271,15 +272,15 @@ class KMeans {
       // First, sum the data points assigned to each cluster
       nda::matrix_shape<> means_shape{k_, data.columns()};
       auto means = std::make_unique<nda::matrix<double>>(means_shape, 0);
-      std::vector<uint32_t> cluster_counts(k_, 0);
-      for (uint32_t x = 0; x < data.rows(); ++x) {
-        uint32_t c = (*assignments)[x];
+      std::vector<nda::size_t> cluster_counts(k_, 0);
+      for (nda::index_t x = 0; x < data.rows(); ++x) {
+        MeanId c = (*assignments)[x];
         (*means)(c, nda::all) += data(x, nda::all);
         cluster_counts[c] += 1;
       }
       // Find any empty clusters
-      std::vector<uint32_t> empty_clusters;
-      for (uint32_t c = 0; c < k_; ++c) {
+      std::vector<MeansN> empty_clusters;
+      for (MeanId c = 0; c < k_; ++c) {
         if (cluster_counts[c] == 0) {
           empty_clusters.push_back(c);
         }
@@ -302,12 +303,12 @@ class KMeans {
         // Fill each empty cluster by selecting a point with kmeans++, removing
         // that point from its current cluster, then adding it to the empty
         // cluster.
-        for (uint32_t i = 0; i < empty_clusters.size(); ++i) {
+        for (std::size_t i = 0; i < empty_clusters.size(); ++i) {
           double selection = std_unif(rng());
-          uint32_t x = InitPlusPlusIter(
+          nda::index_t x = InitPlusPlusIter(
             data, &squared_dists, &squared_sum, selection);
-          uint32_t old_c = (*assignments)[x];
-          uint32_t new_c = empty_clusters[i];
+          MeanId old_c = (*assignments)[x];
+          MeanId new_c = empty_clusters[i];
 
           (*means)(old_c, nda::all) -= data(x, nda::all);
           (*means)(new_c, nda::all) += data(x, nda::all);
@@ -325,14 +326,14 @@ class KMeans {
 
       // Step 5
       std::vector<double> cluster_to_means(k_);
-      for (uint32_t c = 0; c < k_; ++c) {
+      for (MeanId c = 0; c < k_; ++c) {
         cluster_to_means[c] = Distance<double, double>::Compute(
             (*clusters)(c, nda::all), (*means)(c, nda::all));
       }
       for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread] = std::thread([&, thread]() {
               for (nda::index_t x = thread; x < data.rows(); x += n_threads) {
-                for (uint32_t c = 0; c < k_; ++c) {
+                for (MeanId c = 0; c < k_; ++c) {
                   double dist_diff = lower_bounds(x, c) - cluster_to_means[c];
                   lower_bounds(x, c) = std::max(dist_diff, 0.0);
                 }  // for c
@@ -346,8 +347,8 @@ class KMeans {
       if (verbose) t.StopAndReset("step 5");
 
       // Step 6
-      for (uint32_t x = 0; x < data.rows(); ++x) {
-        uint32_t c_x = (*assignments)[x];
+      for (nda::index_t x = 0; x < data.rows(); ++x) {
+        MeanId c_x = (*assignments)[x];
         upper_bounds[x] = upper_bounds[x] + cluster_to_means[c_x];
         upper_bound_loose[x] = true;
       }
@@ -392,10 +393,10 @@ class KMeans {
     std::vector<double> squared_dists(data.rows(), INFINITY);
     double squared_sum = data.rows();
 
-    std::vector<uint32_t> clusters(k_);
+    std::vector<nda::index_t> clusters(k_);
 
     // Assign each cluster
-    for (uint32_t c = 0; c < k_; ++c) {
+    for (MeanId c = 0; c < k_; ++c) {
       double selection = std_unif(rng());
       clusters[c] = InitPlusPlusIter(data, &squared_dists, &squared_sum,
                                      selection);
@@ -408,7 +409,7 @@ class KMeans {
     // Copy the values of the cluster data points into a new Matrix
     auto filled_clusters = std::make_unique<nda::matrix<double>>(
         nda::matrix_shape<>{k_, data.columns()});
-    for (uint32_t c = 0; c < k_; ++c) {
+    for (MeanId c = 0; c < k_; ++c) {
       (*filled_clusters)(c, nda::all).copy_elems(data(clusters[c], nda::all));
     }
     clusters_ = std::move(filled_clusters);
@@ -424,23 +425,23 @@ class KMeans {
   void RandomSumInit(const nda::matrix<T>& data,
                      utils::Random::Seed seed = utils::Random::Seed()) {
     T row_sum = 0;
-    for (uint32_t j = 0; j < data.columns(); ++j) {
+    for (nda::index_t j = 0; j < data.columns(); ++j) {
       row_sum += data(0, j);
     }
 
     utils::Random rng(seed);
-    std::uniform_int_distribution<uint32_t> choose_bucket(0,
-                                                          data.columns() - 1);
+    std::uniform_int_distribution<nda::index_t> choose_bucket(
+        0, data.columns() - 1);
     std::uniform_real_distribution<double> choose_amount(0.0, row_sum + 1);
 
     auto clusters = std::make_unique<nda::matrix<double>>(
         nda::matrix_shape<>{k_, data.columns()});
 
     // Assign each cluster
-    for (uint32_t c = 0; c < k_; ++c) {
+    for (MeanId c = 0; c < k_; ++c) {
       double sum_remaining = row_sum;
       while (sum_remaining > 0) {
-        uint32_t bucket = choose_bucket(rng());
+        nda::index_t bucket = choose_bucket(rng());
         double amount = choose_amount(rng());
         if (amount > sum_remaining) {
           amount = sum_remaining;
@@ -469,8 +470,8 @@ class KMeans {
         nda::matrix_shape<>{k_, data.columns()});
 
     // Assign each cluster
-    for (uint32_t c = 0; c < k_; ++c) {
-      for (uint32_t j = 0; j < data.columns(); ++j) {
+    for (MeanId c = 0; c < k_; ++c) {
+      for (nda::index_t j = 0; j < data.columns(); ++j) {
         (*clusters)(c, j) = choose_amount(rng());
       }  // for j
     }  // for c
@@ -482,7 +483,7 @@ class KMeans {
     return clusters_.get();
   }
 
-  const std::vector<uint32_t>* assignments() const {
+  const std::vector<MeanId>* assignments() const {
     return assignments_.get();
   }
 
@@ -503,14 +504,14 @@ class KMeans {
 
     @returns Index of the point in data that is selected to be the new cluster.
   */
-  uint32_t InitPlusPlusIter(const nda::matrix<T>& data,
-                            std::vector<double>* squared_dists,
-                            double* squared_sum, double selection) {
-    uint32_t new_cluster = 0;
+  nda::index_t InitPlusPlusIter(const nda::matrix<T>& data,
+                                std::vector<double>* squared_dists,
+                                double* squared_sum, double selection) {
+    nda::index_t new_cluster = 0;
 
     // Select the next cluster based on the D^2 probability distribution
     double cumulative_probability = 0;
-    for (uint32_t x = 0; x < data.rows(); ++x) {
+    for (nda::index_t x = 0; x < data.rows(); ++x) {
       // If this is the first iteration, give every point equal probability
       if ((*squared_dists)[x] == INFINITY) {
         cumulative_probability += 1.0 / data.rows();
@@ -530,7 +531,7 @@ class KMeans {
     // squared distance from that point to the new cluster. Also update
     // squared_sum as we go along.
     *squared_sum = 0;
-    for (uint32_t x = 0; x < data.rows(); ++x) {
+    for (nda::index_t x = 0; x < data.rows(); ++x) {
       double new_dist = Distance<T, T>::Compute(data(new_cluster, nda::all),
                                                 data(x, nda::all));
       double new_sq_dist = std::pow(new_dist, 2);
@@ -545,10 +546,10 @@ class KMeans {
 
   double ComputeLoss(const nda::matrix<T>& data,
                      const nda::matrix<double>& clusters,
-                     const std::vector<uint32_t>& assignments) {
+                     const std::vector<MeanId>& assignments) {
     double squared_sum = 0;
-    for (uint32_t x = 0; x < data.rows(); ++x) {
-      uint32_t c_x = assignments[x];
+    for (nda::index_t x = 0; x < data.rows(); ++x) {
+      MeanId c_x = assignments[x];
       double dist_to_cluster = Distance<T, double>::Compute(
           data(x, nda::all), clusters(c_x, nda::all));
       squared_sum += std::pow(dist_to_cluster, 2);
@@ -556,9 +557,9 @@ class KMeans {
     return squared_sum/data.rows();
   }  // ComputeLoss()
 
-  const uint32_t k_;
+  const MeansN k_;
   std::unique_ptr<nda::matrix<double>> clusters_;
-  std::unique_ptr<std::vector<uint32_t>> assignments_;
+  std::unique_ptr<std::vector<MeanId>> assignments_;
   double loss_;
 };  // KMeans
 

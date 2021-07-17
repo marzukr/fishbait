@@ -4,12 +4,12 @@
 #define SRC_HAND_STRENGTHS_DEFINITIONS_H_
 
 #include <cstdint>
+#include <string>
 
 namespace hand_strengths {
 
 using OCHS_Id = uint8_t;
 using OCHS_N = OCHS_Id;
-using OCHS_VectT = double;
 
 constexpr OCHS_N kOCHS_N = 8;
 

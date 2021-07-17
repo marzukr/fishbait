@@ -17,7 +17,8 @@ TEST_CASE("Save and load vector test", "[utils][cereal]") {
     save_vect[i] = i + i / 10.0;
   }
   std::filesystem::remove("out/tests/vector_save_test.cereal");
-  utils::CerealSave("out/tests/vector_save_test.cereal", &save_vect);
+  utils::Cereal(utils::FileAction::Save, "out/tests/vector_save_test.cereal",
+                &save_vect);
 
   std::vector<double> load_vect;
   utils::CerealLoad("out/tests/vector_save_test.cereal", &load_vect);
@@ -42,7 +43,8 @@ TEST_CASE("Save and load nda test", "[utils][cereal]") {
   utils::CerealSave("out/tests/nda_save_test.cereal", &save_matrix);
 
   nda::array<int, dense_col_t> load_matrix({1, 1});
-  utils::CerealLoad("out/tests/nda_save_test.cereal", &load_matrix);
+  utils::Cereal(utils::FileAction::Load, "out/tests/nda_save_test.cereal",
+                &load_matrix);
   REQUIRE(load_matrix.rows() == n);
   REQUIRE(load_matrix.columns() == m);
   for (uint32_t i = 0; i < n; ++i) {
