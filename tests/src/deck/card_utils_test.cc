@@ -5,7 +5,7 @@
 
 #include "catch2/catch.hpp"
 #include "deck/card_utils.h"
-#include "deck/constants.h"
+#include "deck/definitions.h"
 
 TEST_CASE("Test SK to ISO", "[deck][cardutils]") {
   std::array<uint8_t, deck::kDeckSize> converted;

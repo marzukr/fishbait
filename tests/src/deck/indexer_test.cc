@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "catch2/catch.hpp"
-#include "deck/constants.h"
+#include "deck/definitions.h"
 #include "deck/indexer.h"
 #include "hand_strengths/ochs.h"
 

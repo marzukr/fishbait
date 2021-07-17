@@ -9,6 +9,7 @@
 #include "array/matrix.h"
 #include "deck/card_utils.h"
 #include "deck/indexer.h"
+#include "hand_strengths/definitions.h"
 #include "hand_strengths/lut_generators.h"
 #include "hand_strengths/ochs.h"
 #include "utils/cereal.h"
@@ -44,27 +45,32 @@ int main(int argc, char *argv[]) {
 
   if (!strcmp(argv[1], "preflop")) {
     // Generate preflop LUT
-    nda::matrix<uint32_t> preflop_lut = PreflopLUT(showdown_lut, true);
+    nda::matrix<hand_strengths::HistCount> preflop_lut =
+        PreflopLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/preflop_lut_nda.cereal",
                       &preflop_lut, true);
   } else if (!strcmp(argv[1], "flop")) {
     // Generate Flop LUT
-    nda::matrix<uint32_t> flop_lut = FlopLUT(showdown_lut, true);
+    nda::matrix<hand_strengths::HistCount> flop_lut =
+        FlopLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/flop_lut_nda.cereal",
                       &flop_lut, true);
   } else if (!strcmp(argv[1], "turn")) {
     // Generate Turn LUT
-    nda::matrix<uint32_t> turn_lut = TurnLUT(showdown_lut, true);
+    nda::matrix<hand_strengths::HistCount> turn_lut =
+        TurnLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/turn_lut_nda.cereal",
                       &turn_lut, true);
   } else if (!strcmp(argv[1], "river")) {
     // Generate River LUT
-    nda::matrix<double> river_lut = RiverLUT(showdown_lut, true);
+    nda::matrix<hand_strengths::OCHS_VectT> river_lut =
+        RiverLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/river_lut_nda.cereal",
                       &river_lut, true);
   } else if (!strcmp(argv[1], "ochs_preflop")) {
     // Generate OCHS Preflop LUT
-    nda::matrix<double> ochs_pflop_lut = OCHS_PreflopLUT(showdown_lut, true);
+    nda::matrix<hand_strengths::OCHS_VectT> ochs_pflop_lut =
+        OCHS_PreflopLUT(showdown_lut, true);
     utils::CerealSave("out/hand_strengths/ochs_preflop_lut_nda.cereal",
                       &ochs_pflop_lut, true);
   }

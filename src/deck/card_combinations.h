@@ -8,8 +8,7 @@
 #include <vector>
 
 #include "deck/card_utils.h"
-#include "deck/constants.h"
-#include "deck/types.h"
+#include "deck/definitions.h"
 
 namespace deck {
 

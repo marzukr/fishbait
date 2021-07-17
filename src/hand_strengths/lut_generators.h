@@ -3,11 +3,16 @@
 #ifndef SRC_HAND_STRENGTHS_LUT_GENERATORS_H_
 #define SRC_HAND_STRENGTHS_LUT_GENERATORS_H_
 
+#include <cstdint>
 #include <vector>
 
 #include "array/array.h"
 #include "array/matrix.h"
+#include "deck/definitions.h"
+#include "deck/indexer.h"
+#include "hand_strengths/definitions.h"
 #include "hand_strengths/ochs.h"
+#include "poker_engine/definitions.h"
 
 namespace hand_strengths {
 
@@ -24,28 +29,29 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose = false);
   @param showdown_lut The showdown LUT to use.
   @param verbose Option to print progress.
 */
-nda::matrix<uint32_t> EHS_LUT(const uint32_t lut_size, const uint32_t buckets,
-    const uint32_t simulation_size, const uint32_t lut_round,
+nda::matrix<HistCount> EHS_LUT(const hand_index_t lut_size,
+    const HistBucketN buckets, const deck::CardN simulation_cards,
+    const poker_engine::RoundN iso_round, deck::Indexer* isocalc,
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-nda::matrix<uint32_t> PreflopLUT(
+nda::matrix<HistCount> PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-nda::matrix<uint32_t> FlopLUT(
+nda::matrix<HistCount> FlopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-nda::matrix<uint32_t> TurnLUT(
+nda::matrix<HistCount> TurnLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-nda::matrix<double> RiverLUT(
+nda::matrix<OCHS_VectT> RiverLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-nda::matrix<double> OCHS_PreflopLUT(
+nda::matrix<OCHS_VectT> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 

@@ -14,8 +14,8 @@
 #include <string>
 
 #include "SKPokerEval/src/SevenEval.h"
-#include "deck/types.h"
-#include "poker_engine/types.h"
+#include "deck/definitions.h"
+#include "poker_engine/definitions.h"
 #include "utils/fraction.h"
 #include "utils/random.h"
 

@@ -6,8 +6,8 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
-#include "deck/indexer.h"
 #include "deck/card_utils.h"
+#include "deck/indexer.h"
 #include "utils/cereal.h"
 
 TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {

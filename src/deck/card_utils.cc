@@ -8,7 +8,7 @@
 extern "C" {
   #include "hand-isomorphism/src/deck.h"
 }
-#include "deck/types.h"
+#include "deck/definitions.h"
 
 namespace deck {
 

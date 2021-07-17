@@ -11,8 +11,8 @@
 extern "C" {
   #include "hand-isomorphism/src/hand_index.h"
 }
-#include "deck/types.h"
-#include "poker_engine/types.h"
+#include "deck/definitions.h"
+#include "poker_engine/definitions.h"
 
 namespace deck {
 

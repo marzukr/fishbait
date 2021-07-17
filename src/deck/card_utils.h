@@ -7,7 +7,7 @@
 #include <string>
 
 #include "SKPokerEval/src/Deckcards.h"
-#include "deck/types.h"
+#include "deck/definitions.h"
 
 namespace deck {
 
