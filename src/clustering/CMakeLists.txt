@@ -7,4 +7,3 @@ target_link_libraries(clustering INTERFACE Threads::Threads)
 
 add_executable(clustering.out main.cc)
 target_link_libraries(clustering.out clustering)
-coverage_counter_zero(clustering.out)

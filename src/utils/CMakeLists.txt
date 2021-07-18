@@ -8,4 +8,3 @@ add_library(
   random.h
   timer.h
   )
-coverage_counter_zero(utils)

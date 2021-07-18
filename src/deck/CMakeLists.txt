@@ -8,4 +8,3 @@ add_library(
   indexer.h
   )
 target_link_libraries(deck handisomorphism)
-coverage_counter_zero(deck)

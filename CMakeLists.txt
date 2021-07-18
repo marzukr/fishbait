@@ -64,20 +64,13 @@ function(clean_gcov_files target)
   set(clean_files ${clean_files} ${target_gcov_files})
   set_target_properties(${target} PROPERTIES
                         ADDITIONAL_CLEAN_FILES "${clean_files}")
-endfunction()
 
-#[[ Configures such that the target's .gcda coverage files are deleted before it
-    is built so that there are no gcda merge conflicts. This must be called from
-    each subdirectory for each target since this add_custom_command signature
-    cannot be called from a different directory. ]]
-function(coverage_counter_zero target)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    get_target_property(build_path ${target} BINARY_DIR)
-    add_custom_command(TARGET ${target} PRE_BUILD
-      COMMAND lcov --zerocounters --directory 
-              ${build_path}/CMakeFiles/${target}.dir
-      )
-  endif()
+  # Deletes the .gcno and .gcda coverage files of this target
+  add_custom_target(clear_${target}_coverage_files
+    COMMAND ${CMAKE_COMMAND} -E rm -f ${target_gcov_files}
+    COMMENT "Clearing coverage files for ${target}"
+    )
+  add_dependencies(${target} clear_${target}_coverage_files)
 endfunction()
 
 #[[ Adds the given path as a subdirectory, runs clean_gcov_files on all targets
