@@ -4,7 +4,7 @@ add_library(
   card_combinations.h
   card_utils.cc
   card_utils.h
-  constants.h
+  definitions.h
   indexer.h
   )
 target_link_libraries(deck handisomorphism)

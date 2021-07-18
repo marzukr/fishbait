@@ -1,5 +1,7 @@
 add_library(
   hand_strengths SHARED
+  definitions.h
+  lut_files.h
   lut_generators.cc
   lut_generators.h
   ochs.cc
