@@ -15,7 +15,6 @@
 #include "blueprint/definitions.h"
 #include "poker_engine/definitions.h"
 #include "poker_engine/node.h"
-#include "utils/fraction.h"
 
 namespace blueprint {
 
@@ -83,7 +82,7 @@ class SequenceTable {
         [](const nda::size_t sum, const nda::matrix<SequenceId>& round_table) {
           return sum + round_table.size();
         });
-    size_t bytes = sizeof(SequenceId) * elements;
+    std::size_t bytes = sizeof(SequenceId) * elements;
     double memory = bytes / 1073741824.0;
     os << "SequenceTable<" << +kPlayers << ", " << kActions << ">" << " { "
        << "preflop rows: " << s.States(poker_engine::Round::kPreFlop) << "; "

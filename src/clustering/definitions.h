@@ -10,6 +10,8 @@ namespace clustering {
 using MeanId = uint32_t;
 using MeansN = MeanId;
 
+using CardCluster = MeanId;
+
 }  // namespace clustering
 
 #endif  // SRC_CLUSTERING_DEFINITIONS_H_

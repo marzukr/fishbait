@@ -6,7 +6,9 @@
 #include <cstdint>
 #include <limits>
 
+#include "clustering/definitions.h"
 #include "poker_engine/definitions.h"
+#include "poker_engine/node.h"
 
 namespace blueprint {
 
@@ -19,6 +21,11 @@ constexpr SequenceId kIllegalId = std::numeric_limits<SequenceId>::max();
 struct Sequence {
   SequenceId id;
   poker_engine::Round round;
+};
+
+struct Infoset {
+  Sequence sequence;
+  clustering::CardCluster card_cluster;
 };
 
 struct Action {
@@ -39,6 +46,9 @@ struct Action {
            max_rotation == rhs.max_rotation && max_round == rhs.max_round;
   }
 };
+
+using Regret = int32_t;
+using ActionCount = uint32_t;
 
 }  // namespace blueprint
 
