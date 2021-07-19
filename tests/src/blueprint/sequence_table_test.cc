@@ -1,6 +1,8 @@
 // Copyright 2021 Marzuk Rashid
 
-#include <vector>
+#include <ios>
+#include <iostream>
+#include <sstream>
 
 #include "array/array.h"
 #include "catch2/catch.hpp"
@@ -20,6 +22,13 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
            row_counter[3] == 0));
 
   blueprint::SequenceTable<6, 2> seq{actions, start_state};
+
+  std::stringstream ss;
+  ss.precision(10);
+  ss << std::fixed << seq;
+  std::string seq_str = ss.str();
+  REQUIRE(seq_str == "SequenceTable<6, 2> { preflop rows: 62; flop rows: 0; "
+                     "turn rows: 0; river rows: 0; memory: 0.0000004619 GB; }");
 
   using blueprint::kLeafId;
   std::vector<blueprint::SequenceId> preflop_table = {1, 31, 2, 16, 3, 9, 4, 6,
@@ -76,6 +85,14 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
            row_counter[2] == 180 && row_counter[3] == 180));
 
   blueprint::SequenceTable<3, 4> seq{actions, start_state};
+
+  std::stringstream ss;
+  ss.precision(10);
+  ss << std::fixed << seq;
+  std::string seq_str = ss.str();
+  REQUIRE(seq_str == "SequenceTable<3, 4> { preflop rows: 98; flop rows: 180; "
+                     "turn rows: 180; river rows: 180; "
+                     "memory: 0.0000074953 GB; }");
 
   using blueprint::kIllegalId;
   using blueprint::kLeafId;

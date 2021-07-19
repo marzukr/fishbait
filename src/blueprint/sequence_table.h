@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <numeric>
 #include <ostream>
 #include <stdexcept>
 #include <vector>
@@ -77,12 +78,19 @@ class SequenceTable {
   }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
-    nda::size_t elements = s.table_.rows() * s.table_.columns();
+    nda::size_t elements = std::accumulate(s.table_,
+        s.table_ + poker_engine::kNRounds, 0,
+        [](const nda::size_t sum, const nda::matrix<SequenceId>& round_table) {
+          return sum + round_table.size();
+        });
     size_t bytes = sizeof(SequenceId) * elements;
-    double memory = bytes / 1.0e+9;
-    os << "SequenceTable<" << +kPlayers << ">" << " { "
-       << "rows: " << s.States() << "; "
-       << "memory: ~" << memory << " GB; "
+    double memory = bytes / 1073741824.0;
+    os << "SequenceTable<" << +kPlayers << ", " << kActions << ">" << " { "
+       << "preflop rows: " << s.States(poker_engine::Round::kPreFlop) << "; "
+       << "flop rows: " << s.States(poker_engine::Round::kFlop) << "; "
+       << "turn rows: " << s.States(poker_engine::Round::kTurn) << "; "
+       << "river rows: " << s.States(poker_engine::Round::kRiver) << "; "
+       << "memory: " << memory << " GB; "
        << "}";
     return os;
   }
