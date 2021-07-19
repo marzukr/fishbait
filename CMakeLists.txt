@@ -55,20 +55,21 @@ function(clean_gcov_files target)
   get_target_property(build_path ${target} BINARY_DIR)
   foreach(source ${sources})
     if(source MATCHES "((\.c)|(\.cc))$")
-      set(target_gcov_files ${target_gcov_files}
-          "${build_path}/CMakeFiles/${target}.dir/${source}.gcno"
+      set(target_gcda_files ${target_gcda_files}
           "${build_path}/CMakeFiles/${target}.dir/${source}.gcda")
+      set(target_gcno_files ${target_gcno_files}
+          "${build_path}/CMakeFiles/${target}.dir/${source}.gcno")
     endif()
   endforeach()
   get_target_property(clean_files ${target} ADDITIONAL_CLEAN_FILES)
-  set(clean_files ${clean_files} ${target_gcov_files})
+  set(clean_files ${clean_files} ${target_gcda_files} ${target_gcno_files})
   set_target_properties(${target} PROPERTIES
                         ADDITIONAL_CLEAN_FILES "${clean_files}")
 
   # Deletes the .gcno and .gcda coverage files of this target
   add_custom_target(clear_${target}_coverage_files
-    COMMAND ${CMAKE_COMMAND} -E rm -f ${target_gcov_files}
-    COMMENT "Clearing coverage files for ${target}"
+    COMMAND ${CMAKE_COMMAND} -E rm -f ${target_gcda_files}
+    COMMENT "Clearing coverage counts for ${target}"
     )
   add_dependencies(${target} clear_${target}_coverage_files)
 endfunction()

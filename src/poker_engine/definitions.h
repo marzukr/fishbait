@@ -19,6 +19,14 @@ enum class Action : uint8_t { kFold, kCheckCall, kBet, kAllIn };
 
 constexpr RoundN kNRounds = 4;
 
+inline RoundId GetRoundId(Round round) {
+  return static_cast<RoundId>(round);
+}
+
+inline Round GetRound(RoundId round_id) {
+  return Round{round_id};
+}
+
 }  // namespace poker_engine
 
 #endif  // SRC_POKER_ENGINE_DEFINITIONS_H_

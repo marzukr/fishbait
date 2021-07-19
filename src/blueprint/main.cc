@@ -24,13 +24,17 @@ int main() {
 //      {poker_engine::Action::kBet, 2.0, 1, poker_engine::Round::kFlop},
 //      {poker_engine::Action::kBet, 3.0, 1, poker_engine::Round::kPreFlop},
 //      {poker_engine::Action::kAllIn}};
-  std::vector<blueprint::Action> actions =
+  blueprint::Action actions[5] =
       {{poker_engine::Action::kFold},
        {poker_engine::Action::kCheckCall},
        {poker_engine::Action::kBet, 0.5, 1},
        {poker_engine::Action::kBet, 1.0},
        {poker_engine::Action::kAllIn}};
   poker_engine::Node<6> start_state;
-  uint32_t sequences = blueprint::SequenceTable<6>::Count(actions, start_state);
-  std::cout << sequences << std::endl;
+  blueprint::SequenceN row_counter[poker_engine::kNRounds];
+  blueprint::SequenceTable<6, 5>::Count(actions, start_state, row_counter);
+  std::cout << row_counter[0] << std::endl;
+  std::cout << row_counter[1] << std::endl;
+  std::cout << row_counter[2] << std::endl;
+  std::cout << row_counter[3] << std::endl;
 }

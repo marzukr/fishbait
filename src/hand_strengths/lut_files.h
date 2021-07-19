@@ -11,41 +11,44 @@
 
 namespace hand_strengths {
 
-void ShowdownLUT_File(utils::FileAction action,
-                      std::vector<ShowdownStrength>* data_points,
-                      bool verbose = false) {
+inline void ShowdownLUT_File(utils::FileAction action,
+                             std::vector<ShowdownStrength>* data_points,
+                             bool verbose = false) {
   utils::Cereal(action, "out/hand_strengths/showdown_lut_vector.cereal",
                 data_points, verbose);
 }
 
-void PreflopLUT_File(utils::FileAction action,
-                     nda::matrix<HistCount>* data_points,
-                     bool verbose = false) {
+inline void PreflopLUT_File(utils::FileAction action,
+                            nda::matrix<HistCount>* data_points,
+                            bool verbose = false) {
   utils::Cereal(action, "out/hand_strengths/preflop_lut_nda.cereal",
                 data_points, verbose);
 }
 
-void FlopLUT_File(utils::FileAction action, nda::matrix<HistCount>* data_points,
-                  bool verbose = false) {
+inline void FlopLUT_File(utils::FileAction action,
+                         nda::matrix<HistCount>* data_points,
+                         bool verbose = false) {
   utils::Cereal(action, "out/hand_strengths/flop_lut_nda.cereal", data_points,
                 verbose);
 }
 
-void TurnLUT_File(utils::FileAction action, nda::matrix<HistCount>* data_points,
-                  bool verbose = false) {
+inline void TurnLUT_File(utils::FileAction action,
+                         nda::matrix<HistCount>* data_points,
+                         bool verbose = false) {
   utils::Cereal(action, "out/hand_strengths/turn_lut_nda.cereal", data_points,
                 verbose);
 }
 
-void RiverLUT_File(utils::FileAction action, nda::matrix<double>* data_points,
-                   bool verbose = false) {
+inline void RiverLUT_File(utils::FileAction action,
+                          nda::matrix<double>* data_points,
+                          bool verbose = false) {
   utils::Cereal(action, "out/hand_strengths/river_lut_nda.cereal", data_points,
                 verbose);
 }
 
-void OCHS_PreflopLUT_File(utils::FileAction action,
-                          nda::matrix<double>* data_points,
-                          bool verbose = false) {
+inline void OCHS_PreflopLUT_File(utils::FileAction action,
+                                 nda::matrix<double>* data_points,
+                                 bool verbose = false) {
   utils::Cereal(action, "out/hand_strengths/ochs_preflop_lut_nda.cereal",
                 data_points, verbose);
 }
