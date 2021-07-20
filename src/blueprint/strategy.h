@@ -75,6 +75,29 @@ class Strategy {
   */
   int SampleAction(Infoset i) const;
 
+  /*
+    @brief Recursively iterates through actions and card dealings and thus 
+           sequenceID/cardID combinations
+
+    @param sequenceID ID of current action sequence
+    @param cardID ID of card infoset
+    @param index of current player
+  */
+  void UpdateStrategy(blueprint::sequenceID sequenceID, uint32_t cardID,
+                      uint8_t player);
+
+  /*
+    @brief Recursively iterates over game tree (by sampling action from current 
+           regrets) and updates regrets table with outcome 
+
+    @param sequenceID ID of current action sequence
+    @param cardID ID of card infoset
+    @param index of current player
+    @param whether to prune extreme regrets
+  */
+  void TraverseMCCFR(blueprint::sequenceID sequenceID, uint32_t cardID,
+                      uint8_t player, bool prune);
+
   const Regret regret_floor_;
   SequenceTable<kPlayers, kActions> sequences_;
   nda::matrix<Regret> regrets_[poker_engine::kNRounds];
