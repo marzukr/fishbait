@@ -4,11 +4,11 @@
 #define SRC_BLUEPRINT_SEQUENCE_TABLE_H_
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <numeric>
 #include <ostream>
 #include <stdexcept>
-#include <vector>
 
 #include "array/array.h"
 #include "array/matrix.h"
@@ -18,23 +18,33 @@
 
 namespace blueprint {
 
-template <poker_engine::PlayerN kPlayers, int kActions>
+template <poker_engine::PlayerN kPlayers, std::size_t kActions>
 class SequenceTable {
+ private:
+  using ActionArray = std::array<std::array<Action, kActions>,
+                                 poker_engine::kNRounds>;
+  using NumActionsArray = std::array<std::size_t, poker_engine::kNRounds>;
+  using SequenceMatrix = std::array<nda::matrix<SequenceId>,
+                                    poker_engine::kNRounds>;
+  using NumSequenceArray = std::array<SequenceN, poker_engine::kNRounds>;
+
+  ActionArray actions_;
+  const poker_engine::Node<kPlayers> start_state_;
+  SequenceMatrix table_;
+
  public:
-  SequenceTable(const Action actions[kActions],
+  SequenceTable(const std::array<Action, kActions>& actions,
                 const poker_engine::Node<kPlayers>& start_state)
-                : start_state_{start_state}, table_{} {
-    int action_counter[poker_engine::kNRounds];
+                : actions_{}, start_state_{start_state}, table_{} {
+    NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
-
-    SequenceN row_counter[poker_engine::kNRounds];
-    CountSorted(actions_, action_counter, start_state, row_counter);
-
+    NumSequenceArray row_counter = CountSorted(actions_, action_counter,
+                                               start_state);
     for (poker_engine::RoundId i = 0; i < poker_engine::kNRounds; ++i) {
       table_[i] = nda::matrix<SequenceId>{{row_counter[i], action_counter[i]}};
     }
 
-    std::fill(row_counter, row_counter + poker_engine::kNRounds, 0);
+    row_counter.fill(0);
     Generate(start_state_, actions_, action_counter, 0, row_counter,
         [&](Sequence seq, nda::index_t action_col, SequenceId val) {
           poker_engine::RoundId round_id = poker_engine::GetRoundId(seq.round);
@@ -77,8 +87,7 @@ class SequenceTable {
   }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
-    nda::size_t elements = std::accumulate(s.table_,
-        s.table_ + poker_engine::kNRounds, 0,
+    nda::size_t elements = std::accumulate(s.table_.begin(), s.table_.end(), 0,
         [](const nda::size_t sum, const nda::matrix<SequenceId>& round_table) {
           return sum + round_table.size();
         });
@@ -99,15 +108,15 @@ class SequenceTable {
 
     @param actions The actions available in the abstracted game tree.
     @param start_state The game tree node to start the table at.
-    @param row_counter The number of rows in each round.
+
+    @return Array with the number of rows in each round.
   */
-  static void Count(const Action actions[kActions],
-                    const poker_engine::Node<kPlayers>& start_state,
-                    SequenceN row_counter[poker_engine::kNRounds]) {
-    Action sorted_actions[poker_engine::kNRounds][kActions];
-    int action_counter[poker_engine::kNRounds];
-    SortActions(actions, sorted_actions, action_counter);
-    CountSorted(sorted_actions, action_counter, start_state, row_counter);
+  static NumSequenceArray Count(const std::array<Action, kActions>& actions,
+      const poker_engine::Node<kPlayers>& start_state) {
+    ActionArray sorted_actions;
+    NumActionsArray num_actions;
+    SortActions(actions, sorted_actions, num_actions);
+    return CountSorted(sorted_actions, num_actions, start_state);
   }
 
  private:
@@ -119,40 +128,42 @@ class SequenceTable {
     @param sorted_actions The actions available in the abstracted game tree.
     @param action_count The number of actions in each round.
     @param start_state The game tree node to start the table at.
-    @param row_counter The number of rows in each round.
+
+    @return An array with the number of rows in each round.
   */
-  static void CountSorted(
-      const Action sorted_actions[poker_engine::kNRounds][kActions],
-      int action_count[poker_engine::kNRounds],
-      const poker_engine::Node<kPlayers>& start_state,
-      SequenceN row_counter[poker_engine::kNRounds]) {
-    std::fill(row_counter, row_counter + poker_engine::kNRounds, 0);
-    Generate(start_state, sorted_actions, action_count, 0, row_counter,
-        [](Sequence, nda::index_t, SequenceId) {});
+  static NumSequenceArray CountSorted(const ActionArray& sorted_actions,
+      const NumActionsArray& num_actions,
+      const poker_engine::Node<kPlayers>& start_state) {
+    NumSequenceArray row_counter;
+    std::fill(row_counter.begin(), row_counter.end(), 0);
+    Generate(start_state, sorted_actions, num_actions, 0, row_counter,
+             [](Sequence, nda::index_t, SequenceId) {});
+    return row_counter;
   }
 
   /*
     @brief Sorts and counts the actions into each round.
 
     @param actions All the actions availible at any round.
-    @param sorted_actions Array to store the sorted actions.
-    @param action_counter Array to save the number of actions at each round.
+    @param sorted_actions Pointer to array to store the sorted actions.
+    @param num_actions Pointer to array to save the number of actions at each
+        round.
   */
-  static void SortActions(const Action actions[kActions],
-      Action sorted_actions[poker_engine::kNRounds][kActions],
-      int action_counter[poker_engine::kNRounds]) {
-    std::fill(action_counter, action_counter + poker_engine::kNRounds, 0);
-    for (int i = 0; i < kActions; ++i) {
+  static void SortActions(const std::array<Action, kActions>& actions,
+                          ActionArray& sorted_actions,
+                          NumActionsArray& num_actions) {
+    std::fill(num_actions.begin(), num_actions.end(), 0);
+    for (std::size_t i = 0; i < kActions; ++i) {
       for (poker_engine::RoundId round = 0; round < poker_engine::kNRounds;
            ++round) {
         poker_engine::RoundId action_round =
             poker_engine::GetRoundId(actions[i].max_round);
         if (round <= action_round) {
-          sorted_actions[round][action_counter[round]] = actions[i];
-          ++action_counter[round];
+          sorted_actions[round][num_actions[round]] = actions[i];
+          ++num_actions[round];
         }
       }  // for round
-    }  // for action
+    }  // for i
   }
 
   /*
@@ -160,7 +171,7 @@ class SequenceTable {
 
     @param state The game tree node to generate a row for.
     @param actions The actions available in the abstracted game tree.
-    @param action_count Array of number of actions available at each round.
+    @param num_actions Array of number of actions available at each round.
     @param seq The SequenceId corresponding to the game tree node.
     @param row_counter An array to a count of the number of rows added to the
         table so far in each round.
@@ -169,17 +180,15 @@ class SequenceTable {
   */
   template <typename RowMarkFn>
   static void Generate(const poker_engine::Node<kPlayers>& state,
-                       const Action actions[poker_engine::kNRounds][kActions],
-                       const int action_count[poker_engine::kNRounds],
-                       const SequenceId seq,
-                       SequenceN row_counter[poker_engine::kNRounds],
-                       RowMarkFn&& row_marker) {
+                       const ActionArray& actions,
+                       const NumActionsArray& num_actions, SequenceId seq,
+                       NumSequenceArray& row_counter, RowMarkFn&& row_marker) {
     poker_engine::RoundId round_id = poker_engine::GetRoundId(state.round());
     if (row_counter[round_id] == kIllegalId) {
       throw std::overflow_error("Sequence table has too many rows.");
     }
     ++row_counter[round_id];
-    for (int j = 0; j < action_count[round_id]; ++j) {
+    for (std::size_t j = 0; j < num_actions[round_id]; ++j) {
       Action action = actions[round_id][j];
       poker_engine::Chips chip_size = ActionSize(action, state);
       if (chip_size) {
@@ -189,7 +198,7 @@ class SequenceTable {
           poker_engine::RoundId new_round_id =
               poker_engine::GetRoundId(new_round);
           row_marker({seq, state.round()}, j, row_counter[new_round_id]);
-          Generate(new_state, actions, action_count, row_counter[new_round_id],
+          Generate(new_state, actions, num_actions, row_counter[new_round_id],
                    row_counter, row_marker);
         } else {
           row_marker({seq, state.round()}, j, kLeafId);
@@ -223,10 +232,6 @@ class SequenceTable {
     }
     return false;
   }
-
-  Action actions_[poker_engine::kNRounds][kActions];
-  const poker_engine::Node<kPlayers> start_state_;
-  nda::matrix<SequenceId> table_[poker_engine::kNRounds];
 };  // class SequenceTable
 
 }  // namespace blueprint

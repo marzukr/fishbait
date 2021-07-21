@@ -3,6 +3,7 @@
 #ifndef SRC_BLUEPRINT_DEFINITIONS_H_
 #define SRC_BLUEPRINT_DEFINITIONS_H_
 
+#include <array>
 #include <cstdint>
 #include <limits>
 

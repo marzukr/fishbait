@@ -1,5 +1,6 @@
 // Copyright 2021 Marzuk Rashid
 
+#include <array>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -12,16 +13,16 @@
 #include "poker_engine/node.h"
 
 TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
-  blueprint::Action actions[2] = {{poker_engine::Action::kFold},
-                                  {poker_engine::Action::kAllIn}};
+  std::array<blueprint::Action, 2> actions = {{{poker_engine::Action::kFold},
+                                               {poker_engine::Action::kAllIn}}};
   poker_engine::Node<6> start_state;
 
-  blueprint::SequenceN row_counter[poker_engine::kNRounds];
-  blueprint::SequenceTable<6, 2>::Count(actions, start_state, row_counter);
-  REQUIRE((row_counter[0] == 62 && row_counter[1] == 0 && row_counter[2] == 0 &&
-           row_counter[3] == 0));
+  std::array row_counts = blueprint::SequenceTable<6, 2>::Count(actions,
+                                                                start_state);
+  REQUIRE((row_counts[0] == 62 && row_counts[1] == 0 && row_counts[2] == 0 &&
+           row_counts[3] == 0));
 
-  blueprint::SequenceTable<6, 2> seq{actions, start_state};
+  blueprint::SequenceTable seq{actions, start_state};
 
   std::stringstream ss;
   ss.precision(10);
@@ -71,20 +72,20 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
 }  // TEST_CASE "6 players all in or fold"
 
 TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
-  blueprint::Action actions[4] = {
+  std::array<blueprint::Action, 4> actions = {{
       {poker_engine::Action::kFold},
       {poker_engine::Action::kAllIn},
       {poker_engine::Action::kCheckCall},
       {poker_engine::Action::kBet, 1.0, 1, poker_engine::Round::kPreFlop}
-  };
+  }};
   poker_engine::Node<3> start_state;
 
-  blueprint::SequenceN row_counter[poker_engine::kNRounds];
-  blueprint::SequenceTable<3, 4>::Count(actions, start_state, row_counter);
-  REQUIRE((row_counter[0] == 98 && row_counter[1] == 180 &&
-           row_counter[2] == 180 && row_counter[3] == 180));
+  std::array row_counts = blueprint::SequenceTable<3, 4>::Count(actions,
+                                                                start_state);
+  REQUIRE((row_counts[0] == 98 && row_counts[1] == 180 &&
+           row_counts[2] == 180 && row_counts[3] == 180));
 
-  blueprint::SequenceTable<3, 4> seq{actions, start_state};
+  blueprint::SequenceTable seq{actions, start_state};
 
   std::stringstream ss;
   ss.precision(10);
