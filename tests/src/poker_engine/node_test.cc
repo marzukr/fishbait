@@ -25,7 +25,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   */
 
   // Construct the initial Node
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<8, double> triton(0, 4000, 2000, 500, true, true, 500000);
   REQUIRE_THROWS(triton.NewHand());
 
@@ -276,14 +276,10 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.bets(5) == 140500);
   REQUIRE(triton.stack(5) == 360000);
 
-  deck::SK_Card cards_throw[8][2];
-  deck::SK_Card board_throw[1][5];
-  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_, cards_throw,
-                                 board_throw[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.single_run_, cards_throw,
-                                 board_throw[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, cards_throw, board_throw,
-                                 1));
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_throw;
+  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
+  REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
+  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board_throw));
 
   // Test Haxton's action (fold)
   REQUIRE(triton.Rotation() == 0);
@@ -304,20 +300,26 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(triton.NewHand());
 
-  deck::SK_Card cards0[8][2] = {
+  poker_engine::HandArray<deck::ISO_Card, 8> cards0 = {{
       {/*     Loeliger     */}, {/*      Cates       */},
       {Card("Qh"), Card("Js")}, {Card("Td"), Card("5s")},
       {Card("Kc"), Card("8h")}, {Card("Jc"), Card("7h")},
-      {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}};
-  deck::SK_Card board0[1][5] = {{Card("8c"), Card("6c"), Card("Ks"), Card("5c"),
-                                 Card("4d")}};
-  triton.AwardPot(triton.single_run_, cards0, board0[0]);
+      {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}
+  }};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board0 = {{{Card("8c"),
+      Card("6c"), Card("Ks"), Card("5c"), Card("4d")}}};
+  triton.set_hands(cards0);
+  triton.set_board(board0[0]);
+  REQUIRE(triton.hands(2) == cards0[2]);
+  REQUIRE(triton.board() == board0[0]);
+  REQUIRE(triton.PlayerCards(2) == std::array{Card("Qh"), Card("Js"),
+      Card("8c"), Card("6c"), Card("Ks"), Card("5c"), Card("4d")});
+  triton.AwardPot(triton.single_run_);
 
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_, cards0,
-                                 board0[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.single_run_, cards0, board0[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, cards0, board0, 1));
+  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
+  REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
+  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board0));
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 2 --------------------------------- */
@@ -457,12 +459,9 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.bets(2) == 2500);
   REQUIRE(triton.stack(2) == 484000);
 
-  REQUIRE_THROWS(triton.AwardPot(triton.single_run_, cards_throw,
-                                 board_throw[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, cards_throw, board_throw,
-                                 1));
-  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_, cards_throw,
-                                 board_throw[0]));
+  REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
+  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board_throw));
+  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
 
   // Test Tan Xuan's action (fold)
   REQUIRE(triton.Rotation() == 0);
@@ -483,20 +482,27 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(triton.NewHand());
 
-  deck::SK_Card cards1[8][2] = {
+  poker_engine::HandArray<deck::ISO_Card, 8> cards1 = {{
       {Card("Qd"), Card("6c")}, {Card("Ah"), Card("8d")},
       {/*     Kuznetsov    */}, {Card("8c"), Card("6h")},
       {Card("Kc"), Card("4s")}, {Card("7c"), Card("6s")},
-      {Card("7s"), Card("3s")}, {Card("Tc"), Card("8h")}};
-  deck::SK_Card board1[1][5] = {{/*Flop1*/ /*Flop2*/ /*Flop3*/ /*Turn*/
-                                 /*River*/}};
-  triton.AwardPot(triton.single_run_, cards1, board1[0]);
+      {Card("7s"), Card("3s")}, {Card("Tc"), Card("8h")}
+  }};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board1 = {{/*Flop1*/
+      /*Flop2*/ /*Flop3*/ /*Turn*/ /*River*/}};
+  triton.set_hands(cards1);
+  triton.set_board(board1[0]);
+  REQUIRE(triton.hands(0) == cards1[0]);
+  REQUIRE(triton.board() == board1[0]);
+  deck::Card zero = 0;
+  REQUIRE(triton.PlayerCards(0) == std::array{Card("Qd"), Card("6c"),
+      zero, zero, zero, zero, zero});
+  triton.AwardPot(triton.single_run_);
 
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(triton.AwardPot(triton.single_run_, cards1, board1[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, cards1, board1, 1));
-  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_, cards1,
-                                 board1[0]));
+  REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
+  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board1));
+  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 3 --------------------------------- */
@@ -688,10 +694,8 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.stack(1) == 486000);
 
   REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
-  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_, cards_throw,
-                                 board_throw[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, cards_throw, board_throw,
-                                 1));
+  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
+  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board_throw));
 
   // Test Paul Phua's action (fold)
   REQUIRE(triton.Rotation() == 1);
@@ -736,14 +740,12 @@ TEST_CASE("Triton cash game first 3 hands", "[poker_engine][node]") {
   REQUIRE(triton.stack(7) == 500000);
   REQUIRE_THROWS(triton.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
-  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_, cards_throw,
-                                 board_throw[0]));
-  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, cards_throw, board_throw,
-                                 1));
+  REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
+  REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board_throw));
 }  // TEST_CASE "Triton cash game first 3 hands"
 
 TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<2, utils::Fraction> heads_up(0, 4, 2, 2, true, true, 100);
   REQUIRE_THROWS(heads_up.NewHand());
 
@@ -799,14 +801,10 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(0) == 0);
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards_throw[2][2];
-  deck::SK_Card board_throw[1][5];
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards_throw,
-                                   board_throw, 1));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards_throw,
-                                   board_throw[0]));
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_throw;
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
 
   // Test Mary's action (all in)
   REQUIRE(heads_up.Rotation() == 0);
@@ -833,12 +831,17 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards0[2][2] = {{Card("7c"), Card("2h")}, {Card("Ah"),
-                                 Card("As")}};
-  deck::SK_Card board0[1][5] = {{Card("9c"), Card("6c"), Card("Ks"), Card("5c"),
-                                 Card("4d")}};
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
-  heads_up.AwardPot(heads_up.single_run_, cards0, board0[0]);
+  poker_engine::HandArray<deck::ISO_Card, 2> cards0 = {{{Card("7c"),
+      Card("2h")}, {Card("Ah"), Card("As")}}};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board0 = {{{Card("9c"),
+      Card("6c"), Card("Ks"), Card("5c"), Card("4d")}}};
+  heads_up.set_board(board0[0]);
+  heads_up.set_hands(cards0);
+  REQUIRE(heads_up.board() == board0[0]);
+  REQUIRE(heads_up.hands(1) == cards0[1]);
+  REQUIRE(heads_up.PlayerCards(1) == std::array{Card("Ah"), Card("As"),
+      Card("9c"), Card("6c"), Card("Ks"), Card("5c"), Card("4d")});
+  heads_up.AwardPot(heads_up.single_run_);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -848,10 +851,9 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(1) == 196);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards0, board0[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards0, board0, 1));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards0,
-                                   board0[0]));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board0));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 2 --------------------------------- */
@@ -868,12 +870,9 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.pot() == 6);
   REQUIRE(heads_up.button() == 1);
 
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards_throw,
-                                   board_throw, 1));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
 
   // Test Mary's action (call)
   REQUIRE(heads_up.Rotation() == 0);
@@ -891,12 +890,17 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards1[8][2] = {{Card("5s"), Card("4s")}, {Card("Kh"),
-                                 Card("Th")}};
-  deck::SK_Card board1[1][5] = {{Card("7h"), Card("Ah"), Card("3c"), Card("7s"),
-                                 Card("6c")}};
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
-  heads_up.AwardPot(heads_up.single_run_, cards1, board1[0]);
+  poker_engine::HandArray<deck::ISO_Card, 2> cards1 = {{{Card("5s"),
+      Card("4s")}, {Card("Kh"), Card("Th")}}};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board1 = {{{Card("7h"),
+      Card("Ah"), Card("3c"), Card("7s"), Card("6c")}}};
+  heads_up.set_board(board1[0]);
+  heads_up.set_hands(cards1);
+  REQUIRE(heads_up.board() == board1[0]);
+  REQUIRE(heads_up.hands(1) == cards1[1]);
+  REQUIRE(heads_up.PlayerCards(1) == std::array{Card("Kh"), Card("Th"),
+      Card("7h"), Card("Ah"), Card("3c"), Card("7s"), Card("6c")});
+  heads_up.AwardPot(heads_up.single_run_);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -906,10 +910,9 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(1) == 192);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards1, board1[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards1,
-                                   board1[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards1, board1, 1));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board1));
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 3 --------------------------------- */
@@ -946,12 +949,9 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.bets(0) == 10);
   REQUIRE(heads_up.stack(0) == 0);
 
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards_throw,
-                                   board_throw, 1));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
 
   // Test Mary's action (call)
   REQUIRE(heads_up.Rotation() == 0);
@@ -976,12 +976,17 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards2[8][2] = {{Card("8h"), Card("8c")}, {Card("5d"),
-                                 Card("5c")}};
-  deck::SK_Card board2[1][5] = {{Card("9d"), Card("6h"), Card("7c"), Card("Td"),
-                                 Card("Kh")}};
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
-  heads_up.AwardPot(heads_up.single_run_, cards2, board2[0]);
+  poker_engine::HandArray<deck::ISO_Card, 2> cards2 = {{{Card("8h"),
+      Card("8c")}, {Card("5d"), Card("5c")}}};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board2 = {{{Card("9d"),
+      Card("6h"), Card("7c"), Card("Td"), Card("Kh")}}};
+  heads_up.set_board(board2[0]);
+  heads_up.set_hands(cards2);
+  REQUIRE(heads_up.board() == board2[0]);
+  REQUIRE(heads_up.hands(1) == cards2[1]);
+  REQUIRE(heads_up.PlayerCards(1) == std::array{Card("5d"), Card("5c"),
+      Card("9d"), Card("6h"), Card("7c"), Card("Td"), Card("Kh")});
+  heads_up.AwardPot(heads_up.single_run_);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -991,14 +996,13 @@ TEST_CASE("heads up big blind ante big blind first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(1) == 180);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards2, board2[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards2,
-                                   board2[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards2, board2, 1));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board2));
 }  // TEST_CASE "heads up big blind ante big blind first"
 
 TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<2, double> heads_up(0, 4, 2, 2, true, false, 100, 0);
   REQUIRE_THROWS(heads_up.NewHand());
 
@@ -1043,14 +1047,10 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(0) == 0);
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards_throw[2][2];
-  deck::SK_Card board_throw[1][5];
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards_throw,
-                                   board_throw, 8));
+  poker_engine::MultiBoardArray<deck::ISO_Card, 8> board_throw;
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
 
   // Test Mary's action (all in)
   REQUIRE(heads_up.Rotation() == 0);
@@ -1077,12 +1077,17 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards0[2][2] = {{Card("6d"), Card("6c")}, {Card("Qc"),
-                                 Card("Jd")}};
-  deck::SK_Card board0[1][5] = {{Card("7h"), Card("4s"), Card("Js"), Card("Th"),
-                                 Card("Ad")}};
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
-  heads_up.AwardPot(heads_up.single_run_, cards0, board0[0]);
+  poker_engine::HandArray<deck::ISO_Card, 2> cards0 = {{{Card("6d"),
+      Card("6c")}, {Card("Qc"), Card("Jd")}}};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board0 = {{{Card("7h"),
+      Card("4s"), Card("Js"), Card("Th"), Card("Ad")}}};
+  heads_up.set_board(board0[0]);
+  heads_up.set_hands(cards0);
+  REQUIRE(heads_up.board() == board0[0]);
+  REQUIRE(heads_up.hands(1) == cards0[1]);
+  REQUIRE(heads_up.PlayerCards(1) == std::array{Card("Qc"), Card("Jd"),
+      Card("7h"), Card("4s"), Card("Js"), Card("Th"), Card("Ad")});
+  heads_up.AwardPot(heads_up.single_run_);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -1092,10 +1097,9 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(1) == 196);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards0, board0[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards0,
-                                   board0[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards0, board0, 8));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board0));
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 2 --------------------------------- */
@@ -1112,12 +1116,9 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.pot() == 6);
   REQUIRE(heads_up.button() == 1);
 
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards_throw,
-                                   board_throw, 8));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
 
   // Test Mary's action (call)
   REQUIRE(heads_up.Rotation() == 0);
@@ -1135,12 +1136,17 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards1[8][2] = {{Card("Ah"), Card("Kd")}, {Card("Qc"),
-                                 Card("Qh")}};
-  deck::SK_Card board1[1][5] = {{Card("3h"), Card("6c"), Card("9c"), Card("9d"),
-                                 Card("Ad")}};
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
-  heads_up.AwardPot(heads_up.single_run_, cards1, board1[0]);
+  poker_engine::HandArray<deck::ISO_Card, 2> cards1 = {{{Card("Ah"),
+      Card("Kd")}, {Card("Qc"), Card("Qh")}}};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board1 = {{{Card("3h"),
+      Card("6c"), Card("9c"), Card("9d"), Card("Ad")}}};
+  heads_up.set_board(board1[0]);
+  heads_up.set_hands(cards1);
+  REQUIRE(heads_up.board() == board1[0]);
+  REQUIRE(heads_up.hands(0) == cards1[0]);
+  REQUIRE(heads_up.PlayerCards(0) == std::array{Card("Ah"), Card("Kd"),
+      Card("3h"), Card("6c"), Card("9c"), Card("9d"), Card("Ad")});
+  heads_up.AwardPot(heads_up.single_run_);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -1150,10 +1156,9 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(1) == 196);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards1, board1[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards1,
-                                   board1[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards1, board1, 8));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board1));
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 3 --------------------------------- */
@@ -1195,12 +1200,9 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.bets(0) == 6);
   REQUIRE(heads_up.stack(0) == 0);
 
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards_throw,
-                                   board_throw[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards_throw,
-                                   board_throw, 1));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards_throw,
-                                   board_throw[0]));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
 
   // Test Mary's action (check)
   REQUIRE(heads_up.Rotation() == 0);
@@ -1225,12 +1227,17 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
 
-  deck::SK_Card cards2[8][2] = {{Card("Qc"), Card("Qh")}, {Card("8s"),
-                                 Card("8d")}};
-  deck::SK_Card board2[1][5] = {{Card("3d"), Card("Ac"), Card("Kh"), Card("3h"),
-                                 Card("2h")}};
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
-  heads_up.AwardPot(heads_up.single_run_, cards2, board2[0]);
+  poker_engine::HandArray<deck::ISO_Card, 2> cards2 = {{{Card("Qc"),
+      Card("Qh")}, {Card("8s"), Card("8d")}}};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board2 = {{{Card("3d"),
+      Card("Ac"), Card("Kh"), Card("3h"), Card("2h")}}};
+  heads_up.set_board(board2[0]);
+  heads_up.set_hands(cards2);
+  REQUIRE(heads_up.board() == board2[0]);
+  REQUIRE(heads_up.hands(1) == cards2[1]);
+  REQUIRE(heads_up.PlayerCards(1) == std::array{Card("8s"), Card("8d"),
+      Card("3d"), Card("Ac"), Card("Kh"), Card("3h"), Card("2h")});
+  heads_up.AwardPot(heads_up.single_run_);
 
   // Check AwardPot results
   REQUIRE(heads_up.pot() == 0);
@@ -1240,14 +1247,13 @@ TEST_CASE("heads up big blind ante ante first", "[poker_engine][node]") {
   REQUIRE(heads_up.stack(1) == 188);
 
   REQUIRE_THROWS(heads_up.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_, cards2, board2[0]));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, cards2, board2, 1));
-  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_, cards2,
-                                   board2[0]));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board2));
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
 }  // TEST_CASE "heads up big blind ante ante first"
 
 TEST_CASE("straddle", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<6, utils::Fraction> game(0, 100, 50, 0, true, false, 10000,
                                               3, utils::Fraction{}, 5, true);
   REQUIRE_THROWS(game.NewHand());
@@ -1270,12 +1276,10 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.bets(0) == 0);
   REQUIRE(game.stack(0) == 10000);
 
-  deck::SK_Card card_throws[8][2];
-  deck::SK_Card board_throws[1][5];
-  REQUIRE_THROWS(game.AwardPot(game.single_run_, card_throws, board_throws[0]));
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_, card_throws, board_throws, 1));
-  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_, card_throws,
-                               board_throws[0]));
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_throws;
+  REQUIRE_THROWS(game.AwardPot(game.single_run_));
+  REQUIRE_THROWS(game.AwardPot(game.multi_run_, board_throws));
+  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
 
   // Player 0 action (fold)
   REQUIRE(game.Rotation() == 0);
@@ -1595,12 +1599,17 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE_THROWS(game.Apply(poker_engine::Action::kFold));
   REQUIRE_THROWS(game.NewHand());
 
-  deck::SK_Card cards0[6][2] = {{Card("Jc"), Card("9d")}, {0, 0}, {0, 0},
-                                {0, 0}, {Card("Jh"), Card("Kd")}, {0, 0}};
-  deck::SK_Card board0[1][5] = {{Card("Qd"), Card("4s"), Card("Kc"), Card("6d"),
-                                 Card("Tc")}};
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_));
-  game.AwardPot(game.multi_run_, cards0, board0, 1);
+  poker_engine::HandArray<deck::ISO_Card, 6> cards0 = {{{Card("Jc"),
+      Card("9d")}, {0, 0}, {0, 0}, {0, 0}, {Card("Jh"), Card("Kd")}, {0, 0}}};
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board0 = {{{Card("Qd"),
+      Card("4s"), Card("Kc"), Card("6d"), Card("Tc")}}};
+  game.set_board(board0[0]);
+  game.set_hands(cards0);
+  REQUIRE(game.board() == board0[0]);
+  REQUIRE(game.hands(4) == cards0[4]);
+  REQUIRE(game.PlayerCards(4) == std::array{Card("Jh"), Card("Kd"), Card("Qd"),
+      Card("4s"), Card("Kc"), Card("6d"), Card("Tc")});
+  game.AwardPot(game.multi_run_, board0);
 
   // Check AwardPot results
   REQUIRE(game.pot() == 0);
@@ -1615,22 +1624,19 @@ TEST_CASE("straddle", "[poker_engine][node]") {
   REQUIRE(game.stack(5) == 9200);
 
   REQUIRE_THROWS(game.Apply(poker_engine::Action::kFold));
-  REQUIRE_THROWS(game.AwardPot(game.single_run_, cards0, board0[0]));
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_, cards0, board0, 1));
-  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_, cards0,
-                               board0[0]));
+  REQUIRE_THROWS(game.AwardPot(game.single_run_));
+  REQUIRE_THROWS(game.AwardPot(game.multi_run_, board0));
+  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
 }  // TEST_CASE "straddle"
 
 TEST_CASE("straddle with all in", "[poker_engine][node]") {
   poker_engine::Node<6, double> game(0, 100, 50, 0, true, false, 400, 3);
   REQUIRE_THROWS(game.NewHand());
 
-  deck::SK_Card card_throws[8][2];
-  deck::SK_Card board_throws[1][5];
-  REQUIRE_THROWS(game.AwardPot(game.single_run_, card_throws, board_throws[0]));
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_, card_throws, board_throws, 1));
-  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_, card_throws,
-                               board_throws[0]));
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_throws;
+  REQUIRE_THROWS(game.AwardPot(game.single_run_));
+  REQUIRE_THROWS(game.AwardPot(game.multi_run_, board_throws));
+  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
 
   REQUIRE(game.button() == 0);
   REQUIRE(game.big_blind() == 100);
@@ -1666,12 +1672,13 @@ TEST_CASE("straddle with bb ante", "[poker_engine][node]") {
   poker_engine::Node<6, double> game(0, 100, 50, 100, true, false, 10000, 1);
   REQUIRE_THROWS(game.NewHand());
 
-  deck::SK_Card card_throws[8][2];
-  deck::SK_Card board_throws[1][5];
-  REQUIRE_THROWS(game.AwardPot(game.single_run_, card_throws, board_throws[0]));
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_, card_throws, board_throws, 1));
-  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_, card_throws,
-                               board_throws[0]));
+  poker_engine::HandArray<deck::ISO_Card, 6> card_throws;
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_throws;
+  game.set_hands(card_throws);
+  game.set_board(board_throws[0]);
+  REQUIRE_THROWS(game.AwardPot(game.single_run_));
+  REQUIRE_THROWS(game.AwardPot(game.multi_run_, board_throws));
+  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
 
   REQUIRE(game.button() == 0);
   REQUIRE(game.big_blind() == 100);
@@ -1710,12 +1717,13 @@ TEST_CASE("straddle with ante", "[poker_engine][node]") {
   poker_engine::Node<6, double> game(0, 100, 50, 100, false, false, 10000, 1);
   REQUIRE_THROWS(game.NewHand());
 
-  deck::SK_Card card_throws[8][2];
-  deck::SK_Card board_throws[1][5];
-  REQUIRE_THROWS(game.AwardPot(game.single_run_, card_throws, board_throws[0]));
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_, card_throws, board_throws, 1));
-  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_, card_throws,
-                               board_throws[0]));
+  poker_engine::HandArray<deck::ISO_Card, 6> card_throws;
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_throws;
+  game.set_hands(card_throws);
+  game.set_board(board_throws[0]);
+  REQUIRE_THROWS(game.AwardPot(game.single_run_));
+  REQUIRE_THROWS(game.AwardPot(game.multi_run_, board_throws));
+  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
 
   REQUIRE(game.button() == 0);
   REQUIRE(game.big_blind() == 100);
@@ -1751,18 +1759,22 @@ TEST_CASE("straddle with ante", "[poker_engine][node]") {
 }  // TEST_CASE "straddle with ante"
 
 TEST_CASE("awardpot same stack no rake double", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
-  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
-  deck::SK_Card board[5] = {Card("As"), Card("Ks"), Card("Qs"), Card("Js"),
-                            Card("Ts")};
-  deck::SK_Card hands[3][2] = {{Card("2s"), Card("2h")},
-                               {Card("3s"), Card("3h")},
-                               {Card("4s"), Card("4h")}};
-  game.AwardPot(game.same_stack_no_rake_, hands, board);
+  poker_engine::BoardArray<deck::ISO_Card> board = {Card("As"), Card("Ks"),
+      Card("Qs"), Card("Js"), Card("Ts")};
+  poker_engine::HandArray<deck::ISO_Card, 3> hands = {{{Card("2s"), Card("2h")},
+      {Card("3s"), Card("3h")}, {Card("4s"), Card("4h")}}};
+  game.set_hands(hands);
+  game.set_board(board);
+  REQUIRE(game.board() == board);
+  REQUIRE(game.hands(2) == hands[2]);
+  REQUIRE(game.PlayerCards(2) == std::array{Card("4s"), Card("4h"), Card("As"),
+      Card("Ks"), Card("Qs"), Card("Js"), Card("Ts")});
+  game.AwardPot(game.same_stack_no_rake_);
   REQUIRE(game.stack(0) == 10000);
   REQUIRE(game.stack(1) == 10000);
   REQUIRE(game.stack(2) == 10000);
@@ -1773,19 +1785,23 @@ TEST_CASE("awardpot same stack no rake double", "[poker_engine][node]") {
 }  // TEST_CASE "awardpot same stack no rake double"
 
 TEST_CASE("awardpot same stack no rake fraction", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<3, utils::Fraction> game(0, 100, 50, 0, false, false,
                                               10000);
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
-  REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
-  deck::SK_Card board[5] = {Card("2d"), Card("2c"), Card("Qs"), Card("Js"),
-                            Card("Ts")};
-  deck::SK_Card hands[3][2] = {{Card("2s"), Card("2h")},
-                               {Card("3s"), Card("3h")},
-                               {0, 0}};
-  game.AwardPot(game.same_stack_no_rake_, hands, board);
+  poker_engine::BoardArray<deck::ISO_Card> board = {Card("2d"), Card("2c"),
+      Card("Qs"), Card("Js"), Card("Ts")};
+  poker_engine::HandArray<deck::ISO_Card, 3> hands = {{{Card("2s"), Card("2h")},
+      {Card("3s"), Card("3h")}, {0, 0}}};
+  game.set_hands(hands);
+  game.set_board(board);
+  REQUIRE(game.board() == board);
+  REQUIRE(game.hands(0) == hands[0]);
+  REQUIRE(game.PlayerCards(0) == std::array{Card("2s"), Card("2h"), Card("2d"),
+      Card("2c"), Card("Qs"), Card("Js"), Card("Ts")});
+  game.AwardPot(game.same_stack_no_rake_);
   REQUIRE(game.stack(0) == 30000);
   REQUIRE(game.stack(1) == 0);
   REQUIRE(game.stack(2) == 0);
@@ -1796,7 +1812,7 @@ TEST_CASE("awardpot same stack no rake fraction", "[poker_engine][node]") {
 }  // TEST_CASE "awardpot same stack no rake fraction"
 
 TEST_CASE("awardpot single run double", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<3, double> game(0, 100, 50, 100, true, false, 10000);
   game.Apply(poker_engine::Action::kAllIn);
   REQUIRE(game.CanCheckCall() == false);
@@ -1805,13 +1821,17 @@ TEST_CASE("awardpot single run double", "[poker_engine][node]") {
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
   game.Apply(poker_engine::Action::kAllIn);
-  REQUIRE_THROWS(game.AwardPot(game.single_run_));
-  deck::SK_Card board[5] = {Card("8c"), Card("9c"), Card("Ts"), Card("Js"),
-                            Card("Qs")};
-  deck::SK_Card hands[3][2] = {{Card("2s"), Card("2h")},
-                               {Card("3s"), Card("3h")},
-                               {Card("Ah"), Card("Kh")}};
-  game.AwardPot(game.single_run_, hands, board);
+  poker_engine::BoardArray<deck::ISO_Card> board = {Card("8c"), Card("9c"),
+      Card("Ts"), Card("Js"), Card("Qs")};
+  poker_engine::HandArray<deck::ISO_Card, 3> hands = {{{Card("2s"), Card("2h")},
+      {Card("3s"), Card("3h")}, {Card("Ah"), Card("Kh")}}};
+  game.set_hands(hands);
+  game.set_board(board);
+  REQUIRE(game.board() == board);
+  REQUIRE(game.hands(1) == hands[1]);
+  REQUIRE(game.PlayerCards(1) == std::array{Card("3s"), Card("3h"), Card("8c"),
+      Card("9c"), Card("Ts"), Card("Js"), Card("Qs")});
+  game.AwardPot(game.single_run_);
   REQUIRE(game.stack(0) == 300);
   REQUIRE(game.stack(1) == 300);
   REQUIRE(game.stack(2) == 29400);
@@ -1822,7 +1842,7 @@ TEST_CASE("awardpot single run double", "[poker_engine][node]") {
 }  // TEST_CASE "awardpot single run double"
 
 TEST_CASE("awardpot single run fraction", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<4, utils::Fraction> game(0, 100, 50, 100, true, false,
                                               10000);
   game.Apply(poker_engine::Action::kAllIn);
@@ -1835,14 +1855,18 @@ TEST_CASE("awardpot single run fraction", "[poker_engine][node]") {
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
   game.Apply(poker_engine::Action::kAllIn);
-  REQUIRE_THROWS(game.AwardPot(game.single_run_));
-  deck::SK_Card board[5] = {Card("8c"), Card("9c"), Card("Ts"), Card("Js"),
-                            Card("Qs")};
-  deck::SK_Card hands[4][2] = {{Card("Ad"), Card("Kd")},
-                               {Card("Ac"), Card("Kc")},
-                               {Card("Ah"), Card("Kh")},
-                               {Card("2s"), Card("2h")}};
-  game.AwardPot(game.single_run_, hands, board);
+  poker_engine::BoardArray<deck::ISO_Card> board = {Card("8c"), Card("9c"),
+      Card("Ts"), Card("Js"), Card("Qs")};
+  poker_engine::HandArray<deck::ISO_Card, 4> hands = {{{Card("Ad"), Card("Kd")},
+      {Card("Ac"), Card("Kc")}, {Card("Ah"), Card("Kh")},
+      {Card("2s"), Card("2h")}}};
+  game.set_board(board);
+  game.set_hands(hands);
+  REQUIRE(game.board() == board);
+  REQUIRE(game.hands(3) == hands[3]);
+  REQUIRE(game.PlayerCards(3) == std::array{Card("2s"), Card("2h"), Card("8c"),
+      Card("9c"), Card("Ts"), Card("Js"), Card("Qs")});
+  game.AwardPot(game.single_run_);
   REQUIRE((game.stack(0) == 13533 || game.stack(0) == 13534));
   REQUIRE((game.stack(1) == 13533 || game.stack(1) == 13534));
   REQUIRE((game.stack(2) == 12933 || game.stack(2) == 12934));
@@ -1857,7 +1881,7 @@ TEST_CASE("awardpot single run fraction", "[poker_engine][node]") {
 
 TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
                    utils::Fraction) {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false, 11);
   // Preflop fold to big blind
   game.Apply(poker_engine::Action::kFold);
@@ -1865,7 +1889,8 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
   game.Apply(poker_engine::Action::kFold);
   game.Apply(poker_engine::Action::kFold);
   // Award Pot
-  game.AwardPot(game.multi_run_);
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> multi_board;
+  game.AwardPot(game.multi_run_, multi_board);
   REQUIRE(game.stack(0) == 11);
   REQUIRE(game.stack(1) == 10);
   REQUIRE(game.stack(2) == 12);
@@ -1895,11 +1920,13 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
   game.Apply(poker_engine::Action::kCheckCall);
   game.Apply(poker_engine::Action::kCheckCall);
   // Award Pot
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_));
-  deck::SK_Card board_0[1][5] = {{Card("8c"), Card("9c"), Card("Ts"),
-                                  Card("Js"), Card("Qs")}};
-  deck::SK_Card hands_0[5][2] = {{}, {}, {0, 0}, {Card("2s"), Card("2h")}, {}};
-  game.AwardPot(game.multi_run_, hands_0, board_0);
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_0 = {{{Card("8c"),
+      Card("9c"), Card("Ts"), Card("Js"), Card("Qs")}}};
+  poker_engine::HandArray<deck::ISO_Card, 5> hands_0 = {{{}, {}, {0, 0},
+      {Card("2s"), Card("2h")}, {}}};
+  game.set_hands(hands_0);
+  REQUIRE(game.hands(4) == hands_0[4]);
+  game.AwardPot(game.multi_run_, board_0);
   REQUIRE(game.stack(0) == 11);
   REQUIRE(game.stack(1) == 10);
   REQUIRE(game.stack(2) == 10);
@@ -1920,19 +1947,16 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
   // Award Pot
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_));
-  deck::SK_Card board_1[3][5] = {{Card("8c"), Card("9c"), Card("Tc"),
-                                  Card("Jc"), Card("2d")},
-                                 {Card("2c"), Card("3c"), Card("4c"),
-                                  Card("5d"), Card("6d")},
-                                 {Card("8s"), Card("9s"), Card("Ts"),
-                                  Card("Qs"), Card("2h")}};
-  deck::SK_Card hands_1[5][2] = {{Card("6h"), Card("7h")},
-                                 {Card("Ac"), Card("Kc")},
-                                 {Card("As"), Card("Ks")},
-                                 {Card("5s"), Card("7s")},
-                                 {Card("Qd"), Card("8d")}};
-  game.AwardPot(game.multi_run_, hands_1, board_1, 3);
+  poker_engine::MultiBoardArray<deck::ISO_Card, 3> board_1 = {{{Card("8c"),
+      Card("9c"), Card("Tc"), Card("Jc"), Card("2d")}, {Card("2c"), Card("3c"),
+      Card("4c"), Card("5d"), Card("6d")}, {Card("8s"), Card("9s"), Card("Ts"),
+      Card("Qs"), Card("2h")}}};
+  poker_engine::HandArray<deck::ISO_Card, 5> hands_1 = {{{Card("6h"),
+      Card("7h")}, {Card("Ac"), Card("Kc")}, {Card("As"), Card("Ks")},
+      {Card("5s"), Card("7s")}, {Card("Qd"), Card("8d")}}};
+  game.set_hands(hands_1);
+  REQUIRE(game.hands(2) == hands_1[2]);
+  game.AwardPot(game.multi_run_, board_1);
   REQUIRE((game.stack(0) == 1 || game.stack(0) == 0));
   REQUIRE(game.stack(1) == 33);
   REQUIRE(game.stack(2) == 17);
@@ -1951,7 +1975,7 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker_engine][node]", double,
 
 TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
                    "[poker_engine][node]", double, utils::Fraction) {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   TestType rake{1};
   rake /= 20;
   poker_engine::Node<5, TestType> game(0, 2, 1, 0, true, false, 11, 0, rake, 0,
@@ -1962,7 +1986,8 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   game.Apply(poker_engine::Action::kFold);
   game.Apply(poker_engine::Action::kFold);
   // Award Pot
-  game.AwardPot(game.multi_run_);
+  poker_engine::MultiBoardArray<deck::ISO_Card, 4> multi_board;
+  game.AwardPot(game.multi_run_, multi_board);
   REQUIRE(game.stack(0) == 11);
   REQUIRE(game.stack(1) == 10);
   REQUIRE(game.stack(2) == 12);
@@ -1992,11 +2017,13 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   game.Apply(poker_engine::Action::kCheckCall);
   game.Apply(poker_engine::Action::kCheckCall);
   // Award Pot
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_));
-  deck::SK_Card board_0[1][5] = {{Card("8c"), Card("9c"), Card("Ts"),
-                                  Card("Js"), Card("Qs")}};
-  deck::SK_Card hands_0[5][2] = {{}, {}, {0, 0}, {Card("2s"), Card("2h")}, {}};
-  game.AwardPot(game.multi_run_, hands_0, board_0);
+  poker_engine::MultiBoardArray<deck::ISO_Card, 1> board_0 = {{{Card("8c"),
+      Card("9c"), Card("Ts"), Card("Js"), Card("Qs")}}};
+  poker_engine::HandArray<deck::ISO_Card, 5> hands_0 = {{{}, {}, {0, 0},
+      {Card("2s"), Card("2h")}, {}}};
+  game.set_hands(hands_0);
+  REQUIRE(game.hands(1) == hands_0[1]);
+  game.AwardPot(game.multi_run_, board_0);
   REQUIRE(game.stack(0) == 11);
   REQUIRE(game.stack(1) == 10);
   REQUIRE(game.stack(2) == 10);
@@ -2017,19 +2044,16 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   game.Apply(poker_engine::Action::kAllIn);
   game.Apply(poker_engine::Action::kAllIn);
   // Award Pot
-  REQUIRE_THROWS(game.AwardPot(game.multi_run_));
-  deck::SK_Card board_1[3][5] = {{Card("8c"), Card("9c"), Card("Tc"),
-                                  Card("Jc"), Card("2d")},
-                                  {Card("2c"), Card("3c"), Card("4c"),
-                                   Card("5d"), Card("6d")},
-                                  {Card("8s"), Card("9s"), Card("Ts"),
-                                   Card("Qs"), Card("2h")}};
-  deck::SK_Card hands_1[5][2] = {{Card("6h"), Card("7h")},
-                                 {Card("Ac"), Card("Kc")},
-                                 {Card("As"), Card("Ks")},
-                                 {Card("5s"), Card("7s")},
-                                 {Card("Qd"), Card("8d")}};
-  game.AwardPot(game.multi_run_, hands_1, board_1, 3);
+  poker_engine::MultiBoardArray<deck::ISO_Card, 3> board_1 = {{{Card("8c"),
+      Card("9c"), Card("Tc"), Card("Jc"), Card("2d")}, {Card("2c"), Card("3c"),
+      Card("4c"), Card("5d"), Card("6d")}, {Card("8s"), Card("9s"), Card("Ts"),
+      Card("Qs"), Card("2h")}}};
+  poker_engine::HandArray<deck::ISO_Card, 5> hands_1 = {{{Card("6h"),
+      Card("7h")}, {Card("Ac"), Card("Kc")}, {Card("As"), Card("Ks")},
+      {Card("5s"), Card("7s")}, {Card("Qd"), Card("8d")}}};
+  game.set_hands(hands_1);
+  REQUIRE(game.hands(0) == hands_1[0]);
+  game.AwardPot(game.multi_run_, board_1);
   REQUIRE(game.stack(0) == 0);
   REQUIRE(game.stack(1) == 32);
   REQUIRE(game.stack(2) == 16);
@@ -2048,7 +2072,7 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
 
 TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker_engine][node]",
                    double, utils::Fraction) {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   TestType rake{1};
   rake /= 20;
   poker_engine::Node<4, TestType> game(0, 100, 50, 100, true, false, 10000, 0,
@@ -2063,14 +2087,18 @@ TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker_engine][node]",
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
   game.Apply(poker_engine::Action::kAllIn);
-  REQUIRE_THROWS(game.AwardPot(game.single_run_));
-  deck::SK_Card board[5] = {Card("8c"), Card("9c"), Card("Ts"), Card("Js"),
-                            Card("Qs")};
-  deck::SK_Card hands[4][2] = {{Card("Ad"), Card("Kd")},
-                               {Card("Ac"), Card("Kc")},
-                               {Card("Ah"), Card("Kh")},
-                               {Card("2s"), Card("2h")}};
-  game.AwardPot(game.single_run_, hands, board);
+  poker_engine::BoardArray<deck::ISO_Card> board = {Card("8c"), Card("9c"),
+      Card("Ts"), Card("Js"), Card("Qs")};
+  poker_engine::HandArray<deck::ISO_Card, 4> hands = {{{Card("Ad"), Card("Kd")},
+      {Card("Ac"), Card("Kc")}, {Card("Ah"), Card("Kh")}, {Card("2s"),
+      Card("2h")}}};
+  game.set_hands(hands);
+  game.set_board(board);
+  REQUIRE(game.board() == board);
+  REQUIRE(game.hands(2) == hands[2]);
+  REQUIRE(game.PlayerCards(2) == std::array{Card("Ah"), Card("Kh"), Card("8c"),
+      Card("9c"), Card("Ts"), Card("Js"), Card("Qs")});
+  game.AwardPot(game.single_run_);
   REQUIRE((game.stack(0) == 13499 || game.stack(0) == 13500));
   REQUIRE((game.stack(1) == 13499 || game.stack(1) == 13500));
   REQUIRE(game.stack(2) == 12901);
@@ -2141,7 +2169,7 @@ TEST_CASE("ante all players all in", "[poker_engine][node]") {
 }  // TEST_CASE "bb ante with change"
 
 TEST_CASE("regular hand heads up", "[poker_engine][node]") {
-  auto Card = deck::SKCardFromStr;
+  auto Card = deck::ISOCardFromStr;
   poker_engine::Node<2, double> game(0, 100, 50, 0, false, false, 10000);
 
   // Verify that the constructor worked correctly
@@ -2322,11 +2350,17 @@ TEST_CASE("regular hand heads up", "[poker_engine][node]") {
   REQUIRE(game.stack(1) == 8050);
 
   // AwardPot
-  deck::SK_Card board[5] = {Card("5c"), Card("Qd"), Card("Jd"), Card("Ks"),
-                            Card("3s")};
-  deck::SK_Card hands[2][2] = {{Card("Ac"), Card("Qh")},
-                               {Card("Kh"), Card("Qc")}};
-  game.AwardPot(game.same_stack_no_rake_, hands, board);
+  poker_engine::BoardArray<deck::ISO_Card> board = {Card("5c"), Card("Qd"),
+      Card("Jd"), Card("Ks"), Card("3s")};
+  poker_engine::HandArray<deck::ISO_Card, 2> hands = {{{Card("Ac"), Card("Qh")},
+      {Card("Kh"), Card("Qc")}}};
+  game.set_board(board);
+  game.set_hands(hands);
+  REQUIRE(game.board() == board);
+  REQUIRE(game.hands(1) == hands[1]);
+  REQUIRE(game.PlayerCards(1) == std::array{Card("Kh"), Card("Qc"), Card("5c"),
+      Card("Qd"), Card("Jd"), Card("Ks"), Card("3s")});
+  game.AwardPot(game.same_stack_no_rake_);
   REQUIRE(game.pot() == 0);
   REQUIRE(game.bets(0) == 0);
   REQUIRE(game.stack(0) == 8050);
@@ -2504,3 +2538,23 @@ TEMPLATE_TEST_CASE("convert bet 2", "[poker_engine][node]", double,
   game.Apply(poker_engine::Action::kBet, 65);
   REQUIRE(game.pot() == 100);
 }  // TEMPLATE_TEST_CASE "convert bet 2"
+
+TEST_CASE("deal cards test", "[poker_engine][node]") {
+  poker_engine::Node<6, double> game(0, 5, 2, 0, false, false, 500);
+  for (int trial = 0; trial < 100; ++trial) {
+    game.DealCards();
+    for (poker_engine::PlayerId i = 0; i < 6; ++i) {
+      REQUIRE(game.hands(i)[0] != game.hands(i)[1]);
+      for (deck::CardN j = 0; j < poker_engine::kBoardCards; ++j) {
+        REQUIRE(game.board()[j] != game.hands(i)[0]);
+        REQUIRE(game.board()[j] != game.hands(i)[1]);
+      }
+      for (poker_engine::PlayerId j = i + 1; j < 6; ++j) {
+        REQUIRE(game.hands(i)[0] != game.hands(j)[0]);
+        REQUIRE(game.hands(i)[0] != game.hands(j)[1]);
+        REQUIRE(game.hands(i)[1] != game.hands(j)[0]);
+        REQUIRE(game.hands(i)[1] != game.hands(j)[1]);
+      }
+    }  // for i
+  }  // for trial
+}  // TEST_CASE "deal cards test"

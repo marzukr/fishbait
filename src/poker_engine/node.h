@@ -4,6 +4,7 @@
 #define SRC_POKER_ENGINE_NODE_H_
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -12,8 +13,10 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include "SKPokerEval/src/SevenEval.h"
+#include "deck/card_utils.h"
 #include "deck/definitions.h"
 #include "poker_engine/definitions.h"
 #include "utils/fraction.h"
@@ -61,7 +64,10 @@ class Node {
 
          // Chip Information
          pot_{0}, bets_{}, stack_{}, min_raise_{big_blind},
-         max_bet_{big_blind} {
+         max_bet_{big_blind},
+
+         // Card Information
+         hands_{}, board_{} {
     button_ = button_ + kPlayers - 1; /* Since NewHand() increments the button
                                          position. */
     std::fill(stack_, stack_ + kPlayers, default_stack);
@@ -109,6 +115,9 @@ class Node {
     // min_raise_ will be set after the straddle is posted
     // max_bet_ will be set after the blinds and antes are posted
 
+    /* Card Information is dealt with by DealCards() and/or set_board() and
+       set_hands(). */
+
     // Post Blinds, Antes, and Straddles
     Chips effective_ante = ante_;
     if (ante_ > 0 && !blind_before_ante_) effective_ante = PostAntes();
@@ -122,6 +131,46 @@ class Node {
 
     CyclePlayers(false);
   }  // NewHand()
+
+  /*
+    @brief Deal random cards to the players and the board.
+  */
+  void DealCards() {
+    static utils::Random rng{};
+    static deck::Deck<deck::ISO_Card> card_deck =
+        deck::UnshuffledDeck<deck::ISO_Card>();
+    for (deck::CardN i = 0; i < kPlayers * kHandCards + kBoardCards; ++i) {
+      deck::ISO_Card last_card = 51 - i;
+      std::uniform_int_distribution<deck::ISO_Card> rand_card(0, last_card);
+      deck::ISO_Card selected_card = rand_card(rng());
+      if (i < kPlayers * kHandCards) {
+        PlayerN player = i / kHandCards;
+        deck::Card hand_card = i % kHandCards;
+        hands_[player][hand_card] = card_deck[selected_card];
+      } else {
+        board_[i - kPlayers * kHandCards] = card_deck[selected_card];
+      }
+      std::swap(card_deck[selected_card], card_deck[last_card]);
+    }  // for i
+  }  // DealCards()
+
+  /*
+    @brief Returns an array of all the cards that the given player can see.
+
+    The first two cards are the hole cards. The rest are the cards on the board
+    starting with the flop, then the turn, then the river.
+
+    @param player The player whose cards to return.
+
+    @return An array of all the cards that the given player can see.
+  */
+  PlayerCardArray<deck::ISO_Card> PlayerCards(PlayerId player) const {
+    PlayerCardArray<deck::ISO_Card> player_cards;
+    std::copy(hands_[player].begin(), hands_[player].end(),
+              player_cards.begin());
+    std::copy(board_.begin(), board_.end(), player_cards.begin() + kHandCards);
+    return player_cards;
+  }
 
   /*
     @brief Get the index of a player relative to the button.
@@ -257,31 +306,17 @@ class Node {
     will have increased by the appropriate amount. Must only be called when the
     game is no longer in progress and AwardPot() hasn't already been called for
     the current hand. This version applies optimizations based on the assumption
-    that all players started the hand with the same stack amount and there is no
-    rake. The pot will not be awarded correctly if this is not the case. Note,
-    this function will also not work with a big blind ante because the big blind
-    has less effective chips than the other players.
-
-    @param hands 2d array of each player's hand. Rows for each player, columns
-        for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
-        indexing. Nullptr is a valid option if all but one player has
-        folded.
-    @param board Array of the public board cards. Follows the standard order.
-        i.e. columns [0,2] are the flop, column 3 is the turn, and column 4 is
-        the river. SKEval indexing. Nullptr is a valid option if all but one
-        player has folded.
+    that all players started the hand with the same stack amount, there is no
+    rake, and no players have mucked their hands. The pot will not be awarded
+    correctly if this is not the case. Note, this function will also not work
+    with a big blind ante because the big blind has less effective chips than
+    the other players.
   */
-  void AwardPot(SameStackNoRake,
-                const deck::SK_Card hands[kPlayers][2] = nullptr,
-                const deck::SK_Card board[5] = nullptr) {
+  void AwardPot(SameStackNoRake) {
     VerifyAwardablePot(__func__);
-    if (players_left_ == 1) {
-      return FoldVictory(folded_);
-    } else {
-      VerifyCardInfo(hands, board, __func__);
-    }
+    if (players_left_ == 1) return FoldVictory(folded_);
     SevenEval::Rank ranks[kPlayers];
-    RankPlayers(hands, board, folded_, ranks);
+    RankPlayers(folded_, ranks);
     BestPlayersData best_players = BestPlayers(ranks, folded_);
     QuotaT exact_awards[kPlayers]{};
     QuotaT pot_precise = QuotaT{1} * pot_;
@@ -298,31 +333,17 @@ class Node {
     all bets will be 0, and the winner(s)'s stack will have increased by the
     appropriate amount. Must only be called when the game is no longer in
     progress and AwardPot() hasn't already been called for the current hand.
-
-    @param hands 2d array of each player's hand. Rows for each player, columns
-        for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
-        indexing. If a player's two cards are the same, this represents a mucked
-        or folded hand. Nullptr is a valid option if all but one player has
-        folded.
-    @param board Array of the public board cards. Follows the standard order.
-        i.e. columns [0,2] are the flop, column 3 is the turn, and column 4 is
-        the river. SKEval indexing. Nullptr is a valid option if all but one
-        player has folded.
   */
-  void AwardPot(SingleRun, const deck::SK_Card hands[kPlayers][2] = nullptr,
-                const deck::SK_Card board[5] = nullptr) {
+  void AwardPot(SingleRun) {
     VerifyAwardablePot(__func__);
 
+    if (players_left_ == 1) return FoldVictory(folded_);
     bool processed[kPlayers];
-    PlayerId players_to_award = PlayersToProcess(hands, processed);
-    if (players_to_award == 1) {
-      return FoldVictory(processed);
-    } else {
-      VerifyCardInfo(hands, board, __func__);
-    }
+    PlayerId players_to_award = PlayersToProcess(processed);
+    if (players_to_award == 1) return FoldVictory(processed);
 
     SevenEval::Rank ranks[kPlayers];
-    RankPlayers(hands, board, processed, ranks);
+    RankPlayers(processed, ranks);
 
     // Loop through each side pot and award it to the appropriate player(s)
     QuotaT exact_awards[kPlayers]{};
@@ -345,29 +366,19 @@ class Node {
     appropriate amount. Must only be called when the game is no longer in
     progress and AwardPot() hasn't already been called for the current hand.
 
-    @param hands 2d array of each player's hand. Rows for each player, columns
-        for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
-        indexing. If a player's two cards are the same, this represents a mucked
-        or folded hand. Nullptr is a valid option if all but one player has
-        folded.
     @param boards Array of the public board cards. Follows the standard order.
         i.e. columns [0,2] are the flop, column 3 is the turn, and column 4 is
-        the river. SKEval indexing. Each row is a different run out. Nullptr is
-        a valid option if all but one player has folded.
-    @param n_runs How many times the board is being run.
+        the river. ISO indexing. Each row is a different run out.
   */
-  void AwardPot(MultiRun, const deck::SK_Card hands[kPlayers][2] = nullptr,
-                const deck::SK_Card boards[][5] = nullptr,
-                const uint8_t n_runs = 1) {
+  template <std::size_t kRuns>
+  void AwardPot(MultiRun,
+                const MultiBoardArray<deck::ISO_Card, kRuns>& boards) {
     VerifyAwardablePot(__func__);
 
+    if (players_left_ == 1) return FoldVictory(folded_);
     bool processed[kPlayers];
-    PlayerId players_to_award = PlayersToProcess(hands, processed);
-    if (players_to_award == 1) {
-      return FoldVictory(processed);
-    } else {
-      VerifyCardInfo(hands, boards, __func__);
-    }
+    PlayerId players_to_award = PlayersToProcess(processed);
+    if (players_to_award == 1) return FoldVictory(processed);
 
     QuotaT exact_awards[kPlayers]{};
 
@@ -379,16 +390,16 @@ class Node {
     BestPlayersData best_players_run;
     PlayerId players_to_award_run;
 
-    for (uint8_t run = 0; run < n_runs; ++run) {
+    for (std::size_t run = 0; run < kRuns; ++run) {
       std::copy(processed, processed + kPlayers, processed_run);
-      RankPlayers(hands, boards[run], processed_run, ranks_run);
+      set_board(boards[run]);
+      RankPlayers(processed_run, ranks_run);
       std::copy(bets_, bets_ + kPlayers, bets_run);
       players_to_award_run = players_to_award;
 
       // Loop through each side pot and award it to the appropriate player(s)
       while (players_to_award_run > 0) {
-        side_pot = QuotaT{1} * AllocateSidePot(bets_run, processed_run) /
-                   n_runs;
+        side_pot = AllocateSidePot(bets_run, processed_run) / QuotaT{kRuns};
         best_players_run = BestPlayers(ranks_run, processed_run);
         DivideSidePot(side_pot, ranks_run, processed_run, best_players_run,
                       exact_awards);
@@ -400,18 +411,18 @@ class Node {
     std::fill(bets_, bets_ + kPlayers, 0);
   }  // AwardPot()
 
-  /*
-    Attribute getter functions
-  */
+  // Attribute getter functions
+  // --------------------------------------------------------------------------
+
   Chips big_blind() const { return big_blind_; }
   Chips small_blind() const { return small_blind_; }
   Chips ante() const { return ante_; }
   bool big_blind_ante() const { return big_blind_ante_; }
   bool blind_before_ante() const { return blind_before_ante_; }
 
-  /*
-    Progress getter functions
-  */
+  // Progress getter functions
+  // --------------------------------------------------------------------------
+
   PlayerId button() const { return button_; }
   bool in_progress() const { return in_progress_; }
   Round round() const { return round_; }
@@ -423,14 +434,30 @@ class Node {
   PlayerId players_left() const { return players_left_; }
   PlayerId players_all_in() const { return players_all_in_; }
 
-  /*
-    Chip information getter functions
-  */
+  // Chip information getter functions
+  // --------------------------------------------------------------------------
+
   Chips pot() const { return pot_; }
   Chips bets(PlayerId player) const { return bets_[player]; }
   Chips stack(PlayerId player) const { return stack_[player]; }
   // no min_raise_ getter because it is an implementation detail
   // no max_bet_ getter because it is an implementation detail
+
+  // Card information getter functions
+  // --------------------------------------------------------------------------
+
+  const Hand<deck::ISO_Card> hands(PlayerId player) const {
+    return hands_[player];
+  }
+  const BoardArray<deck::ISO_Card>& board() const { return board_; }
+
+  // Card information setter functions
+  // --------------------------------------------------------------------------
+
+  void set_hands(const HandArray<deck::ISO_Card, kPlayers>& hands) {
+    hands_ = hands;
+  }
+  void set_board(const BoardArray<deck::ISO_Card>& board) { board_ = board; }
 
  private:
   /*
@@ -685,22 +712,18 @@ class Node {
   }
 
   /*
-    @brief Mark all non folded or mucked players as processed.
+    @brief Mark all folded or mucked players as processed.
     
     Mark all other players as not processed.
 
-    @param hands 2d array of each player's hand. Rows for each player, columns
-        for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
-        indexing. Can be nullptr if all but one player has folded.
     @param processed An array to write if a player has been processed or not to.
     
     @return The number of players that have not been processed.
   */
-  PlayerId PlayersToProcess(const deck::SK_Card hands[kPlayers][2],
-                            bool processed[kPlayers]) const {
+  PlayerN PlayersToProcess(bool processed[kPlayers]) const {
     PlayerId players_to_award = kPlayers;
     for (PlayerId i = 0; i < kPlayers; ++i) {
-      if (folded_[i] || (hands && hands[i][0] == hands[i][1])) {
+      if (folded_[i] || hands_[i][0] == hands_[i][1]) {
         processed[i] = true;
         players_to_award -= 1;
       } else {
@@ -708,21 +731,6 @@ class Node {
       }
     }  // for i
     return players_to_award;
-  }
-
-  /*
-    @brief Verifies that hands and board are not null. Throws if not.
-  */
-  void VerifyCardInfo(const void* hands, const void* board,
-                      const std::string& func) {
-    if (hands == nullptr || board == nullptr) {
-      throw std::invalid_argument(func + " called with hands = nullptr or "
-                                  "board = nullptr when there is more than 1 "
-                                  "player remaining in the game. If there is "
-                                  "more than 1 player who has not folded, we "
-                                  "need hand and card information to award the "
-                                  "pot.");
-    }
   }
 
   /*
@@ -745,24 +753,17 @@ class Node {
   /*
     @brief Writes the hand ranking of each player to a given output array.
 
-    @param hands 2d array of each player's hand. Rows for each player, columns
-        for each card. i.e. row 2 column 0 is player 2's 0th card. SKEval
-        indexing.
-    @param board Array of the public board cards. Follows the standard order.
-        i.e. columns [0,2] are the flop, column 3 is the turn, and column 4 is
-        the river. SKEval indexing.
     @param filter Players marked as true in this array will not be ranked.
     @param output Array to write hand rankings to.
-    
-    @return If this function awarded the pot.
   */
-  void RankPlayers(const deck::SK_Card hands[kPlayers][2],
-                   const deck::SK_Card board[5], const bool filter[kPlayers],
+  void RankPlayers(const bool filter[kPlayers],
                    SevenEval::Rank output[kPlayers]) const {
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i]) {
-        output[i] = SevenEval::GetRank(hands[i][0], hands[i][1], board[0],
-                                       board[1], board[2], board[3], board[4]);
+        output[i] = SevenEval::GetRank(deck::ConvertISOtoSK(hands_[i][0]),
+            deck::ConvertISOtoSK(hands_[i][1]), deck::ConvertISOtoSK(board_[0]),
+            deck::ConvertISOtoSK(board_[1]), deck::ConvertISOtoSK(board_[2]),
+            deck::ConvertISOtoSK(board_[3]), deck::ConvertISOtoSK(board_[4]));
       }
     }
   }  // RankPlayers()
@@ -978,6 +979,8 @@ class Node {
   }  // DistributeChips()
 
   // Attributes
+  // --------------------------------------------------------------------------
+
   const Chips big_blind_;         // how many chips the big blind is
   const Chips small_blind_;       // how many chips the small blind is
   const Chips ante_;              /* how many chips each player must contribute
@@ -993,28 +996,37 @@ class Node {
   const bool no_flop_no_drop_;    // is rake taken on hands without a flop?
 
   // Progress information
-  PlayerId button_;               // index of player on the button
-  bool in_progress_;              // is a hand is in progress?
-  Round round_;                   // current betting round
-  PlayCount cycled_;              /* number of players that have been cycled
-                                     through on this betting round */
-  PlayerId acting_player_;        // index of player whose turn it is
-  PlayerId pot_good_;             /* number of players who still need to act
-                                     before this round is over */
-  PlayerId no_raise_;             /* number of players who still need to act,
-                                     but can only call or fold because another
-                                     player went all in less than the
-                                     min-raise */
-  bool folded_[kPlayers];         // has the given player folded?
-  PlayerId players_left_;         // number of players who haven’t folded
-  PlayerId players_all_in_;       // number of players who are all in
+  // --------------------------------------------------------------------------
+
+  PlayerId button_;          // index of player on the button
+  bool in_progress_;         // is a hand is in progress?
+  Round round_;              // current betting round
+  PlayCount cycled_;         /* number of players that have been cycled through
+                                on this betting round */
+  PlayerId acting_player_;   // index of player whose turn it is
+  PlayerId pot_good_;        /* number of players who still need to act before
+                                this round is over */
+  PlayerId no_raise_;        /* number of players who still need to act, but can
+                                only call or fold because another player went
+                                all in less than the min-raise */
+  bool folded_[kPlayers];    // has the given player folded?
+  PlayerId players_left_;    // number of players who haven’t folded
+  PlayerId players_all_in_;  // number of players who are all in
 
   // Chip information
-  Chips pot_;                     // number of chips in the pot
-  Chips bets_[kPlayers];          // number of chips each player has bet
-  Chips stack_[kPlayers];         // number of chips each player has behind
-  Chips min_raise_;               // minimum bet amount
-  Chips max_bet_;                 // maximum amount that has been bet so far
+  // --------------------------------------------------------------------------
+
+  Chips pot_;              // number of chips in the pot
+  Chips bets_[kPlayers];   // number of chips each player has bet
+  Chips stack_[kPlayers];  // number of chips each player has behind
+  Chips min_raise_;        // minimum bet amount
+  Chips max_bet_;          // maximum amount that has been bet so far
+
+  // Card Information
+  // --------------------------------------------------------------------------
+
+  HandArray<deck::ISO_Card, kPlayers> hands_;  // cards in each player's hand.
+  BoardArray<deck::ISO_Card> board_;           // cards on the board.
 };  // Node
 
 }  // namespace poker_engine

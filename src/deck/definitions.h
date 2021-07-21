@@ -3,6 +3,7 @@
 #ifndef SRC_DECK_DEFINITIONS_H_
 #define SRC_DECK_DEFINITIONS_H_
 
+#include <array>
 #include <cstdint>
 
 namespace deck {
@@ -17,6 +18,9 @@ constexpr CardN kDeckSize = 52;
 constexpr uint8_t kUniqueHands = 169;
 constexpr uint32_t kIsoRivers = 123156254;
 constexpr uint32_t kOpHandsN = 990;  // 45 choose 2
+
+template <typename IndexScheme>
+using Deck = std::array<IndexScheme, kDeckSize>;
 
 }  // namespace deck
 

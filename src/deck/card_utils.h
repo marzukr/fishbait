@@ -3,7 +3,9 @@
 #ifndef SRC_DECK_CARD_UTILS_H_
 #define SRC_DECK_CARD_UTILS_H_
 
+#include <array>
 #include <cstdint>
+#include <numeric>
 #include <string>
 
 #include "SKPokerEval/src/Deckcards.h"
@@ -28,6 +30,13 @@ inline SK_Card ConvertISOtoSK(ISO_Card iso_card) {
 ISO_Card ISOCardFromStr(const std::string& card_str);
 
 SK_Card SKCardFromStr(const std::string& card_str);
+
+template <typename IndexScheme>
+Deck<IndexScheme> UnshuffledDeck() {
+  Deck<IndexScheme> card_deck;
+  std::iota(card_deck.begin(), card_deck.end(), 0);
+  return card_deck;
+}
 
 }  // namespace deck
 
