@@ -3,13 +3,10 @@
 #ifndef SRC_BLUEPRINT_DEFINITIONS_H_
 #define SRC_BLUEPRINT_DEFINITIONS_H_
 
-#include <array>
 #include <cstdint>
 #include <limits>
 
-#include "clustering/definitions.h"
 #include "engine/definitions.h"
-#include "engine/node.h"
 
 namespace blueprint {
 
@@ -18,16 +15,6 @@ using SequenceN = SequenceId;
 
 constexpr SequenceId kLeafId = 0;
 constexpr SequenceId kIllegalId = std::numeric_limits<SequenceId>::max();
-
-struct Sequence {
-  SequenceId id;
-  engine::Round round;
-};
-
-struct Infoset {
-  Sequence sequence;
-  clustering::CardCluster card_cluster;
-};
 
 struct Action {
   engine::Action play;

@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "blueprint/sequence_table.h"
+#include "blueprint/strategy.h"
 #include "engine/node.h"
 
 int main() {
@@ -36,4 +37,6 @@ int main() {
   std::cout << row_counts[1] << std::endl;
   std::cout << row_counts[2] << std::endl;
   std::cout << row_counts[3] << std::endl;
+  // blueprint::Strategy<6, 5> strategy(start_state, actions, 1, 1, 1, 1, 1, 1,
+  //                                    1, 1, 1, true);
 }

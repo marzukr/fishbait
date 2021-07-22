@@ -65,8 +65,8 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
 
   for (blueprint::SequenceId i = 0; i < 62; ++i) {
     for (nda::index_t j = 0; j < 2; ++j) {
-      blueprint::Sequence s = {i, engine::Round::kPreFlop};
-      REQUIRE(seq.Next(s, j) == preflop_table[i * 2 + j]);
+      REQUIRE(seq.Next(i, engine::Round::kPreFlop, j) ==
+              preflop_table[i * 2 + j]);
     }
   }
 }  // TEST_CASE "6 players all in or fold"
@@ -155,8 +155,8 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   }
   for (blueprint::SequenceId i = 0; i < 98; ++i) {
     for (nda::index_t j = 0; j < 4; ++j) {
-      blueprint::Sequence s = {i, engine::Round::kPreFlop};
-      REQUIRE(seq.Next(s, j) == preflop_table[i * 4 + j]);
+      REQUIRE(seq.Next(i, engine::Round::kPreFlop, j) ==
+              preflop_table[i * 4 + j]);
     }
   }
 
@@ -234,8 +234,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   }
   for (blueprint::SequenceId i = 0; i < 180; ++i) {
     for (nda::index_t j = 0; j < 3; ++j) {
-      blueprint::Sequence s = {i, engine::Round::kFlop};
-      REQUIRE(seq.Next(s, j) == flop_table[i * 3 + j]);
+      REQUIRE(seq.Next(i, engine::Round::kFlop, j) == flop_table[i * 3 + j]);
     }
   }
 
@@ -313,8 +312,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   }
   for (blueprint::SequenceId i = 0; i < 180; ++i) {
     for (nda::index_t j = 0; j < 3; ++j) {
-      blueprint::Sequence s = {i, engine::Round::kTurn};
-      REQUIRE(seq.Next(s, j) == turn_table[i * 3 + j]);
+      REQUIRE(seq.Next(i, engine::Round::kTurn, j) == turn_table[i * 3 + j]);
     }
   }
 
@@ -393,8 +391,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   }
   for (blueprint::SequenceId i = 0; i < 180; ++i) {
     for (nda::index_t j = 0; j < 3; ++j) {
-      blueprint::Sequence s = {i, engine::Round::kRiver};
-      REQUIRE(seq.Next(s, j) == river_table[i * 3 + j]);
+      REQUIRE(seq.Next(i, engine::Round::kRiver, j) == river_table[i * 3 + j]);
     }
   }
 }  // TEST_CASE "3 player all in fold check pot bet"

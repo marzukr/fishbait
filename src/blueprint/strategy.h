@@ -6,6 +6,7 @@
 #include "array/matrix.h"
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
+#include "clustering/cluster_table.h"
 #include "engine/definitions.h"
 #include "engine/node.h"
 
@@ -13,6 +14,15 @@ namespace blueprint {
 
 template <engine::PlayerN kPlayers, int kActions>
 class Strategy {
+ private:
+  const Regret regret_floor_;
+  const Regret prune_constant_;
+
+  clustering::ClusterTable info_abstraction_;
+  SequenceTable<kPlayers, kActions> action_abstraction_;
+  nda::matrix<Regret> regrets_[engine::kNRounds];
+  nda::matrix<ActionCount> action_counts_;
+
  public:
   /*
     @brief Constructor
@@ -23,6 +33,8 @@ class Strategy {
     @param strategy_interval The number of iterations between each update of the
         average strategy.
     @param prune_threshold The number of iterations to wait before pruning.
+    @param prune_constant Actions with regret less than this constant are
+        eligible to be pruned.
     @param LCFR_threshold The number of iterations to apply LCFR.
     @param discount_interval The number of iterations between each LCFR
         discount.
@@ -33,10 +45,10 @@ class Strategy {
     @param verbose Whether to print debug information.
   */
   Strategy(const engine::Node<kPlayers>& start_state,
-           const Action actions[kActions], int iterations,
-           int strategy_interval, int prune_threshold, int LCFR_threshold,
-           int discount_interval, Regret regret_floor, int snapshot_interval,
-           int strategy_delay, bool verbose = false);
+           const std::array<Action, kActions>& actions, int iterations,
+           int strategy_interval, int prune_threshold, Regret prune_constant,
+           int LCFR_threshold, int discount_interval, Regret regret_floor,
+           int snapshot_interval, int strategy_delay, bool verbose = false);
 
  private:
   /*
@@ -56,52 +68,56 @@ class Strategy {
   */
   void MCCFR(int iterations, int strategy_interval, int prune_threshold,
              int LCFR_threshold, int discount_interval, int snapshot_interval,
-             int strategy_delay, bool verbose) const;
+             int strategy_delay, bool verbose);
 
   /*
     @brief Computes the strategy at the given infoset from regrets.
 
-    @param i The infoset to compute the strategy for.
-    @param strategy Array to store the computed strategy.
+    @param seq The sequence id of the infoset.
+    @param card_bucket The card cluster id of the infoset.
+
+    @return An array with the computed strategy.
   */
-  void CalculateStrategy(Infoset i, double strategy[kActions]) const;
+  std::array<double, kActions> CalculateStrategy(SequenceId seq,
+      clustering::CardCluster card_bucket) const;
 
   /*
     @brief Samples an action from the strategy at the given infoset.
 
-    @param i The infoset to sample an action from.
+    @param seq The sequence id of the infoset.
+    @param card_bucket The card cluster id of the infoset.
 
     @return The index of the sampled action.
   */
-  int SampleAction(Infoset i) const;
+  int SampleAction(SequenceId seq, clustering::CardCluster card_bucket) const;
 
   /*
-    @brief Recursively iterates through actions and card dealings and thus 
-           sequenceID/cardID combinations
+    @brief Recursively updates the given player's average preflop strategy.
 
-    @param sequenceID ID of current action sequence
-    @param cardID ID of card infoset
-    @param index of current player
+    @param state State of the game at the current recursive call.
+    @param seq The sequence id of the infoset at the current recursive call.
+    @param card_bucket The card cluster id of the infoset at the current
+        recursive call.
+    @param player The player whose strategy is being updated.
   */
-  void UpdateStrategy(blueprint::sequenceID sequenceID, uint32_t cardID,
-                      uint8_t player);
+  void UpdateStrategy(engine::Node<kPlayers>& state, SequenceId seq,
+                      clustering::CardCluster card_bucket,
+                      engine::PlayerId player);
 
   /*
-    @brief Recursively iterates over game tree (by sampling action from current 
-           regrets) and updates regrets table with outcome 
+    @brief Recursively updates the given player's cumulative regrets.
 
-    @param sequenceID ID of current action sequence
-    @param cardID ID of card infoset
-    @param index of current player
-    @param whether to prune extreme regrets
+    @param state State of the game at the current recursive call.
+    @param seq The sequence id of the infoset at the current recursive call.
+    @param card_bucket The card cluster id of the infoset at the current
+        recursive call.
+    @param player The player whose strategy is being updated.
+    @param prune Whether to prune actions with regrets less than
+        prunt_constant_.
   */
-  void TraverseMCCFR(blueprint::sequenceID sequenceID, uint32_t cardID,
-                      uint8_t player, bool prune);
-
-  const Regret regret_floor_;
-  SequenceTable<kPlayers, kActions> sequences_;
-  nda::matrix<Regret> regrets_[engine::kNRounds];
-  nda::matrix<ActionCount> action_counts_;
+  void TraverseMCCFR(engine::Node<kPlayers>& state, SequenceId seq,
+                     clustering::CardCluster card_bucket,
+                     engine::PlayerId player, bool prune);
 };  // class Strategy
 
 }  // namespace blueprint

@@ -46,19 +46,19 @@ class SequenceTable {
 
     row_counter.fill(0);
     Generate(start_state_, actions_, action_counter, 0, row_counter,
-        [&](Sequence seq, nda::index_t action_col, SequenceId val) {
-          engine::RoundId round_id = engine::GetRoundId(seq.round);
-          table_[round_id](seq.id, action_col) = val;
+        [&](SequenceId seq, engine::RoundId round_id, nda::index_t action_col,
+            SequenceId val) {
+          table_[round_id](seq, action_col) = val;
         });
   }  // SequenceTable()
 
   SequenceTable(const SequenceTable& other) = default;
   SequenceTable& operator=(const SequenceTable& other) = default;
 
-  SequenceId Next(Sequence current_node, nda::index_t action_idx) const {
-    engine::RoundId round_id =
-        engine::GetRoundId(current_node.round);
-    return table_[round_id](current_node.id, action_idx);
+  SequenceId Next(SequenceId current_node, engine::Round round,
+                  nda::index_t action_idx) const {
+    engine::RoundId round_id = engine::GetRoundId(round);
+    return table_[round_id](current_node, action_idx);
   }
 
   SequenceN States(engine::RoundId round_id) const {
@@ -137,7 +137,7 @@ class SequenceTable {
     NumSequenceArray row_counter;
     std::fill(row_counter.begin(), row_counter.end(), 0);
     Generate(start_state, sorted_actions, num_actions, 0, row_counter,
-             [](Sequence, nda::index_t, SequenceId) {});
+             [](SequenceId, engine::RoundId, nda::index_t, SequenceId) {});
     return row_counter;
   }
 
@@ -196,14 +196,14 @@ class SequenceTable {
         if (new_state.Apply(action.play, chip_size)) {
           engine::Round new_round = new_state.round();
           engine::RoundId new_round_id = engine::GetRoundId(new_round);
-          row_marker({seq, state.round()}, j, row_counter[new_round_id]);
+          row_marker(seq, round_id, j, row_counter[new_round_id]);
           Generate(new_state, actions, num_actions, row_counter[new_round_id],
                    row_counter, row_marker);
         } else {
-          row_marker({seq, state.round()}, j, kLeafId);
+          row_marker(seq, round_id, j, kLeafId);
         }
       } else {
-        row_marker({seq, state.round()}, j, kIllegalId);
+        row_marker(seq, round_id, j, kIllegalId);
       }
     }  // for j
   }

@@ -24,7 +24,7 @@ void CerealSave(const std::string_view path, T* save, bool verbose = false) {
     std::cout << "Saving to " << path << std::endl;
   }
 
-  std::ofstream os(path, std::ios::binary);
+  std::ofstream os(path.data(), std::ios::binary);
   cereal::PortableBinaryOutputArchive archive(os);
   archive(*save);
 
@@ -39,7 +39,7 @@ void CerealLoad(const std::string_view path, T* load, bool verbose = false) {
     std::cout << "Loading " << path << std::endl;
   }
 
-  std::ifstream ins(path, std::ios::binary);
+  std::ifstream ins(path.data(), std::ios::binary);
   cereal::PortableBinaryInputArchive iarchive(ins);
   iarchive(*load);
 
