@@ -35,8 +35,9 @@ int main(int argc, char *argv[]) {
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run
-    utils::CerealSave("out/clustering/flop_clusters.cereal",
-                      k.assignments(), true);
+    utils::CerealSave(
+        clustering::ClusterAssignmentFile(engine::Round::kFlop),
+        k.assignments(), true);
 
   // cluster turn
   } else if (!strcmp(argv[1], "turn")) {
@@ -49,8 +50,9 @@ int main(int argc, char *argv[]) {
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run
-    utils::CerealSave("out/clustering/turn_clusters.cereal",
-                      k.assignments(), true);
+    utils::CerealSave(
+        clustering::ClusterAssignmentFile(engine::Round::kTurn),
+        k.assignments(), true);
 
   // cluster river
   } else if (!strcmp(argv[1], "river")) {
@@ -62,8 +64,9 @@ int main(int argc, char *argv[]) {
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run
-    utils::CerealSave("out/clustering/river_clusters.cereal",
-                      k.assignments(), true);
+    utils::CerealSave(
+        clustering::ClusterAssignmentFile(engine::Round::kRiver),
+        k.assignments(), true);
   }
 
   return 0;

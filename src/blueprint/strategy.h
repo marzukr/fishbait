@@ -1,4 +1,4 @@
-// Copyright 2021 Marzuk Rashid
+// Copyright 2021 Marzuk Rashid and Emily Dale
 
 #ifndef SRC_BLUEPRINT_STRATEGY_H_
 #define SRC_BLUEPRINT_STRATEGY_H_
@@ -6,12 +6,12 @@
 #include "array/matrix.h"
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
-#include "poker_engine/definitions.h"
-#include "poker_engine/node.h"
+#include "engine/definitions.h"
+#include "engine/node.h"
 
 namespace blueprint {
 
-template <poker_engine::PlayerN kPlayers, int kActions>
+template <engine::PlayerN kPlayers, int kActions>
 class Strategy {
  public:
   /*
@@ -32,7 +32,7 @@ class Strategy {
         average strategy and taking snapshots.
     @param verbose Whether to print debug information.
   */
-  Strategy(const poker_engine::Node<kPlayers>& start_state,
+  Strategy(const engine::Node<kPlayers>& start_state,
            const Action actions[kActions], int iterations,
            int strategy_interval, int prune_threshold, int LCFR_threshold,
            int discount_interval, Regret regret_floor, int snapshot_interval,
@@ -100,7 +100,7 @@ class Strategy {
 
   const Regret regret_floor_;
   SequenceTable<kPlayers, kActions> sequences_;
-  nda::matrix<Regret> regrets_[poker_engine::kNRounds];
+  nda::matrix<Regret> regrets_[engine::kNRounds];
   nda::matrix<ActionCount> action_counts_;
 };  // class Strategy
 

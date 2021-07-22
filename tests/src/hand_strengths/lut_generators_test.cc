@@ -6,9 +6,9 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
-#include "deck/card_utils.h"
-#include "deck/definitions.h"
-#include "deck/indexer.h"
+#include "engine/card_utils.h"
+#include "engine/definitions.h"
+#include "engine/indexer.h"
 #include "hand_strengths/definitions.h"
 #include "utils/cereal.h"
 
@@ -19,10 +19,10 @@ TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {
                     &preflop_lut, true);
 
   // Test Preflop LUT
-  deck::ISO_Card c1;
-  deck::ISO_Card c2;
+  engine::ISO_Card c1;
+  engine::ISO_Card c2;
   hand_index_t index;
-  deck::Indexer handcalc(1, {2});
+  engine::Indexer<2> handcalc;
 
   // Test 4s4h
   std::array<hand_strengths::HistCount, 50> python{328, 19856, 1944, 7464, 702,
@@ -31,9 +31,9 @@ TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {
       104212, 31482, 78090, 87866, 78948, 116550, 4122, 58378, 14544, 17318,
       24216, 16228, 26888, 9504, 19524, 7740, 0, 1120, 10614, 39838, 50670,
       65002, 108000, 80156};
-  c1 = deck::ISOCardFromStr("4s");
-  c2 = deck::ISOCardFromStr("4h");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("4s");
+  c2 = engine::ISOCardFromStr("4h");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(preflop_lut(index, nda::all) ==
           nda::vector_ref<hand_strengths::HistCount>{python});
 
@@ -43,9 +43,9 @@ TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {
       92556, 97794, 85150, 121220, 119406, 115818, 111074, 124568, 209692,
       50130, 64526, 22200, 45678, 39840, 67686, 17428, 51950, 23358, 18196, 0,
       480, 6892, 50132, 37722, 69878, 80232, 118522};
-  c1 = deck::ISOCardFromStr("6s");
-  c2 = deck::ISOCardFromStr("6h");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("6s");
+  c2 = engine::ISOCardFromStr("6h");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(preflop_lut(index, nda::all) ==
           nda::vector_ref<hand_strengths::HistCount>{python});
 
@@ -55,9 +55,9 @@ TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {
       13635, 63438, 67965, 66337, 17544, 9612, 11961, 9618, 16312, 8688, 9488,
       9837, 12663, 30690, 32598, 48042, 48999, 74067, 81702, 84816, 138372,
       107064, 87969, 33836, 45250, 50607, 114084, 129504};
-  c1 = deck::ISOCardFromStr("Ks");
-  c2 = deck::ISOCardFromStr("Qs");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("Ks");
+  c2 = engine::ISOCardFromStr("Qs");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(preflop_lut(index, nda::all) ==
           nda::vector_ref<hand_strengths::HistCount>{python});
 
@@ -67,9 +67,9 @@ TEST_CASE("Preflop LUT", "[.][hand_strengths][lut_generators]") {
       7206, 10869, 15194, 2759, 7868, 6384, 1575, 7341, 10707, 23916, 23415,
       39225, 67725, 59985, 56700, 112224, 58794, 84012, 43724, 54996, 52503,
       40155, 34604, 41670, 33057, 66873, 81042, 79584, 138699};
-  c1 = deck::ISOCardFromStr("Ts");
-  c2 = deck::ISOCardFromStr("Js");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("Ts");
+  c2 = engine::ISOCardFromStr("Js");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(preflop_lut(index, nda::all) ==
           nda::vector_ref<hand_strengths::HistCount>{python});
 }  // TEST_CASE "Preflop LUT"
@@ -184,44 +184,44 @@ TEST_CASE("OCHS preflop LUT", "[.][hand_strengths][lut_generators]") {
                     &ochs_pflop_lut, true);
 
   // Test OCHS Preflop LUT
-  deck::ISO_Card c1;
-  deck::ISO_Card c2;
+  engine::ISO_Card c1;
+  engine::ISO_Card c2;
   hand_index_t index;
-  deck::Indexer handcalc(1, {2});
+  engine::Indexer<2> handcalc;
 
   // Test 4s4h
   std::array<double, 8> python{0.7067924301854952, 0.63773542235149039,
       0.51629005043410425, 0.62033047285995946, 0.50607466814971436,
       0.57061730769146102, 0.49623908415211315, 0.18910648209329986};
-  c1 = deck::ISOCardFromStr("4s");
-  c2 = deck::ISOCardFromStr("4h");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("4s");
+  c2 = engine::ISOCardFromStr("4h");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 
   // Test 6s6h
   python = {0.80545143648256701, 0.69675317583793528, 0.58721879993272219,
       0.67776445492975701, 0.52137624112798064, 0.65133747155571486,
       0.51928199966903676, 0.19143041856385981};
-  c1 = deck::ISOCardFromStr("6s");
-  c2 = deck::ISOCardFromStr("6h");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("6s");
+  c2 = engine::ISOCardFromStr("6h");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 
   // Test KsQs
   python = {0.66592875635067472, 0.68572378956421143, 0.65743699894924057,
       0.72201515172127217, 0.69275740417212617, 0.55303989813124876,
       0.49228674983853477, 0.38410719805984606};
-  c1 = deck::ISOCardFromStr("Ks");
-  c2 = deck::ISOCardFromStr("Qs");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("Ks");
+  c2 = engine::ISOCardFromStr("Qs");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 
   // Test TsJs
   python = {0.67918141757288086, 0.71507626721815865, 0.68650369512587017,
       0.55169020567956739, 0.54276122624837642, 0.48086173700940682,
       0.38734159963565767, 0.30993595958038606};
-  c1 = deck::ISOCardFromStr("Ts");
-  c2 = deck::ISOCardFromStr("Js");
-  index = handcalc.index({c1, c2});
+  c1 = engine::ISOCardFromStr("Ts");
+  c2 = engine::ISOCardFromStr("Js");
+  index = handcalc.IndexLast({c1, c2});
   REQUIRE(ochs_pflop_lut(index, nda::all) == nda::vector_ref<double>{python});
 }  // TEST_CASE "OCHS preflop LUT"

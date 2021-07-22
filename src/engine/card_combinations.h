@@ -1,16 +1,16 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_DECK_CARD_COMBINATIONS_H_
-#define SRC_DECK_CARD_COMBINATIONS_H_
+#ifndef SRC_ENGINE_CARD_COMBINATIONS_H_
+#define SRC_ENGINE_CARD_COMBINATIONS_H_
 
 #include <cassert>
 #include <cstdint>
 #include <vector>
 
-#include "deck/card_utils.h"
-#include "deck/definitions.h"
+#include "engine/card_utils.h"
+#include "engine/definitions.h"
 
-namespace deck {
+namespace engine {
 
 class CardCombinations {
  public:
@@ -51,8 +51,6 @@ class CardCombinations {
     }
   }
 
-  static uint32_t N_Choose_K(uint32_t n, uint32_t k);
-
   Card operator()(CardN idx) const { return state_[idx]; }
   Card* begin() { return state_.data(); }
   Card* end() { return state_.data() + r_; }
@@ -76,6 +74,6 @@ class CardCombinations {
   bool is_done_;
 };  // class CardCombinations
 
-}  // namespace deck
+}  // namespace engine
 
-#endif  // SRC_DECK_CARD_COMBINATIONS_H_
+#endif  // SRC_ENGINE_CARD_COMBINATIONS_H_

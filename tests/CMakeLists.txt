@@ -8,23 +8,21 @@ add_executable(tests.out main.cc
   src/clustering/distance_test.cc
   src/clustering/k_means_test.cc
 
-  src/deck/card_combinations_test.cc
-  src/deck/card_utils_test.cc
-  src/deck/indexer_test.cc
+  src/engine/card_combinations_test.cc
+  src/engine/card_utils_test.cc
+  src/engine/indexer_test.cc
+  src/engine/node_test.cc
 
   src/hand_strengths/lut_generators_test.cc
-
-  src/poker_engine/node_test.cc
 
   src/utils/cereal_test.cc
   src/utils/combination_matrix_test.cc
   src/utils/fraction_test.cc
   src/utils/loop_iterator_test.cc
   src/utils/random_test.cc
-
   )
-target_link_libraries(tests.out blueprint clustering deck hand_strengths
-                      poker_engine utils)
+target_link_libraries(tests.out blueprint clustering engine hand_strengths
+                      utils)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/out/tests
   COMMAND ${CMAKE_COMMAND} -E make_directory

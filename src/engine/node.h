@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_POKER_ENGINE_NODE_H_
-#define SRC_POKER_ENGINE_NODE_H_
+#ifndef SRC_ENGINE_NODE_H_
+#define SRC_ENGINE_NODE_H_
 
 #include <algorithm>
 #include <array>
@@ -16,13 +16,12 @@
 #include <utility>
 
 #include "SKPokerEval/src/SevenEval.h"
-#include "deck/card_utils.h"
-#include "deck/definitions.h"
-#include "poker_engine/definitions.h"
+#include "engine/card_utils.h"
+#include "engine/definitions.h"
 #include "utils/fraction.h"
 #include "utils/random.h"
 
-namespace poker_engine {
+namespace engine {
 
 /* QuotaT is used to represent exact award quotas before being apportioned into
    discrete chips (double or utils::Fraction). This choice could impact the
@@ -137,15 +136,14 @@ class Node {
   */
   void DealCards() {
     static utils::Random rng{};
-    static deck::Deck<deck::ISO_Card> card_deck =
-        deck::UnshuffledDeck<deck::ISO_Card>();
-    for (deck::CardN i = 0; i < kPlayers * kHandCards + kBoardCards; ++i) {
-      deck::ISO_Card last_card = 51 - i;
-      std::uniform_int_distribution<deck::ISO_Card> rand_card(0, last_card);
-      deck::ISO_Card selected_card = rand_card(rng());
+    static Deck<ISO_Card> card_deck = UnshuffledDeck<ISO_Card>();
+    for (CardN i = 0; i < kPlayers * kHandCards + kBoardCards; ++i) {
+      ISO_Card last_card = 51 - i;
+      std::uniform_int_distribution<ISO_Card> rand_card(0, last_card);
+      ISO_Card selected_card = rand_card(rng());
       if (i < kPlayers * kHandCards) {
         PlayerN player = i / kHandCards;
-        deck::Card hand_card = i % kHandCards;
+        Card hand_card = i % kHandCards;
         hands_[player][hand_card] = card_deck[selected_card];
       } else {
         board_[i - kPlayers * kHandCards] = card_deck[selected_card];
@@ -164,8 +162,8 @@ class Node {
 
     @return An array of all the cards that the given player can see.
   */
-  PlayerCardArray<deck::ISO_Card> PlayerCards(PlayerId player) const {
-    PlayerCardArray<deck::ISO_Card> player_cards;
+  PlayerCardArray<ISO_Card> PlayerCards(PlayerId player) const {
+    PlayerCardArray<ISO_Card> player_cards;
     std::copy(hands_[player].begin(), hands_[player].end(),
               player_cards.begin());
     std::copy(board_.begin(), board_.end(), player_cards.begin() + kHandCards);
@@ -372,7 +370,7 @@ class Node {
   */
   template <std::size_t kRuns>
   void AwardPot(MultiRun,
-                const MultiBoardArray<deck::ISO_Card, kRuns>& boards) {
+                const MultiBoardArray<ISO_Card, kRuns>& boards) {
     VerifyAwardablePot(__func__);
 
     if (players_left_ == 1) return FoldVictory(folded_);
@@ -446,18 +444,18 @@ class Node {
   // Card information getter functions
   // --------------------------------------------------------------------------
 
-  const Hand<deck::ISO_Card> hands(PlayerId player) const {
+  const Hand<ISO_Card> hands(PlayerId player) const {
     return hands_[player];
   }
-  const BoardArray<deck::ISO_Card>& board() const { return board_; }
+  const BoardArray<ISO_Card>& board() const { return board_; }
 
   // Card information setter functions
   // --------------------------------------------------------------------------
 
-  void set_hands(const HandArray<deck::ISO_Card, kPlayers>& hands) {
+  void set_hands(const HandArray<ISO_Card, kPlayers>& hands) {
     hands_ = hands;
   }
-  void set_board(const BoardArray<deck::ISO_Card>& board) { board_ = board; }
+  void set_board(const BoardArray<ISO_Card>& board) { board_ = board; }
 
  private:
   /*
@@ -760,10 +758,10 @@ class Node {
                    SevenEval::Rank output[kPlayers]) const {
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i]) {
-        output[i] = SevenEval::GetRank(deck::ConvertISOtoSK(hands_[i][0]),
-            deck::ConvertISOtoSK(hands_[i][1]), deck::ConvertISOtoSK(board_[0]),
-            deck::ConvertISOtoSK(board_[1]), deck::ConvertISOtoSK(board_[2]),
-            deck::ConvertISOtoSK(board_[3]), deck::ConvertISOtoSK(board_[4]));
+        output[i] = SevenEval::GetRank(ConvertISOtoSK(hands_[i][0]),
+            ConvertISOtoSK(hands_[i][1]), ConvertISOtoSK(board_[0]),
+            ConvertISOtoSK(board_[1]), ConvertISOtoSK(board_[2]),
+            ConvertISOtoSK(board_[3]), ConvertISOtoSK(board_[4]));
       }
     }
   }  // RankPlayers()
@@ -1025,10 +1023,10 @@ class Node {
   // Card Information
   // --------------------------------------------------------------------------
 
-  HandArray<deck::ISO_Card, kPlayers> hands_;  // cards in each player's hand.
-  BoardArray<deck::ISO_Card> board_;           // cards on the board.
+  HandArray<ISO_Card, kPlayers> hands_;  // cards in each player's hand.
+  BoardArray<ISO_Card> board_;           // cards on the board.
 };  // Node
 
-}  // namespace poker_engine
+}  // namespace engine
 
-#endif  // SRC_POKER_ENGINE_NODE_H_
+#endif  // SRC_ENGINE_NODE_H_

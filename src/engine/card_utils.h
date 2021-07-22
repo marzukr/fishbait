@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_DECK_CARD_UTILS_H_
-#define SRC_DECK_CARD_UTILS_H_
+#ifndef SRC_ENGINE_CARD_UTILS_H_
+#define SRC_ENGINE_CARD_UTILS_H_
 
 #include <array>
 #include <cstdint>
@@ -9,9 +9,9 @@
 #include <string>
 
 #include "SKPokerEval/src/Deckcards.h"
-#include "deck/definitions.h"
+#include "engine/definitions.h"
 
-namespace deck {
+namespace engine {
 
 inline std::string SKCardPretty(Card i) {
   return pretty_card[i];
@@ -38,6 +38,6 @@ Deck<IndexScheme> UnshuffledDeck() {
   return card_deck;
 }
 
-}  // namespace deck
+}  // namespace engine
 
-#endif  // SRC_DECK_CARD_UTILS_H_
+#endif  // SRC_ENGINE_CARD_UTILS_H_

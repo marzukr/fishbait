@@ -7,8 +7,8 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
-#include "deck/card_utils.h"
-#include "deck/indexer.h"
+#include "engine/card_utils.h"
+#include "engine/indexer.h"
 #include "hand_strengths/definitions.h"
 #include "hand_strengths/lut_files.h"
 #include "hand_strengths/lut_generators.h"

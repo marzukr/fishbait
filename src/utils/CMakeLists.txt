@@ -5,6 +5,8 @@ add_library(
   fraction.cc
   fraction.h
   loop_iterator.h
+  "math.h"
+  meta.h
   random.h
   timer.h
   )

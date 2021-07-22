@@ -7,11 +7,11 @@ add_library(
   ochs.cc
   ochs.h
   )
-target_link_libraries(hand_strengths handisomorphism deck)
+target_link_libraries(hand_strengths handisomorphism engine)
 
 add_executable(hand_strengths.out main.cc
                ${CMAKE_BINARY_DIR}/out/hand_strengths)
-target_link_libraries(hand_strengths.out hand_strengths deck)
+target_link_libraries(hand_strengths.out hand_strengths engine)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/out/hand_strengths
   COMMAND ${CMAKE_COMMAND} -E make_directory

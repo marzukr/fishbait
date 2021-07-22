@@ -19,7 +19,7 @@ namespace utils {
 enum class FileAction { Load, Save };
 
 template <typename T>
-void CerealSave(std::string path, T* save, bool verbose = false) {
+void CerealSave(const std::string_view path, T* save, bool verbose = false) {
   if (verbose) {
     std::cout << "Saving to " << path << std::endl;
   }
@@ -34,7 +34,7 @@ void CerealSave(std::string path, T* save, bool verbose = false) {
 }  // CerealSave
 
 template <typename T>
-void CerealLoad(std::string path, T* load, bool verbose = false) {
+void CerealLoad(const std::string_view path, T* load, bool verbose = false) {
   if (verbose) {
     std::cout << "Loading " << path << std::endl;
   }

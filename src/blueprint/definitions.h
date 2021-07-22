@@ -8,8 +8,8 @@
 #include <limits>
 
 #include "clustering/definitions.h"
-#include "poker_engine/definitions.h"
-#include "poker_engine/node.h"
+#include "engine/definitions.h"
+#include "engine/node.h"
 
 namespace blueprint {
 
@@ -21,7 +21,7 @@ constexpr SequenceId kIllegalId = std::numeric_limits<SequenceId>::max();
 
 struct Sequence {
   SequenceId id;
-  poker_engine::Round round;
+  engine::Round round;
 };
 
 struct Infoset {
@@ -30,17 +30,17 @@ struct Infoset {
 };
 
 struct Action {
-  poker_engine::Action play;
+  engine::Action play;
 
   // Bet size proportional to the pot. Only matters if play is a kBet.
   double size = 0;
 
   /* The largest rotation this action can be player. Not inclusive. 0 indicates
      the action can be player on any rotation. */
-  poker_engine::PlayCount max_rotation = 0;
+  engine::PlayCount max_rotation = 0;
 
   // The latest round this action can be player. Inclusive.
-  poker_engine::Round max_round = poker_engine::Round::kRiver;
+  engine::Round max_round = engine::Round::kRiver;
 
   bool operator==(const Action& rhs) const {
     return play == rhs.play && size == rhs.size &&
