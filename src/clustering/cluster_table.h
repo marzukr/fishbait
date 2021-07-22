@@ -32,7 +32,7 @@ class ClusterTable {
   */
   template <engine::PlayerN kPlayers>
   std::array<CardCluster, kPlayers> Clusters(
-      const engine::Node<kPlayers>& node) const {
+      const engine::Node<kPlayers>& node) {
     std::array<CardCluster, kPlayers> card_clusters;
     for (engine::PlayerId i = 0; i < kPlayers; ++i) {
       if (!node.folded(i)) {

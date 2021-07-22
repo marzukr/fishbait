@@ -52,21 +52,27 @@ class Indexer {
   /*
     @brief Returns the index of the given cards at the last round.
   */
-  hand_index_t IndexLast(const CardArray<>& cards) {
+  template <std::size_t kArrSize>
+  hand_index_t IndexLast(const std::array<ISO_Card, kArrSize>& cards) {
+    static_assert(kArrSize >= TotalCards());
     return hand_index_last(isocalc_, cards.data());
   }
 
   /*
     @brief Returns the index of the given cards at the last round.
   */
-  hand_index_t IndexLast(const ISO_Card(&cards)[TotalCards(Rounds() - 1)]) {
+  template <std::size_t kArrSize>
+  hand_index_t IndexLast(const ISO_Card(&cards)[kArrSize]) {
+    static_assert(kArrSize >= TotalCards());
     return hand_index_last(isocalc_, cards);
   }
 
   /*
     @brief Returns the index of the given cards at each round.
   */
-  IndexArray Index(const ISO_Card(&cards)[TotalCards(Rounds() - 1)]) {
+  template <std::size_t kArrSize>
+  IndexArray Index(const ISO_Card(&cards)[kArrSize]) {
+    static_assert(kArrSize >= TotalCards());
     IndexArray indicies;
     hand_index_all(isocalc_, cards, indicies.data());
     return indicies;
@@ -75,7 +81,9 @@ class Indexer {
   /*
     @brief Returns the indices of the cards at each round.
   */
-  IndexArray Index(const CardArray<>& cards) {
+  template <std::size_t kArrSize>
+  IndexArray Index(const std::array<ISO_Card, kArrSize>& cards) {
+    static_assert(kArrSize >= TotalCards());
     IndexArray indicies;
     hand_index_all(isocalc_, cards.data(), indicies.data());
     return indicies;

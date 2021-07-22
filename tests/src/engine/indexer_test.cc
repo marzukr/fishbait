@@ -20,6 +20,7 @@ TEST_CASE("Basic flop indexer tests", "[engine][indexer]") {
   hand_index_t i = 0;
   std::set<hand_index_t> indicies_set;
   for (hand_index_t idx = 0; idx < 1500000; ++idx) {
+    REQUIRE(flop.Unindex<0>(idx).size() == 2);
     rollout = flop.Unindex<1>(idx);
     bool invalid_cards = false;
     for (engine::Card c : rollout) {

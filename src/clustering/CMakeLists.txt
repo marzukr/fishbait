@@ -10,5 +10,10 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(clustering engine Threads::Threads)
 
-add_executable(clustering.out main.cc)
+add_executable(clustering.out main.cc ${CMAKE_BINARY_DIR}/out/clustering)
 target_link_libraries(clustering.out clustering)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/out/clustering
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+          ${CMAKE_BINARY_DIR}/out/clustering
+  )

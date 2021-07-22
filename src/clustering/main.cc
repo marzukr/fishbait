@@ -31,7 +31,8 @@ int main(int argc, char *argv[]) {
 
     // run clustering 10 times
     clustering::KMeans<hand_strengths::HistCount,
-                       clustering::EarthMoverDistance> k(200);
+                       clustering::EarthMoverDistance>
+        k(clustering::NumClusters(engine::Round::kFlop));
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run
@@ -46,7 +47,8 @@ int main(int argc, char *argv[]) {
 
     // run clustering 10 times
     clustering::KMeans<hand_strengths::HistCount,
-                       clustering::EarthMoverDistance> k(200);
+                       clustering::EarthMoverDistance>
+        k(clustering::NumClusters(engine::Round::kTurn));
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run
@@ -60,7 +62,8 @@ int main(int argc, char *argv[]) {
     hand_strengths::RiverLUT_File(utils::FileAction::Load, &data_points, true);
 
     // run clustering 10 times
-    clustering::KMeans<double, clustering::EuclideanDistance> k(200);
+    clustering::KMeans<double, clustering::EuclideanDistance>
+        k(clustering::NumClusters(engine::Round::kRiver));
     k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
 
     // save best run

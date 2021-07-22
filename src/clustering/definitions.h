@@ -24,6 +24,12 @@ inline constexpr std::string_view ClusterAssignmentFile(engine::Round r) {
   return kClusterAssignmentFiles[engine::GetRoundId(r)];
 }
 
+constexpr std::array<CardCluster, engine::kNRounds> kNumClusters = {
+    engine::kUniqueHands, 200, 200, 200};
+inline constexpr CardCluster NumClusters(engine::Round r) {
+  return kNumClusters[engine::GetRoundId(r)];
+}
+
 }  // namespace clustering
 
 #endif  // SRC_CLUSTERING_DEFINITIONS_H_

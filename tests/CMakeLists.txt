@@ -5,6 +5,7 @@ add_executable(tests.out main.cc
 
   src/blueprint/sequence_table_test.cc
 
+  src/clustering/cluster_table_test.cc
   src/clustering/distance_test.cc
   src/clustering/k_means_test.cc
 
