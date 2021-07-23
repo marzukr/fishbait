@@ -4,6 +4,8 @@
 #define SRC_CLUSTERING_CLUSTER_TABLE_H_
 
 #include <array>
+#include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #include "clustering/definitions.h"
@@ -31,34 +33,39 @@ class ClusterTable {
     betting round.
   */
   template <engine::PlayerN kPlayers>
-  std::array<CardCluster, kPlayers> Clusters(
+  std::array<CardCluster, kPlayers> ClusterArray(
       const engine::Node<kPlayers>& node) {
     std::array<CardCluster, kPlayers> card_clusters;
     for (engine::PlayerId i = 0; i < kPlayers; ++i) {
       if (!node.folded(i)) {
-        std::array player_cards = node.PlayerCards(i);
-        hand_index_t idx;
-        switch (node.round()) {
-          case engine::Round::kPreFlop:
-            card_clusters[i] = preflop_indexer_.IndexLast(player_cards);
-            break;
-          case engine::Round::kFlop:
-            idx = flop_indexer_.IndexLast(player_cards);
-            card_clusters[i] = table_[1][idx];
-            break;
-          case engine::Round::kTurn:
-            idx = turn_indexer_.IndexLast(player_cards);
-            card_clusters[i] = table_[2][idx];
-            break;
-          case engine::Round::kRiver:
-            idx = river_indexer_.IndexLast(player_cards);
-            card_clusters[i] = table_[3][idx];
-            break;
-        }  // switch node.round()
+        card_clusters[i] = Cluster(node, i);
       }
-    }  // for i
+    }
     return card_clusters;
-  }  // Clusters()
+  }  // ClusterArray()
+
+  /*
+    @brief Returns the card cluster for the given player in the given node.
+  */
+  template <engine::PlayerN kPlayers>
+  CardCluster Cluster(const engine::Node<kPlayers>& node,
+                      engine::PlayerId player) {
+    std::array player_cards = node.PlayerCards(player);
+    switch (node.round()) {
+      case engine::Round::kPreFlop:
+        return preflop_indexer_.IndexLast(player_cards);
+      case engine::Round::kFlop:
+        return table_[1][flop_indexer_.IndexLast(player_cards)];
+      case engine::Round::kTurn:
+        return table_[2][turn_indexer_.IndexLast(player_cards)];
+      case engine::Round::kRiver:
+        return table_[3][river_indexer_.IndexLast(player_cards)];
+    }
+    std::stringstream ss;
+    ss << +engine::GetRoundId(node.round()) << " is not a valid round."
+       << std::endl;
+    throw std::out_of_range(ss.str());
+  }
 };  // class ClusterTable
 
 }  // namespace clustering

@@ -14,7 +14,7 @@ TEST_CASE("ClusterTable bounds check", "[.][clustering][cluster_table]") {
     for (int trial = 0; trial < 100; ++trial) {
       game.DealCards();
       std::array<clustering::CardCluster, kPlayers> clusters =
-          table.Clusters(game);
+          table.ClusterArray(game);
       for (std::size_t j = 0; j < clusters.size(); ++j) {
         REQUIRE(clusters[j] < clustering::NumClusters(game.round()));
         static_assert(!std::is_signed_v<clustering::CardCluster>);

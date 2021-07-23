@@ -2,10 +2,13 @@
 
 #include "clustering/cluster_table.h"
 
+#include <array>
 #include <numeric>
 
 #include "clustering/definitions.h"
 #include "engine/definitions.h"
+#include "engine/indexer.h"
+#include "engine/node.h"
 #include "utils/cereal.h"
 
 namespace clustering {

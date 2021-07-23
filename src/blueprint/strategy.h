@@ -20,7 +20,7 @@ class Strategy {
 
   clustering::ClusterTable info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
-  nda::matrix<Regret> regrets_[engine::kNRounds];
+  std::array<nda::matrix<Regret>, engine::kNRounds> regrets_;
   nda::matrix<ActionCount> action_counts_;
 
  public:
@@ -109,14 +109,14 @@ class Strategy {
 
     @param state State of the game at the current recursive call.
     @param seq The sequence id of the infoset at the current recursive call.
-    @param card_bucket The card cluster id of the infoset at the current
-        recursive call.
+    @param card_bucket The card cluster ids for each non folded player in the
+        current round.
     @param player The player whose strategy is being updated.
     @param prune Whether to prune actions with regrets less than
         prunt_constant_.
   */
   void TraverseMCCFR(engine::Node<kPlayers>& state, SequenceId seq,
-                     clustering::CardCluster card_bucket,
+                     std::array<clustering::CardCluster, kPlayers> card_buckets,
                      engine::PlayerId player, bool prune);
 };  // class Strategy
 
