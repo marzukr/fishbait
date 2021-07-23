@@ -49,6 +49,8 @@ class Strategy {
            int strategy_interval, int prune_threshold, Regret prune_constant,
            int LCFR_threshold, int discount_interval, Regret regret_floor,
            int snapshot_interval, int strategy_delay, bool verbose = false);
+  Strategy(const Strategy& other) = default;
+  Strategy& operator=(const Strategy& other) = default;
 
  private:
   /*
