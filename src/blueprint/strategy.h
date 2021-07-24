@@ -3,7 +3,7 @@
 #ifndef SRC_BLUEPRINT_STRATEGY_H_
 #define SRC_BLUEPRINT_STRATEGY_H_
 
-#include "array/matrix.h"
+#include "array/array.h"
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
 #include "clustering/cluster_table.h"
@@ -15,13 +15,18 @@ namespace blueprint {
 template <engine::PlayerN kPlayers, int kActions>
 class Strategy {
  private:
+  using InfosetActionTableShape = nda::shape<nda::dim<>, nda::dim<>,
+                                             nda::dense_dim<>>;
+  template <typename T>
+  using InfosetActionTable = nda::array<T, InfosetActionTableShape>;
+
   const Regret regret_floor_;
   const Regret prune_constant_;
 
   clustering::ClusterTable info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
-  std::array<nda::matrix<Regret>, engine::kNRounds> regrets_;
-  nda::matrix<ActionCount> action_counts_;
+  std::array<InfosetActionTable<Regret>, engine::kNRounds> regrets_;
+  InfosetActionTable<ActionCount> action_counts_;
 
  public:
   /*
