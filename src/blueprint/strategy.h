@@ -27,6 +27,7 @@ class Strategy {
 
   clustering::ClusterTable info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
+  // Card Buckets x Sequences x Actions
   std::array<InfosetActionTable<Regret>, engine::kNRounds> regrets_;
   InfosetActionTable<ActionCount> action_counts_;
 
