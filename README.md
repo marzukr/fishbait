@@ -8,7 +8,7 @@ From the root directory:
 
 1. `mkdir -p build`
 2. `cd build`
-3. `cmake <options> ..`
+3. `cmake <options> ..`gfdgsfdg
     * Possible Options:
         * Add `-D CMAKE_C_COMPILER=<c-compiler>` and 
           `-D CMAKE_CXX_COMPILER=<cpp-compiler>`
