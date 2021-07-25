@@ -46,4 +46,4 @@ installed for code coverage.
     * Type names with acronyms (like `OCHS_N`) may have underscores.
 * This project follows the [Google Python Style guide](https://google.github.io/styleguide/pyguide.html)
   with the following exceptions:
-    * 2 spaces are used for indentation
+    * 2 spaces are used for indentatio
