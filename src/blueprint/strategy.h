@@ -3,6 +3,8 @@
 #ifndef SRC_BLUEPRINT_STRATEGY_H_
 #define SRC_BLUEPRINT_STRATEGY_H_
 
+#include <algorithm>
+
 #include "array/array.h"
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
@@ -81,22 +83,49 @@ class Strategy {
     @brief Computes the strategy at the given infoset from regrets.
 
     @param seq The sequence id of the infoset.
+    @param round The betting round of the infoset.
     @param card_bucket The card cluster id of the infoset.
 
     @return An array with the computed strategy.
   */
   std::array<double, kActions> CalculateStrategy(SequenceId seq,
-      clustering::CardCluster card_bucket) const;
+      engine::Round round, clustering::CardCluster card_bucket) const {
+    engine::RoundId round_id = engine::GetRoundId(round);
+
+    Regret sum = 0;
+    int legal_action_count = 0;
+    for (nda::index_t action_id : regrets_[round_id].k()) {
+      if (action_abstraction_.Next(seq, round_id, action_id) != kIllegalId) {
+        ++legal_action_count;
+      }
+      sum += std::max(0, regrets_[round_id](card_bucket, seq, action_id));
+    }
+
+    std::array<double, kActions> strategy = {0};
+    for (nda::index_t action_id : regrets_[round_id].k()) {
+      if (sum > 0) {
+        strategy[action_id] = std::max(0, regrets_[round_id](card_bucket, seq,
+                                                             action_id));
+        strategy[action_id] /= sum;
+      } else {
+        strategy[action_id] = 1.0 / legal_action_count;
+      }
+    }
+
+    return strategy;
+  }
 
   /*
     @brief Samples an action from the strategy at the given infoset.
 
     @param seq The sequence id of the infoset.
+    @param round The betting round of the infoset.
     @param card_bucket The card cluster id of the infoset.
 
     @return The index of the sampled action.
   */
-  int SampleAction(SequenceId seq, clustering::CardCluster card_bucket) const;
+  int SampleAction(SequenceId seq, engine::Round round,
+      clustering::CardCluster card_bucket) const;
 
   /*
     @brief Recursively updates the given player's average preflop strategy.
