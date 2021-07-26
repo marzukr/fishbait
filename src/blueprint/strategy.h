@@ -82,7 +82,7 @@ class Strategy {
   }
 
   /*
-    @brief Initializes a infoset x card x action table for a given round.
+    @brief Initializes a card x sequence x action table for a given round.
   */
   template<typename T>
   InfosetActionTable<T> InitInfosetActionTable(engine::Round r) {
