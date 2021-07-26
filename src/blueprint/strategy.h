@@ -86,9 +86,10 @@ class Strategy {
   template<typename T>
   InfosetActionTable<T> InitInfosetActionTable(engine::RoundId r) {
     return InfosetActionTable<T>{{clustering::kNumClusters[r],
-                               action_abstraction_.States(r),
-                               action_abstraction_.ActionCount(r)}, 0};
+                                  action_abstraction_.States(r),
+                                  action_abstraction_.ActionCount(r)}, 0};
   }
+
   /*
     @brief Computes the strategy using the MCCFR algorithm.
 
