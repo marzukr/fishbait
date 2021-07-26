@@ -62,8 +62,7 @@ class ClusterTable {
         return table_[3][river_indexer_.IndexLast(player_cards)];
     }
     std::stringstream ss;
-    ss << +engine::GetRoundId(node.round()) << " is not a valid round."
-       << std::endl;
+    ss << +(+node.round()) << " is not a valid round." << std::endl;
     throw std::out_of_range(ss.str());
   }
 };  // class ClusterTable

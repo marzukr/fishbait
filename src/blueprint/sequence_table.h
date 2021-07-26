@@ -46,9 +46,9 @@ class SequenceTable {
 
     row_counter.fill(0);
     Generate(start_state_, actions_, action_counter, 0, row_counter,
-        [&](SequenceId seq, engine::RoundId round_id, nda::index_t action_col,
+        [&](SequenceId seq, engine::Round round, nda::index_t action_col,
             SequenceId val) {
-          table_[round_id](seq, action_col) = val;
+          table_[+round](seq, action_col) = val;
         });
   }  // SequenceTable()
 
@@ -57,33 +57,20 @@ class SequenceTable {
 
   SequenceId Next(SequenceId current_node, engine::Round round,
                   nda::index_t action_idx) const {
-    engine::RoundId round_id = engine::GetRoundId(round);
-    return table_[round_id](current_node, action_idx);
+    return table_[+round](current_node, action_idx);
   }
 
-  SequenceN States(engine::RoundId round_id) const {
-    return table_[round_id].rows();
-  }
   SequenceN States(engine::Round round) const {
-    engine::RoundId round_id = engine::GetRoundId(round);
-    return States(round_id);
+    return table_[+round].rows();
   }
 
-  nda::size_t ActionCount(engine::RoundId round_id) const {
-    return table_[round_id].columns();
-  }
   nda::size_t ActionCount(engine::Round round) const {
-    engine::RoundId round_id = engine::GetRoundId(round);
-    return ActionCount(round_id);
+    return table_[+round].columns();
   }
 
-  nda::const_vector_ref<Action> Actions(engine::RoundId round_id) const {
-    return nda::const_vector_ref<Action>(&actions_[round_id][0],
-                                         ActionCount(round_id));
-  }
   nda::const_vector_ref<Action> Actions(engine::Round round) const {
-    engine::RoundId round_id = engine::GetRoundId(round);
-    return Actions(round_id);
+    return nda::const_vector_ref<Action>(&actions_[+round][0],
+                                         ActionCount(round));
   }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
@@ -137,7 +124,7 @@ class SequenceTable {
     NumSequenceArray row_counter;
     std::fill(row_counter.begin(), row_counter.end(), 0);
     Generate(start_state, sorted_actions, num_actions, 0, row_counter,
-             [](SequenceId, engine::RoundId, nda::index_t, SequenceId) {});
+             [](SequenceId, engine::Round, nda::index_t, SequenceId) {});
     return row_counter;
   }
 
@@ -154,10 +141,8 @@ class SequenceTable {
                           NumActionsArray& num_actions) {
     std::fill(num_actions.begin(), num_actions.end(), 0);
     for (std::size_t i = 0; i < kActions; ++i) {
-      for (engine::RoundId round = 0; round < engine::kNRounds;
-           ++round) {
-        engine::RoundId action_round =
-            engine::GetRoundId(actions[i].max_round);
+      for (engine::RoundId round = 0; round < engine::kNRounds; ++round) {
+        engine::RoundId action_round = +actions[i].max_round;
         if (round <= action_round) {
           sorted_actions[round][num_actions[round]] = actions[i];
           ++num_actions[round];
@@ -183,27 +168,25 @@ class SequenceTable {
                        const ActionArray& actions,
                        const NumActionsArray& num_actions, SequenceId seq,
                        NumSequenceArray& row_counter, RowMarkFn&& row_marker) {
-    engine::RoundId round_id = engine::GetRoundId(state.round());
-    if (row_counter[round_id] == kIllegalId) {
+    if (row_counter[+state.round()] == kIllegalId) {
       throw std::overflow_error("Sequence table has too many rows.");
     }
-    ++row_counter[round_id];
-    for (std::size_t j = 0; j < num_actions[round_id]; ++j) {
-      Action action = actions[round_id][j];
+    ++row_counter[+state.round()];
+    for (std::size_t j = 0; j < num_actions[+state.round()]; ++j) {
+      Action action = actions[+state.round()][j];
       engine::Chips chip_size = ActionSize(action, state);
       if (chip_size) {
         engine::Node<kPlayers> new_state = state;
         if (new_state.Apply(action.play, chip_size)) {
           engine::Round new_round = new_state.round();
-          engine::RoundId new_round_id = engine::GetRoundId(new_round);
-          row_marker(seq, round_id, j, row_counter[new_round_id]);
-          Generate(new_state, actions, num_actions, row_counter[new_round_id],
+          row_marker(seq, state.round(), j, row_counter[+new_round]);
+          Generate(new_state, actions, num_actions, row_counter[+new_round],
                    row_counter, row_marker);
         } else {
-          row_marker(seq, round_id, j, kLeafId);
+          row_marker(seq, state.round(), j, kLeafId);
         }
       } else {
-        row_marker(seq, round_id, j, kIllegalId);
+        row_marker(seq, state.round(), j, kIllegalId);
       }
     }  // for j
   }

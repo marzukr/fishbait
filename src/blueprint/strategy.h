@@ -60,9 +60,9 @@ class Strategy {
            : regret_floor_{regret_floor}, prune_constant_{prune_constant},
              info_abstraction_{verbose},
              action_abstraction_{actions, start_state},
-             regrets_{InitRegretTable()},
-             action_counts_{InitInfosetActionTable<ActionCount>(
-                 engine::GetRoundId(engine::Round::kPreFlop))} {
+             regrets_{InitRegretTable()}, action_counts_{
+                InitInfosetActionTable<ActionCount>(+engine::Round::kPreFlop)
+             } {
     MCCFR(iterations, strategy_interval, prune_threshold, LCFR_threshold,
           discount_interval, snapshot_interval, strategy_delay, verbose);
   }
@@ -76,7 +76,7 @@ class Strategy {
   std::array<InfosetActionTable<Regret>, engine::kNRounds> InitRegretTable() {
     std::array<InfosetActionTable<Regret>, engine::kNRounds> regret_table;
     for (engine::RoundId r = 0; r < engine::kNRounds; ++r) {
-      regret_table[r] = InitInfosetActionTable<Regret>(r);
+      regret_table[r] = InitInfosetActionTable<Regret>(engine::Round{r});
     }
     return regret_table;
   }
@@ -85,8 +85,8 @@ class Strategy {
     @brief Initializes a infoset x card x action table for a given round.
   */
   template<typename T>
-  InfosetActionTable<T> InitInfosetActionTable(engine::RoundId r) {
-    return InfosetActionTable<T>{{clustering::kNumClusters[r],
+  InfosetActionTable<T> InitInfosetActionTable(engine::Round r) {
+    return InfosetActionTable<T>{{clustering::NumClusters(r),
                                   action_abstraction_.States(r),
                                   action_abstraction_.ActionCount(r)}, 0};
   }
@@ -121,22 +121,20 @@ class Strategy {
   */
   std::array<double, kActions> CalculateStrategy(SequenceId seq,
       engine::Round round, clustering::CardCluster card_bucket) const {
-    engine::RoundId round_id = engine::GetRoundId(round);
-
     Regret sum = 0;
     int legal_action_count = 0;
-    for (nda::index_t action_id : regrets_[round_id].k()) {
-      if (action_abstraction_.Next(seq, round_id, action_id) != kIllegalId) {
+    for (nda::index_t action_id : regrets_[+round].k()) {
+      if (action_abstraction_.Next(seq, +round, action_id) != kIllegalId) {
         ++legal_action_count;
       }
-      sum += std::max(0, regrets_[round_id](card_bucket, seq, action_id));
+      sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
     }
 
     std::array<double, kActions> strategy = {0};
-    for (nda::index_t action_id : regrets_[round_id].k()) {
+    for (nda::index_t action_id : regrets_[+round].k()) {
       if (sum > 0) {
-        strategy[action_id] = std::max(0, regrets_[round_id](card_bucket, seq,
-                                                             action_id));
+        strategy[action_id] = std::max(0, regrets_[+round](card_bucket, seq,
+                                                           action_id));
         strategy[action_id] /= sum;
       } else {
         strategy[action_id] = 1.0 / legal_action_count;

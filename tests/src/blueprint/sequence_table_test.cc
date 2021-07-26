@@ -56,7 +56,7 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   REQUIRE(seq.ActionCount(engine::Round::kRiver) == 2);
 
   for (engine::RoundId i = 0; i < engine::kNRounds; ++i) {
-    engine::Round round = engine::GetRound(i);
+    engine::Round round = engine::Round{i};
     nda::const_vector_ref<blueprint::Action> round_actions = seq.Actions(round);
     for (int i = 0; i < round_actions.width(); ++i) {
       REQUIRE(round_actions(i) == actions[i]);
