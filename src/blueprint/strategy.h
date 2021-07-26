@@ -56,12 +56,11 @@ class Strategy {
            int strategy_interval, int prune_threshold, Regret prune_constant,
            int LCFR_threshold, int discount_interval, Regret regret_floor,
            int snapshot_interval, int strategy_delay, bool verbose = false)
-
            : regret_floor_{regret_floor}, prune_constant_{prune_constant},
              info_abstraction_{verbose},
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()},
-             action_counts_{InitInfosetActionTable(
+             action_counts_{InitInfosetActionTable<ActionCount>(
                  engine::GetRoundId(engine::Round::kPreFlop))} {
     MCCFR(iterations, strategy_interval, prune_threshold, LCFR_threshold,
           discount_interval, snapshot_interval, strategy_delay, verbose);
@@ -70,16 +69,23 @@ class Strategy {
   Strategy& operator=(const Strategy& other) = default;
 
  private:
+  /*
+    @brief Initializes regret table.
+  */
   std::array<InfosetActionTable<Regret>, engine::kNRounds> InitRegretTable() {
     std::array<InfosetActionTable<Regret>, engine::kNRounds> regret_table;
     for (engine::RoundId r = 0; r < engine::kNRounds; ++r) {
-      regret_table[r] = InitInfosetActionTable(r);
+      regret_table[r] = InitInfosetActionTable<Regret>(r);
     }
     return regret_table;
   }
+
+  /*
+    @brief Initializes a infoset x card x action table for a given round.
+  */
   template<typename T>
   InfosetActionTable<T> InitInfosetActionTable(engine::RoundId r) {
-    return InfosetActionTable{{clustering::kNumClusters[r],
+    return InfosetActionTable<T>{{clustering::kNumClusters[r],
                                action_abstraction_.States(r),
                                action_abstraction_.ActionCount(r)}, 0};
   }
