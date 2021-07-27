@@ -3,7 +3,7 @@
 #ifndef SRC_UTILS_META_H_
 #define SRC_UTILS_META_H_
 
-namespace utils {
+namespace fishbait {
 
 template <int kFirstNum = 0, int... kNums>
 constexpr int PackSum(int depth = sizeof...(kNums)) {
@@ -14,6 +14,6 @@ constexpr int PackSum(int depth = sizeof...(kNums)) {
   }
 }
 
-}  // namespace utils
+}  // namespace fishbait
 
 #endif  // SRC_UTILS_META_H_

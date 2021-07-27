@@ -64,15 +64,15 @@ def operator_to_str(operator):
 def construct_fraction(frac_obj, it = None):
   """Returns C++ code to construct the given Python fraction."""
   if it is None:
-    return "utils::Fraction{{{}, {}}}".format(frac_obj.numerator,
-                                              frac_obj.denominator)
+    return "fishbait::Fraction{{{}, {}}}".format(frac_obj.numerator,
+                                                 frac_obj.denominator)
   else:
-    return "utils::Fraction f{}{{{}, {}}};".format(it, frac_obj.numerator,
-                                                   frac_obj.denominator)
+    return "fishbait::Fraction f{}{{{}, {}}};".format(it, frac_obj.numerator,
+                                                      frac_obj.denominator)
 
 def construct_fraction_arith(a1, a2, operator, it):
   """Returns C++ code to construct a fraction through arithmetic."""
-  return "utils::Fraction f{} = {} {} {};".format(it, a1, operator, a2)
+  return "fishbait::Fraction f{} = {} {} {};".format(it, a1, operator, a2)
 
 def int_type_str(bits, signed):
   """For instance, with bits=8 and signed = False, returns "uint8_t"."""

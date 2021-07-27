@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 
-namespace utils {
+namespace fishbait {
 
 class Timer {
  public:
@@ -38,6 +38,6 @@ class Timer {
   std::chrono::time_point<std::chrono::high_resolution_clock> start_;
 };  // Timer
 
-}  // namespace utils
+}  // namespace fishbait
 
 #endif  // SRC_UTILS_TIMER_H_

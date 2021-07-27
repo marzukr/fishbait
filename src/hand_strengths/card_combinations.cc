@@ -1,15 +1,15 @@
 // Copyright 2021 Marzuk Rashid
 
-#include "engine/card_combinations.h"
+#include "hand_strengths/card_combinations.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 
-#include "engine/card_utils.h"
-#include "engine/definitions.h"
+#include "poker/card_utils.h"
+#include "poker/definitions.h"
 
-namespace engine {
+namespace fishbait {
 
 CardCombinations::CardCombinations(CardN r) : state_(r+1, 0),
                                               included_(kDeckSize, true), r_(r),
@@ -55,4 +55,4 @@ bool CardCombinations::MoveToNextIncluded(CardN i) {
   }
 }
 
-}  // namespace engine
+}  // namespace fishbait

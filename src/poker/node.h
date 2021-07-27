@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_ENGINE_NODE_H_
-#define SRC_ENGINE_NODE_H_
+#ifndef SRC_POKER_NODE_H_
+#define SRC_POKER_NODE_H_
 
 #include <algorithm>
 #include <array>
@@ -16,12 +16,12 @@
 #include <utility>
 
 #include "SKPokerEval/src/SevenEval.h"
-#include "engine/card_utils.h"
-#include "engine/definitions.h"
+#include "poker/card_utils.h"
+#include "poker/definitions.h"
 #include "utils/fraction.h"
 #include "utils/random.h"
 
-namespace engine {
+namespace fishbait {
 
 /* QuotaT is used to represent exact award quotas before being apportioned into
    discrete chips (double or utils::Fraction). This choice could impact the
@@ -135,8 +135,8 @@ class Node {
     @brief Deal random cards to the players and the board.
   */
   void DealCards() {
-    static utils::Random rng{};
-    static Deck<ISO_Card> card_deck = UnshuffledDeck<ISO_Card>();
+    thread_local Random rng{};
+    thread_local Deck<ISO_Card> card_deck = UnshuffledDeck<ISO_Card>();
     for (CardN i = 0; i < kPlayers * kHandCards + kBoardCards; ++i) {
       ISO_Card last_card = 51 - i;
       std::uniform_int_distribution<ISO_Card> rand_card(0, last_card);
@@ -1027,6 +1027,6 @@ class Node {
   BoardArray<ISO_Card> board_;           // cards on the board.
 };  // Node
 
-}  // namespace engine
+}  // namespace fishbait
 
-#endif  // SRC_ENGINE_NODE_H_
+#endif  // SRC_POKER_NODE_H_

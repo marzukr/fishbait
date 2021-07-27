@@ -14,7 +14,7 @@
 #include "cereal/types/tuple.hpp"
 #include "cereal/types/vector.hpp"
 
-namespace utils {
+namespace fishbait {
 
 enum class FileAction { Load, Save };
 
@@ -61,7 +61,7 @@ void Cereal(FileAction action, std::string path, T* data,
   }
 }
 
-}  // namespace utils
+}  // namespace fishbait
 
 namespace cereal {
 

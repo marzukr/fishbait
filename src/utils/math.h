@@ -3,7 +3,7 @@
 #ifndef SRC_UTILS_MATH_H_
 #define SRC_UTILS_MATH_H_
 
-namespace utils {
+namespace fishbait {
 
 constexpr uint32_t N_Choose_K(uint32_t n, uint32_t k) {
   if (k > n) return 0;
@@ -18,6 +18,6 @@ constexpr uint32_t N_Choose_K(uint32_t n, uint32_t k) {
   return result;
 }
 
-}  // namespace utils
+}  // namespace fishbait
 
 #endif  // SRC_UTILS_MATH_H_

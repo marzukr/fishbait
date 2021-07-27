@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace utils {
+namespace fishbait {
 
 /*
   ----------------------------------------------------------------------------
@@ -515,4 +515,4 @@ template int64_t Fraction::Compare<uint8_t>(uint8_t) const;
 template int64_t Fraction::Compare<uint16_t>(uint16_t) const;
 template int64_t Fraction::Compare<uint32_t>(uint32_t) const;
 
-}  // namespace utils
+}  // namespace fishbait

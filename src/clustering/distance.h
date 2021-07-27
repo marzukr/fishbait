@@ -11,7 +11,7 @@
 
 #include "array/array.h"
 
-namespace clustering {
+namespace fishbait {
 
 template <typename T, typename U>
 class EarthMoverDistance {
@@ -49,6 +49,6 @@ class EuclideanDistance {
   }
 };
 
-}  // namespace clustering
+}  // namespace fishbait
 
 #endif  // SRC_CLUSTERING_DISTANCE_H_

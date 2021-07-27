@@ -8,12 +8,12 @@
 
 #include "array/array.h"
 #include "array/matrix.h"
-#include "engine/definitions.h"
-#include "engine/indexer.h"
 #include "hand_strengths/definitions.h"
 #include "hand_strengths/ochs.h"
+#include "poker/definitions.h"
+#include "poker/indexer.h"
 
-namespace hand_strengths {
+namespace fishbait {
 
 std::vector<ShowdownStrength> ShowdownLUT(const bool verbose = false);
 
@@ -29,9 +29,8 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose = false);
   @param showdown_lut The showdown LUT to use.
   @param verbose Option to print progress.
 */
-template <hand_index_t kLUTSize, HistBucketN kBuckets,
-          engine::CardN kSimulationCards, engine::RoundN kISORound,
-          typename IndexerT>
+template <hand_index_t kLUTSize, HistBucketN kBuckets, CardN kSimulationCards,
+          RoundN kISORound, typename IndexerT>
 nda::matrix<HistCount> EHS_LUT(IndexerT& isocalc,
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
@@ -56,6 +55,6 @@ nda::matrix<double> OCHS_PreflopLUT(
     const std::vector<ShowdownStrength>& showdown_lut,
     const bool verbose = false);
 
-}  // namespace hand_strengths
+}  // namespace fishbait
 
 #endif  // SRC_HAND_STRENGTHS_LUT_GENERATORS_H_

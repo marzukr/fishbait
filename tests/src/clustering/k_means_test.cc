@@ -52,8 +52,8 @@ TEST_CASE("Elkan 10 double points 2 dimensions 3 clusters",
   (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
   (*initial_centers)(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
 
-  clustering::KMeans<double, clustering::EuclideanDistance>
-      k(3, std::move(initial_centers));
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(
+      3, std::move(initial_centers));
   k.Elkan(features);
 
   std::vector<double> correct_c0{1.2979202268901564, 0.4511877774581576};
@@ -67,8 +67,8 @@ TEST_CASE("Elkan 10 double points 2 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{2, 2, 0, 2, 1, 1, 1, 0, 0,
-                                                      1};
+  std::vector<fishbait::MeanId> correct_assignments{2, 2, 0, 2, 1, 1, 1, 0, 0,
+                                                    1};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -114,8 +114,8 @@ TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters",
   (*initial_centers)(3, nda::all).copy_elems(nda::vector_ref<double>(c3));
   (*initial_centers)(4, nda::all).copy_elems(nda::vector_ref<double>(c4));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance>
-      k(5, std::move(initial_centers));
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(
+      5, std::move(initial_centers));
   k.Elkan(features);
 
   std::vector<double> correct_c0{4.5, 2};
@@ -134,8 +134,8 @@ TEST_CASE("Elkan 10 int points 2 dimensions 5 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{0, 4, 0, 2, 3, 1, 4, 3, 3,
-                                                      2};
+  std::vector<fishbait::MeanId> correct_assignments{0, 4, 0, 2, 3, 1, 4, 3, 3,
+                                                    2};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -361,8 +361,8 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
   (*initial_centers)(3, nda::all).copy_elems(nda::vector_ref<double>(c3));
   (*initial_centers)(4, nda::all).copy_elems(nda::vector_ref<double>(c4));
 
-  clustering::KMeans<double, clustering::EuclideanDistance>
-      k(5, std::move(initial_centers));
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(
+      5, std::move(initial_centers));
   k.Elkan(features);
 
   std::vector<double> correct_c0{0.7148766666666666 , 0.8232170028571429 };
@@ -381,7 +381,7 @@ TEST_CASE("Elkan 100 double points 2 dimensions 5 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{4, 2, 4, 2, 3, 2, 4, 3, 0,
+  std::vector<fishbait::MeanId> correct_assignments{4, 2, 4, 2, 3, 2, 4, 3, 0,
       2, 0, 4, 1, 2, 0, 3, 0, 4, 1, 1, 0, 2, 3, 0, 3, 0, 2, 0, 1, 2, 1, 1, 3, 4,
       3, 3, 0, 4, 0, 2, 1, 1, 1, 1, 0, 3, 2, 1, 2, 3, 3, 4, 2, 3, 1, 1, 3, 3, 1,
       3, 4, 0, 2, 1, 1, 1, 2, 2, 3, 1, 4, 0, 1, 3, 3, 4, 4, 0, 0, 0, 4, 2, 2, 1,
@@ -425,8 +425,8 @@ TEST_CASE("Elkan 10 double points 1 dimension 2 clusters",
   (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
   (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
 
-  clustering::KMeans<double, clustering::EuclideanDistance>
-      k(2, std::move(initial_centers));
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(2,
+      std::move(initial_centers));
   k.Elkan(features);
 
   std::vector<double> correct_c0{-4.120122438};
@@ -438,8 +438,8 @@ TEST_CASE("Elkan 10 double points 1 dimension 2 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{0, 0, 0, 0, 1, 1, 0, 1, 1,
-                                                      1};
+  std::vector<fishbait::MeanId> correct_assignments{0, 0, 0, 0, 1, 1, 0, 1, 1,
+                                                    1};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -481,8 +481,8 @@ TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters",
   (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
   (*initial_centers)(2, nda::all).copy_elems(nda::vector_ref<double>(c2));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance>
-      k(3, std::move(initial_centers));
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(
+      3, std::move(initial_centers));
   k.Elkan(features);
 
   std::vector<double> correct_c0{-1.6666666666666667, 3.6666666666666665, -4,
@@ -502,8 +502,8 @@ TEST_CASE("Elkan 10 int points 10 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{2, 2, 0, 2, 0, 2, 1, 1, 1,
-                                                      0};
+  std::vector<fishbait::MeanId> correct_assignments{2, 2, 0, 2, 0, 2, 1, 1, 1,
+                                                    0};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -543,8 +543,8 @@ TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   (*initial_centers)(0, nda::all).copy_elems(nda::vector_ref<double>(c0));
   (*initial_centers)(1, nda::all).copy_elems(nda::vector_ref<double>(c1));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance>
-      k(2, std::move(initial_centers));
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(
+      2, std::move(initial_centers));
   k.Elkan(features);
 
   std::vector<double> correct_c0{10, 10};
@@ -556,8 +556,8 @@ TEST_CASE("Elkan 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{1, 1, 1, 1, 1, 1, 0, 0, 0,
-                                                      0};
+  std::vector<fishbait::MeanId> correct_assignments{1, 1, 1, 1, 1, 1, 0, 0, 0,
+                                                    0};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -592,8 +592,8 @@ TEST_CASE("kmeans++ 10 double points 2 dimensions 3 clusters",
   features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
-  clustering::KMeans<double, clustering::EuclideanDistance> k(3);
-  k.InitPlusPlus(features, false, utils::Random::Seed(42));
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(3);
+  k.InitPlusPlus(features, false, fishbait::Random::Seed(42));
   const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{2.44595585, 3.44402974};
@@ -633,8 +633,8 @@ TEST_CASE("kmeans++ 10 int points 2 dimensions 5 clusters",
   features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(5);
-  k.InitPlusPlus(features, false, utils::Random::Seed(18));
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(5);
+  k.InitPlusPlus(features, false, fishbait::Random::Seed(18));
   const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{3, 6};
@@ -858,8 +858,8 @@ TEST_CASE("kmeans++ 100 double points 2 dimensions 5 clusters",
   features(98, nda::all).copy_elems(nda::vector_ref<double>(d98));
   features(99, nda::all).copy_elems(nda::vector_ref<double>(d99));
 
-  clustering::KMeans<double, clustering::EuclideanDistance> k(5);
-  k.InitPlusPlus(features, false, utils::Random::Seed(78));
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(5);
+  k.InitPlusPlus(features, false, fishbait::Random::Seed(78));
   const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{0.36555605, 0.30401102};
@@ -903,8 +903,8 @@ TEST_CASE("kmeans++ 10 double points 1 dimension 2 clusters",
   features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
-  clustering::KMeans<double, clustering::EuclideanDistance> k(2);
-  k.InitPlusPlus(features, false, utils::Random::Seed(31));
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(2);
+  k.InitPlusPlus(features, false, fishbait::Random::Seed(31));
   const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-4.6183699};
@@ -942,8 +942,8 @@ TEST_CASE("kmeans++ 10 int points 10 dimensions 3 clusters",
   features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
-  k.InitPlusPlus(features, false, utils::Random::Seed(44));
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(3);
+  k.InitPlusPlus(features, false, fishbait::Random::Seed(44));
   const nda::matrix<double>* centers = k.clusters();
 
   std::vector<double> c0{-1, -1, -3, -4, -8, -5, -3, 2, -7, -12};
@@ -983,7 +983,7 @@ TEST_CASE("kmeans++ 10 int points (6+4 duplicates) 2 dimensions 2 clusters",
   features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(2);
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(2);
   k.InitPlusPlus(features, false);
   const nda::matrix<double>* centers = k.clusters();
 
@@ -1025,13 +1025,13 @@ TEST_CASE("RandomSumInit 10 int points sum 10", "[clustering][kmeans]") {
   features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(10);
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(10);
   k.RandomSumInit(features);
   const nda::matrix<double>* centers = k.clusters();
 
   REQUIRE(centers->rows() == 10);
   REQUIRE(centers->columns() == 2);
-  for (clustering::MeanId c = 0; c < centers->rows(); ++c) {
+  for (fishbait::MeanId c = 0; c < centers->rows(); ++c) {
     double row_sum = 0;
     for (nda::index_t j = 0; j < centers->columns(); ++j) {
       row_sum += (*centers)(c, j);
@@ -1064,13 +1064,13 @@ TEST_CASE("RandomSumInit 10 double points sum 10", "[clustering][kmeans]") {
   features(8, nda::all).copy_elems(nda::vector_ref<double>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<double>(d9));
 
-  clustering::KMeans<double, clustering::EuclideanDistance> k(10);
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(10);
   k.RandomSumInit(features);
   const nda::matrix<double>* centers = k.clusters();
 
   REQUIRE(centers->rows() == 10);
   REQUIRE(centers->columns() == 2);
-  for (clustering::MeanId c = 0; c < centers->rows(); ++c) {
+  for (fishbait::MeanId c = 0; c < centers->rows(); ++c) {
     double row_sum = 0;
     for (nda::index_t j = 0; j < centers->columns(); ++j) {
       row_sum += (*centers)(c, j);
@@ -1082,13 +1082,13 @@ TEST_CASE("RandomSumInit 10 double points sum 10", "[clustering][kmeans]") {
 TEST_CASE("RandomProbInit 10 int points", "[clustering][kmeans]") {
   nda::matrix<int8_t> features({1000, 1000}, 10);
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(900);
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(900);
   k.RandomProbInit(features);
   const nda::matrix<double>* centers = k.clusters();
 
   REQUIRE(centers->rows() == 900);
   REQUIRE(centers->columns() == 1000);
-  for (clustering::MeanId c = 0; c < centers->rows(); ++c) {
+  for (fishbait::MeanId c = 0; c < centers->rows(); ++c) {
     for (nda::index_t j = 0; j < centers->columns(); ++j) {
       REQUIRE((*centers)(c, j) >= 0.0);
       REQUIRE((*centers)(c, j) < 1.0);
@@ -1121,9 +1121,9 @@ TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters",
   features(8, nda::all).copy_elems(nda::vector_ref<int8_t>(d8));
   features(9, nda::all).copy_elems(nda::vector_ref<int8_t>(d9));
 
-  clustering::KMeans<int8_t, clustering::EuclideanDistance> k(3);
-  k.MultipleRestarts(features, 10, clustering::kPlusPlus, false,
-      utils::Random::Seed(773202));
+  fishbait::KMeans<int8_t, fishbait::EuclideanDistance> k(3);
+  k.MultipleRestarts(features, 10, fishbait::kPlusPlus, false,
+      fishbait::Random::Seed(773202));
 
   std::vector<double> correct_c0{-4.666666666666667, 8.666666666666666,
       -1.3333333333333333, -4.0, -3.3333333333333335, -6.333333333333333,
@@ -1142,8 +1142,8 @@ TEST_CASE("multiple restarts 10 int points 10 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{2, 2, 1, 2, 1, 2, 0, 0, 0,
-                                                      1};
+  std::vector<fishbait::MeanId> correct_assignments{2, 2, 1, 2, 1, 2, 0, 0, 0,
+                                                    1};
 
   REQUIRE(*k.assignments() == correct_assignments);
 
@@ -1355,9 +1355,9 @@ TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters",
   features(98, nda::all).copy_elems(nda::vector_ref<double>(d98));
   features(99, nda::all).copy_elems(nda::vector_ref<double>(d99));
 
-  clustering::KMeans<double, clustering::EuclideanDistance> k(3);
-  k.MultipleRestarts(features, 10, clustering::kRandomProb, false,
-      utils::Random::Seed(1029384));
+  fishbait::KMeans<double, fishbait::EuclideanDistance> k(3);
+  k.MultipleRestarts(features, 10, fishbait::kRandomProb, false,
+                     fishbait::Random::Seed(1029384));
 
   std::vector<double> correct_c0{0.5204443935870346, 0.19430779443165194};
   std::vector<double> correct_c1{0.22296618475567098, 0.630273664551855};
@@ -1370,7 +1370,7 @@ TEST_CASE("multiple restarts 100 double points 2 dimensions 3 clusters",
 
   REQUIRE(*k.clusters() == correct_centers);
 
-  std::vector<clustering::MeanId> correct_assignments{2, 0, 0, 0, 1, 2, 1, 2, 1,
+  std::vector<fishbait::MeanId> correct_assignments{2, 0, 0, 0, 1, 2, 1, 2, 1,
       0, 1, 1, 1, 0, 1, 2, 2, 1, 0, 2, 1, 1, 0, 2, 1, 2, 0, 1, 2, 1, 1, 0, 2, 0,
       0, 2, 0, 1, 2, 0, 1, 0, 0, 0, 2, 0, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0, 0, 0, 1,
       0, 2, 1, 1, 2, 0, 1, 0, 0, 1, 2, 2, 0, 0, 1, 0, 2, 2, 2, 0, 1, 2, 1, 0, 2,

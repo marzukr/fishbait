@@ -5,15 +5,15 @@
 #include <set>
 
 #include "catch2/catch.hpp"
-#include "engine/definitions.h"
-#include "engine/indexer.h"
 #include "hand_strengths/ochs.h"
+#include "poker/definitions.h"
+#include "poker/indexer.h"
 
-TEST_CASE("Basic flop indexer tests", "[engine][indexer]") {
+TEST_CASE("Basic flop indexer tests", "[poker][indexer]") {
   const hand_index_t n_flops =
-      engine::ImperfectRecallHands(engine::Round::kFlop);
-  engine::Indexer<2, 3> flop;
-  std::array<engine::ISO_Card, 5> rollout;
+      fishbait::ImperfectRecallHands(fishbait::Round::kFlop);
+  fishbait::Indexer<2, 3> flop;
+  std::array<fishbait::ISO_Card, 5> rollout;
   std::array<hand_index_t, 2> indicies;
   std::array<hand_index_t, 2> indicies_2;
 
@@ -23,8 +23,8 @@ TEST_CASE("Basic flop indexer tests", "[engine][indexer]") {
     REQUIRE(flop.Unindex<0>(idx).size() == 2);
     rollout = flop.Unindex<1>(idx);
     bool invalid_cards = false;
-    for (engine::Card c : rollout) {
-      if (c >= engine::kDeckSize) {
+    for (fishbait::Card c : rollout) {
+      if (c >= fishbait::kDeckSize) {
         invalid_cards = true;
         break;
       }
@@ -42,7 +42,7 @@ TEST_CASE("Basic flop indexer tests", "[engine][indexer]") {
     if (array_index_last != idx || indicies_2[1] != idx || init_list != idx) {
       break;
     }
-    REQUIRE(indicies[0] < engine::kUniqueHands);
+    REQUIRE(indicies[0] < fishbait::kUniqueHands);
     REQUIRE(indicies[1] < n_flops);
     indicies_set.insert(array_index_last);
     ++i;

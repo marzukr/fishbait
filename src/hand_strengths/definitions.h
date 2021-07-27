@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <string>
 
-namespace hand_strengths {
+namespace fishbait {
 
 using OCHS_Id = uint8_t;
 using OCHS_N = OCHS_Id;
@@ -28,6 +28,6 @@ using HistCount = uint32_t;
 using HistBucketId = uint32_t;
 using HistBucketN = HistBucketId;
 
-}  // namespace hand_strengths
+}  // namespace fishbait
 
 #endif  // SRC_HAND_STRENGTHS_DEFINITIONS_H_

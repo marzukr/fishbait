@@ -1,6 +1,6 @@
 // Copyright 2021 Marzuk Rashid
 
-#include "engine/card_utils.h"
+#include "poker/card_utils.h"
 
 #include <stdexcept>
 #include <string>
@@ -8,9 +8,9 @@
 extern "C" {
   #include "hand-isomorphism/src/deck.h"
 }
-#include "engine/definitions.h"
+#include "poker/definitions.h"
 
-namespace engine {
+namespace fishbait {
 
 void CheckCardLength(const std::string& func, const std::string& card_str) {
   if (card_str.length() != 2) {
@@ -134,4 +134,4 @@ SK_Card SKCardFromStr(const std::string& card_str) {
   return suit + rank;
 }  // SKCardFromStr()
 
-}  // namespace engine
+}  // namespace fishbait

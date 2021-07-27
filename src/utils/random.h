@@ -5,7 +5,7 @@
 
 #include <random>
 
-namespace utils {
+namespace fishbait {
 
 class Random {
  public:
@@ -38,6 +38,6 @@ class Random {
   std::mt19937 rng_;
 };  // Random
 
-}  // namespace utils
+}  // namespace fishbait
 
 #endif  // SRC_UTILS_RANDOM_H_

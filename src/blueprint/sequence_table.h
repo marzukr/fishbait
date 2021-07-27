@@ -13,40 +13,39 @@
 #include "array/array.h"
 #include "array/matrix.h"
 #include "blueprint/definitions.h"
-#include "engine/definitions.h"
-#include "engine/node.h"
+#include "poker/definitions.h"
+#include "poker/node.h"
 
-namespace blueprint {
+namespace fishbait {
 
-template <engine::PlayerN kPlayers, std::size_t kActions>
+template <PlayerN kPlayers, std::size_t kActions>
 class SequenceTable {
  private:
-  using ActionArray = std::array<std::array<Action, kActions>,
-                                 engine::kNRounds>;
-  using NumActionsArray = std::array<std::size_t, engine::kNRounds>;
-  using SequenceMatrix = std::array<nda::matrix<SequenceId>,
-                                    engine::kNRounds>;
-  using NumSequenceArray = std::array<SequenceN, engine::kNRounds>;
+  using ActionArray = std::array<std::array<AbstractAction, kActions>,
+                                 kNRounds>;
+  using NumActionsArray = std::array<std::size_t, kNRounds>;
+  using SequenceMatrix = std::array<nda::matrix<SequenceId>, kNRounds>;
+  using NumSequenceArray = std::array<SequenceN, kNRounds>;
 
   ActionArray actions_;
-  const engine::Node<kPlayers> start_state_;
+  const Node<kPlayers> start_state_;
   SequenceMatrix table_;
 
  public:
-  SequenceTable(const std::array<Action, kActions>& actions,
-                const engine::Node<kPlayers>& start_state)
+  SequenceTable(const std::array<AbstractAction, kActions>& actions,
+                const Node<kPlayers>& start_state)
                 : actions_{}, start_state_{start_state}, table_{} {
     NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
     NumSequenceArray row_counter = CountSorted(actions_, action_counter,
                                                start_state);
-    for (engine::RoundId i = 0; i < engine::kNRounds; ++i) {
+    for (RoundId i = 0; i < kNRounds; ++i) {
       table_[i] = nda::matrix<SequenceId>{{row_counter[i], action_counter[i]}};
     }
 
     row_counter.fill(0);
     Generate(start_state_, actions_, action_counter, 0, row_counter,
-        [&](SequenceId seq, engine::Round round, nda::index_t action_col,
+        [&](SequenceId seq, Round round, nda::index_t action_col,
             SequenceId val) {
           table_[+round](seq, action_col) = val;
         });
@@ -55,22 +54,22 @@ class SequenceTable {
   SequenceTable(const SequenceTable& other) = default;
   SequenceTable& operator=(const SequenceTable& other) = default;
 
-  SequenceId Next(SequenceId current_node, engine::Round round,
+  SequenceId Next(SequenceId current_node, Round round,
                   nda::index_t action_idx) const {
     return table_[+round](current_node, action_idx);
   }
 
-  SequenceN States(engine::Round round) const {
+  SequenceN States(Round round) const {
     return table_[+round].rows();
   }
 
-  nda::size_t ActionCount(engine::Round round) const {
+  nda::size_t ActionCount(Round round) const {
     return table_[+round].columns();
   }
 
-  nda::const_vector_ref<Action> Actions(engine::Round round) const {
-    return nda::const_vector_ref<Action>(&actions_[+round][0],
-                                         ActionCount(round));
+  nda::const_vector_ref<AbstractAction> Actions(Round round) const {
+    return nda::const_vector_ref<AbstractAction>(&actions_[+round][0],
+                                                 ActionCount(round));
   }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
@@ -81,10 +80,10 @@ class SequenceTable {
     std::size_t bytes = sizeof(SequenceId) * elements;
     double memory = bytes / 1073741824.0;
     os << "SequenceTable<" << +kPlayers << ", " << kActions << ">" << " { "
-       << "preflop rows: " << s.States(engine::Round::kPreFlop) << "; "
-       << "flop rows: " << s.States(engine::Round::kFlop) << "; "
-       << "turn rows: " << s.States(engine::Round::kTurn) << "; "
-       << "river rows: " << s.States(engine::Round::kRiver) << "; "
+       << "preflop rows: " << s.States(Round::kPreFlop) << "; "
+       << "flop rows: " << s.States(Round::kFlop) << "; "
+       << "turn rows: " << s.States(Round::kTurn) << "; "
+       << "river rows: " << s.States(Round::kRiver) << "; "
        << "memory: " << memory << " GB; "
        << "}";
     return os;
@@ -98,8 +97,9 @@ class SequenceTable {
 
     @return Array with the number of rows in each round.
   */
-  static NumSequenceArray Count(const std::array<Action, kActions>& actions,
-                                const engine::Node<kPlayers>& start_state) {
+  static NumSequenceArray Count(
+      const std::array<AbstractAction, kActions>& actions,
+      const Node<kPlayers>& start_state) {
     ActionArray sorted_actions;
     NumActionsArray num_actions;
     SortActions(actions, sorted_actions, num_actions);
@@ -119,12 +119,12 @@ class SequenceTable {
     @return An array with the number of rows in each round.
   */
   static NumSequenceArray CountSorted(const ActionArray& sorted_actions,
-      const NumActionsArray& num_actions,
-      const engine::Node<kPlayers>& start_state) {
+                                      const NumActionsArray& num_actions,
+                                      const Node<kPlayers>& start_state) {
     NumSequenceArray row_counter;
     std::fill(row_counter.begin(), row_counter.end(), 0);
     Generate(start_state, sorted_actions, num_actions, 0, row_counter,
-             [](SequenceId, engine::Round, nda::index_t, SequenceId) {});
+             [](SequenceId, Round, nda::index_t, SequenceId) {});
     return row_counter;
   }
 
@@ -136,13 +136,13 @@ class SequenceTable {
     @param num_actions Pointer to array to save the number of actions at each
         round.
   */
-  static void SortActions(const std::array<Action, kActions>& actions,
+  static void SortActions(const std::array<AbstractAction, kActions>& actions,
                           ActionArray& sorted_actions,
                           NumActionsArray& num_actions) {
     std::fill(num_actions.begin(), num_actions.end(), 0);
     for (std::size_t i = 0; i < kActions; ++i) {
-      for (engine::RoundId round = 0; round < engine::kNRounds; ++round) {
-        engine::RoundId action_round = +actions[i].max_round;
+      for (RoundId round = 0; round < kNRounds; ++round) {
+        RoundId action_round = +actions[i].max_round;
         if (round <= action_round) {
           sorted_actions[round][num_actions[round]] = actions[i];
           ++num_actions[round];
@@ -164,8 +164,7 @@ class SequenceTable {
         given value at the given Sequence and action in the table.
   */
   template <typename RowMarkFn>
-  static void Generate(const engine::Node<kPlayers>& state,
-                       const ActionArray& actions,
+  static void Generate(const Node<kPlayers>& state, const ActionArray& actions,
                        const NumActionsArray& num_actions, SequenceId seq,
                        NumSequenceArray& row_counter, RowMarkFn&& row_marker) {
     if (row_counter[+state.round()] == kIllegalId) {
@@ -173,12 +172,12 @@ class SequenceTable {
     }
     ++row_counter[+state.round()];
     for (std::size_t j = 0; j < num_actions[+state.round()]; ++j) {
-      Action action = actions[+state.round()][j];
-      engine::Chips chip_size = ActionSize(action, state);
+      AbstractAction action = actions[+state.round()][j];
+      Chips chip_size = ActionSize(action, state);
       if (chip_size) {
-        engine::Node<kPlayers> new_state = state;
+        Node<kPlayers> new_state = state;
         if (new_state.Apply(action.play, chip_size)) {
-          engine::Round new_round = new_state.round();
+          Round new_round = new_state.round();
           row_marker(seq, state.round(), j, row_counter[+new_round]);
           Generate(new_state, actions, num_actions, row_counter[+new_round],
                    row_counter, row_marker);
@@ -196,19 +195,19 @@ class SequenceTable {
 
     @return The size of the action to play if it can be played, 0 otherwise.
   */
-  static engine::Chips ActionSize(const Action& action,
-                                  const engine::Node<kPlayers>& state) {
+  static Chips ActionSize(const AbstractAction& action,
+                          const Node<kPlayers>& state) {
     if ((action.max_rotation == 0 || state.Rotation() < action.max_rotation) &&
         (state.round() <= action.max_round)) {
       switch (action.play) {
-        case engine::Action::kAllIn:
+        case Action::kAllIn:
           return true;
-        case engine::Action::kCheckCall:
+        case Action::kCheckCall:
           return state.CanCheckCall();
-        case engine::Action::kFold:
+        case Action::kFold:
           return state.CanFold();
-        case engine::Action::kBet:
-          engine::Chips size = state.ConvertBet(action.size);
+        case Action::kBet:
+          Chips size = state.ConvertBet(action.size);
           return state.CanBet(size) ? size : false;
       }
     }
@@ -216,6 +215,6 @@ class SequenceTable {
   }
 };  // class SequenceTable
 
-}  // namespace blueprint
+}  // namespace fishbait
 
 #endif  // SRC_BLUEPRINT_SEQUENCE_TABLE_H_

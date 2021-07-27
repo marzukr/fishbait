@@ -7,7 +7,7 @@ TEST_CASE("CombinationMatrix", "[utils][combinationmatrix]") {
   const int n_items = 50;
   const double cm_filler = 5;
 
-  utils::CombinationMatrix<double> cm(n_items, cm_filler);
+  fishbait::CombinationMatrix<double> cm(n_items, cm_filler);
 
   REQUIRE(cm.n() == n_items);
 

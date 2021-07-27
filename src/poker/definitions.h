@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_ENGINE_DEFINITIONS_H_
-#define SRC_ENGINE_DEFINITIONS_H_
+#ifndef SRC_POKER_DEFINITIONS_H_
+#define SRC_POKER_DEFINITIONS_H_
 
 #include <array>
 #include <cstdint>
@@ -11,7 +11,7 @@ extern "C" {
 }
 #include "utils/math.h"
 
-namespace engine {
+namespace fishbait {
 
 using RoundId = uint8_t;
 using RoundN = RoundId;
@@ -52,8 +52,8 @@ using MultiBoardArray = std::array<BoardArray<IndexScheme>, kRuns>;
 template <typename IndexScheme>
 using PlayerCardArray = std::array<IndexScheme, kPlayerCards>;
 
-constexpr uint32_t kOpHandsN = utils::N_Choose_K(
-    kDeckSize - kHandCards - kBoardCards, kHandCards);  // 45 choose 2
+constexpr uint32_t kOpHandsN = N_Choose_K(kDeckSize - kHandCards - kBoardCards,
+                                          kHandCards);  // 45 choose 2
 
 constexpr std::array<hand_index_t, kNRounds> kImperfectRecallHands = {169,
     1286792, 13960050, 123156254};
@@ -63,6 +63,6 @@ inline constexpr hand_index_t ImperfectRecallHands(Round r) {
 constexpr hand_index_t kUniqueHands =
     ImperfectRecallHands(Round::kPreFlop);
 
-}  // namespace engine
+}  // namespace fishbait
 
-#endif  // SRC_ENGINE_DEFINITIONS_H_
+#endif  // SRC_POKER_DEFINITIONS_H_

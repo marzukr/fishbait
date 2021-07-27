@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-namespace utils {
+namespace fishbait {
 
 template <typename T>
 class CombinationMatrix {
@@ -39,6 +39,6 @@ class CombinationMatrix {
   std::vector<T> data_;
 };  // CombinationMatrix
 
-}  // namespace utils
+}  // namespace fishbait
 
 #endif  // SRC_UTILS_COMBINATION_MATRIX_H_

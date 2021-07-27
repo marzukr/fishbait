@@ -8,7 +8,7 @@
 #include <ostream>
 #include <utility>
 
-namespace utils {
+namespace fishbait {
 
 class Fraction {
  public:
@@ -206,6 +206,6 @@ template<typename T> Fraction operator/(Fraction lhs, T rhs);
 double operator/(double lhs, const Fraction& rhs);
 double operator/(const Fraction& lhs, double rhs);
 
-}  // namespace utils
+}  // namespace fishbait
 
 #endif  // SRC_UTILS_FRACTION_H_

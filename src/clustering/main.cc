@@ -26,49 +26,47 @@ int main(int argc, char *argv[]) {
 
   // cluster flop
   if (!strcmp(argv[1], "flop")) {
-    nda::matrix<hand_strengths::HistCount> data_points;
-    hand_strengths::FlopLUT_File(utils::FileAction::Load, &data_points, true);
+    nda::matrix<fishbait::HistCount> data_points;
+    fishbait::FlopLUT_File(fishbait::FileAction::Load, &data_points, true);
 
     // run clustering 10 times
-    clustering::KMeans<hand_strengths::HistCount,
-                       clustering::EarthMoverDistance>
-        k(clustering::NumClusters(engine::Round::kFlop));
-    k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
+    fishbait::KMeans<fishbait::HistCount, fishbait::EarthMoverDistance> k(
+        fishbait::NumClusters(fishbait::Round::kFlop));
+    k.MultipleRestarts(data_points, 10, fishbait::kPlusPlus, true);
 
     // save best run
-    utils::CerealSave(
-        clustering::ClusterAssignmentFile(engine::Round::kFlop),
+    fishbait::CerealSave(
+        fishbait::ClusterAssignmentFile(fishbait::Round::kFlop),
         k.assignments(), true);
 
   // cluster turn
   } else if (!strcmp(argv[1], "turn")) {
-    nda::matrix<hand_strengths::HistCount> data_points;
-    hand_strengths::TurnLUT_File(utils::FileAction::Load, &data_points, true);
+    nda::matrix<fishbait::HistCount> data_points;
+    fishbait::TurnLUT_File(fishbait::FileAction::Load, &data_points, true);
 
     // run clustering 10 times
-    clustering::KMeans<hand_strengths::HistCount,
-                       clustering::EarthMoverDistance>
-        k(clustering::NumClusters(engine::Round::kTurn));
-    k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
+    fishbait::KMeans<fishbait::HistCount, fishbait::EarthMoverDistance> k(
+        fishbait::NumClusters(fishbait::Round::kTurn));
+    k.MultipleRestarts(data_points, 10, fishbait::kPlusPlus, true);
 
     // save best run
-    utils::CerealSave(
-        clustering::ClusterAssignmentFile(engine::Round::kTurn),
+    fishbait::CerealSave(
+        fishbait::ClusterAssignmentFile(fishbait::Round::kTurn),
         k.assignments(), true);
 
   // cluster river
   } else if (!strcmp(argv[1], "river")) {
     nda::matrix<double> data_points;
-    hand_strengths::RiverLUT_File(utils::FileAction::Load, &data_points, true);
+    fishbait::RiverLUT_File(fishbait::FileAction::Load, &data_points, true);
 
     // run clustering 10 times
-    clustering::KMeans<double, clustering::EuclideanDistance>
-        k(clustering::NumClusters(engine::Round::kRiver));
-    k.MultipleRestarts(data_points, 10, clustering::kPlusPlus, true);
+    fishbait::KMeans<double, fishbait::EuclideanDistance> k(
+        fishbait::NumClusters(fishbait::Round::kRiver));
+    k.MultipleRestarts(data_points, 10, fishbait::kPlusPlus, true);
 
     // save best run
-    utils::CerealSave(
-        clustering::ClusterAssignmentFile(engine::Round::kRiver),
+    fishbait::CerealSave(
+        fishbait::ClusterAssignmentFile(fishbait::Round::kRiver),
         k.assignments(), true);
   }
 

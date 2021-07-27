@@ -8,7 +8,7 @@ add_library(
   )
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(clustering engine Threads::Threads)
+target_link_libraries(clustering poker Threads::Threads)
 
 add_executable(clustering.out main.cc ${CMAKE_BINARY_DIR}/out/clustering)
 target_link_libraries(clustering.out clustering)

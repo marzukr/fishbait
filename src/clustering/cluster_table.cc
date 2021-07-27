@@ -6,24 +6,24 @@
 #include <numeric>
 
 #include "clustering/definitions.h"
-#include "engine/definitions.h"
-#include "engine/indexer.h"
-#include "engine/node.h"
+#include "poker/definitions.h"
+#include "poker/indexer.h"
+#include "poker/node.h"
 #include "utils/cereal.h"
 
-namespace clustering {
+namespace fishbait {
 
 ClusterTable::ClusterTable(bool verbose) : table_{}, preflop_indexer_{},
                                            flop_indexer_{}, turn_indexer_{},
                                            river_indexer_{} {
-  for (engine::RoundId i = 0; i < engine::kNRounds; ++i) {
+  for (RoundId i = 0; i < kNRounds; ++i) {
     if (kClusterAssignmentFiles[i] == "") {
-      table_[i].resize(engine::kImperfectRecallHands[i]);
+      table_[i].resize(kImperfectRecallHands[i]);
       std::iota(table_[i].begin(), table_[i].end(), 0);
     } else {
-      utils::CerealLoad(kClusterAssignmentFiles[i], &table_[i], verbose);
+      CerealLoad(kClusterAssignmentFiles[i], &table_[i], verbose);
     }
   }
 }
 
-}  // namespace clustering
+}  // namespace fishbait

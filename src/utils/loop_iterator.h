@@ -5,7 +5,7 @@
 
 #include <iterator>
 
-namespace utils {
+namespace fishbait {
 
 template <typename T>
 class LoopIterator {
@@ -59,6 +59,6 @@ class LoopIterator {
   T value;
 };
 
-}  // namespace utils
+}  // namespace fishbait
 
 #endif  // SRC_UTILS_LOOP_ITERATOR_H_

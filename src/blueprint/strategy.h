@@ -9,12 +9,12 @@
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
 #include "clustering/cluster_table.h"
-#include "engine/definitions.h"
-#include "engine/node.h"
+#include "poker/definitions.h"
+#include "poker/node.h"
 
-namespace blueprint {
+namespace fishbait {
 
-template <engine::PlayerN kPlayers, int kActions>
+template <PlayerN kPlayers, int kActions>
 class Strategy {
  private:
   using InfosetActionTableShape = nda::shape<nda::dim<>, nda::dim<>,
@@ -25,10 +25,10 @@ class Strategy {
   const Regret regret_floor_;
   const Regret prune_constant_;
 
-  clustering::ClusterTable info_abstraction_;
+  ClusterTable info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
   // Card Buckets x Sequences x Actions
-  std::array<InfosetActionTable<Regret>, engine::kNRounds> regrets_;
+  std::array<InfosetActionTable<Regret>, kNRounds> regrets_;
   InfosetActionTable<ActionCount> action_counts_;
 
  public:
@@ -52,8 +52,8 @@ class Strategy {
         average strategy and taking snapshots.
     @param verbose Whether to print debug information.
   */
-  Strategy(const engine::Node<kPlayers>& start_state,
-           const std::array<Action, kActions>& actions, int iterations,
+  Strategy(const Node<kPlayers>& start_state,
+           const std::array<AbstractAction, kActions>& actions, int iterations,
            int strategy_interval, int prune_threshold, Regret prune_constant,
            int LCFR_threshold, int discount_interval, Regret regret_floor,
            int snapshot_interval, int strategy_delay, bool verbose = false)
@@ -61,7 +61,7 @@ class Strategy {
              info_abstraction_{verbose},
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
-                InitInfosetActionTable<ActionCount>(+engine::Round::kPreFlop)
+                 InitInfosetActionTable<ActionCount>(+Round::kPreFlop)
              } {
     MCCFR(iterations, strategy_interval, prune_threshold, LCFR_threshold,
           discount_interval, snapshot_interval, strategy_delay, verbose);
@@ -73,10 +73,10 @@ class Strategy {
   /*
     @brief Initializes regret table.
   */
-  std::array<InfosetActionTable<Regret>, engine::kNRounds> InitRegretTable() {
-    std::array<InfosetActionTable<Regret>, engine::kNRounds> regret_table;
-    for (engine::RoundId r = 0; r < engine::kNRounds; ++r) {
-      regret_table[r] = InitInfosetActionTable<Regret>(engine::Round{r});
+  std::array<InfosetActionTable<Regret>, kNRounds> InitRegretTable() {
+    std::array<InfosetActionTable<Regret>, kNRounds> regret_table;
+    for (RoundId r = 0; r < kNRounds; ++r) {
+      regret_table[r] = InitInfosetActionTable<Regret>(Round{r});
     }
     return regret_table;
   }
@@ -85,9 +85,8 @@ class Strategy {
     @brief Initializes a card x sequence x action table for a given round.
   */
   template<typename T>
-  InfosetActionTable<T> InitInfosetActionTable(engine::Round r) {
-    return InfosetActionTable<T>{{clustering::NumClusters(r),
-                                  action_abstraction_.States(r),
+  InfosetActionTable<T> InitInfosetActionTable(Round r) {
+    return InfosetActionTable<T>{{NumClusters(r), action_abstraction_.States(r),
                                   action_abstraction_.ActionCount(r)}, 0};
   }
 
@@ -119,8 +118,8 @@ class Strategy {
 
     @return An array with the computed strategy.
   */
-  std::array<double, kActions> CalculateStrategy(SequenceId seq,
-      engine::Round round, clustering::CardCluster card_bucket) const {
+  std::array<double, kActions> CalculateStrategy(SequenceId seq, Round round,
+      CardCluster card_bucket) const {
     Regret sum = 0;
     int legal_action_count = 0;
     for (nda::index_t action_id : regrets_[+round].k()) {
@@ -153,8 +152,7 @@ class Strategy {
 
     @return The index of the sampled action.
   */
-  int SampleAction(SequenceId seq, engine::Round round,
-      clustering::CardCluster card_bucket) const;
+  int SampleAction(SequenceId seq, Round round, CardCluster card_bucket) const;
 
   /*
     @brief Recursively updates the given player's average preflop strategy.
@@ -165,9 +163,8 @@ class Strategy {
         recursive call.
     @param player The player whose strategy is being updated.
   */
-  void UpdateStrategy(engine::Node<kPlayers>& state, SequenceId seq,
-                      clustering::CardCluster card_bucket,
-                      engine::PlayerId player);
+  void UpdateStrategy(Node<kPlayers>& state, SequenceId seq,
+                      CardCluster card_bucket, PlayerId player);
 
   /*
     @brief Recursively updates the given player's cumulative regrets.
@@ -180,11 +177,11 @@ class Strategy {
     @param prune Whether to prune actions with regrets less than
         prunt_constant_.
   */
-  void TraverseMCCFR(engine::Node<kPlayers>& state, SequenceId seq,
-                     std::array<clustering::CardCluster, kPlayers> card_buckets,
-                     engine::PlayerId player, bool prune);
+  void TraverseMCCFR(Node<kPlayers>& state, SequenceId seq,
+                     std::array<CardCluster, kPlayers> card_buckets,
+                     PlayerId player, bool prune);
 };  // class Strategy
 
-}  // namespace blueprint
+}  // namespace fishbait
 
 #endif  // SRC_BLUEPRINT_STRATEGY_H_

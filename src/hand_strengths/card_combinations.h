@@ -1,16 +1,16 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_ENGINE_CARD_COMBINATIONS_H_
-#define SRC_ENGINE_CARD_COMBINATIONS_H_
+#ifndef SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_
+#define SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_
 
 #include <cassert>
 #include <cstdint>
 #include <vector>
 
-#include "engine/card_utils.h"
-#include "engine/definitions.h"
+#include "poker/card_utils.h"
+#include "poker/definitions.h"
 
-namespace engine {
+namespace fishbait {
 
 class CardCombinations {
  public:
@@ -74,6 +74,6 @@ class CardCombinations {
   bool is_done_;
 };  // class CardCombinations
 
-}  // namespace engine
+}  // namespace fishbait
 
-#endif  // SRC_ENGINE_CARD_COMBINATIONS_H_
+#endif  // SRC_HAND_STRENGTHS_CARD_COMBINATIONS_H_

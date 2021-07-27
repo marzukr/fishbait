@@ -22,7 +22,7 @@
 #include "utils/random.h"
 #include "utils/timer.h"
 
-namespace clustering {
+namespace fishbait {
 
 enum InitProc { kPlusPlus, kRandomSum, kRandomProb };
 
@@ -53,7 +53,7 @@ class KMeans {
   */
   void MultipleRestarts(const nda::matrix<T>& data, uint32_t restarts,
                         InitProc initializer = kPlusPlus, bool verbose = false,
-                        utils::Random::Seed seed = utils::Random::Seed()) {
+                        Random::Seed seed = Random::Seed()) {
     // Variables to store the clustering with the lowest loss
     std::unique_ptr<nda::matrix<double>> clusters(nullptr);
     std::unique_ptr<std::vector<MeanId>> assignments(nullptr);
@@ -61,7 +61,7 @@ class KMeans {
     uint32_t best_trial = 0;
 
     // Random number generator to generate seeds
-    utils::Random rng(seed);
+    Random rng(seed);
     std::uniform_int_distribution<uint32_t> seed_gen;
 
     // Repeat the clustering the specified number of times
@@ -73,18 +73,18 @@ class KMeans {
       // Set the starting clusters
       switch (initializer) {
         case kPlusPlus:
-          InitPlusPlus(data, verbose, utils::Random::Seed(seed_gen(rng())));
+          InitPlusPlus(data, verbose, Random::Seed(seed_gen(rng())));
           break;
         case kRandomSum:
-          RandomSumInit(data, utils::Random::Seed(seed_gen(rng())));
+          RandomSumInit(data, Random::Seed(seed_gen(rng())));
           break;
         case kRandomProb:
-          RandomProbInit(data, utils::Random::Seed(seed_gen(rng())));
+          RandomProbInit(data, Random::Seed(seed_gen(rng())));
           break;
       }  // switch (initializer)
 
       // Run kmeans until convergence
-      Elkan(data, verbose, utils::Random::Seed(seed_gen(rng())));
+      Elkan(data, verbose, Random::Seed(seed_gen(rng())));
 
       // If the new clustering is better than the best one so far, replace it
       if (loss_ < loss) {
@@ -115,7 +115,7 @@ class KMeans {
         clusters if they are not already initialized.
   */
   void Elkan(const nda::matrix<T>& data, bool verbose = false,
-             utils::Random::Seed seed = utils::Random::Seed()) {
+             Random::Seed seed = Random::Seed()) {
     std::unique_ptr<nda::matrix<double>> clusters(nullptr);
     if (clusters_ == nullptr) {
       InitPlusPlus(data, verbose, seed);
@@ -129,7 +129,7 @@ class KMeans {
 
     // Compute and store the distance between each cluster and every other
     // cluster
-    utils::CombinationMatrix<double> cluster_dists(k_);
+    CombinationMatrix<double> cluster_dists(k_);
     for (MeanId c1 = 0; c1 < k_; ++c1) {
       for (MeanId c2 = c1 + 1; c2 < k_; ++c2) {
         cluster_dists(c1, c2) = Distance<double, double>::Compute(
@@ -178,7 +178,7 @@ class KMeans {
     }  // for x
 
     // Initialize random number generator for filling empty clusters
-    utils::Random rng(seed);
+    Random rng(seed);
     std::uniform_real_distribution<> std_unif(0.0, 1.0);
 
     if (verbose) {
@@ -193,7 +193,7 @@ class KMeans {
 
     bool converged = false;
     uint32_t iteration = 0;
-    utils::Timer t;
+    Timer t;
     while (!converged) {
       // Step 1
       // For all centers c and c', compute the distance between them
@@ -383,8 +383,8 @@ class KMeans {
         passed then a random one is chosen.
   */
   void InitPlusPlus(const nda::matrix<T>& data, bool verbose = false,
-                    utils::Random::Seed seed = utils::Random::Seed()) {
-    utils::Random rng(seed);
+                    Random::Seed seed = Random::Seed()) {
+    Random rng(seed);
     std::uniform_real_distribution<> std_unif(0.0, 1.0);
 
     // Array to store the squared distances to the nearest cluster. Initially
@@ -423,13 +423,13 @@ class KMeans {
         passed then a random one is chosen.
   */
   void RandomSumInit(const nda::matrix<T>& data,
-                     utils::Random::Seed seed = utils::Random::Seed()) {
+                     Random::Seed seed = Random::Seed()) {
     T row_sum = 0;
     for (nda::index_t j = 0; j < data.columns(); ++j) {
       row_sum += data(0, j);
     }
 
-    utils::Random rng(seed);
+    Random rng(seed);
     std::uniform_int_distribution<nda::index_t> choose_bucket(
         0, data.columns() - 1);
     std::uniform_real_distribution<double> choose_amount(0.0, row_sum + 1);
@@ -462,8 +462,8 @@ class KMeans {
         passed then a random one is chosen.
   */
   void RandomProbInit(const nda::matrix<T>& data,
-                      utils::Random::Seed seed = utils::Random::Seed()) {
-    utils::Random rng(seed);
+                      Random::Seed seed = Random::Seed()) {
+    Random rng(seed);
     std::uniform_real_distribution<double> choose_amount(0.0, 1.0);
 
     auto clusters = std::make_unique<nda::matrix<double>>(
@@ -563,6 +563,6 @@ class KMeans {
   double loss_;
 };  // KMeans
 
-}  // namespace clustering
+}  // namespace fishbait
 
 #endif  // SRC_CLUSTERING_K_MEANS_H_

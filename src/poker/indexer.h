@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
-#ifndef SRC_ENGINE_INDEXER_H_
-#define SRC_ENGINE_INDEXER_H_
+#ifndef SRC_POKER_INDEXER_H_
+#define SRC_POKER_INDEXER_H_
 
 #include <array>
 #include <cstdint>
@@ -11,10 +11,10 @@
 extern "C" {
   #include "hand-isomorphism/src/hand_index.h"
 }
-#include "engine/definitions.h"
+#include "poker/definitions.h"
 #include "utils/meta.h"
 
-namespace engine {
+namespace fishbait {
 
 template <CardN... kCardsPerRound>
 class Indexer {
@@ -23,7 +23,7 @@ class Indexer {
     @brief Get the total number of cards up to the given round.
   */
   static constexpr CardN TotalCards(std::size_t round = Rounds() - 1) {
-    return utils::PackSum<kCardsPerRound...>(round);
+    return PackSum<kCardsPerRound...>(round);
   }
 
   static constexpr std::size_t Rounds() {
@@ -100,6 +100,6 @@ class Indexer {
   }
 };  // class Indexer
 
-}  // namespace engine
+}  // namespace fishbait
 
-#endif  // SRC_ENGINE_INDEXER_H_
+#endif  // SRC_POKER_INDEXER_H_

@@ -98,7 +98,7 @@ add_module(external/hand-isomorphism/src)
 
 add_module(src/blueprint)
 add_module(src/clustering)
-add_module(src/engine)
+add_module(src/poker)
 add_module(src/hand_strengths)
 add_module(src/utils)
 

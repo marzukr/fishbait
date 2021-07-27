@@ -19,6 +19,7 @@ TEST_CASE("Test array", "[external][array]") {
   const double c_points_val = 4.75;
 
   nda::matrix<int> points({points_n, points_m}, points_val);
+  REQUIRE(points.size() == points_n * points_m);
   const nda::matrix<double> const_points({c_points_n, c_points_m},
                                          c_points_val);
 

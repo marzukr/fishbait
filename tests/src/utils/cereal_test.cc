@@ -17,11 +17,11 @@ TEST_CASE("Save and load vector test", "[utils][cereal]") {
     save_vect[i] = i + i / 10.0;
   }
   std::filesystem::remove("out/tests/vector_save_test.cereal");
-  utils::Cereal(utils::FileAction::Save, "out/tests/vector_save_test.cereal",
-                &save_vect);
+  fishbait::Cereal(fishbait::FileAction::Save,
+                   "out/tests/vector_save_test.cereal", &save_vect);
 
   std::vector<double> load_vect;
-  utils::CerealLoad("out/tests/vector_save_test.cereal", &load_vect);
+  fishbait::CerealLoad("out/tests/vector_save_test.cereal", &load_vect);
   REQUIRE(load_vect.size() == n);
   for (uint32_t i = 0; i < n; ++i) {
     REQUIRE(load_vect[i] == (i + i / 10.0));
@@ -40,11 +40,11 @@ TEST_CASE("Save and load nda test", "[utils][cereal]") {
     }
   }
   std::filesystem::remove("out/tests/nda_save_test.cereal");
-  utils::CerealSave("out/tests/nda_save_test.cereal", &save_matrix);
+  fishbait::CerealSave("out/tests/nda_save_test.cereal", &save_matrix);
 
   nda::array<int, dense_col_t> load_matrix({1, 1});
-  utils::Cereal(utils::FileAction::Load, "out/tests/nda_save_test.cereal",
-                &load_matrix);
+  fishbait::Cereal(fishbait::FileAction::Load, "out/tests/nda_save_test.cereal",
+                   &load_matrix);
   REQUIRE(load_matrix.rows() == n);
   REQUIRE(load_matrix.columns() == m);
   for (uint32_t i = 0; i < n; ++i) {
