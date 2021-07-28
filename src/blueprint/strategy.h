@@ -61,10 +61,11 @@ class Strategy {
              info_abstraction_{verbose},
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
-                 InitInfosetActionTable<ActionCount>(+Round::kPreFlop)
+                 InitInfosetActionTable<ActionCount>(Round::kPreFlop)
              } {
-    MCCFR(iterations, strategy_interval, prune_threshold, LCFR_threshold,
-          discount_interval, snapshot_interval, strategy_delay, verbose);
+    MCCFR(start_state, iterations, strategy_interval, prune_threshold, 
+          LCFR_threshold, discount_interval, snapshot_interval, strategy_delay, 
+          verbose);
   }
   Strategy(const Strategy& other) = default;
   Strategy& operator=(const Strategy& other) = default;
@@ -105,9 +106,55 @@ class Strategy {
         average strategy and taking snapshots.
     @param verbose Whether to print debug information.
   */
-  void MCCFR(int iterations, int strategy_interval, int prune_threshold,
-             int LCFR_threshold, int discount_interval, int snapshot_interval,
-             int strategy_delay, bool verbose);
+  void MCCFR(const Node<kPlayers>& start_state, int iterations, 
+             int strategy_interval, int prune_threshold, int LCFR_threshold, 
+             int discount_interval, int snapshot_interval, int strategy_delay, 
+             bool verbose) {
+    for (int t = 0; t < iterations; ++t) {
+      for (PlayerId player = 0; player < kPlayers; ++player) {
+
+        // update strategy after strategy_inveral time 
+        if(t % strategy_interval == 0) {
+          const Node<kPlayers>& strategy_state_copy = Node(start_state);
+          strategy_state_copy.DealCards();
+          UpdateStrategy(strategy_state_copy, 0, 
+                         info_abstraction_.Cluster(strategy_state_copy), 
+                         player);
+        }
+
+        // Set prune variable and traverse MCCFR
+        bool prune = false;
+        if(t > prune_threshold) {
+          std::uniform_real_distribution<> random_prune(0.0, 1.0);
+          if(random_prune < 0.05) {
+            prune = true;
+          }
+        }
+        const Node<kPlayers>& mccfr_state_copy = Node(start_state);
+        mccfr_state_copy.DealCards();
+        TraverseMCCFR(mccfr_state_copy, 0, 
+                      info_abstraction_.ClusterArray(mccfr_state_copy),
+                      player, prune);
+      }
+
+      // Discount all regrets and action counter after discount_interal
+      if (t < LCFR_threshold && t % discount_interval == 0) {
+        double d = (t*1.0/discount_interval)/((t*1.0/discount_interval) + 1);
+        for (RoundId r = 0; r < kNRounds; ++r) {
+          std::for_each(regrets_[r].data(), 
+                        regrets_[r].data()+regrets_[r].size(), 
+                        [](Regret &regret) {
+                          regret = (Regret) std::round(regret*d);
+                        });
+        }
+        std::for_each(action_counts_.data(), 
+                      action_counts_.data()+action_counts_.size(), 
+                      [](ActionCount &count) {
+                          count = (ActionCount) std::round(count*d);
+                      });
+      }
+    }
+  }
 
   /*
     @brief Computes the strategy at the given infoset from regrets.
