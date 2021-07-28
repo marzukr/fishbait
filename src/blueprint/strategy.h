@@ -4,6 +4,7 @@
 #define SRC_BLUEPRINT_STRATEGY_H_
 
 #include <algorithm>
+#include <iostream>
 
 #include "array/array.h"
 #include "blueprint/definitions.h"
@@ -11,6 +12,7 @@
 #include "clustering/cluster_table.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
+#include "utils/random.h"
 
 namespace fishbait {
 
@@ -30,6 +32,7 @@ class Strategy {
   // Card Buckets x Sequences x Actions
   std::array<InfosetActionTable<Regret>, kNRounds> regrets_;
   InfosetActionTable<ActionCount> action_counts_;
+  Random rng_;
 
  public:
   /*
@@ -62,9 +65,9 @@ class Strategy {
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
-             } {
-    MCCFR(start_state, iterations, strategy_interval, prune_threshold, 
-          LCFR_threshold, discount_interval, snapshot_interval, strategy_delay, 
+             }, rng_() {
+    MCCFR(start_state, iterations, strategy_interval, prune_threshold,
+          LCFR_threshold, discount_interval, snapshot_interval, strategy_delay,
           verbose);
   }
   Strategy(const Strategy& other) = default;
@@ -106,50 +109,57 @@ class Strategy {
         average strategy and taking snapshots.
     @param verbose Whether to print debug information.
   */
-  void MCCFR(const Node<kPlayers>& start_state, int iterations, 
-             int strategy_interval, int prune_threshold, int LCFR_threshold, 
-             int discount_interval, int snapshot_interval, int strategy_delay, 
-             bool verbose) {
+  void MCCFR(const Node<kPlayers>& start_state, int iterations,
+             int strategy_interval, int prune_threshold, int LCFR_threshold,
+             int discount_interval, [[maybe_unused]] int snapshot_interval,
+             [[maybe_unused]] int strategy_delay, bool verbose) {
+    if (verbose) {
+        std::cout << "Starting MCCFR" << std::endl;
+    }
     for (int t = 0; t < iterations; ++t) {
+      if (verbose) {
+        std::cout << "iteration: " << t << std::endl;
+      }
       for (PlayerId player = 0; player < kPlayers; ++player) {
-
-        // update strategy after strategy_inveral time 
-        if(t % strategy_interval == 0) {
+        // update strategy after strategy_inveral time
+        if (t % strategy_interval == 0) {
           const Node<kPlayers>& strategy_state_copy = Node(start_state);
           strategy_state_copy.DealCards();
-          UpdateStrategy(strategy_state_copy, 0, 
-                         info_abstraction_.Cluster(strategy_state_copy), 
+          UpdateStrategy(strategy_state_copy, 0,
+                         info_abstraction_.Cluster(strategy_state_copy),
                          player);
         }
 
         // Set prune variable and traverse MCCFR
         bool prune = false;
-        if(t > prune_threshold) {
-          std::uniform_real_distribution<> random_prune(0.0, 1.0);
-          if(random_prune < 0.05) {
+        if (t > prune_threshold) {
+          std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
+          double random_prune = uniform_distribution_(rng_());
+          if (random_prune < 0.05) {
             prune = true;
           }
         }
         const Node<kPlayers>& mccfr_state_copy = Node(start_state);
         mccfr_state_copy.DealCards();
-        TraverseMCCFR(mccfr_state_copy, 0, 
+        TraverseMCCFR(mccfr_state_copy, 0,
                       info_abstraction_.ClusterArray(mccfr_state_copy),
                       player, prune);
       }
 
       // Discount all regrets and action counter after discount_interal
       if (t < LCFR_threshold && t % discount_interval == 0) {
-        double d = (t*1.0/discount_interval)/((t*1.0/discount_interval) + 1);
+        double d = (t*1.0/discount_interval)/
+                         ((t*1.0/discount_interval) + 1);
         for (RoundId r = 0; r < kNRounds; ++r) {
-          std::for_each(regrets_[r].data(), 
-                        regrets_[r].data()+regrets_[r].size(), 
-                        [](Regret &regret) {
+          std::for_each(regrets_[r].data(),
+                        regrets_[r].data()+regrets_[r].size(),
+                        [=](Regret& regret) {
                           regret = (Regret) std::round(regret*d);
                         });
         }
-        std::for_each(action_counts_.data(), 
-                      action_counts_.data()+action_counts_.size(), 
-                      [](ActionCount &count) {
+        std::for_each(action_counts_.data(),
+                      action_counts_.data()+action_counts_.size(),
+                      [=](ActionCount &count) {
                           count = (ActionCount) std::round(count*d);
                       });
       }
