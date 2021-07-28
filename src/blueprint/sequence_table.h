@@ -32,6 +32,12 @@ class SequenceTable {
   SequenceMatrix table_;
 
  public:
+  /*
+    @brief Constructs a sequence table.
+
+    @param actions The actions available in the abstracted game tree.
+    @param start_state The game tree node to start the table at.
+  */
   SequenceTable(const std::array<AbstractAction, kActions>& actions,
                 const Node<kPlayers>& start_state)
                 : actions_{}, start_state_{start_state}, table_{} {
@@ -50,23 +56,51 @@ class SequenceTable {
           table_[+round](seq, action_col) = val;
         });
   }  // SequenceTable()
-
   SequenceTable(const SequenceTable& other) = default;
   SequenceTable& operator=(const SequenceTable& other) = default;
 
+  /*
+    @brief Returns the sequence id reached by taking the given action.
+
+    @param current_node Sequence of the state where the action is to be taken.
+    @param round The betting round that the current_node is in.
+    @param action_idx The action to take.
+  */
   SequenceId Next(SequenceId current_node, Round round,
                   nda::index_t action_idx) const {
     return table_[+round](current_node, action_idx);
   }
 
+  /*
+    @brief Returns the number of sequences in the given round.
+  */
   SequenceN States(Round round) const {
     return table_[+round].rows();
   }
 
+  /*
+    @brief Returns the number of legal actions available in the given infoset.
+  */
+  nda::size_t NumLegalActions(SequenceId seq, Round round) const {
+    nda::size_t count = 0;
+    for (nda::index_t action_id : table_[+round].j()) {
+      if (table_[+round](seq, action_id) != kIllegalId) {
+        ++count;
+      }
+    }
+    return count;
+  }
+
+  /*
+    @brief Returns the total number of actions available in the given round.
+  */
   nda::size_t ActionCount(Round round) const {
     return table_[+round].columns();
   }
 
+  /*
+    @brief Returns a vector_ref of the actions available in the given round.
+  */
   nda::const_vector_ref<AbstractAction> Actions(Round round) const {
     return nda::const_vector_ref<AbstractAction>(&actions_[+round][0],
                                                  ActionCount(round));

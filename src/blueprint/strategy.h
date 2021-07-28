@@ -120,12 +120,11 @@ class Strategy {
   */
   std::array<double, kActions> CalculateStrategy(SequenceId seq, Round round,
       CardCluster card_bucket) const {
+    nda::size_t legal_action_count =
+        action_abstraction_.NumLegalActions(seq, round);
+
     Regret sum = 0;
-    int legal_action_count = 0;
     for (nda::index_t action_id : regrets_[+round].k()) {
-      if (action_abstraction_.Next(seq, +round, action_id) != kIllegalId) {
-        ++legal_action_count;
-      }
       sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
     }
 

@@ -65,6 +65,7 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   }
 
   for (fishbait::SequenceId i = 0; i < 62; ++i) {
+    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kPreFlop) == 2);
     for (nda::index_t j = 0; j < 2; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kPreFlop, j) ==
               preflop_table[i * 2 + j]);
@@ -147,6 +148,11 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
       kIllegalId, kLeafId, kLeafId, kIllegalId, kIllegalId, 164, 95, 168,
       kIllegalId, 96, 97, kIllegalId, kIllegalId, kLeafId, kLeafId, kIllegalId,
       kIllegalId, kLeafId, kLeafId, kIllegalId, kIllegalId};
+  std::vector<nda::size_t> preflop_legal_actions = {4, 4, 2, 3, 2, 3, 2, 4, 2,
+      3, 2, 2, 2, 2, 4, 3, 2, 3, 2, 2, 2, 2, 3, 2, 2, 2, 3, 3, 2, 2, 2, 2, 3, 2,
+      2, 2, 4, 3, 2, 2, 2, 2, 3, 2, 2, 2, 3, 3, 2, 2, 2, 2, 3, 2, 2, 2, 4, 4, 2,
+      3, 2, 2, 2, 2, 4, 2, 2, 2, 3, 3, 2, 2, 2, 2, 3, 2, 2, 2, 4, 3, 2, 2, 2, 2,
+      3, 2, 2, 2, 3, 3, 2, 2, 2, 2, 3, 2, 2, 2};
   REQUIRE(seq.States(fishbait::Round::kPreFlop) == 98);
   REQUIRE(seq.ActionCount(fishbait::Round::kPreFlop) == 4);
   nda::const_vector_ref<fishbait::AbstractAction> round_actions =
@@ -155,6 +161,8 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 98; ++i) {
+    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kPreFlop) ==
+            preflop_legal_actions[i]);
     for (nda::index_t j = 0; j < 4; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kPreFlop, j) ==
               preflop_table[i * 4 + j]);
@@ -234,6 +242,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 180; ++i) {
+    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kFlop) == 2);
     for (nda::index_t j = 0; j < 3; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kFlop, j) == flop_table[i * 3 + j]);
     }
@@ -312,6 +321,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 180; ++i) {
+    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kTurn) == 2);
     for (nda::index_t j = 0; j < 3; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kTurn, j) == turn_table[i * 3 + j]);
     }
@@ -391,6 +401,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 180; ++i) {
+    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kRiver) == 2);
     for (nda::index_t j = 0; j < 3; ++j) {
       REQUIRE((seq.Next(i, fishbait::Round::kRiver, j) ==
                river_table[i * 3 + j]));
