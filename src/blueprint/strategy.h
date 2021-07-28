@@ -4,6 +4,8 @@
 #define SRC_BLUEPRINT_STRATEGY_H_
 
 #include <algorithm>
+#include <array>
+#include <random>
 
 #include "array/array.h"
 #include "blueprint/definitions.h"
@@ -11,6 +13,7 @@
 #include "clustering/cluster_table.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
+#include "utils/random.h"
 
 namespace fishbait {
 
@@ -30,6 +33,7 @@ class Strategy {
   // Card Buckets x Sequences x Actions
   std::array<InfosetActionTable<Regret>, kNRounds> regrets_;
   InfosetActionTable<ActionCount> action_counts_;
+  Random rng_;
 
  public:
   /*
@@ -62,7 +66,7 @@ class Strategy {
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(+Round::kPreFlop)
-             } {
+             }, rng_{} {
     MCCFR(iterations, strategy_interval, prune_threshold, LCFR_threshold,
           discount_interval, snapshot_interval, strategy_delay, verbose);
   }
@@ -136,18 +140,21 @@ class Strategy {
   */
   std::array<double, kActions> CalculateStrategy(SequenceId seq, Round round,
       CardCluster card_bucket) const {
-    nda::size_t legal_action_count =
-        action_abstraction_.NumLegalActions(seq, round);
+    nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
     Regret sum = PositiveRegretSum(seq, round, card_bucket);
 
     std::array<double, kActions> strategy = {0};
     for (nda::index_t action_id : regrets_[+round].k()) {
       if (sum > 0) {
+        /* We don't need to check if the action is legal here because illegal
+           actions always have a regret of 0 and thus will be assigned a
+           probability of 0 in the strategy. */
         strategy[action_id] = std::max(0, regrets_[+round](card_bucket, seq,
                                                            action_id));
         strategy[action_id] /= sum;
-      } else {
-        strategy[action_id] = 1.0 / legal_action_count;
+      } else if (action_abstraction_.Next(seq, round, action_id) !=
+                 kIllegalId) {
+        strategy[action_id] = 1.0 / legal_actions;
       }
     }
 
@@ -155,7 +162,7 @@ class Strategy {
   }
 
   /*
-    @brief Samples an action from the strategy at the given infoset.
+    @brief Samples an action from the current strategy at the given infoset.
 
     @param seq The sequence id of the infoset.
     @param round The betting round of the infoset.
@@ -163,7 +170,33 @@ class Strategy {
 
     @return The index of the sampled action.
   */
-  int SampleAction(SequenceId seq, Round round, CardCluster card_bucket) const;
+  nda::index_t SampleAction(SequenceId seq, Round round,
+                            CardCluster card_bucket) const {
+    std::uniform_real_distribution<double> sampler(0, 1);
+    double sampled = sampler(rng_());
+    double bound = 0;
+    Regret sum = PositiveRegretSum(seq, round, card_bucket);
+    nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
+    for (nda::index_t action_id : regrets_[+round].k()) {
+      double action_prob;
+      if (sum > 0) {
+        /* We don't need to check if the action is legal here because illegal
+           actions always have a regret of 0 and thus will be assigned an
+           action_prob of 0. */
+        action_prob = std::max(0, regrets_[+round](card_bucket, seq,
+                                                   action_id));
+        action_prob /= sum;
+      } else if (action_abstraction_.Next(seq, round, action_id) !=
+                 kIllegalId) {
+        action_prob = 1.0 / legal_actions;
+      }
+
+      bound += action_prob;
+      if (sampled < bound) {
+        return action_id;
+      }
+    }  // for action_id
+  }  // SampleAction()
 
   /*
     @brief Recursively updates the given player's average preflop strategy.
