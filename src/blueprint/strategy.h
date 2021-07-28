@@ -110,6 +110,22 @@ class Strategy {
              int strategy_delay, bool verbose);
 
   /*
+    @brief Returns the sum of all positive regrets at an infoset.
+
+    @param seq The sequence id of the infoset.
+    @param round The betting round of the infoset.
+    @param card_bucket The card cluster id of the infoset.
+  */
+  Regret PositiveRegretSum(SequenceId seq, Round round,
+                           CardCluster card_bucket) const {
+    Regret sum = 0;
+    for (nda::index_t action_id : regrets_[+round].k()) {
+      sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
+    }
+    return sum;
+  }
+
+  /*
     @brief Computes the strategy at the given infoset from regrets.
 
     @param seq The sequence id of the infoset.
@@ -122,11 +138,7 @@ class Strategy {
       CardCluster card_bucket) const {
     nda::size_t legal_action_count =
         action_abstraction_.NumLegalActions(seq, round);
-
-    Regret sum = 0;
-    for (nda::index_t action_id : regrets_[+round].k()) {
-      sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
-    }
+    Regret sum = PositiveRegretSum(seq, round, card_bucket);
 
     std::array<double, kActions> strategy = {0};
     for (nda::index_t action_id : regrets_[+round].k()) {
