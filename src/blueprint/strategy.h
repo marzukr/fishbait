@@ -171,7 +171,7 @@ class Strategy {
     @return The index of the sampled action.
   */
   nda::index_t SampleAction(SequenceId seq, Round round,
-                            CardCluster card_bucket) const {
+                            CardCluster card_bucket) {
     std::uniform_real_distribution<double> sampler(0, 1);
     double sampled = sampler(rng_());
     double bound = 0;
