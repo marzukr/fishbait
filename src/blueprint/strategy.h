@@ -117,9 +117,8 @@ class Strategy {
         average strategy and taking snapshots.
     @param verbose Whether to print debug information.
   */
-  void MCCFR(const Node<kPlayers>& start_state, int iterations,
-             int strategy_interval, int prune_threshold,
-             double prune_probability, int LCFR_threshold,
+  void MCCFR(Node<kPlayers> start_state, int iterations, int strategy_interval,
+             int prune_threshold, double prune_probability, int LCFR_threshold,
              int discount_interval, [[maybe_unused]] int snapshot_interval,
              int strategy_delay, bool verbose) {
     if (verbose) std::cout << "Starting MCCFR" << std::endl;
@@ -267,7 +266,12 @@ class Strategy {
     @param player The player whose strategy is being updated.
   */
   void UpdateStrategy(const Node<kPlayers>& state, CardCluster card_bucket,
-                      SequenceId seq, PlayerId player);
+                      SequenceId seq, PlayerId player) {
+    (void) state;
+    (void) card_bucket;
+    (void) seq;
+    (void) player;
+  }
 
   /*
     @brief Recursively updates the given player's cumulative regrets.
@@ -282,7 +286,13 @@ class Strategy {
   */
   void TraverseMCCFR(const Node<kPlayers>& state,
                      std::array<CardCluster, kPlayers> card_buckets,
-                     SequenceId seq, PlayerId player, bool prune);
+                     SequenceId seq, PlayerId player, bool prune) {
+    (void) state;
+    (void) card_buckets;
+    (void) seq;
+    (void) player;
+    (void) prune;
+  }
 };  // class Strategy
 
 }  // namespace fishbait
