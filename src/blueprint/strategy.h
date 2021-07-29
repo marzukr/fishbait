@@ -4,7 +4,9 @@
 #define SRC_BLUEPRINT_STRATEGY_H_
 
 #include <algorithm>
+#include <array>
 #include <iostream>
+#include <random>
 
 #include "array/array.h"
 #include "blueprint/definitions.h"
@@ -145,7 +147,8 @@ class Strategy {
                       prune);
       }
 
-      // Discount all regrets and action counter after discount_interal
+      /* Discount all regrets and action counter every discount_interval until
+         LCFR_threshold */
       if (t < LCFR_threshold && t % discount_interval == 0) {
         double d = (t * 1.0 / discount_interval) /
                    (t * 1.0 / discount_interval + 1);
@@ -166,6 +169,22 @@ class Strategy {
   }  // MCCFR()
 
   /*
+    @brief Returns the sum of all positive regrets at an infoset.
+
+    @param seq The sequence id of the infoset.
+    @param round The betting round of the infoset.
+    @param card_bucket The card cluster id of the infoset.
+  */
+  Regret PositiveRegretSum(SequenceId seq, Round round,
+                           CardCluster card_bucket) const {
+    Regret sum = 0;
+    for (nda::index_t action_id : regrets_[+round].k()) {
+      sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
+    }
+    return sum;
+  }
+
+  /*
     @brief Computes the strategy at the given infoset from regrets.
 
     @param seq The sequence id of the infoset.
@@ -176,23 +195,21 @@ class Strategy {
   */
   std::array<double, kActions> CalculateStrategy(SequenceId seq, Round round,
       CardCluster card_bucket) const {
-    Regret sum = 0;
-    int legal_action_count = 0;
-    for (nda::index_t action_id : regrets_[+round].k()) {
-      if (action_abstraction_.Next(seq, +round, action_id) != kIllegalId) {
-        ++legal_action_count;
-      }
-      sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
-    }
+    nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
+    Regret sum = PositiveRegretSum(seq, round, card_bucket);
 
     std::array<double, kActions> strategy = {0};
     for (nda::index_t action_id : regrets_[+round].k()) {
       if (sum > 0) {
+        /* We don't need to check if the action is legal here because illegal
+           actions always have a regret of 0 and thus will be assigned a
+           probability of 0 in the strategy. */
         strategy[action_id] = std::max(0, regrets_[+round](card_bucket, seq,
                                                            action_id));
         strategy[action_id] /= sum;
-      } else {
-        strategy[action_id] = 1.0 / legal_action_count;
+      } else if (action_abstraction_.Next(seq, round, action_id) !=
+                 kIllegalId) {
+        strategy[action_id] = 1.0 / legal_actions;
       }
     }
 
@@ -200,7 +217,7 @@ class Strategy {
   }
 
   /*
-    @brief Samples an action from the strategy at the given infoset.
+    @brief Samples an action from the current strategy at the given infoset.
 
     @param seq The sequence id of the infoset.
     @param round The betting round of the infoset.
@@ -208,7 +225,33 @@ class Strategy {
 
     @return The index of the sampled action.
   */
-  int SampleAction(SequenceId seq, Round round, CardCluster card_bucket) const;
+  nda::index_t SampleAction(SequenceId seq, Round round,
+                            CardCluster card_bucket) {
+    std::uniform_real_distribution<double> sampler(0, 1);
+    double sampled = sampler(rng_());
+    double bound = 0;
+    Regret sum = PositiveRegretSum(seq, round, card_bucket);
+    nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
+    for (nda::index_t action_id : regrets_[+round].k()) {
+      double action_prob;
+      if (sum > 0) {
+        /* We don't need to check if the action is legal here because illegal
+           actions always have a regret of 0 and thus will be assigned an
+           action_prob of 0. */
+        action_prob = std::max(0, regrets_[+round](card_bucket, seq,
+                                                   action_id));
+        action_prob /= sum;
+      } else if (action_abstraction_.Next(seq, round, action_id) !=
+                 kIllegalId) {
+        action_prob = 1.0 / legal_actions;
+      }
+
+      bound += action_prob;
+      if (sampled < bound) {
+        return action_id;
+      }
+    }  // for action_id
+  }  // SampleAction()
 
   /*
     @brief Recursively updates the given player's average preflop strategy.
@@ -227,7 +270,7 @@ class Strategy {
 
     @param state State of the game at the current recursive call.
     @param seq The sequence id of the infoset at the current recursive call.
-    @param card_bucket The card cluster ids for each non folded player in the
+    @param card_buckets The card cluster ids for each non folded player in the
         current round.
     @param player The player whose strategy is being updated.
     @param prune Whether to prune actions with regrets less than
