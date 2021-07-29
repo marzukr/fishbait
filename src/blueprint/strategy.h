@@ -7,6 +7,8 @@
 #include <array>
 #include <iostream>
 #include <random>
+#include <stdexcept>
+#include <string>
 
 #include "array/array.h"
 #include "blueprint/definitions.h"
@@ -251,6 +253,8 @@ class Strategy {
         return action_id;
       }
     }  // for action_id
+    constexpr std::string_view error = __func__ + ": No action was selected.";
+    throw std::runtime_error(error);
   }  // SampleAction()
 
   /*
