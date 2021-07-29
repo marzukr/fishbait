@@ -119,13 +119,13 @@ class Strategy {
              int strategy_interval, int prune_threshold,
              double prune_probability, int LCFR_threshold,
              int discount_interval, [[maybe_unused]] int snapshot_interval,
-             [[maybe_unused]] int strategy_delay, bool verbose) {
+             int strategy_delay, bool verbose) {
     if (verbose) std::cout << "Starting MCCFR" << std::endl;
     for (int t = 1; t <= iterations; ++t) {
       if (verbose) std::cout << "iteration: " << t << std::endl;
       for (PlayerId player = 0; player < kPlayers; ++player) {
         // update strategy after strategy_inveral iterations
-        if (t % strategy_interval == 0) {
+        if (t > strategy_delay && t % strategy_interval == 0) {
           start_state.DealCards();
           UpdateStrategy(start_state,
                          info_abstraction_.Cluster(start_state, player), 0,
@@ -148,7 +148,7 @@ class Strategy {
 
       /* Discount all regrets and action counter every discount_interval until
          LCFR_threshold */
-      if (t < LCFR_threshold && t % discount_interval == 0) {
+      if (t <= LCFR_threshold && t % discount_interval == 0) {
         double d = (t * 1.0 / discount_interval) /
                    (t * 1.0 / discount_interval + 1);
         for (RoundId r = 0; r < kNRounds; ++r) {
