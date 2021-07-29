@@ -44,6 +44,7 @@ class Strategy {
     @param strategy_interval The number of iterations between each update of the
         average strategy.
     @param prune_threshold The number of iterations to wait before pruning.
+    @param prune_probability The probability that we prune in Traverse-MCCFR.
     @param prune_constant Actions with regret less than this constant are
         eligible to be pruned.
     @param LCFR_threshold The number of iterations to apply LCFR.
@@ -57,9 +58,10 @@ class Strategy {
   */
   Strategy(const Node<kPlayers>& start_state,
            const std::array<AbstractAction, kActions>& actions, int iterations,
-           int strategy_interval, int prune_threshold, Regret prune_constant,
-           int LCFR_threshold, int discount_interval, Regret regret_floor,
-           int snapshot_interval, int strategy_delay, bool verbose = false)
+           int strategy_interval, int prune_threshold, double prune_probability,
+           Regret prune_constant, int LCFR_threshold, int discount_interval,
+           Regret regret_floor, int snapshot_interval, int strategy_delay,
+           bool verbose = false)
            : regret_floor_{regret_floor}, prune_constant_{prune_constant},
              info_abstraction_{verbose},
              action_abstraction_{actions, start_state},
@@ -67,8 +69,8 @@ class Strategy {
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
              }, rng_() {
     MCCFR(start_state, iterations, strategy_interval, prune_threshold,
-          LCFR_threshold, discount_interval, snapshot_interval, strategy_delay,
-          verbose);
+          prune_probability, LCFR_threshold, discount_interval,
+          snapshot_interval, strategy_delay, verbose);
   }
   Strategy(const Strategy& other) = default;
   Strategy& operator=(const Strategy& other) = default;
@@ -97,10 +99,12 @@ class Strategy {
   /*
     @brief Computes the strategy using the MCCFR algorithm.
 
+    @param start_state The starting state of the game.
     @param iterations The number of iterations to run mccfr.
     @param strategy_interval The number of iterations between each update of the
         average strategy.
     @param prune_threshold The number of iterations to wait before pruning.
+    @param prune_probability The probability that we prune in Traverse-MCCFR.
     @param LCFR_threshold The number of iterations to apply LCFR.
     @param discount_interval The number of iterations between each LCFR
         discount.
@@ -110,23 +114,19 @@ class Strategy {
     @param verbose Whether to print debug information.
   */
   void MCCFR(const Node<kPlayers>& start_state, int iterations,
-             int strategy_interval, int prune_threshold, int LCFR_threshold,
+             int strategy_interval, int prune_threshold,
+             double prune_probability, int LCFR_threshold,
              int discount_interval, [[maybe_unused]] int snapshot_interval,
              [[maybe_unused]] int strategy_delay, bool verbose) {
-    if (verbose) {
-        std::cout << "Starting MCCFR" << std::endl;
-    }
-    for (int t = 0; t < iterations; ++t) {
-      if (verbose) {
-        std::cout << "iteration: " << t << std::endl;
-      }
+    if (verbose) std::cout << "Starting MCCFR" << std::endl;
+    for (int t = 1; t <= iterations; ++t) {
+      if (verbose) std::cout << "iteration: " << t << std::endl;
       for (PlayerId player = 0; player < kPlayers; ++player) {
-        // update strategy after strategy_inveral time
+        // update strategy after strategy_inveral iterations
         if (t % strategy_interval == 0) {
-          const Node<kPlayers>& strategy_state_copy = Node(start_state);
-          strategy_state_copy.DealCards();
-          UpdateStrategy(strategy_state_copy, 0,
-                         info_abstraction_.Cluster(strategy_state_copy),
+          start_state.DealCards();
+          UpdateStrategy(start_state, 0,
+                         info_abstraction_.Cluster(start_state, player),
                          player);
         }
 
@@ -134,37 +134,36 @@ class Strategy {
         bool prune = false;
         if (t > prune_threshold) {
           std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
-          double random_prune = uniform_distribution_(rng_());
-          if (random_prune < 0.05) {
+          double random_prune = uniform_distribution(rng_());
+          if (random_prune < prune_probability) {
             prune = true;
           }
         }
-        const Node<kPlayers>& mccfr_state_copy = Node(start_state);
-        mccfr_state_copy.DealCards();
-        TraverseMCCFR(mccfr_state_copy, 0,
-                      info_abstraction_.ClusterArray(mccfr_state_copy),
-                      player, prune);
+        start_state.DealCards();
+        TraverseMCCFR(start_state, 0,
+                      info_abstraction_.ClusterArray(start_state), player,
+                      prune);
       }
 
       // Discount all regrets and action counter after discount_interal
       if (t < LCFR_threshold && t % discount_interval == 0) {
-        double d = (t*1.0/discount_interval)/
-                         ((t*1.0/discount_interval) + 1);
+        double d = (t * 1.0 / discount_interval) /
+                   (t * 1.0 / discount_interval + 1);
         for (RoundId r = 0; r < kNRounds; ++r) {
           std::for_each(regrets_[r].data(),
-                        regrets_[r].data()+regrets_[r].size(),
+                        regrets_[r].data() + regrets_[r].size(),
                         [=](Regret& regret) {
-                          regret = (Regret) std::round(regret*d);
+                          regret = std::rint(regret * d);
                         });
         }
         std::for_each(action_counts_.data(),
-                      action_counts_.data()+action_counts_.size(),
-                      [=](ActionCount &count) {
-                          count = (ActionCount) std::round(count*d);
+                      action_counts_.data() + action_counts_.size(),
+                      [=](ActionCount& count) {
+                        count = std::rint(count * d);
                       });
       }
-    }
-  }
+    }  // for t
+  }  // MCCFR()
 
   /*
     @brief Computes the strategy at the given infoset from regrets.
@@ -220,7 +219,7 @@ class Strategy {
         recursive call.
     @param player The player whose strategy is being updated.
   */
-  void UpdateStrategy(Node<kPlayers>& state, SequenceId seq,
+  void UpdateStrategy(const Node<kPlayers>& state, SequenceId seq,
                       CardCluster card_bucket, PlayerId player);
 
   /*
@@ -234,7 +233,7 @@ class Strategy {
     @param prune Whether to prune actions with regrets less than
         prunt_constant_.
   */
-  void TraverseMCCFR(Node<kPlayers>& state, SequenceId seq,
+  void TraverseMCCFR(const Node<kPlayers>& state, SequenceId seq,
                      std::array<CardCluster, kPlayers> card_buckets,
                      PlayerId player, bool prune);
 };  // class Strategy
