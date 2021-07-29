@@ -127,8 +127,8 @@ class Strategy {
         // update strategy after strategy_inveral iterations
         if (t % strategy_interval == 0) {
           start_state.DealCards();
-          UpdateStrategy(start_state, 0,
-                         info_abstraction_.Cluster(start_state, player),
+          UpdateStrategy(start_state,
+                         info_abstraction_.Cluster(start_state, player), 0,
                          player);
         }
 
@@ -142,9 +142,8 @@ class Strategy {
           }
         }
         start_state.DealCards();
-        TraverseMCCFR(start_state, 0,
-                      info_abstraction_.ClusterArray(start_state), player,
-                      prune);
+        TraverseMCCFR(start_state, info_abstraction_.ClusterArray(start_state),
+                      0, player, prune);
       }
 
       /* Discount all regrets and action counter every discount_interval until
@@ -171,12 +170,12 @@ class Strategy {
   /*
     @brief Returns the sum of all positive regrets at an infoset.
 
+    @param card_bucket The card cluster id of the infoset.
     @param seq The sequence id of the infoset.
     @param round The betting round of the infoset.
-    @param card_bucket The card cluster id of the infoset.
   */
-  Regret PositiveRegretSum(SequenceId seq, Round round,
-                           CardCluster card_bucket) const {
+  Regret PositiveRegretSum(CardCluster card_bucket, SequenceId seq,
+                           Round round) const {
     Regret sum = 0;
     for (nda::index_t action_id : regrets_[+round].k()) {
       sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
@@ -187,16 +186,17 @@ class Strategy {
   /*
     @brief Computes the strategy at the given infoset from regrets.
 
+    @param card_bucket The card cluster id of the infoset.
     @param seq The sequence id of the infoset.
     @param round The betting round of the infoset.
-    @param card_bucket The card cluster id of the infoset.
 
     @return An array with the computed strategy.
   */
-  std::array<double, kActions> CalculateStrategy(SequenceId seq, Round round,
-      CardCluster card_bucket) const {
+  std::array<double, kActions> CalculateStrategy(CardCluster card_bucket,
+                                                 SequenceId seq,
+                                                 Round round) const {
     nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
-    Regret sum = PositiveRegretSum(seq, round, card_bucket);
+    Regret sum = PositiveRegretSum(card_bucket, seq, round);
 
     std::array<double, kActions> strategy = {0};
     for (nda::index_t action_id : regrets_[+round].k()) {
@@ -219,18 +219,18 @@ class Strategy {
   /*
     @brief Samples an action from the current strategy at the given infoset.
 
+    @param card_bucket The card cluster id of the infoset.
     @param seq The sequence id of the infoset.
     @param round The betting round of the infoset.
-    @param card_bucket The card cluster id of the infoset.
 
     @return The index of the sampled action.
   */
-  nda::index_t SampleAction(SequenceId seq, Round round,
-                            CardCluster card_bucket) {
+  nda::index_t SampleAction(CardCluster card_bucket, SequenceId seq,
+                            Round round) {
     std::uniform_real_distribution<double> sampler(0, 1);
     double sampled = sampler(rng_());
     double bound = 0;
-    Regret sum = PositiveRegretSum(seq, round, card_bucket);
+    Regret sum = PositiveRegretSum(card_bucket, seq, round);
     nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
     for (nda::index_t action_id : regrets_[+round].k()) {
       double action_prob;
@@ -257,28 +257,28 @@ class Strategy {
     @brief Recursively updates the given player's average preflop strategy.
 
     @param state State of the game at the current recursive call.
-    @param seq The sequence id of the infoset at the current recursive call.
     @param card_bucket The card cluster id of the infoset at the current
         recursive call.
+    @param seq The sequence id of the infoset at the current recursive call.
     @param player The player whose strategy is being updated.
   */
-  void UpdateStrategy(const Node<kPlayers>& state, SequenceId seq,
-                      CardCluster card_bucket, PlayerId player);
+  void UpdateStrategy(const Node<kPlayers>& state, CardCluster card_bucket,
+                      SequenceId seq, PlayerId player);
 
   /*
     @brief Recursively updates the given player's cumulative regrets.
 
     @param state State of the game at the current recursive call.
-    @param seq The sequence id of the infoset at the current recursive call.
     @param card_buckets The card cluster ids for each non folded player in the
         current round.
+    @param seq The sequence id of the infoset at the current recursive call.
     @param player The player whose strategy is being updated.
     @param prune Whether to prune actions with regrets less than
         prunt_constant_.
   */
-  void TraverseMCCFR(const Node<kPlayers>& state, SequenceId seq,
+  void TraverseMCCFR(const Node<kPlayers>& state,
                      std::array<CardCluster, kPlayers> card_buckets,
-                     PlayerId player, bool prune);
+                     SequenceId seq, PlayerId player, bool prune);
 };  // class Strategy
 
 }  // namespace fishbait
