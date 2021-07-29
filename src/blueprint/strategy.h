@@ -222,7 +222,7 @@ class Strategy {
   void UpdateStrategy(const Node<kPlayers>& state, SequenceId seq,
                       CardCluster card_bucket, PlayerId player) {
     Round round = state.round();
-    if (round > kPreFlop || !state.in_progress()) {
+    if (round > Round::kPreFlop || !state.in_progress()) {
       return;
     }
     Node<kPlayers> new_state = state;
@@ -230,24 +230,21 @@ class Strategy {
                                           action_abstraction_.Actions(round);
     if (state.acting_player == player) {
       int action_index = SampleAction(seq, round, card_bucket);
-      AbstractAction& action = all_actions(action_index);
+      const AbstractAction& action = all_actions(action_index);
       new_state.Apply(action, action_abstraction_.ActionSize(action, state));
       action_counts_(card_bucket, seq, action_index) += 1;
       UpdateStrategy(new_state, player);
-    }
-    else {
+    } else {
       std::for_each(all_actions.data(), all_actions.data() + all_actions.size(),
                     [&](AbstractAction& action) {
-                        // Marzuk I need to copy it but I don't think it does
-                        // this here
+                        // this is supposed to copy it but i don't think it does
                         new_state = state;
                         new_state.Apply(action,
                                         action_abstraction_.ActionSize(action,
                                                                        state));
                         UpdateStrategy(new_state, new_state.acting_player());
-                    }
+                    });
     }
-
   }
 
   /*
