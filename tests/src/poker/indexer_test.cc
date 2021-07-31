@@ -9,6 +9,35 @@
 #include "poker/definitions.h"
 #include "poker/indexer.h"
 
+TEST_CASE("Basic preflop indexer tests", "[poker][indexer]") {
+  const hand_index_t n_hands =
+      fishbait::ImperfectRecallHands(fishbait::Round::kPreFlop);
+  fishbait::Indexer<2> preflop;
+  std::array<fishbait::ISO_Card, 2> rollout;
+
+  hand_index_t i = 0;
+  std::set<hand_index_t> indicies_set;
+  for (hand_index_t idx = 0; idx < n_hands + 10; ++idx) {
+    rollout = preflop.Unindex<0>(idx);
+    bool invalid_cards = false;
+    for (fishbait::Card c : rollout) {
+      if (c >= fishbait::kDeckSize) {
+        invalid_cards = true;
+        break;
+      }
+    }
+    if (invalid_cards) break;
+    hand_index_t array_index_last = preflop.IndexLast(rollout);
+    if (array_index_last != idx) {
+      break;
+    }
+    indicies_set.insert(array_index_last);
+    ++i;
+  }
+  REQUIRE(i == n_hands);  // number of flops
+  REQUIRE(indicies_set.size() == n_hands);
+}  // TEST_CASE "Basic preflop indexer tests"
+
 TEST_CASE("Basic flop indexer tests", "[poker][indexer]") {
   const hand_index_t n_flops =
       fishbait::ImperfectRecallHands(fishbait::Round::kFlop);
@@ -19,7 +48,7 @@ TEST_CASE("Basic flop indexer tests", "[poker][indexer]") {
 
   hand_index_t i = 0;
   std::set<hand_index_t> indicies_set;
-  for (hand_index_t idx = 0; idx < 1500000; ++idx) {
+  for (hand_index_t idx = 0; idx < n_flops + 10; ++idx) {
     REQUIRE(flop.Unindex<0>(idx).size() == 2);
     rollout = flop.Unindex<1>(idx);
     bool invalid_cards = false;
@@ -50,3 +79,61 @@ TEST_CASE("Basic flop indexer tests", "[poker][indexer]") {
   REQUIRE(i == n_flops);  // number of flops
   REQUIRE(indicies_set.size() == n_flops);
 }  // TEST_CASE "Basic flop indexer tests"
+
+TEST_CASE("Basic turn indexer tests", "[.][poker][indexer]") {
+  const hand_index_t n_turns =
+      fishbait::ImperfectRecallHands(fishbait::Round::kTurn);
+  fishbait::Indexer<2, 4> turn;
+  std::array<fishbait::ISO_Card, 6> rollout;
+
+  hand_index_t i = 0;
+  std::set<hand_index_t> indicies_set;
+  for (hand_index_t idx = 0; idx < n_turns + 10; ++idx) {
+    rollout = turn.Unindex<1>(idx);
+    bool invalid_cards = false;
+    for (fishbait::Card c : rollout) {
+      if (c >= fishbait::kDeckSize) {
+        invalid_cards = true;
+        break;
+      }
+    }
+    if (invalid_cards) break;
+    hand_index_t array_index_last = turn.IndexLast(rollout);
+    if (array_index_last != idx) {
+      break;
+    }
+    indicies_set.insert(array_index_last);
+    ++i;
+  }
+  REQUIRE(i == n_turns);  // number of flops
+  REQUIRE(indicies_set.size() == n_turns);
+}  // TEST_CASE "Basic turn indexer tests"
+
+TEST_CASE("Basic river indexer tests", "[.][poker][indexer]") {
+  const hand_index_t n_rivers =
+      fishbait::ImperfectRecallHands(fishbait::Round::kRiver);
+  fishbait::Indexer<2, 5> river;
+  std::array<fishbait::ISO_Card, 7> rollout;
+
+  hand_index_t i = 0;
+  std::set<hand_index_t> indicies_set;
+  for (hand_index_t idx = 0; idx < n_rivers + 10; ++idx) {
+    rollout = river.Unindex<1>(idx);
+    bool invalid_cards = false;
+    for (fishbait::Card c : rollout) {
+      if (c >= fishbait::kDeckSize) {
+        invalid_cards = true;
+        break;
+      }
+    }
+    if (invalid_cards) break;
+    hand_index_t array_index_last = river.IndexLast(rollout);
+    if (array_index_last != idx) {
+      break;
+    }
+    indicies_set.insert(array_index_last);
+    ++i;
+  }
+  REQUIRE(i == n_rivers);  // number of flops
+  REQUIRE(indicies_set.size() == n_rivers);
+}  // TEST_CASE "Basic river indexer tests"
