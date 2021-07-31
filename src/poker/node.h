@@ -74,7 +74,7 @@ class Node {
   }  // Node()
 
   Node(const Node& other) = default;
-  Node& operator=(const Node& other) = default;
+  Node& operator=(const Node& other) = delete;  // because const members
 
   /*
     @brief Reset the state variables for the start of a new hand.
