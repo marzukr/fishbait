@@ -266,8 +266,8 @@ class Strategy {
     @param seq The sequence id of the infoset at the current recursive call.
     @param player The player whose strategy is being updated.
   */
-  void UpdateStrategy(const Node<kPlayers>& state, SequenceId seq,
-                      CardCluster card_bucket, PlayerId player) {
+  void UpdateStrategy(const Node<kPlayers>& state, CardCluster card_bucket,
+                      SequenceId seq, PlayerId player) {
     Round round = state.round();
     if (round > Round::kPreFlop || !state.in_progress()) {
       return;
@@ -276,20 +276,25 @@ class Strategy {
     nda::const_vector_ref<AbstractAction> all_actions =
                                           action_abstraction_.Actions(round);
     if (state.acting_player == player) {
-      int action_index = SampleAction(seq, round, card_bucket);
+      int action_index = SampleAction(card_bucket, seq, round);
       const AbstractAction& action = all_actions(action_index);
       new_state.Apply(action, action_abstraction_.ActionSize(action, state));
       action_counts_(card_bucket, seq, action_index) += 1;
-      UpdateStrategy(new_state, player);
+      UpdateStrategy(new_state, card_bucket,
+                     action_abstraction_(seq, action_index), player);
     } else {
       std::for_each(all_actions.data(), all_actions.data() + all_actions.size(),
                     [&](AbstractAction& action) {
+                        // placeholder while i fix branch
+                        int action_index = 0;
                         // this is supposed to copy it but i don't think it does
                         new_state = state;
                         new_state.Apply(action,
                                         action_abstraction_.ActionSize(action,
                                                                        state));
-                        UpdateStrategy(new_state, new_state.acting_player());
+                        UpdateStrategy(new_state, card_bucket,
+                                       action_abstraction_(seq, action_index),
+                                       new_state.acting_player());
                     });
     }
   }
