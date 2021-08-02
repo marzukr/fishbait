@@ -286,7 +286,7 @@ class Strategy {
                      player);
     } else {
       for (nda::index_t action_index = 0;
-           action_index < action_abstraction_.ActionCount(round);
+           action_index < (nda::index_t) action_abstraction_.ActionCount(round);
            ++action_index) {
         if (action_abstraction_.Next(seq, round, action_index) != kIllegalId) {
           Node<kPlayers> new_state = state;
