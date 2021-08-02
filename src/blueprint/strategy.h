@@ -269,12 +269,15 @@ class Strategy {
   void UpdateStrategy(const Node<kPlayers>& state, CardCluster card_bucket,
                       SequenceId seq, PlayerId player) {
     Round round = state.round();
-    if (round > Round::kPreFlop || !state.in_progress()) return;
+    if (round > Round::kPreFlop || !state.in_progress() ||
+        state.folded(player)) {
+      return;
+    }
     nda::const_vector_ref<AbstractAction> actions =
-                                          action_abstraction_.Actions(round);
+        action_abstraction_.Actions(round);
     if (state.acting_player() == player) {
       Node<kPlayers> new_state = state;
-      int action_index = SampleAction(card_bucket, seq, round);
+      nda::index_t action_index = SampleAction(card_bucket, seq, round);
       AbstractAction action = actions(action_index);
       new_state.Apply(action.play, state.ConvertBet(action.size));
       action_counts_(card_bucket, seq, action_index) += 1;
@@ -282,15 +285,17 @@ class Strategy {
                      action_abstraction_.Next(seq, round, action_index),
                      player);
     } else {
-      for (nda::size_t action_index = 0;
+      for (nda::index_t action_index = 0;
            action_index < action_abstraction_.ActionCount(round);
            ++action_index) {
-        Node<kPlayers> new_state = state;
-        AbstractAction action = actions(action_index);
-        new_state.Apply(action.play, state.ConvertBet(action.size));
-        UpdateStrategy(new_state, card_bucket,
-                       action_abstraction_.Next(seq, round, action_index),
-                       new_state.acting_player());
+        if (action_abstraction_.Next(seq, round, action_index) != kIllegalId) {
+          Node<kPlayers> new_state = state;
+          AbstractAction action = actions(action_index);
+          new_state.Apply(action.play, state.ConvertBet(action.size));
+          UpdateStrategy(new_state, card_bucket,
+                         action_abstraction_.Next(seq, round, action_index),
+                         player);
+        }
       }
     }
   }
