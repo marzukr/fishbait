@@ -234,7 +234,7 @@ class Strategy {
     Regret sum = PositiveRegretSum(card_bucket, seq, round);
     nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
     for (nda::index_t action_id : regrets_[+round].k()) {
-      double action_prob;
+      double action_prob = 0;
       if (sum > 0) {
         /* We don't need to check if the action is legal here because illegal
            actions always have a regret of 0 and thus will be assigned an
@@ -252,7 +252,8 @@ class Strategy {
         return action_id;
       }
     }  // for action_id
-    constexpr std::string_view error = __func__ + ": No action was selected.";
+    const std::string error = std::string(__func__) +
+                              ": No action was selected.";
     throw std::runtime_error(error);
   }  // SampleAction()
 
@@ -267,10 +268,35 @@ class Strategy {
   */
   void UpdateStrategy(const Node<kPlayers>& state, CardCluster card_bucket,
                       SequenceId seq, PlayerId player) {
-    (void) state;
-    (void) card_bucket;
-    (void) seq;
-    (void) player;
+    Round round = state.round();
+    if (round > Round::kPreFlop || !state.in_progress() ||
+        state.folded(player)) {
+      return;
+    }
+    nda::const_vector_ref<AbstractAction> actions =
+        action_abstraction_.Actions(round);
+    if (state.acting_player() == player) {
+      Node<kPlayers> new_state = state;
+      nda::index_t action_index = SampleAction(card_bucket, seq, round);
+      AbstractAction action = actions(action_index);
+      new_state.Apply(action.play, state.ConvertBet(action.size));
+      action_counts_(card_bucket, seq, action_index) += 1;
+      UpdateStrategy(new_state, card_bucket,
+                     action_abstraction_.Next(seq, round, action_index),
+                     player);
+    } else {
+      for (nda::index_t action_index = 0; action_index < actions.width();
+           ++action_index) {
+        if (action_abstraction_.Next(seq, round, action_index) != kIllegalId) {
+          Node<kPlayers> new_state = state;
+          AbstractAction action = actions(action_index);
+          new_state.Apply(action.play, state.ConvertBet(action.size));
+          UpdateStrategy(new_state, card_bucket,
+                         action_abstraction_.Next(seq, round, action_index),
+                         player);
+        }
+      }
+    }
   }
 
   /*
