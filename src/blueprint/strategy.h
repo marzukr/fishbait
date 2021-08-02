@@ -144,7 +144,7 @@ class Strategy {
         }
         start_state.DealCards();
         TraverseMCCFR(start_state, info_abstraction_.ClusterArray(start_state),
-                      0, player, prune);
+                      0, player, start_state.stack(player), prune);
       }
 
       /* Discount all regrets and action counter every discount_interval until
@@ -310,14 +310,60 @@ class Strategy {
     @param prune Whether to prune actions with regrets less than
         prunt_constant_.
   */
-  void TraverseMCCFR(const Node<kPlayers>& state,
+  double TraverseMCCFR(const Node<kPlayers>& state,
                      std::array<CardCluster, kPlayers> card_buckets,
-                     SequenceId seq, PlayerId player, bool prune) {
-    (void) state;
-    (void) card_buckets;
-    (void) seq;
-    (void) player;
-    (void) prune;
+                     SequenceId seq, PlayerId player, Chips starting_stack,
+                     bool prune) {
+    if (state.in_progress()) {
+      // type / unsigned error?
+      return state.stack(player) - starting_stack;
+    }
+    Round round = state.round();
+    PlayerId acting_player = state.acting_player();
+    nda::const_vector_ref<AbstractAction> actions =
+        action_abstraction_.Actions(round);
+    if (acting_player == player) {
+      std::array<double, kActions> strategy = CalculateStrategy(
+          card_buckets[player], seq, round);
+      double value = 0;
+      std::array<double, kActions> action_values;
+      std::array<bool, kActions> explored;
+      for (nda::index_t action_index = 0; action_index < actions.width();
+           ++action_index) {
+        if (!prune ||
+           regrets_[+round](card_buckets[player], seq, action_index) >
+           regret_floor_) {
+          Node<kPlayers> new_state = state;
+          AbstractAction action = actions(action_index);
+          new_state.Apply(action.play, state.ConvertBet(action.size));
+          double action_value = TraverseMCCFR(new_state, card_buckets,
+              action_abstraction_.Next(seq, round, action_index), player,
+              starting_stack, prune);
+          action_values[action_index] = action_value;
+          value += action_value * strategy[action_index];
+          explored[action_index] = true;
+        } else {
+          explored[action_index] = false;
+        }
+      }
+      for (nda::index_t action_index = 0; action_index < actions.width();
+           ++action_index) {
+        if (explored[action_index]) {
+          regrets_[+round](card_buckets[player], seq, action_index) +=
+              std::rint(action_values[action_index] - value);
+        }
+      }
+      return value;
+    } else {
+      nda::index_t action_index =  SampleAction(card_buckets[acting_player],
+                                                seq, round);
+      Node<kPlayers> new_state = state;
+      AbstractAction action = actions(action_index);
+      new_state.Apply(action.play, state.ConvertBet(action.size));
+      return TraverseMCCFR(new_state, card_buckets,
+            action_abstraction_.Next(seq, round, action_index), player,
+            starting_stack, prune);
+    }
   }
 };  // class Strategy
 
