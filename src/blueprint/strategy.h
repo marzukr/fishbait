@@ -285,8 +285,8 @@ class Strategy {
                      action_abstraction_.Next(seq, round, action_index),
                      player);
     } else {
-      for (nda::index_t action_index = 0;
-           action_index < actions.width(); ++action_index) {
+      for (nda::index_t action_index = 0; action_index < actions.width();
+           ++action_index) {
         if (action_abstraction_.Next(seq, round, action_index) != kIllegalId) {
           Node<kPlayers> new_state = state;
           AbstractAction action = actions(action_index);
