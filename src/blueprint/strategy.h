@@ -38,6 +38,8 @@ class Strategy {
   InfosetActionTable<ActionCount> action_counts_;
   Random rng_;
 
+  Chips starting_stack_;
+
  public:
   /*
     @brief Constructor
@@ -71,7 +73,7 @@ class Strategy {
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
-             }, rng_() {
+             }, rng_(), starting_stack_{start_state.stack(2)} {
     MCCFR(start_state, iterations, strategy_interval, prune_threshold,
           prune_probability, LCFR_threshold, discount_interval,
           snapshot_interval, strategy_delay, verbose);
@@ -144,7 +146,7 @@ class Strategy {
         }
         start_state.DealCards();
         TraverseMCCFR(start_state, info_abstraction_.ClusterArray(start_state),
-                      0, player, start_state.stack(player), prune);
+                      0, player, prune);
       }
 
       /* Discount all regrets and action counter every discount_interval until
@@ -270,7 +272,7 @@ class Strategy {
                       SequenceId seq, PlayerId player) {
     Round round = state.round();
     if (round > Round::kPreFlop || !state.in_progress() ||
-        state.folded(player)) {
+        state.folded(player) || state.stack(player) == 0) {
       return;
     }
     nda::const_vector_ref<AbstractAction> actions =
@@ -314,10 +316,9 @@ class Strategy {
   */
   double TraverseMCCFR(const Node<kPlayers>& state,
                        std::array<CardCluster, kPlayers> card_buckets,
-                       SequenceId seq, PlayerId player, Chips starting_stack,
-                       bool prune) {
-    if (!state.in_progress()) {
-      return 1.0 * state.stack(player) - 1.0 * starting_stack;
+                       SequenceId seq, PlayerId player, bool prune) {
+    if (!state.in_progress() || state.folded(player)) {
+      return 1.0 * state.stack(player) - 1.0 * starting_stack_;
     }
     Round round = state.round();
     PlayerId acting_player = state.acting_player();
@@ -333,7 +334,7 @@ class Strategy {
            ++action_index) {
         SequenceId next_seq = action_abstraction_.Next(seq, round,
                                                        action_index);
-        if (next_seq != kIllegalId & (!prune ||
+        if ((next_seq != kIllegalId) & (!prune ||
           regrets_[+round](card_buckets[player], seq, action_index) >
           prune_constant_)) {
           AbstractAction action = actions(action_index);
@@ -342,8 +343,7 @@ class Strategy {
           std::array<CardCluster, kPlayers> new_card_buckets =
               info_abstraction_.ClusterArray(new_state);
           double action_value = TraverseMCCFR(new_state, new_card_buckets,
-                                              next_seq, player, starting_stack,
-                                              prune);
+                                              next_seq, player, prune);
           action_values[action_index] = action_value;
           value += action_value * strategy[action_index];
           explored[action_index] = true;
@@ -354,8 +354,10 @@ class Strategy {
       for (nda::index_t action_index = 0; action_index < actions.width();
            ++action_index) {
         if (explored[action_index]) {
-          regrets_[+round](card_buckets[player], seq, action_index) +=
-              std::rint(action_values[action_index] - value);
+          regrets_[+round](card_buckets[player], seq, action_index) = std::max(
+              regret_floor_,
+              (regrets_[+round](card_buckets[player], seq, action_index) +
+              (Regret) std::rint(action_values[action_index] - value)));
         }
       }
       return value;
@@ -369,8 +371,8 @@ class Strategy {
               info_abstraction_.ClusterArray(new_state);
       return TraverseMCCFR(new_state, new_card_buckets,
                            action_abstraction_.Next(seq, round, action_index),
-                           player, starting_stack, prune);
-    }  // if (acting_player == player) 
+                           player, prune);
+    }  // if (acting_player == player)
   }  // TraverseMCCFR()
 };  // class Strategy
 
