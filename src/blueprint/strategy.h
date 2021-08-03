@@ -279,7 +279,7 @@ class Strategy {
       Node<kPlayers> new_state = state;
       nda::index_t action_index = SampleAction(card_bucket, seq, round);
       AbstractAction action = actions(action_index);
-      new_state.Apply(action.play, state.ConvertBet(action.size));
+      new_state.Apply(action.play, new_state.ConvertBet(action.size));
       action_counts_(card_bucket, seq, action_index) += 1;
       UpdateStrategy(new_state, card_bucket,
                      action_abstraction_.Next(seq, round, action_index),
@@ -290,7 +290,7 @@ class Strategy {
         if (action_abstraction_.Next(seq, round, action_index) != kIllegalId) {
           Node<kPlayers> new_state = state;
           AbstractAction action = actions(action_index);
-          new_state.Apply(action.play, state.ConvertBet(action.size));
+          new_state.Apply(action.play, new_state.ConvertBet(action.size));
           UpdateStrategy(new_state, card_bucket,
                          action_abstraction_.Next(seq, round, action_index),
                          player);
@@ -309,14 +309,15 @@ class Strategy {
     @param player The player whose strategy is being updated.
     @param prune Whether to prune actions with regrets less than
         prunt_constant_.
+    
+    @return The value of the node.
   */
   double TraverseMCCFR(const Node<kPlayers>& state,
-                     std::array<CardCluster, kPlayers> card_buckets,
-                     SequenceId seq, PlayerId player, Chips starting_stack,
-                     bool prune) {
-    if (state.in_progress()) {
-      // type / unsigned error?
-      return state.stack(player) - starting_stack;
+                       std::array<CardCluster, kPlayers> card_buckets,
+                       SequenceId seq, PlayerId player, Chips starting_stack,
+                       bool prune) {
+    if (!state.in_progress()) {
+      return 1.0 * state.stack(player) - 1.0 * starting_stack;
     }
     Round round = state.round();
     PlayerId acting_player = state.acting_player();
@@ -330,15 +331,19 @@ class Strategy {
       std::array<bool, kActions> explored;
       for (nda::index_t action_index = 0; action_index < actions.width();
            ++action_index) {
-        if (!prune ||
-           regrets_[+round](card_buckets[player], seq, action_index) >
-           regret_floor_) {
-          Node<kPlayers> new_state = state;
+        SequenceId next_seq = action_abstraction_.Next(seq, round,
+                                                       action_index);
+        if (next_seq != kIllegalId & (!prune ||
+          regrets_[+round](card_buckets[player], seq, action_index) >
+          prune_constant_)) {
           AbstractAction action = actions(action_index);
-          new_state.Apply(action.play, state.ConvertBet(action.size));
-          double action_value = TraverseMCCFR(new_state, card_buckets,
-              action_abstraction_.Next(seq, round, action_index), player,
-              starting_stack, prune);
+          Node<kPlayers> new_state = state;
+          new_state.Apply(action.play, new_state.ConvertBet(action.size));
+          std::array<CardCluster, kPlayers> new_card_buckets =
+              info_abstraction_.ClusterArray(new_state);
+          double action_value = TraverseMCCFR(new_state, new_card_buckets,
+                                              next_seq, player, starting_stack,
+                                              prune);
           action_values[action_index] = action_value;
           value += action_value * strategy[action_index];
           explored[action_index] = true;
@@ -355,16 +360,18 @@ class Strategy {
       }
       return value;
     } else {
-      nda::index_t action_index =  SampleAction(card_buckets[acting_player],
+      nda::index_t action_index = SampleAction(card_buckets[acting_player],
                                                 seq, round);
       Node<kPlayers> new_state = state;
       AbstractAction action = actions(action_index);
-      new_state.Apply(action.play, state.ConvertBet(action.size));
-      return TraverseMCCFR(new_state, card_buckets,
-            action_abstraction_.Next(seq, round, action_index), player,
-            starting_stack, prune);
-    }
-  }
+      new_state.Apply(action.play, new_state.ConvertBet(action.size));
+      std::array<CardCluster, kPlayers> new_card_buckets =
+              info_abstraction_.ClusterArray(new_state);
+      return TraverseMCCFR(new_state, new_card_buckets,
+                           action_abstraction_.Next(seq, round, action_index),
+                           player, starting_stack, prune);
+    }  // if (acting_player == player) 
+  }  // TraverseMCCFR()
 };  // class Strategy
 
 }  // namespace fishbait
