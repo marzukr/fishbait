@@ -38,7 +38,7 @@ class Strategy {
   InfosetActionTable<ActionCount> action_counts_;
   Random rng_;
 
-  Chips starting_stack_;
+  std::array<Chips, kPlayers> starting_stacks_;
 
  public:
   /*
@@ -73,7 +73,7 @@ class Strategy {
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
-             }, rng_(), starting_stack_{start_state.stack(2)} {
+             }, rng_(), starting_stacks_{InitStartingStacks(start_state)} {
     MCCFR(start_state, iterations, strategy_interval, prune_threshold,
           prune_probability, LCFR_threshold, discount_interval,
           snapshot_interval, strategy_delay, verbose);
@@ -91,6 +91,16 @@ class Strategy {
       regret_table[r] = InitInfosetActionTable<Regret>(Round{r});
     }
     return regret_table;
+  }
+
+  /* @brief Initializes starting stacks array. */
+  std::array<Chips, kPlayers> InitStartingStacks(const Node<kPlayers>&
+                                                 start_state) {
+    std::array<Chips, kPlayers> starting_stacks;
+    for (PlayerId player = 0; player < kPlayers; ++player) {
+      starting_stacks[player] = start_state.stack(player);
+    }
+    return starting_stacks;
   }
 
   /*
@@ -318,7 +328,9 @@ class Strategy {
                        std::array<CardCluster, kPlayers> card_buckets,
                        SequenceId seq, PlayerId player, bool prune) {
     if (!state.in_progress() || state.folded(player)) {
-      return 1.0 * state.stack(player) - 1.0 * starting_stack_;
+      Node<kPlayers> new_state = state;
+      new_state.AwardPot(new_state.same_stack_no_rake_);
+      return 1.0 * new_state.stack(player) - 1.0 * starting_stacks_[player];
     }
     Round round = state.round();
     PlayerId acting_player = state.acting_player();
