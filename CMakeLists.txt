@@ -6,7 +6,7 @@ find_package(Git QUIET REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 
 # Helpful warning compiler flags
-add_compile_options(-Wall -Wextra -pedantic -Werror)
+add_compile_options(-Wall -Wextra -pedantic -Werror -march=native)
 
 # Enable coverage compiler flags if in debug mode
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
