@@ -12,7 +12,7 @@ TEST_CASE("ClusterTable bounds check", "[.][clustering][cluster_table]") {
   fishbait::Node<kPlayers> game;
   for (fishbait::RoundId round = 0; round < fishbait::kNRounds; ++round) {
     for (int trial = 0; trial < 100; ++trial) {
-      game.DealCards();
+      game.Deal();
       std::array<fishbait::CardCluster, kPlayers> clusters =
           table.ClusterArray(game);
       for (std::size_t j = 0; j < clusters.size(); ++j) {

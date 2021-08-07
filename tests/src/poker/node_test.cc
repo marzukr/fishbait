@@ -37,6 +37,10 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.button() == 0);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kPreFlop);
+  REQUIRE(triton.acting_player() == triton.kChancePlayer);
+
+  triton.Deal();
+  triton.ProceedPlay();
   REQUIRE(triton.cycled() == 0);
   REQUIRE(triton.acting_player() == 3);
   REQUIRE(triton.folded(3) == false);
@@ -68,6 +72,8 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.bets(3) == 500);
   REQUIRE(triton.stack(3) == 500000);
   REQUIRE_THROWS(triton.NewHand());
+  REQUIRE_THROWS(triton.ProceedPlay());
+  REQUIRE_THROWS(triton.Deal());
 
   // Test Paul Phua's action (fold)
   REQUIRE(triton.PlayerIndex(4) == 4);
@@ -180,6 +186,15 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kFlop);
+
+  /* -------------------------------- Flop ---------------------------------- */
+
+  REQUIRE(triton.round() == fishbait::Round::kFlop);
+  REQUIRE_THROWS(triton.Apply(fishbait::Action::kCheckCall));
+  REQUIRE(triton.in_progress() == true);
+  REQUIRE(triton.acting_player() == triton.kChancePlayer);
+  triton.Deal();
+  triton.ProceedPlay();
   REQUIRE(triton.cycled() == 1);
   REQUIRE(triton.acting_player() == 2);
   REQUIRE(triton.folded(2) == false);
@@ -188,8 +203,6 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.pot() == 36000);
   REQUIRE(triton.bets(2) == 10500);
   REQUIRE(triton.stack(2) == 486000);
-
-  /* -------------------------------- Flop ---------------------------------- */
 
   // Test Kuznetsov's action (check)
   REQUIRE(triton.Rotation() == 0);
@@ -247,6 +260,15 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.Apply(fishbait::Action::kFold) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kTurn);
+
+  /* -------------------------------- Turn ---------------------------------- */
+
+  REQUIRE(triton.round() == fishbait::Round::kTurn);
+  REQUIRE_THROWS(triton.Apply(fishbait::Action::kCheckCall));
+  REQUIRE(triton.in_progress() == true);
+  REQUIRE(triton.acting_player() == triton.kChancePlayer);
+  triton.Deal();
+  triton.ProceedPlay();
   REQUIRE(triton.cycled() == 4);
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.folded(2) == true);
@@ -255,8 +277,6 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.pot() == 96000);
   REQUIRE(triton.bets(2) == 10500);
   REQUIRE(triton.stack(2) == 486000);
-
-  /* -------------------------------- Turn ---------------------------------- */
 
   // Test Tony G's action (bet 100000)
   REQUIRE(triton.Rotation() == 0);
@@ -298,24 +318,26 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
 
   REQUIRE_THROWS(triton.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(triton.NewHand());
+  REQUIRE_THROWS(triton.ProceedPlay());
+  REQUIRE_THROWS(triton.Deal());
 
-  fishbait::HandArray<fishbait::ISO_Card, 8> cards0 = {{
-      {/*     Loeliger     */}, {/*      Cates       */},
-      {Card("Qh"), Card("Js")}, {Card("Td"), Card("5s")},
-      {Card("Kc"), Card("8h")}, {Card("Jc"), Card("7h")},
-      {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}
-  }};
+  // fishbait::HandArray<fishbait::ISO_Card, 8> cards0 = {{
+  //     {/*     Loeliger     */}, {/*      Cates       */},
+  //     {Card("Qh"), Card("Js")}, {Card("Td"), Card("5s")},
+  //     {Card("Kc"), Card("8h")}, {Card("Jc"), Card("7h")},
+  //     {Card("Kh"), Card("Jh")}, {Card("7s"), Card("2d")}
+  // }};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board0 = {{{Card("8c"),
       Card("6c"), Card("Ks"), Card("5c"), Card("4d")}}};
-  triton.set_hands(cards0);
-  triton.set_board(board0[0]);
-  REQUIRE(triton.hands(2) == cards0[2]);
-  REQUIRE(triton.board() == board0[0]);
-  REQUIRE(triton.PlayerCards(2) == std::array{Card("Qh"), Card("Js"),
-      Card("8c"), Card("6c"), Card("Ks"), Card("5c"), Card("4d")});
+  // triton.SetHands(cards0);
+  // triton.SetBoard(board0[0]);
+  // REQUIRE(triton.PlayerCards(2) == std::array{Card("Qh"), Card("Js"),
+  //     Card("8c"), Card("6c"), Card("Ks"), Card("5c"), Card("4d")});
   triton.AwardPot(triton.single_run_);
 
   REQUIRE_THROWS(triton.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(triton.ProceedPlay());
+  REQUIRE_THROWS(triton.Deal());
   REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
   REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
   REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board0));
@@ -338,6 +360,10 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
 
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kPreFlop);
+  REQUIRE(triton.acting_player() == triton.kChancePlayer);
+  triton.Deal();
+  triton.ProceedPlay();
+
   REQUIRE(triton.cycled() == 0);
   REQUIRE(triton.acting_player() == 4);
   REQUIRE(triton.players_left() == 8);
@@ -480,6 +506,8 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
 
   REQUIRE_THROWS(triton.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(triton.NewHand());
+  REQUIRE_THROWS(triton.ProceedPlay());
+  REQUIRE_THROWS(triton.Deal());
 
   fishbait::HandArray<fishbait::ISO_Card, 8> cards1 = {{
       {Card("Qd"), Card("6c")}, {Card("Ah"), Card("8d")},
@@ -489,16 +517,16 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   }};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board1 = {{/*Flop1*/
       /*Flop2*/ /*Flop3*/ /*Turn*/ /*River*/}};
-  triton.set_hands(cards1);
-  triton.set_board(board1[0]);
-  REQUIRE(triton.hands(0) == cards1[0]);
-  REQUIRE(triton.board() == board1[0]);
-  fishbait::Card zero = 0;
-  REQUIRE(triton.PlayerCards(0) == std::array{Card("Qd"), Card("6c"),
-      zero, zero, zero, zero, zero});
+  triton.SetHands(cards1);
+  triton.SetBoard(board1[0]);
+  std::array player_cards_0 = triton.PlayerCards(0);
+  REQUIRE(player_cards_0[0] == Card("Qd"));
+  REQUIRE(player_cards_0[1] == Card("6c"));
   triton.AwardPot(triton.single_run_);
 
   REQUIRE_THROWS(triton.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(triton.Deal());
+  REQUIRE_THROWS(triton.ProceedPlay());
   REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
   REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board1));
   REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
@@ -521,6 +549,12 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
 
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kPreFlop);
+  REQUIRE(triton.acting_player() == triton.kChancePlayer);
+  REQUIRE_THROWS(triton.Apply(fishbait::Action::kFold));
+  triton.ResetDeck();
+  triton.ProceedPlay();
+  REQUIRE_THROWS(triton.Deal());
+
   REQUIRE(triton.cycled() == 0);
   REQUIRE(triton.acting_player() == 5);
   REQUIRE(triton.players_left() == 8);
@@ -648,6 +682,17 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kFlop);
+
+  /* -------------------------------- Flop ---------------------------------- */
+
+  REQUIRE(triton.round() == fishbait::Round::kFlop);
+  REQUIRE_THROWS(triton.Apply(fishbait::Action::kCheckCall));
+  REQUIRE(triton.in_progress() == true);
+  REQUIRE(triton.acting_player() == triton.kChancePlayer);
+  REQUIRE_THROWS(triton.Deal());
+  triton.ResetDeck();
+  REQUIRE_THROWS(triton.Deal());
+  triton.ProceedPlay();
   REQUIRE(triton.cycled() == 1);
   REQUIRE(triton.acting_player() == 4);
   REQUIRE(triton.folded(4) == false);
@@ -656,8 +701,6 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.pot() == 30000);
   REQUIRE(triton.bets(4) == 12500);
   REQUIRE(triton.stack(4) == 484000);
-
-  /* -------------------------------- Flop ---------------------------------- */
 
   // Test Paul Phua's action (check)
   REQUIRE(triton.Rotation() == 0);
@@ -719,6 +762,8 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   //                                /*River*/};
   REQUIRE_THROWS(triton.Apply(fishbait::Action::kAllIn));
   REQUIRE_THROWS(triton.NewHand());
+  REQUIRE_THROWS(triton.ProceedPlay());
+  REQUIRE_THROWS(triton.Deal());
   triton.AwardPot(triton.single_run_);
   REQUIRE(triton.pot() == 0);
   REQUIRE(triton.bets(0) == 0);
@@ -741,6 +786,10 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE_THROWS(triton.AwardPot(triton.single_run_));
   REQUIRE_THROWS(triton.AwardPot(triton.same_stack_no_rake_));
   REQUIRE_THROWS(triton.AwardPot(triton.multi_run_, board_throw));
+  triton.ResetDeck();
+  triton.NewHand();
+  REQUIRE_NOTHROW(triton.Deal());
+  REQUIRE_NOTHROW(triton.ProceedPlay());
 }  // TEST_CASE "Triton cash game first 3 hands"
 
 TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
@@ -757,6 +806,10 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.button() == 0);
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(0) == false);
@@ -776,6 +829,8 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.PlayerIndex(6) == 1);
   REQUIRE(heads_up.PlayerIndex(7) == 0);
   REQUIRE(heads_up.PlayerIndex(8) == 1);
+
+  /* ------------------------------ Preflop --------------------------------- */
 
   // Test John's action (all in)
   REQUIRE(heads_up.Rotation() == 0);
@@ -799,6 +854,8 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.bets(0) == 102);
   REQUIRE(heads_up.stack(0) == 0);
   REQUIRE_THROWS(heads_up.NewHand());
+  REQUIRE_THROWS(heads_up.ProceedPlay());
+  REQUIRE_THROWS(heads_up.Deal());
 
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_throw;
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
@@ -818,11 +875,9 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.CanBet(92) == false);
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kBet, 92));
   REQUIRE(heads_up.CanFold());
-  REQUIRE(heads_up.Apply(fishbait::Action::kAllIn) == false);
-  REQUIRE(heads_up.in_progress() == false);
-  REQUIRE(heads_up.round() == fishbait::Round::kRiver);
-  REQUIRE(heads_up.cycled() == 2);
-  REQUIRE(heads_up.acting_player() == 0);
+  REQUIRE(heads_up.Apply(fishbait::Action::kAllIn) == true);
+  REQUIRE(heads_up.in_progress() == true);
+  REQUIRE(heads_up.round() == fishbait::Round::kFlop);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 2);
@@ -830,14 +885,22 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
 
+  /* -------------------------------- Flop ---------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+  /* -------------------------------- Turn ---------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+  /* -------------------------------- River --------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+
   fishbait::HandArray<fishbait::ISO_Card, 2> cards0 = {{{Card("7c"),
       Card("2h")}, {Card("Ah"), Card("As")}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board0 = {{{Card("9c"),
       Card("6c"), Card("Ks"), Card("5c"), Card("4d")}}};
-  heads_up.set_board(board0[0]);
-  heads_up.set_hands(cards0);
-  REQUIRE(heads_up.board() == board0[0]);
-  REQUIRE(heads_up.hands(1) == cards0[1]);
+  heads_up.SetBoard(board0[0]);
+  heads_up.SetHands(cards0);
   REQUIRE(heads_up.PlayerCards(1) == std::array{Card("Ah"), Card("As"),
       Card("9c"), Card("6c"), Card("Ks"), Card("5c"), Card("4d")});
   heads_up.AwardPot(heads_up.single_run_);
@@ -850,6 +913,8 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.stack(1) == 196);
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.Deal());
+  REQUIRE_THROWS(heads_up.ProceedPlay());
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board0));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
@@ -862,6 +927,12 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
+  REQUIRE_THROWS(heads_up.Deal());
+  heads_up.ResetDeck();
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.players_left() == 2);
@@ -873,30 +944,42 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
 
+  /* ------------------------------ Preflop --------------------------------- */
+
   // Test Mary's action (call)
   REQUIRE(heads_up.Rotation() == 0);
   REQUIRE(heads_up.CanCheckCall() == true);
   REQUIRE(heads_up.CanFold());
-  REQUIRE(heads_up.Apply(fishbait::Action::kCheckCall) == false);
-  REQUIRE(heads_up.in_progress() == false);
-  REQUIRE(heads_up.round() == fishbait::Round::kRiver);
-  REQUIRE(heads_up.cycled() == 2);
-  REQUIRE(heads_up.acting_player() == 1);
+  REQUIRE(heads_up.Apply(fishbait::Action::kCheckCall) == true);
+  REQUIRE(heads_up.in_progress() == true);
+  REQUIRE(heads_up.round() == fishbait::Round::kFlop);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 1);
 
+  /* -------------------------------- Flop ---------------------------------- */
+  heads_up.Deal();
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
+  heads_up.ProceedPlay();
+  /* -------------------------------- Turn ---------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+  /* -------------------------------- River --------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+
+  REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
+  REQUIRE_THROWS(heads_up.Deal());
+  REQUIRE_THROWS(heads_up.ProceedPlay());
 
   fishbait::HandArray<fishbait::ISO_Card, 2> cards1 = {{{Card("5s"),
       Card("4s")}, {Card("Kh"), Card("Th")}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board1 = {{{Card("7h"),
       Card("Ah"), Card("3c"), Card("7s"), Card("6c")}}};
-  heads_up.set_board(board1[0]);
-  heads_up.set_hands(cards1);
-  REQUIRE(heads_up.board() == board1[0]);
-  REQUIRE(heads_up.hands(1) == cards1[1]);
+  heads_up.SetBoard(board1[0]);
+  heads_up.SetHands(cards1);
   REQUIRE(heads_up.PlayerCards(1) == std::array{Card("Kh"), Card("Th"),
       Card("7h"), Card("Ah"), Card("3c"), Card("7s"), Card("6c")});
   heads_up.AwardPot(heads_up.single_run_);
@@ -909,6 +992,8 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.stack(1) == 192);
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.Deal());
+  REQUIRE_THROWS(heads_up.ProceedPlay());
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board1));
@@ -921,6 +1006,15 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
+  REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
+  REQUIRE_THROWS(heads_up.NewHand());
+  REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.Deal());
+  heads_up.ProceedPlay();
+  heads_up.ResetDeck();
+  REQUIRE_THROWS(heads_up.Deal());
+
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.players_left() == 2);
@@ -963,14 +1057,24 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kBet, 7));
   REQUIRE(heads_up.CanBet(8) == true);
   REQUIRE(heads_up.CanFold());
-  REQUIRE(heads_up.Apply(fishbait::Action::kCheckCall) == false);
-  REQUIRE(heads_up.in_progress() == false);
-  REQUIRE(heads_up.round() == fishbait::Round::kRiver);
-  REQUIRE(heads_up.cycled() == 2);
-  REQUIRE(heads_up.acting_player() == 0);
+  REQUIRE(heads_up.Apply(fishbait::Action::kCheckCall) == true);
+  REQUIRE(heads_up.in_progress() == true);
+  REQUIRE(heads_up.round() == fishbait::Round::kFlop);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 1);
+
+  /* -------------------------------- Flop ---------------------------------- */
+  REQUIRE_THROWS(heads_up.Deal());
+  REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
+  heads_up.ProceedPlay();
+  /* -------------------------------- Turn ---------------------------------- */
+  REQUIRE_THROWS(heads_up.Deal());
+  heads_up.ProceedPlay();
+  /* -------------------------------- River --------------------------------- */
+  REQUIRE_THROWS(heads_up.Deal());
+  heads_up.ProceedPlay();
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
@@ -979,10 +1083,8 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
       Card("8c")}, {Card("5d"), Card("5c")}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board2 = {{{Card("9d"),
       Card("6h"), Card("7c"), Card("Td"), Card("Kh")}}};
-  heads_up.set_board(board2[0]);
-  heads_up.set_hands(cards2);
-  REQUIRE(heads_up.board() == board2[0]);
-  REQUIRE(heads_up.hands(1) == cards2[1]);
+  heads_up.SetBoard(board2[0]);
+  heads_up.SetHands(cards2);
   REQUIRE(heads_up.PlayerCards(1) == std::array{Card("5d"), Card("5c"),
       Card("9d"), Card("6h"), Card("7c"), Card("Td"), Card("Kh")});
   heads_up.AwardPot(heads_up.single_run_);
@@ -995,6 +1097,8 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.stack(1) == 180);
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.ProceedPlay());
+  REQUIRE_THROWS(heads_up.Deal());
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board2));
@@ -1002,7 +1106,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
 
 TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<2, double> heads_up(0, 4, 2, 2, true, false, 100, 0);
+  fishbait::Node<2, double> heads_up(0, 4, 2, 2, true, false, 100);
   REQUIRE_THROWS(heads_up.NewHand());
 
   // Verify that the constructor worked correctly
@@ -1014,6 +1118,10 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE(heads_up.button() == 0);
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.folded(0) == false);
@@ -1064,14 +1172,25 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE(heads_up.CanBet(92) == false);
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kBet, 92));
   REQUIRE(heads_up.CanFold());
-  REQUIRE(heads_up.Apply(fishbait::Action::kAllIn) == false);
-  REQUIRE(heads_up.in_progress() == false);
-  REQUIRE(heads_up.round() == fishbait::Round::kRiver);
-  REQUIRE(heads_up.cycled() == 2);
-  REQUIRE(heads_up.acting_player() == 0);
+  REQUIRE(heads_up.Apply(fishbait::Action::kAllIn) == true);
+  REQUIRE(heads_up.in_progress() == true);
+  REQUIRE(heads_up.round() == fishbait::Round::kFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 2);
+
+  /* -------------------------------- Flop ---------------------------------- */
+  heads_up.Deal();
+  REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
+  heads_up.ProceedPlay();
+  /* -------------------------------- Turn ---------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+  /* -------------------------------- River --------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
@@ -1080,10 +1199,8 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
       Card("6c")}, {Card("Qc"), Card("Jd")}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board0 = {{{Card("7h"),
       Card("4s"), Card("Js"), Card("Th"), Card("Ad")}}};
-  heads_up.set_board(board0[0]);
-  heads_up.set_hands(cards0);
-  REQUIRE(heads_up.board() == board0[0]);
-  REQUIRE(heads_up.hands(1) == cards0[1]);
+  heads_up.SetBoard(board0[0]);
+  heads_up.SetHands(cards0);
   REQUIRE(heads_up.PlayerCards(1) == std::array{Card("Qc"), Card("Jd"),
       Card("7h"), Card("4s"), Card("Js"), Card("Th"), Card("Ad")});
   heads_up.AwardPot(heads_up.single_run_);
@@ -1096,6 +1213,8 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE(heads_up.stack(1) == 196);
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.ProceedPlay());
+  REQUIRE_THROWS(heads_up.Deal());
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board0));
@@ -1108,6 +1227,11 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
+  heads_up.ResetDeck();
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 1);
   REQUIRE(heads_up.players_left() == 2);
@@ -1123,14 +1247,24 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE(heads_up.Rotation() == 0);
   REQUIRE(heads_up.CanCheckCall() == true);
   REQUIRE(heads_up.CanFold());
-  REQUIRE(heads_up.Apply(fishbait::Action::kCheckCall) == false);
-  REQUIRE(heads_up.in_progress() == false);
-  REQUIRE(heads_up.round() == fishbait::Round::kRiver);
-  REQUIRE(heads_up.cycled() == 2);
-  REQUIRE(heads_up.acting_player() == 1);
+  REQUIRE(heads_up.Apply(fishbait::Action::kCheckCall) == true);
+  REQUIRE(heads_up.in_progress() == true);
+  REQUIRE(heads_up.round() == fishbait::Round::kFlop);
   REQUIRE(heads_up.folded(1) == false);
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 1);
+
+  /* -------------------------------- Flop ---------------------------------- */
+  heads_up.Deal();
+  REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.NewHand());
+  heads_up.ProceedPlay();
+  /* -------------------------------- Turn ---------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+  /* -------------------------------- River --------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
@@ -1139,10 +1273,8 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
       Card("Kd")}, {Card("Qc"), Card("Qh")}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board1 = {{{Card("3h"),
       Card("6c"), Card("9c"), Card("9d"), Card("Ad")}}};
-  heads_up.set_board(board1[0]);
-  heads_up.set_hands(cards1);
-  REQUIRE(heads_up.board() == board1[0]);
-  REQUIRE(heads_up.hands(0) == cards1[0]);
+  heads_up.SetBoard(board1[0]);
+  heads_up.SetHands(cards1);
   REQUIRE(heads_up.PlayerCards(0) == std::array{Card("Ah"), Card("Kd"),
       Card("3h"), Card("6c"), Card("9c"), Card("9d"), Card("Ad")});
   heads_up.AwardPot(heads_up.single_run_);
@@ -1155,9 +1287,12 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE(heads_up.stack(1) == 196);
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.ProceedPlay());
+  REQUIRE_THROWS(heads_up.Deal());
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board1));
+  heads_up.ResetDeck();
 
   /* ------------------------------------------------------------------------ */
   /* ------------------------------- Hand 3 --------------------------------- */
@@ -1167,6 +1302,10 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
 
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+
   REQUIRE(heads_up.cycled() == 0);
   REQUIRE(heads_up.acting_player() == 0);
   REQUIRE(heads_up.players_left() == 2);
@@ -1189,9 +1328,12 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE(heads_up.CanFold());
   REQUIRE(heads_up.Apply(fishbait::Action::kAllIn) == true);
   REQUIRE(heads_up.in_progress() == true);
-  REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
-  REQUIRE(heads_up.cycled() == 1);
-  REQUIRE(heads_up.acting_player() == 1);
+
+  /* Mary can't fold or raise since she already has enough chips in the pot to
+     continue and John is all in, so play skips to the next chance node. */
+
+  REQUIRE(heads_up.round() == fishbait::Round::kFlop);
+  REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
   REQUIRE(heads_up.folded(0) == false);
   REQUIRE(heads_up.players_left() == 2);
   REQUIRE(heads_up.players_all_in() == 1);
@@ -1203,25 +1345,17 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board_throw));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
 
-  // Test Mary's action (check)
-  REQUIRE(heads_up.Rotation() == 0);
-  REQUIRE(heads_up.CanCheckCall() == true);
-  REQUIRE(heads_up.CanBet(3) == false);
-  REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kBet, 3));
-  REQUIRE(heads_up.CanBet(4) == true);
-  REQUIRE(heads_up.CanBet(187) == true);
-  REQUIRE(heads_up.CanBet(188) == false);
-  REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kBet, 188));
-  REQUIRE(heads_up.CanFold() == false);
+  /* -------------------------------- Flop ---------------------------------- */
+  heads_up.Deal();
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
-  REQUIRE(heads_up.Apply(fishbait::Action::kCheckCall) == false);
-  REQUIRE(heads_up.in_progress() == false);
-  REQUIRE(heads_up.round() == fishbait::Round::kRiver);
-  REQUIRE(heads_up.cycled() == 2);
-  REQUIRE(heads_up.acting_player() == 0);
-  REQUIRE(heads_up.folded(1) == false);
-  REQUIRE(heads_up.players_left() == 2);
-  REQUIRE(heads_up.players_all_in() == 1);
+  REQUIRE_THROWS(heads_up.NewHand());
+  heads_up.ProceedPlay();
+  /* -------------------------------- Turn ---------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
+  /* -------------------------------- River --------------------------------- */
+  heads_up.Deal();
+  heads_up.ProceedPlay();
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
   REQUIRE_THROWS(heads_up.NewHand());
@@ -1230,10 +1364,8 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
       Card("Qh")}, {Card("8s"), Card("8d")}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board2 = {{{Card("3d"),
       Card("Ac"), Card("Kh"), Card("3h"), Card("2h")}}};
-  heads_up.set_board(board2[0]);
-  heads_up.set_hands(cards2);
-  REQUIRE(heads_up.board() == board2[0]);
-  REQUIRE(heads_up.hands(1) == cards2[1]);
+  heads_up.SetBoard(board2[0]);
+  heads_up.SetHands(cards2);
   REQUIRE(heads_up.PlayerCards(1) == std::array{Card("8s"), Card("8d"),
       Card("3d"), Card("Ac"), Card("Kh"), Card("3h"), Card("2h")});
   heads_up.AwardPot(heads_up.single_run_);
@@ -1246,6 +1378,8 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   REQUIRE(heads_up.stack(1) == 188);
 
   REQUIRE_THROWS(heads_up.Apply(fishbait::Action::kFold));
+  REQUIRE_THROWS(heads_up.ProceedPlay());
+  REQUIRE_THROWS(heads_up.Deal());
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.single_run_));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.multi_run_, board2));
   REQUIRE_THROWS(heads_up.AwardPot(heads_up.same_stack_no_rake_));
@@ -1254,7 +1388,7 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
 TEST_CASE("straddle", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
   fishbait::Node<6, fishbait::Fraction> game(0, 100, 50, 0, true, false, 10000,
-                                             3, fishbait::Fraction{}, 5, true);
+                                             fishbait::Fraction{}, 5, true);
   REQUIRE_THROWS(game.NewHand());
 
   // Verify that the constructor worked correctly
@@ -1266,6 +1400,13 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.blind_before_ante() == false);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kPreFlop);
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+  game.PostStraddles(3);
+  REQUIRE_THROWS(game.PostStraddles(3));
+  game.Deal();
+  REQUIRE_THROWS(game.PostStraddles(3));
+  game.ProceedPlay();
+
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.acting_player() == 0);
   REQUIRE(game.folded(0) == false);
@@ -1302,6 +1443,7 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.bets(0) == 0);
   REQUIRE(game.stack(0) == 10000);
   REQUIRE_THROWS(game.NewHand());
+  REQUIRE_THROWS(game.PostStraddles(3));
 
   // Player 1 action (fold)
   REQUIRE(game.Rotation() == 0);
@@ -1395,6 +1537,13 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kFlop);
+
+  /* -------------------------------- Flop ---------------------------------- */
+
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+  REQUIRE_THROWS(game.PostStraddles(3));
+  game.Deal();
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 2);
   REQUIRE(game.acting_player() == 3);
   REQUIRE(game.folded(5) == false);
@@ -1403,8 +1552,6 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.pot() == 2550);
   REQUIRE(game.bets(5) == 800);
   REQUIRE(game.stack(5) == 9200);
-
-  /* -------------------------------- Flop ---------------------------------- */
 
   // Player 3 action (check)
   REQUIRE(game.Rotation() == 0);
@@ -1472,6 +1619,13 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kTurn);
+
+  /* -------------------------------- Turn ---------------------------------- */
+
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+  REQUIRE_THROWS(game.PostStraddles(3));
+  game.Deal();
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 2);
   REQUIRE(game.acting_player() == 3);
   REQUIRE(game.folded(3) == false);
@@ -1480,8 +1634,6 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.pot() == 4150);
   REQUIRE(game.bets(3) == 1600);
   REQUIRE(game.stack(3) == 8400);
-
-  /* -------------------------------- Turn ---------------------------------- */
 
   // Player 3 action (check)
   REQUIRE(game.Rotation() == 0);
@@ -1508,6 +1660,13 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kRiver);
+
+  /* -------------------------------- River --------------------------------- */
+
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+  REQUIRE_THROWS(game.PostStraddles(3));
+  game.Deal();
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 2);
   REQUIRE(game.acting_player() == 3);
   REQUIRE(game.folded(4) == false);
@@ -1516,8 +1675,6 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.pot() == 4150);
   REQUIRE(game.bets(4) == 1600);
   REQUIRE(game.stack(4) == 8400);
-
-  /* -------------------------------- River --------------------------------- */
 
   // Player 3 action (check)
   REQUIRE(game.Rotation() == 0);
@@ -1602,10 +1759,8 @@ TEST_CASE("straddle", "[poker][node]") {
       Card("9d")}, {0, 0}, {0, 0}, {0, 0}, {Card("Jh"), Card("Kd")}, {0, 0}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board0 = {{{Card("Qd"),
       Card("4s"), Card("Kc"), Card("6d"), Card("Tc")}}};
-  game.set_board(board0[0]);
-  game.set_hands(cards0);
-  REQUIRE(game.board() == board0[0]);
-  REQUIRE(game.hands(4) == cards0[4]);
+  game.SetBoard(board0[0]);
+  game.SetHands(cards0);
   REQUIRE(game.PlayerCards(4) == std::array{Card("Jh"), Card("Kd"), Card("Qd"),
       Card("4s"), Card("Kc"), Card("6d"), Card("Tc")});
   game.AwardPot(game.multi_run_, board0);
@@ -1626,10 +1781,11 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE_THROWS(game.AwardPot(game.single_run_));
   REQUIRE_THROWS(game.AwardPot(game.multi_run_, board0));
   REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
+  REQUIRE_THROWS(game.PostStraddles(3));
 }  // TEST_CASE "straddle"
 
 TEST_CASE("straddle with all in", "[poker][node]") {
-  fishbait::Node<6, double> game(0, 100, 50, 0, true, false, 400, 3);
+  fishbait::Node<6, double> game(0, 100, 50, 0, true, false, 400);
   REQUIRE_THROWS(game.NewHand());
 
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_throws;
@@ -1645,6 +1801,11 @@ TEST_CASE("straddle with all in", "[poker][node]") {
   REQUIRE(game.blind_before_ante() == false);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kPreFlop);
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+  game.PostStraddles(3);
+  game.ProceedPlay();
+  REQUIRE_THROWS(game.PostStraddles(3));
+
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.acting_player() == 5);
   for (fishbait::PlayerId i = 0; i < 6; ++i) {
@@ -1665,14 +1826,16 @@ TEST_CASE("straddle with all in", "[poker][node]") {
   REQUIRE(game.stack(3) == 200);
   REQUIRE(game.stack(4) == 0);
   REQUIRE(game.stack(5) == 400);
+  REQUIRE_THROWS(game.Deal());
+  REQUIRE_THROWS(game.PostStraddles(3));
 }  // TEST_CASE "straddle with all in"
 
 TEST_CASE("straddle with bb ante", "[poker][node]") {
-  fishbait::Node<6, double> game(0, 100, 50, 100, true, false, 10000, 1);
+  fishbait::Node<6, double> game(0, 100, 50, 100, true, false, 10000);
   REQUIRE_THROWS(game.NewHand());
 
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_throws;
-  game.set_board(board_throws[0]);
+  game.SetBoard(board_throws[0]);
   REQUIRE_THROWS(game.AwardPot(game.single_run_));
   REQUIRE_THROWS(game.AwardPot(game.multi_run_, board_throws));
   REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
@@ -1685,6 +1848,16 @@ TEST_CASE("straddle with bb ante", "[poker][node]") {
   REQUIRE(game.blind_before_ante() == false);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kPreFlop);
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+  REQUIRE_THROWS(game.Deal());
+  game.ResetDeck();
+  game.Deal();
+  REQUIRE_THROWS(game.PostStraddles(1));
+  game.ResetDeck();
+  game.PostStraddles(1);
+  game.Deal();
+  game.ProceedPlay();
+
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.acting_player() == 4);
   for (fishbait::PlayerId i = 0; i < 6; ++i) {
@@ -1708,14 +1881,16 @@ TEST_CASE("straddle with bb ante", "[poker][node]") {
   REQUIRE(game.CanBet(200) == false);
   REQUIRE(game.CanBet(399) == false);
   REQUIRE(game.CanBet(400) == true);
+  REQUIRE_THROWS(game.Deal());
+  REQUIRE_THROWS(game.PostStraddles(1));
 }  // TEST_CASE "straddle with bb ante"
 
 TEST_CASE("straddle with ante", "[poker][node]") {
-  fishbait::Node<6, double> game(0, 100, 50, 100, false, false, 10000, 1);
+  fishbait::Node<6, double> game(0, 100, 50, 100, false, false, 10000);
   REQUIRE_THROWS(game.NewHand());
 
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_throws;
-  game.set_board(board_throws[0]);
+  game.SetBoard(board_throws[0]);
   REQUIRE_THROWS(game.AwardPot(game.single_run_));
   REQUIRE_THROWS(game.AwardPot(game.multi_run_, board_throws));
   REQUIRE_THROWS(game.AwardPot(game.same_stack_no_rake_));
@@ -1728,6 +1903,11 @@ TEST_CASE("straddle with ante", "[poker][node]") {
   REQUIRE(game.blind_before_ante() == false);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kPreFlop);
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+  game.PostStraddles(1);
+  REQUIRE_THROWS(game.PostStraddles(1));
+  game.ProceedPlay();
+
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.acting_player() == 4);
   for (fishbait::PlayerId i = 0; i < 6; ++i) {
@@ -1756,17 +1936,24 @@ TEST_CASE("straddle with ante", "[poker][node]") {
 TEST_CASE("awardpot same stack no rake double", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
   fishbait::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
+  INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
+  INFO("Flop");
+  REQUIRE_THROWS(game.Deal());
+  game.ProceedPlay();
+  INFO("Turn");
+  game.ProceedPlay();
+  INFO("River");
+  game.ProceedPlay();
   fishbait::BoardArray<fishbait::ISO_Card> board = {Card("As"), Card("Ks"),
       Card("Qs"), Card("Js"), Card("Ts")};
   fishbait::HandArray<fishbait::ISO_Card, 3> hands = {{{Card("2s"), Card("2h")},
       {Card("3s"), Card("3h")}, {Card("4s"), Card("4h")}}};
-  game.set_hands(hands);
-  game.set_board(board);
-  REQUIRE(game.board() == board);
-  REQUIRE(game.hands(2) == hands[2]);
+  game.SetHands(hands);
+  game.SetBoard(board);
   REQUIRE(game.PlayerCards(2) == std::array{Card("4s"), Card("4h"), Card("As"),
       Card("Ks"), Card("Qs"), Card("Js"), Card("Ts")});
   game.AwardPot(game.same_stack_no_rake_);
@@ -1783,17 +1970,24 @@ TEST_CASE("awardpot same stack no rake fraction", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
   fishbait::Node<3, fishbait::Fraction> game(0, 100, 50, 0, false, false,
                                              10000);
+  INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
+  INFO("Flop");
+  REQUIRE_THROWS(game.Deal());
+  game.ProceedPlay();
+  INFO("Turn");
+  game.ProceedPlay();
+  INFO("River");
+  game.ProceedPlay();
   fishbait::BoardArray<fishbait::ISO_Card> board = {Card("2d"), Card("2c"),
       Card("Qs"), Card("Js"), Card("Ts")};
   fishbait::HandArray<fishbait::ISO_Card, 3> hands = {{{Card("2s"), Card("2h")},
       {Card("3s"), Card("3h")}, {0, 0}}};
-  game.set_hands(hands);
-  game.set_board(board);
-  REQUIRE(game.board() == board);
-  REQUIRE(game.hands(0) == hands[0]);
+  game.SetHands(hands);
+  game.SetBoard(board);
   REQUIRE(game.PlayerCards(0) == std::array{Card("2s"), Card("2h"), Card("2d"),
       Card("2c"), Card("Qs"), Card("Js"), Card("Ts")});
   game.AwardPot(game.same_stack_no_rake_);
@@ -1809,6 +2003,9 @@ TEST_CASE("awardpot same stack no rake fraction", "[poker][node]") {
 TEST_CASE("awardpot single run double", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
   fishbait::Node<3, double> game(0, 100, 50, 100, true, false, 10000);
+  REQUIRE_THROWS(game.Apply(fishbait::Action::kAllIn));
+  INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
   REQUIRE(game.CanCheckCall() == false);
   REQUIRE(game.CanFold());
@@ -1816,14 +2013,19 @@ TEST_CASE("awardpot single run double", "[poker][node]") {
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
   game.Apply(fishbait::Action::kAllIn);
+  INFO("Flop");
+  REQUIRE_THROWS(game.Deal());
+  game.ProceedPlay();
+  INFO("Turn");
+  game.ProceedPlay();
+  INFO("River");
+  game.ProceedPlay();
   fishbait::BoardArray<fishbait::ISO_Card> board = {Card("8c"), Card("9c"),
       Card("Ts"), Card("Js"), Card("Qs")};
   fishbait::HandArray<fishbait::ISO_Card, 3> hands = {{{Card("2s"), Card("2h")},
       {Card("3s"), Card("3h")}, {Card("Ah"), Card("Kh")}}};
-  game.set_hands(hands);
-  game.set_board(board);
-  REQUIRE(game.board() == board);
-  REQUIRE(game.hands(1) == hands[1]);
+  game.SetHands(hands);
+  game.SetBoard(board);
   REQUIRE(game.PlayerCards(1) == std::array{Card("3s"), Card("3h"), Card("8c"),
       Card("9c"), Card("Ts"), Card("Js"), Card("Qs")});
   game.AwardPot(game.single_run_);
@@ -1840,6 +2042,9 @@ TEST_CASE("awardpot single run fraction", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
   fishbait::Node<4, fishbait::Fraction> game(0, 100, 50, 100, true, false,
                                              10000);
+  REQUIRE_THROWS(game.Apply(fishbait::Action::kAllIn));
+  INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
@@ -1850,15 +2055,20 @@ TEST_CASE("awardpot single run fraction", "[poker][node]") {
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
   game.Apply(fishbait::Action::kAllIn);
+  INFO("Flop");
+  REQUIRE_THROWS(game.Deal());
+  game.ProceedPlay();
+  INFO("Turn");
+  game.ProceedPlay();
+  INFO("River");
+  game.ProceedPlay();
   fishbait::BoardArray<fishbait::ISO_Card> board = {Card("8c"), Card("9c"),
       Card("Ts"), Card("Js"), Card("Qs")};
   fishbait::HandArray<fishbait::ISO_Card, 4> hands = {{{Card("Ad"), Card("Kd")},
       {Card("Ac"), Card("Kc")}, {Card("Ah"), Card("Kh")},
       {Card("2s"), Card("2h")}}};
-  game.set_board(board);
-  game.set_hands(hands);
-  REQUIRE(game.board() == board);
-  REQUIRE(game.hands(3) == hands[3]);
+  game.SetBoard(board);
+  game.SetHands(hands);
   REQUIRE(game.PlayerCards(3) == std::array{Card("2s"), Card("2h"), Card("8c"),
       Card("9c"), Card("Ts"), Card("Js"), Card("Qs")});
   game.AwardPot(game.single_run_);
@@ -1878,12 +2088,15 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker][node]", double,
                    fishbait::Fraction) {
   auto Card = fishbait::ISOCardFromStr;
   fishbait::Node<5, TestType> game(0, 2, 1, 0, true, false, 11);
+  INFO("Preflop");
+  game.ProceedPlay();
   // Preflop fold to big blind
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
-  // Award Pot
+
+  INFO("Award Pot");
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> multi_board;
   game.AwardPot(game.multi_run_, multi_board);
   REQUIRE(game.stack(0) == 11);
@@ -1896,31 +2109,34 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker][node]", double,
   }
   REQUIRE(game.pot() == 0);
 
-  // Hand 2
+  INFO("Hand 2");
   game.NewHand();
+  game.ProceedPlay();
   REQUIRE(game.button() == 1);
-  // Preflop
+  INFO("Preflop");
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
-  // Flop
+  INFO("Flop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
-  // Turn
+  INFO("Turn");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
-  // River
+  INFO("River");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
-  // Award Pot
+  INFO("Award Pot");
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_0 = {{{Card("8c"),
       Card("9c"), Card("Ts"), Card("Js"), Card("Qs")}}};
   fishbait::HandArray<fishbait::ISO_Card, 5> hands_0 = {{{}, {}, {0, 0},
       {Card("2s"), Card("2h")}, {}}};
-  game.set_hands(hands_0);
-  REQUIRE(game.hands(4) == hands_0[4]);
+  game.SetHands(hands_0);
   game.AwardPot(game.multi_run_, board_0);
   REQUIRE(game.stack(0) == 11);
   REQUIRE(game.stack(1) == 10);
@@ -1932,16 +2148,24 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker][node]", double,
   }
   REQUIRE(game.pot() == 0);
 
-  // Hand 3
+  INFO("Hand 3");
   game.NewHand();
   REQUIRE(game.button() == 2);
-  // Preflop everyone all in
+  INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
-  // Award Pot
+  INFO("Flop");
+  REQUIRE_THROWS(game.Deal());
+  game.ProceedPlay();
+  INFO("Turn");
+  game.ProceedPlay();
+  INFO("River");
+  game.ProceedPlay();
+  INFO("Award Pot");
   fishbait::MultiBoardArray<fishbait::ISO_Card, 3> board_1 = {{{Card("8c"),
       Card("9c"), Card("Tc"), Card("Jc"), Card("2d")}, {Card("2c"), Card("3c"),
       Card("4c"), Card("5d"), Card("6d")}, {Card("8s"), Card("9s"), Card("Ts"),
@@ -1949,8 +2173,7 @@ TEMPLATE_TEST_CASE("awardpot multi run", "[poker][node]", double,
   fishbait::HandArray<fishbait::ISO_Card, 5> hands_1 = {{{Card("6h"),
       Card("7h")}, {Card("Ac"), Card("Kc")}, {Card("As"), Card("Ks")},
       {Card("5s"), Card("7s")}, {Card("Qd"), Card("8d")}}};
-  game.set_hands(hands_1);
-  REQUIRE(game.hands(2) == hands_1[2]);
+  game.SetHands(hands_1);
   game.AwardPot(game.multi_run_, board_1);
   REQUIRE((game.stack(0) == 1 || game.stack(0) == 0));
   REQUIRE(game.stack(1) == 33);
@@ -1973,9 +2196,9 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   auto Card = fishbait::ISOCardFromStr;
   TestType rake{1};
   rake /= 20;
-  fishbait::Node<5, TestType> game(0, 2, 1, 0, true, false, 11, 0, rake, 0,
-                                   true);
+  fishbait::Node<5, TestType> game(0, 2, 1, 0, true, false, 11, rake, 0, true);
   // Preflop fold to big blind
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
@@ -1997,18 +2220,22 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   game.NewHand();
   REQUIRE(game.button() == 1);
   // Preflop
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
   // Flop
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
   // Turn
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
   // River
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
   // Award Pot
@@ -2016,8 +2243,7 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
       Card("9c"), Card("Ts"), Card("Js"), Card("Qs")}}};
   fishbait::HandArray<fishbait::ISO_Card, 5> hands_0 = {{{}, {}, {0, 0},
       {Card("2s"), Card("2h")}, {}}};
-  game.set_hands(hands_0);
-  REQUIRE(game.hands(1) == hands_0[1]);
+  game.SetHands(hands_0);
   game.AwardPot(game.multi_run_, board_0);
   REQUIRE(game.stack(0) == 11);
   REQUIRE(game.stack(1) == 10);
@@ -2033,11 +2259,19 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   game.NewHand();
   REQUIRE(game.button() == 2);
   // Preflop everyone all in
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
+  // Flop
+  REQUIRE_THROWS(game.Deal());
+  game.ProceedPlay();
+  // Turn
+  game.ProceedPlay();
+  // River
+  game.ProceedPlay();
   // Award Pot
   fishbait::MultiBoardArray<fishbait::ISO_Card, 3> board_1 = {{{Card("8c"),
       Card("9c"), Card("Tc"), Card("Jc"), Card("2d")}, {Card("2c"), Card("3c"),
@@ -2046,8 +2280,7 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   fishbait::HandArray<fishbait::ISO_Card, 5> hands_1 = {{{Card("6h"),
       Card("7h")}, {Card("Ac"), Card("Kc")}, {Card("As"), Card("Ks")},
       {Card("5s"), Card("7s")}, {Card("Qd"), Card("8d")}}};
-  game.set_hands(hands_1);
-  REQUIRE(game.hands(0) == hands_1[0]);
+  game.SetHands(hands_1);
   game.AwardPot(game.multi_run_, board_1);
   REQUIRE(game.stack(0) == 0);
   REQUIRE(game.stack(1) == 32);
@@ -2070,8 +2303,9 @@ TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker][node]",
   auto Card = fishbait::ISOCardFromStr;
   TestType rake{1};
   rake /= 20;
-  fishbait::Node<4, TestType> game(0, 100, 50, 100, true, false, 10000, 0, rake,
+  fishbait::Node<4, TestType> game(0, 100, 50, 100, true, false, 10000, rake,
                                    100, false);
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
@@ -2082,15 +2316,20 @@ TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker][node]",
   REQUIRE(game.CanFold());
   REQUIRE(game.CanCheckCall() == false);
   game.Apply(fishbait::Action::kAllIn);
+  // Flop
+  REQUIRE_THROWS(game.Deal());
+  game.ProceedPlay();
+  // Turn
+  game.ProceedPlay();
+  // River
+  game.ProceedPlay();
   fishbait::BoardArray<fishbait::ISO_Card> board = {Card("8c"), Card("9c"),
       Card("Ts"), Card("Js"), Card("Qs")};
   fishbait::HandArray<fishbait::ISO_Card, 4> hands = {{{Card("Ad"), Card("Kd")},
       {Card("Ac"), Card("Kc")}, {Card("Ah"), Card("Kh")}, {Card("2s"),
       Card("2h")}}};
-  game.set_hands(hands);
-  game.set_board(board);
-  REQUIRE(game.board() == board);
-  REQUIRE(game.hands(2) == hands[2]);
+  game.SetHands(hands);
+  game.SetBoard(board);
   REQUIRE(game.PlayerCards(2) == std::array{Card("Ah"), Card("Kh"), Card("8c"),
       Card("9c"), Card("Ts"), Card("Js"), Card("Qs")});
   game.AwardPot(game.single_run_);
@@ -2118,6 +2357,7 @@ TEST_CASE("bb ante with change", "[poker][node]") {
   REQUIRE(game.pot() == 300);
 
   // Preflop
+  game.ProceedPlay();
 
   // Player 0 calls
   REQUIRE(game.CanCheckCall());
@@ -2159,6 +2399,14 @@ TEST_CASE("ante all players all in", "[poker][node]") {
   REQUIRE(game.stack(1) == 0);
   REQUIRE(game.stack(2) == 0);
   REQUIRE(game.pot() == 300);
+  // Preflop
+  game.ProceedPlay();
+  // Flop
+  game.ProceedPlay();
+  // Turn
+  game.ProceedPlay();
+  // River
+  game.ProceedPlay();
   REQUIRE(game.round() == fishbait::Round::kRiver);
   REQUIRE(game.in_progress() == false);
 }  // TEST_CASE "bb ante with change"
@@ -2176,6 +2424,9 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.button() == 0);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kPreFlop);
+  REQUIRE(game.acting_player() == game.kChancePlayer);
+
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.acting_player() == 0);
@@ -2202,12 +2453,16 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 200);
   REQUIRE(game.bets(0) == 100);
   REQUIRE(game.stack(0) == 9900);
+
   // Big blind check
   REQUIRE(game.CanFold() == false);
   REQUIRE_THROWS(game.Apply(fishbait::Action::kFold));
   game.Apply(fishbait::Action::kCheckCall);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kFlop);
+
+  // Flop
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.acting_player() == 0);
@@ -2217,8 +2472,6 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 200);
   REQUIRE(game.bets(1) == 100);
   REQUIRE(game.stack(1) == 9900);
-
-  // Flop
 
   // Small Blind check
   REQUIRE(game.CanFold() == false);
@@ -2235,12 +2488,16 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 200);
   REQUIRE(game.bets(0) == 100);
   REQUIRE(game.stack(0) == 9900);
+
   // big blind check
   REQUIRE(game.CanFold() == false);
   REQUIRE_THROWS(game.Apply(fishbait::Action::kFold));
   game.Apply(fishbait::Action::kCheckCall);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kTurn);
+
+  // Turn
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.acting_player() == 0);
@@ -2250,8 +2507,6 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 200);
   REQUIRE(game.bets(1) == 100);
   REQUIRE(game.stack(1) == 9900);
-
-  // Turn
 
   // Small Blind bet 200
   REQUIRE(game.CanFold() == false);
@@ -2268,11 +2523,15 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 400);
   REQUIRE(game.bets(0) == 300);
   REQUIRE(game.stack(0) == 9700);
+
   // big blind call
   REQUIRE(game.CanFold());
   game.Apply(fishbait::Action::kCheckCall);
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kRiver);
+
+  // River
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.acting_player() == 0);
@@ -2282,8 +2541,6 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 600);
   REQUIRE(game.bets(1) == 300);
   REQUIRE(game.stack(1) == 9700);
-
-  // River
 
   // Small Blind check
   REQUIRE(game.CanFold() == false);
@@ -2300,6 +2557,7 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 600);
   REQUIRE(game.bets(0) == 300);
   REQUIRE(game.stack(0) == 9700);
+
   // big blind bet 300
   REQUIRE(game.CanFold() == false);
   REQUIRE_THROWS(game.Apply(fishbait::Action::kFold));
@@ -2315,6 +2573,7 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 900);
   REQUIRE(game.bets(1) == 600);
   REQUIRE(game.stack(1) == 9400);
+
   // Small Blind raise 1650
   REQUIRE(game.CanFold());
   game.Apply(fishbait::Action::kBet, 1650);
@@ -2329,6 +2588,7 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
   REQUIRE(game.pot() == 2550);
   REQUIRE(game.bets(0) == 1950);
   REQUIRE(game.stack(0) == 8050);
+
   // big blind call
   REQUIRE(game.CanFold());
   game.Apply(fishbait::Action::kCheckCall);
@@ -2349,10 +2609,8 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
       Card("Jd"), Card("Ks"), Card("3s")};
   fishbait::HandArray<fishbait::ISO_Card, 2> hands = {{{Card("Ac"), Card("Qh")},
       {Card("Kh"), Card("Qc")}}};
-  game.set_board(board);
-  game.set_hands(hands);
-  REQUIRE(game.board() == board);
-  REQUIRE(game.hands(1) == hands[1]);
+  game.SetBoard(board);
+  game.SetHands(hands);
   REQUIRE(game.PlayerCards(1) == std::array{Card("Kh"), Card("Qc"), Card("5c"),
       Card("Qd"), Card("Jd"), Card("Ks"), Card("3s")});
   game.AwardPot(game.same_stack_no_rake_);
@@ -2366,6 +2624,7 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
 TEST_CASE("rotation in hand with several rotations", "[poker][node]") {
   fishbait::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
 
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.Rotation() == 0);
   game.Apply(fishbait::Action::kBet, 200);
@@ -2415,6 +2674,7 @@ TEST_CASE("rotation in hand with several rotations", "[poker][node]") {
   REQUIRE(game.Rotation() == 5);
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kCheckCall);
+  game.ProceedPlay();
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.round() == fishbait::Round::kFlop);
@@ -2427,11 +2687,13 @@ TEST_CASE("player goes all in for less than a min raise",
   INFO("Hand 1");
 
   INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kFold);
   game.Apply(fishbait::Action::kBet, 4950);
   game.Apply(fishbait::Action::kCheckCall);
 
   INFO("Flop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kBet, 2000);
   game.Apply(fishbait::Action::kFold);
 
@@ -2445,6 +2707,7 @@ TEST_CASE("player goes all in for less than a min raise",
   game.NewHand();
 
   INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kBet, 4900);
   game.Apply(fishbait::Action::kAllIn);
   REQUIRE(game.CanBet(9699) == false);
@@ -2461,6 +2724,7 @@ TEST_CASE("player goes all in for less than a min raise",
   game.Apply(fishbait::Action::kCheckCall);
 
   INFO("Check correct results on start of the flop");
+  game.ProceedPlay();
   REQUIRE(game.bets(0) == 5000);
   REQUIRE(game.bets(1) == 5000);
   REQUIRE(game.bets(2) == 5000);
@@ -2477,6 +2741,7 @@ TEST_CASE("player goes all in for less than a min raise",
 
 TEST_CASE("non zero button test", "[poker][node]") {
   fishbait::Node<4, double> game(2, 100, 50, 0, false, false, 10000);
+  game.ProceedPlay();
   REQUIRE(game.button() == 2);
   REQUIRE(game.acting_player() == 1);
   game.Apply(fishbait::Action::kFold);
@@ -2485,6 +2750,7 @@ TEST_CASE("non zero button test", "[poker][node]") {
   game.AwardPot(game.same_stack_no_rake_);
   game.NewHand();
   REQUIRE(game.button() == 3);
+  game.ProceedPlay();
   REQUIRE(game.acting_player() == 2);
 }  // TEST_CASE "non zero button test"
 
@@ -2493,10 +2759,12 @@ TEMPLATE_TEST_CASE("convert bet 1", "[poker][node]", double,
   fishbait::Node<2, TestType> game(0, 75, 25, 0, false, false, 1000);
 
   INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
 
   INFO("Flop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kBet, 120);
   game.Apply(fishbait::Action::kBet, 240);
   TestType one{1};
@@ -2514,11 +2782,13 @@ TEMPLATE_TEST_CASE("convert bet 2", "[poker][node]", double,
   fishbait::Node<3, TestType> game(0, 5, 2, 0, false, false, 500);
 
   INFO("Preflop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
   game.Apply(fishbait::Action::kCheckCall);
 
   INFO("Flop");
+  game.ProceedPlay();
   game.Apply(fishbait::Action::kBet, 5);
   game.Apply(fishbait::Action::kBet, 15);
   TestType one{1};
@@ -2535,21 +2805,37 @@ TEMPLATE_TEST_CASE("convert bet 2", "[poker][node]", double,
 }  // TEMPLATE_TEST_CASE "convert bet 2"
 
 TEST_CASE("deal cards test", "[poker][node]") {
-  fishbait::Node<6, double> game(0, 5, 2, 0, false, false, 500);
   for (int trial = 0; trial < 100; ++trial) {
-    game.DealCards();
-    for (fishbait::PlayerId i = 0; i < 6; ++i) {
-      REQUIRE(game.hands(i)[0] != game.hands(i)[1]);
-      for (fishbait::CardN j = 0; j < fishbait::kBoardCards; ++j) {
-        REQUIRE(game.board()[j] != game.hands(i)[0]);
-        REQUIRE(game.board()[j] != game.hands(i)[1]);
+    fishbait::Node<6, double> game(0, 5, 2, 0, false, false, 500);
+    game.Deal();  // preflop
+    game.ProceedPlay();
+    game.Apply(fishbait::Action::kAllIn);
+    game.Apply(fishbait::Action::kAllIn);
+    game.Apply(fishbait::Action::kFold);
+    game.Apply(fishbait::Action::kFold);
+    game.Apply(fishbait::Action::kFold);
+    game.Apply(fishbait::Action::kFold);
+    game.Deal();  // flop
+    game.ProceedPlay();
+    game.Deal();  // turn
+    game.ProceedPlay();
+    game.Deal();  // river
+    game.ProceedPlay();
+    for (fishbait::PlayerId player = 0; player < 6; ++player) {
+      std::array player_cards = game.PlayerCards(player);
+      for (std::size_t i = 0; i < player_cards.size(); ++i) {
+        for (std::size_t j = i + 1; j < player_cards.size(); ++j) {
+          REQUIRE(player_cards[i] != player_cards[j]);
+        }
       }
-      for (fishbait::PlayerId j = i + 1; j < 6; ++j) {
-        REQUIRE(game.hands(i)[0] != game.hands(j)[0]);
-        REQUIRE(game.hands(i)[0] != game.hands(j)[1]);
-        REQUIRE(game.hands(i)[1] != game.hands(j)[0]);
-        REQUIRE(game.hands(i)[1] != game.hands(j)[1]);
+      for (fishbait::PlayerId player2 = player + 1; player2 < 6; ++player2) {
+        std::array player_cards2 = game.PlayerCards(player2);
+        for (std::size_t i = 0; i < fishbait::kHandCards; ++i) {
+          for (std::size_t j = 0; j < fishbait::kHandCards; ++j) {
+            REQUIRE(player_cards[i] != player_cards2[j]);
+          }
+        }
       }
-    }  // for i
+    }  // for player
   }  // for trial
 }  // TEST_CASE "deal cards test"

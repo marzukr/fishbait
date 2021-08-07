@@ -139,7 +139,7 @@ class Strategy {
       for (PlayerId player = 0; player < kPlayers; ++player) {
         // update strategy after strategy_inveral iterations
         if (t > strategy_delay && t % strategy_interval == 0) {
-          start_state.DealCards();
+          start_state.Deal();
           UpdateStrategy(start_state,
                          info_abstraction_.Cluster(start_state, player), 0,
                          player);
@@ -154,7 +154,7 @@ class Strategy {
             prune = true;
           }
         }
-        start_state.DealCards();
+        start_state.Deal();
         TraverseMCCFR(start_state, info_abstraction_.ClusterArray(start_state),
                       0, player, prune);
       }

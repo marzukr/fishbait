@@ -7,12 +7,14 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <optional>
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <utility>
 
 #include "SKPokerEval/src/SevenEval.h"
@@ -28,6 +30,80 @@ namespace fishbait {
    accuracy and/or speed of the awarded chip amounts. */
 template <PlayerId kPlayers = 6, typename QuotaT = double>
 class Node {
+ private:
+  // Attributes
+  // --------------------------------------------------------------------------
+
+  const Chips big_blind_;         // how many chips the big blind is
+  const Chips small_blind_;       // how many chips the small blind is
+  const Chips ante_;              /* how many chips each player must contribute
+                                     to the pot on each hand in expectation */
+  const bool big_blind_ante_;     /* does the big blind pays the ante for
+                                     everyone in the game? */
+  const bool blind_before_ante_;  /* should players should cover the blind
+                                     instead of the ante if they don't have
+                                     enough chips to pay both? */
+  const QuotaT rake_;             // proportion of each hand taken as rake
+  const Chips rake_cap_;          /* maximum number of chips that can be raked;
+                                     rake_cap_ of 0 means no cap */
+  const bool no_flop_no_drop_;    // is rake taken on hands without a flop?
+
+  // Progress information
+  // --------------------------------------------------------------------------
+
+  PlayerId button_;          // index of player on the button
+  bool in_progress_;         // is a hand is in progress?
+  Round round_;              // current betting round
+  PlayCount cycled_;         /* number of players that have been cycled through
+                                on this betting round. Also used to internally
+                                keep track of the number of straddled players
+                                before play starts. */
+  PlayerId acting_player_;   // index of player whose turn it is
+  PlayerId pot_good_;        /* number of players who still need to act before
+                                this round is over */
+  PlayerId no_raise_;        /* number of players who still need to act, but can
+                                only call or fold because another player went
+                                all in less than the min-raise */
+  bool folded_[kPlayers];    // has the given player folded?
+  PlayerId players_left_;    // number of players who haven’t folded
+  PlayerId players_all_in_;  // number of players who are all in
+
+  // Chip information
+  // --------------------------------------------------------------------------
+
+  Chips pot_;              // number of chips in the pot
+  Chips bets_[kPlayers];   // number of chips each player has bet
+  Chips stack_[kPlayers];  // number of chips each player has behind
+  Chips min_raise_;        // minimum bet amount
+  Chips max_bet_;          // maximum amount that has been bet so far
+
+  // Card Information
+  // --------------------------------------------------------------------------
+
+  template <Round kRound>
+  static constexpr CardN CumulativeCards() {
+    if constexpr (kRound == Round::kPreFlop) {
+      return kPlayers * kHandCards;
+    } else {
+      return CumulativeCards<Round{+kRound - 1}>() + kCardsPerRound[+kRound];
+    }
+  }
+  static constexpr std::array<CardN, kNRounds> kCumulativeCards = {
+    CumulativeCards<Round::kPreFlop>(), CumulativeCards<Round::kFlop>(),
+    CumulativeCards<Round::kTurn>(), CumulativeCards<Round::kRiver>()
+  };
+  Deck<ISO_Card> deck_;   /* The deck of cards used by this node. Player i's
+                             cards are in deck_[i * kHandCards] to
+                             deck_[i * kHandCards + kHandCards - 1]. Board cards
+                             come after the player hands. */
+  enum class DeckState : uint8_t { kManual, kAuto, kAutoDealt };
+  DeckState deck_state_;  /* kManual indicates that proper shuffling can no
+                             longer be guaranteed by automatic dealing. kAuto
+                             indicates that automatic dealing may be used.
+                             kAutoDealt can only occur during a chance node and
+                             indicates that cards were dealt at the chance
+                             node. */
+
  public:
   /*
     @brief Construct a node.
@@ -40,7 +116,6 @@ class Node {
     @param blind_before_ante Should players should cover the blind instead of
         the ante if they don't have enough chips to pay both?
     @param default_stack Number of chips each player starts with.
-    @param straddles Number of players straddling on the first hand.
     @param rake Proportion of each hand taken as rake.
     @param rake_cap Maximum number of chips that can be raked. 0 means no cap.
     @param no_flop_no_drop Is rake taken on hands without a flop?
@@ -48,7 +123,7 @@ class Node {
   Node(PlayerId button = 0, Chips big_blind = 100, Chips small_blind = 50,
        Chips ante = 0, bool big_blind_ante = false,
        bool blind_before_ante = true, Chips default_stack = 10000,
-       PlayerId straddles = 0, QuotaT rake = QuotaT{0}, Chips rake_cap = 0,
+       QuotaT rake = QuotaT{0}, Chips rake_cap = 0,
        bool no_flop_no_drop = false)
 
          // Attributes
@@ -66,11 +141,11 @@ class Node {
          max_bet_{big_blind},
 
          // Card Information
-         hands_{}, board_{} {
+         deck_{UnshuffledDeck<ISO_Card>()}, deck_state_{DeckState::kAuto} {
     button_ = button_ + kPlayers - 1; /* Since NewHand() increments the button
                                          position. */
     std::fill(stack_, stack_ + kPlayers, default_stack);
-    NewHand(straddles);
+    NewHand();
   }  // Node()
 
   Node(const Node& other) = default;
@@ -78,10 +153,8 @@ class Node {
 
   /*
     @brief Reset the state variables for the start of a new hand.
-
-    @param straddles The number of players straddling on this hand.
   */
-  void NewHand(PlayerId straddles = 0) {
+  void NewHand() {
     if (pot_ != 0) {
       std::string func{__func__};
       throw std::logic_error(func + " called when pot is not empty. If the pot "
@@ -96,8 +169,8 @@ class Node {
     button_ = (button_ + 1) % kPlayers;
     in_progress_ = true;
     round_ = Round::kPreFlop;
-    cycled_ = 0;
-    acting_player_ = PlayerIndex(3);
+    cycled_ = 0;  // no straddled players by default
+    acting_player_ = kChancePlayer;
     pot_good_ = kPlayers;
     no_raise_ = 0;
     std::fill(folded_, folded_ + kPlayers, false);
@@ -123,51 +196,85 @@ class Node {
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
     if (ante_ > 0 && blind_before_ante_) effective_ante = PostAntes();
-    Chips effective_blind = PostStraddles(straddles);
     players_all_in_ = std::count(stack_, stack_ + kPlayers, 0);
-    min_raise_ = effective_blind;
-    max_bet_ = effective_blind + effective_ante;
-
-    CyclePlayers(false);
+    min_raise_ = big_blind_;
+    max_bet_ = big_blind_ + effective_ante;
   }  // NewHand()
 
   /*
-    @brief Deal random cards to the players and the board.
+    @brief Have the appropriate players straddle.
+    
+    If a player does not have enough chips to straddle the appropriate amount,
+    they do not straddle and no players behind them can straddle either. Can 
+    only be called once per hand during the preflop chance node. If in auto deal
+    mode, it also must only be called before any cards have been dealt.
+
+    @param n How many players to try to straddle.
   */
-  void DealCards() {
-    thread_local Random rng{};
-    thread_local Deck<ISO_Card> card_deck = UnshuffledDeck<ISO_Card>();
-    for (CardN i = 0; i < kPlayers * kHandCards + kBoardCards; ++i) {
-      ISO_Card last_card = 51 - i;
-      std::uniform_int_distribution<ISO_Card> rand_card(0, last_card);
-      ISO_Card selected_card = rand_card(rng());
-      if (i < kPlayers * kHandCards) {
-        PlayerN player = i / kHandCards;
-        Card hand_card = i % kHandCards;
-        hands_[player][hand_card] = card_deck[selected_card];
+  void PostStraddles(PlayerN n) {
+    const std::string func{__func__};
+    if (!in_progress_ || acting_player_ != kChancePlayer ||
+        round_ != Round::kPreFlop || deck_state_ == DeckState::kAutoDealt ||
+        cycled_ != 0) {
+      throw std::logic_error(func + " must only be called once per hand during "
+                                    "the preflop chance node. If in auto deal "
+                                    "mode, it also must only be called before "
+                                    "any cards have been dealt.");
+    }
+    acting_player_ = PlayerIndex(3);
+    Chips max_straddle_size = big_blind_;
+    PlayerN actual_n_straddle = 0;
+    max_bet_ -= big_blind_;  // Set max_bet_ to just the effective ante.
+    for (PlayerId i = 0; i < n; ++i) {
+      Chips straddle_size = max_straddle_size * 2;
+      if (straddle_size > stack_[acting_player_]) {
+        break;
       } else {
-        board_[i - kPlayers * kHandCards] = card_deck[selected_card];
+        if (straddle_size == stack_[acting_player_]) players_all_in_ += 1;
+        PostBlind(acting_player_, straddle_size);
+        max_straddle_size = straddle_size;
+        acting_player_ = NextPlayer();
+        ++actual_n_straddle;
       }
-      std::swap(card_deck[selected_card], card_deck[last_card]);
-    }  // for i
-  }  // DealCards()
+    }
+    min_raise_ = max_straddle_size;
+    max_bet_ += max_straddle_size;
+
+    /* Set cycled_ to the number of straddles so ProceedPlay() knows which
+       player to start with */
+    cycled_ = actual_n_straddle;
+
+    acting_player_ = kChancePlayer;
+  }  // PostStraddles()
 
   /*
-    @brief Returns an array of all the cards that the given player can see.
-
-    The first two cards are the hole cards. The rest are the cards on the board
-    starting with the flop, then the turn, then the river.
-
-    @param player The player whose cards to return.
-
-    @return An array of all the cards that the given player can see.
+    @brief Optionally deal random cards if we are at a chance node.
   */
-  PlayerCardArray<ISO_Card> PlayerCards(PlayerId player) const {
-    PlayerCardArray<ISO_Card> player_cards;
-    std::copy(hands_[player].begin(), hands_[player].end(),
-              player_cards.begin());
-    std::copy(board_.begin(), board_.end(), player_cards.begin() + kHandCards);
-    return player_cards;
+  void Deal() {
+    const std::string func{__func__};
+    if (!in_progress_ || acting_player_ != kChancePlayer) {
+      throw std::logic_error(func + " called when the game is not at a chance "
+                                    "node.");
+    } else if (deck_state_ != DeckState::kAuto) {
+      throw std::logic_error(func + " called when the node is not in automatic "
+                                    "dealing mode. Call ResetDeck() at the "
+                                    "preflop chance node of the next hand to "
+                                    "return to auto deal mode.");
+    }
+    thread_local Random rng{};
+    CardN lb;
+    if (round_ == Round::kPreFlop) {
+      lb = 0;
+    } else {
+      RoundId prev_round = +round_ - 1;
+      lb = kCumulativeCards[prev_round];
+    }
+    for (CardN i = lb; i < kCumulativeCards[+round_]; ++i) {
+      std::uniform_int_distribution<CardN> rand_card(i, deck_.size() - 1);
+      CardN selected_card = rand_card(rng());
+      std::swap(deck_[i], deck_[selected_card]);
+    }
+    deck_state_ = DeckState::kAutoDealt;
   }
 
   /*
@@ -258,8 +365,11 @@ class Node {
   */
   bool Apply(Action play, Chips size = 0) {
     if (!in_progress_) {
-      std::string func{__func__};
+      const std::string func{__func__};
       throw std::logic_error(func + " called when a game is not in progress.");
+    } else if (acting_player_ == kChancePlayer) {
+      const std::string func{__func__};
+      throw std::logic_error(func + " called at a chance node.");
     }
 
     switch (play) {
@@ -295,6 +405,42 @@ class Node {
     CyclePlayers(true);
     return in_progress_;
   }  // Apply()
+
+  /* @brief Proceeds play after a chance node. */
+  void ProceedPlay() {
+    if (!in_progress_ || acting_player_ != kChancePlayer) {
+      const std::string func{__func__};
+      throw std::logic_error(func + " called when the game is not at a chance "
+                                    "node.");
+    }
+
+    /* If we dealt cards at this chance node, auto dealing can continue.
+       Otherwise we must switch over to manual dealing mode as card shuffling
+       can no longer be guaranteed. */
+    if (deck_state_ == DeckState::kAutoDealt) {
+      deck_state_ = DeckState::kAuto;
+    } else {
+      deck_state_ = DeckState::kManual;
+    }
+
+    if (round_ == Round::kPreFlop) {
+      /* PostStraddles() sets cycled_ to the number of players who have
+         straddled. Otherwise NewHand() sets it to 0. */
+      acting_player_ = PlayerIndex(3 + cycled_);
+    } else {
+      acting_player_ = PlayerIndex(1);
+    }
+    cycled_ = 0;
+    pot_good_ = kPlayers;
+    no_raise_ = 0;
+
+    /* If it's preflop, we don't need to set the min_raise_ because it is 
+       already done by NewHand(), and we don't want to overwrite any
+       straddles */
+    if (round_ > Round::kPreFlop) min_raise_ = big_blind_;
+
+    CyclePlayers(false);
+  }
 
   constexpr static struct SameStackNoRake {} same_stack_no_rake_{};
   /*
@@ -369,8 +515,7 @@ class Node {
         the river. ISO indexing. Each row is a different run out.
   */
   template <std::size_t kRuns>
-  void AwardPot(MultiRun,
-                const MultiBoardArray<ISO_Card, kRuns>& boards) {
+  void AwardPot(MultiRun, const MultiBoardArray<ISO_Card, kRuns>& boards) {
     VerifyAwardablePot(__func__);
 
     if (players_left_ == 1) return FoldVictory(folded_);
@@ -390,7 +535,7 @@ class Node {
 
     for (std::size_t run = 0; run < kRuns; ++run) {
       std::copy(processed, processed + kPlayers, processed_run);
-      set_board(boards[run]);
+      SetBoard(boards[run]);
       RankPlayers(processed_run, ranks_run);
       std::copy(bets_, bets_ + kPlayers, bets_run);
       players_to_award_run = players_to_award;
@@ -432,6 +577,11 @@ class Node {
   PlayerId players_left() const { return players_left_; }
   PlayerId players_all_in() const { return players_all_in_; }
 
+  // Progress constants
+  // --------------------------------------------------------------------------
+
+  constexpr static PlayerId kChancePlayer = kPlayers;
+
   // Chip information getter functions
   // --------------------------------------------------------------------------
 
@@ -444,18 +594,58 @@ class Node {
   // Card information getter functions
   // --------------------------------------------------------------------------
 
-  const Hand<ISO_Card> hands(PlayerId player) const {
-    return hands_[player];
+  /*
+    @brief Returns an array of all the cards that the given player can see.
+
+    The first two cards are the hole cards. The rest are the cards on the board
+    starting with the flop, then the turn, then the river. If a card has not
+    been revealed yet (i.e. the node is on the Flop, so the turn and river cards
+    would not have been revealed yet), then the value of the card at that
+    position is undefined.
+
+    @param player The player whose cards to return.
+
+    @return An array of all the cards that the given player can see.
+  */
+  PublicHand<ISO_Card> PlayerCards(PlayerId player) const {
+    PublicHand<ISO_Card> public_hand;
+    std::copy_n(std::next(deck_.begin(), player * kHandCards), kHandCards,
+                public_hand.begin());
+    std::copy_n(std::next(deck_.begin(), kPlayers * kHandCards),
+                kCumulativeCards[+round_] - kCumulativeCards[+Round::kPreFlop],
+                std::next(public_hand.begin(), kHandCards));
+    return public_hand;
   }
-  const BoardArray<ISO_Card>& board() const { return board_; }
 
   // Card information setter functions
   // --------------------------------------------------------------------------
 
-  void set_hands(const HandArray<ISO_Card, kPlayers>& hands) {
-    hands_ = hands;
+  void SetHands(const HandArray<ISO_Card, kPlayers>& hands) {
+    std::copy_n(&hands[0][0], kPlayers * kHandCards, deck_.begin());
+    deck_state_ = DeckState::kManual;
   }
-  void set_board(const BoardArray<ISO_Card>& board) { board_ = board; }
+  void SetBoard(const BoardArray<ISO_Card>& board) {
+    std::copy(board.begin(), board.end(),
+              std::next(deck_.begin(), kPlayers * kHandCards));
+    deck_state_ = DeckState::kManual;
+  }
+
+  /* 
+    @brief Resets the deck to the unshuffled state.
+
+    If done at the preflop chance node, or when we have just concluded a hand,
+    we can make auto dealing shuffle guarantees and return to auto dealing mode.
+  */
+  void ResetDeck() {
+    deck_ = UnshuffledDeck<ISO_Card>();
+
+    if ((in_progress_ && acting_player_ == kChancePlayer &&
+        round_ == Round::kPreFlop) || (!in_progress_ && pot_ == 0)) {
+      deck_state_ = DeckState::kAuto;
+    } else {
+      deck_state_ = DeckState::kManual;
+    }
+  }
 
  private:
   /*
@@ -515,31 +705,6 @@ class Node {
     }
     return effective_ante;
   }  // PostAntes()
-
-  /*
-    @brief Have the appropriate players straddle.
-    
-    If a player does not have enough chips to straddle the appropriate amount,
-    they do not straddle and no players behind them can straddle either. Does
-    not change max_bet_ or min_raise_.
-    
-    @return The largest amount straddled. If no player straddles, returns the
-        big blind. 
-  */
-  Chips PostStraddles(PlayerId n) {
-    Chips max_straddle_size = big_blind_;
-    for (PlayerId i = 0; i < n; ++i) {
-      Chips straddle_size = max_straddle_size * 2;
-      if (straddle_size > stack_[acting_player_]) {
-        break;
-      } else {
-        PostBlind(acting_player_, straddle_size);
-        max_straddle_size = std::max(straddle_size, max_straddle_size);
-        acting_player_ = NextPlayer();
-      }
-    }  // for i
-    return max_straddle_size;
-  }
 
   /*
     @brief Fold the current acting player.
@@ -647,31 +812,30 @@ class Node {
       cycled_ += 1;
       acting_player_ = NextPlayer();
     } while (pot_good_ + no_raise_ > 0 &&
-             (folded_[acting_player_] || stack_[acting_player_] == 0));
+             (folded_[acting_player_] || stack_[acting_player_] == 0 ||
+
+              /* If all but one player is all in, we can skip this player's
+                 action if they've already matched the max_bet_ because their
+                 bets no longer have an effect on the game if everyone else is
+                 already all in. */
+              (players_left_ - players_all_in_ <= 1 &&
+               bets_[acting_player_] == max_bet_)));
+
+    /* If there is only one player left, the current acting_player_ is the
+       singular winner and the game is over. */
+    if (players_left_ == 1) {
+      in_progress_ = false;
+      return;
+    }
 
     // The round has ended
-    if (pot_good_ + no_raise_ == 0 || players_left_ == 1) {
+    if (pot_good_ + no_raise_ == 0) {
       NextRound();
     }
   }
 
-  /*
-    @brief Continue to the next betting round.
-  */
+  /* @brief Continue to the next betting round. */
   void NextRound() {
-    /* If there is only one player left, the current acting_player_ is the
-       singular winner and the game is over. */
-    if (players_left_ == 1) {
-        in_progress_ = false;
-        return;
-
-    /* If all players are all in, then we can skip to the showdown. If all but
-       one player is all in, we can also skip to showdown because that player
-       can no longer take any actions. */
-    } else if (players_left_ - players_all_in_ <= 1) {
-      round_ = Round::kRiver;
-    }
-
     switch (round_) {
       case Round::kPreFlop:
         round_ = Round::kFlop;
@@ -684,19 +848,13 @@ class Node {
         break;
       case Round::kRiver:
         in_progress_ = false;
-        return;  /* When the game is over, we dont' need to cycle acting players
+        return;  /* When the game is over, we don't need to cycle acting players
                     or change other game state variables. */
     }  // switch round_
-    cycled_ = 0;
-    acting_player_ = PlayerIndex(1);
-    pot_good_ = kPlayers;
-    min_raise_ = big_blind_;
-    CyclePlayers(false);
-  }  // NextRound()
+    acting_player_ = kChancePlayer;
+  }
 
-  /*
-    @brief Checks if the pot can be awarded. Throws if not.
-  */
+  /* @brief Checks if the pot can be awarded. Throws if not. */
   void VerifyAwardablePot(const std::string& func) const {
     if (in_progress_) {
       throw std::logic_error(func + " called when the game is still in "
@@ -721,7 +879,16 @@ class Node {
   PlayerN PlayersToProcess(bool processed[kPlayers]) const {
     PlayerId players_to_award = kPlayers;
     for (PlayerId i = 0; i < kPlayers; ++i) {
-      if (folded_[i] || hands_[i][0] == hands_[i][1]) {
+      auto is_mucked = [&]() -> bool {
+        for (CardN card = 1; card < kHandCards; ++card) {
+          if (this->deck_[i * kHandCards + card - 1] !=
+              this->deck_[i * kHandCards + card]) {
+            return false;
+          }
+        }
+        return true;
+      };
+      if (folded_[i] || is_mucked()) {
         processed[i] = true;
         players_to_award -= 1;
       } else {
@@ -758,10 +925,10 @@ class Node {
                    SevenEval::Rank output[kPlayers]) const {
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i]) {
-        output[i] = SevenEval::GetRank(ConvertISOtoSK(hands_[i][0]),
-            ConvertISOtoSK(hands_[i][1]), ConvertISOtoSK(board_[0]),
-            ConvertISOtoSK(board_[1]), ConvertISOtoSK(board_[2]),
-            ConvertISOtoSK(board_[3]), ConvertISOtoSK(board_[4]));
+        PublicHand<ISO_Card> player_cards = PlayerCards(i);
+        std::transform(player_cards.begin(), player_cards.end(),
+                       player_cards.begin(), ConvertISOtoSK);
+        output[i] = std::apply(SevenEval::GetRank<>, player_cards);
       }
     }
   }  // RankPlayers()
@@ -975,56 +1142,6 @@ class Node {
     }
     *pot -= pot_awarded;
   }  // DistributeChips()
-
-  // Attributes
-  // --------------------------------------------------------------------------
-
-  const Chips big_blind_;         // how many chips the big blind is
-  const Chips small_blind_;       // how many chips the small blind is
-  const Chips ante_;              /* how many chips each player must contribute
-                                     to the pot on each hand in expectation */
-  const bool big_blind_ante_;     /* does the big blind pays the ante for
-                                     everyone in the game? */
-  const bool blind_before_ante_;  /* should players should cover the blind
-                                     instead of the ante if they don't have
-                                     enough chips to pay both? */
-  const QuotaT rake_;             // proportion of each hand taken as rake
-  const Chips rake_cap_;          /* maximum number of chips that can be raked;
-                                     rake_cap_ of 0 means no cap */
-  const bool no_flop_no_drop_;    // is rake taken on hands without a flop?
-
-  // Progress information
-  // --------------------------------------------------------------------------
-
-  PlayerId button_;          // index of player on the button
-  bool in_progress_;         // is a hand is in progress?
-  Round round_;              // current betting round
-  PlayCount cycled_;         /* number of players that have been cycled through
-                                on this betting round */
-  PlayerId acting_player_;   // index of player whose turn it is
-  PlayerId pot_good_;        /* number of players who still need to act before
-                                this round is over */
-  PlayerId no_raise_;        /* number of players who still need to act, but can
-                                only call or fold because another player went
-                                all in less than the min-raise */
-  bool folded_[kPlayers];    // has the given player folded?
-  PlayerId players_left_;    // number of players who haven’t folded
-  PlayerId players_all_in_;  // number of players who are all in
-
-  // Chip information
-  // --------------------------------------------------------------------------
-
-  Chips pot_;              // number of chips in the pot
-  Chips bets_[kPlayers];   // number of chips each player has bet
-  Chips stack_[kPlayers];  // number of chips each player has behind
-  Chips min_raise_;        // minimum bet amount
-  Chips max_bet_;          // maximum amount that has been bet so far
-
-  // Card Information
-  // --------------------------------------------------------------------------
-
-  HandArray<ISO_Card, kPlayers> hands_;  // cards in each player's hand.
-  BoardArray<ISO_Card> board_;           // cards on the board.
 };  // Node
 
 }  // namespace fishbait

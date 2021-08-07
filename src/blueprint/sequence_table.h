@@ -50,7 +50,8 @@ class SequenceTable {
     }
 
     row_counter.fill(0);
-    Generate(start_state_, actions_, action_counter, 0, row_counter,
+    Node new_state = start_state_;
+    Generate(new_state, actions_, action_counter, 0, row_counter,
         [&](SequenceId seq, Round round, nda::index_t action_col,
             SequenceId val) {
           table_[+round](seq, action_col) = val;
@@ -157,7 +158,8 @@ class SequenceTable {
                                       const Node<kPlayers>& start_state) {
     NumSequenceArray row_counter;
     std::fill(row_counter.begin(), row_counter.end(), 0);
-    Generate(start_state, sorted_actions, num_actions, 0, row_counter,
+    Node new_state = start_state;
+    Generate(new_state, sorted_actions, num_actions, 0, row_counter,
              [](SequenceId, Round, nda::index_t, SequenceId) {});
     return row_counter;
   }
@@ -196,33 +198,43 @@ class SequenceTable {
         table so far in each round.
     @param row_marker A pointer to a function that will be called to mark a
         given value at the given Sequence and action in the table.
+
+    @returns The id of the state if a row was created. Otherwise kLeafId for
+        terminal states.
   */
   template <typename RowMarkFn>
-  static void Generate(const Node<kPlayers>& state, const ActionArray& actions,
-                       const NumActionsArray& num_actions, SequenceId seq,
-                       NumSequenceArray& row_counter, RowMarkFn&& row_marker) {
+  static SequenceId Generate(Node<kPlayers>& state, const ActionArray& actions,
+                             const NumActionsArray& num_actions, SequenceId seq,
+                             NumSequenceArray& row_counter,
+                             RowMarkFn&& row_marker) {
     if (row_counter[+state.round()] == kIllegalId) {
       throw std::overflow_error("Sequence table has too many rows.");
+    } else if (!state.in_progress()) {
+      return kLeafId;
+    } else if (state.acting_player() == state.kChancePlayer) {
+      state.ProceedPlay();
+      return Generate(state, actions, num_actions, seq, row_counter,
+                      row_marker);
     }
+
     ++row_counter[+state.round()];
     for (std::size_t j = 0; j < num_actions[+state.round()]; ++j) {
       AbstractAction action = actions[+state.round()][j];
       Chips chip_size = ActionSize(action, state);
       if (chip_size) {
         Node<kPlayers> new_state = state;
-        if (new_state.Apply(action.play, chip_size)) {
-          Round new_round = new_state.round();
-          row_marker(seq, state.round(), j, row_counter[+new_round]);
-          Generate(new_state, actions, num_actions, row_counter[+new_round],
-                   row_counter, row_marker);
-        } else {
-          row_marker(seq, state.round(), j, kLeafId);
-        }
+        new_state.Apply(action.play, chip_size);
+        Round new_round = new_state.round();
+        SequenceId new_state_id = Generate(new_state, actions, num_actions,
+                                           row_counter[+new_round], row_counter,
+                                           row_marker);
+        row_marker(seq, state.round(), j, new_state_id);
       } else {
         row_marker(seq, state.round(), j, kIllegalId);
       }
     }  // for j
-  }
+    return seq;
+  }  // Generate()
 
   /*
     @brief Converts the pot proportion of action to a state Apply()-able size.
