@@ -273,9 +273,10 @@ class Strategy {
         state.folded(player) || state.stack(player) == 0) {
       return;
     }
-    if (state.acting_player() == kChancePlayer) {
+    if (state.acting_player() == state.kChancePlayer) {
       state.Deal();
-      return UpdateStrategy(state, info_abstraction_.ClusterArray(state), seq,
+      return UpdateStrategy(state,
+                            info_abstraction_.ClusterArray(state)[player], seq,
                             player);
     }
     nda::const_vector_ref<AbstractAction> actions =
@@ -326,8 +327,8 @@ class Strategy {
     if (state.folded(player)) {
       return state.stack(player);
     }
-    if (state.acting_player() == kChancePlayer) {
-      state.Deal()
+    if (state.acting_player() == state.kChancePlayer) {
+      state.Deal();
       return TraverseMCCFR(state, info_abstraction_.ClusterArray(state), seq,
                            player, prune);
     }
