@@ -38,13 +38,11 @@ class Strategy {
   InfosetActionTable<ActionCount> action_counts_;
   Random rng_;
 
-  std::array<Chips, kPlayers> starting_stacks_;
-
  public:
   /*
     @brief Constructor
 
-    @param start_state The starting state of the game.
+    @param start_state The starting state of the game, same starting stacks
     @param actions The actions available in the abstracted game tree.
     @param iterations The number of iterations to run mccfr.
     @param strategy_interval The number of iterations between each update of the
@@ -73,7 +71,7 @@ class Strategy {
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
-             }, rng_(), starting_stacks_{InitStartingStacks(start_state)} {
+             }, rng_() {
     MCCFR(start_state, iterations, strategy_interval, prune_threshold,
           prune_probability, LCFR_threshold, discount_interval,
           snapshot_interval, strategy_delay, verbose);
@@ -91,16 +89,6 @@ class Strategy {
       regret_table[r] = InitInfosetActionTable<Regret>(Round{r});
     }
     return regret_table;
-  }
-
-  /* @brief Initializes starting stacks array. */
-  std::array<Chips, kPlayers> InitStartingStacks(const Node<kPlayers>&
-                                                 start_state) {
-    std::array<Chips, kPlayers> starting_stacks;
-    for (PlayerId player = 0; player < kPlayers; ++player) {
-      starting_stacks[player] = start_state.stack(player);
-    }
-    return starting_stacks;
   }
 
   /*
@@ -278,22 +266,26 @@ class Strategy {
     @param seq The sequence id of the infoset at the current recursive call.
     @param player The player whose strategy is being updated.
   */
-  void UpdateStrategy(const Node<kPlayers>& state, CardCluster card_bucket,
+  void UpdateStrategy(Node<kPlayers>& state, CardCluster card_bucket,
                       SequenceId seq, PlayerId player) {
     Round round = state.round();
     if (round > Round::kPreFlop || !state.in_progress() ||
         state.folded(player) || state.stack(player) == 0) {
       return;
     }
+    if (state.acting_player() == kChancePlayer) {
+      state.Deal();
+      return UpdateStrategy(state, info_abstraction_.ClusterArray(state), seq,
+                            player);
+    }
     nda::const_vector_ref<AbstractAction> actions =
         action_abstraction_.Actions(round);
     if (state.acting_player() == player) {
-      Node<kPlayers> new_state = state;
       nda::index_t action_index = SampleAction(card_bucket, seq, round);
       AbstractAction action = actions(action_index);
-      new_state.Apply(action.play, new_state.ConvertBet(action.size));
+      state.Apply(action.play, state.ConvertBet(action.size));
       action_counts_(card_bucket, seq, action_index) += 1;
-      UpdateStrategy(new_state, card_bucket,
+      UpdateStrategy(state, card_bucket,
                      action_abstraction_.Next(seq, round, action_index),
                      player);
     } else {
@@ -324,13 +316,20 @@ class Strategy {
     
     @return The value of the node.
   */
-  double TraverseMCCFR(const Node<kPlayers>& state,
-                       std::array<CardCluster, kPlayers> card_buckets,
+  double TraverseMCCFR(Node<kPlayers>& state,
+                       const std::array<CardCluster, kPlayers>& card_buckets,
                        SequenceId seq, PlayerId player, bool prune) {
-    if (!state.in_progress() || state.folded(player)) {
-      Node<kPlayers> new_state = state;
-      new_state.AwardPot(new_state.same_stack_no_rake_);
-      return 1.0 * new_state.stack(player) - 1.0 * starting_stacks_[player];
+    if (!state.in_progress()) {
+      state.AwardPot(state.same_stack_no_rake_);
+      return state.stack(player);
+    }
+    if (state.folded(player)) {
+      return state.stack(player);
+    }
+    if (state.acting_player() == kChancePlayer) {
+      state.Deal()
+      return TraverseMCCFR(state, info_abstraction_.ClusterArray(state), seq,
+                           player, prune);
     }
     Round round = state.round();
     PlayerId acting_player = state.acting_player();
@@ -346,9 +345,10 @@ class Strategy {
            ++action_index) {
         SequenceId next_seq = action_abstraction_.Next(seq, round,
                                                        action_index);
-        if ((next_seq != kIllegalId) & (!prune ||
-          regrets_[+round](card_buckets[player], seq, action_index) >
-          prune_constant_)) {
+        Regret action_regret = regrets_[+round](card_buckets[player], seq,
+                                        action_index);
+        if ((next_seq != kIllegalId) &&
+            (!prune || action_regret > prune_constant_)) {
           AbstractAction action = actions(action_index);
           Node<kPlayers> new_state = state;
           new_state.Apply(action.play, new_state.ConvertBet(action.size));
@@ -366,22 +366,23 @@ class Strategy {
       for (nda::index_t action_index = 0; action_index < actions.width();
            ++action_index) {
         if (explored[action_index]) {
+          Regret infoset_regret = regrets_[+round](card_buckets[player],
+                                                   seq, action_index);
+          Regret value_difference = static_cast<Regret>(std::rint(
+              action_values[action_index] - value));
           regrets_[+round](card_buckets[player], seq, action_index) = std::max(
-              regret_floor_,
-              (regrets_[+round](card_buckets[player], seq, action_index) +
-              (Regret) std::rint(action_values[action_index] - value)));
+              regret_floor_, (infoset_regret + value_difference));
         }
       }
       return value;
     } else {
       nda::index_t action_index = SampleAction(card_buckets[acting_player],
-                                                seq, round);
-      Node<kPlayers> new_state = state;
+                                               seq, round);
       AbstractAction action = actions(action_index);
-      new_state.Apply(action.play, new_state.ConvertBet(action.size));
+      state.Apply(action.play, state.ConvertBet(action.size));
       std::array<CardCluster, kPlayers> new_card_buckets =
-              info_abstraction_.ClusterArray(new_state);
-      return TraverseMCCFR(new_state, new_card_buckets,
+              info_abstraction_.ClusterArray(state);
+      return TraverseMCCFR(state, new_card_buckets,
                            action_abstraction_.Next(seq, round, action_index),
                            player, prune);
     }  // if (acting_player == player)
