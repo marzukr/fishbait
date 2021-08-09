@@ -104,7 +104,6 @@ class Strategy {
   /*
     @brief Computes the strategy using the MCCFR algorithm.
 
-    @param start_state The starting state of the game.
     @param iterations The number of iterations to run mccfr.
     @param strategy_interval The number of iterations between each update of the
         average strategy.
@@ -262,9 +261,7 @@ class Strategy {
     Node<kPlayers> start_state_copy = action_abstraction_.start_state();
     start_state_copy.Deal();
     start_state_copy.ProceedPlay();
-    UpdateStrategy(start_state_copy,
-                   info_abstraction_.Cluster(start_state_copy, player), 0,
-                   player);
+    UpdateStrategy(start_state_copy, 0, 0, player);
   }
 
   /*
@@ -296,10 +293,9 @@ class Strategy {
       AbstractAction action = actions(action_index);
       state.Apply(action.play, state.ConvertBet(action.size));
       action_counts_(card_bucket, seq, action_index) += 1;
-      UpdateStrategy(state, card_bucket,
+      return UpdateStrategy(state, card_bucket,
                      action_abstraction_.Next(seq, round, action_index),
                      player);
-      return;
     } else {
       for (nda::index_t action_index = 0; action_index < actions.width();
            ++action_index) {
@@ -315,13 +311,18 @@ class Strategy {
     }
   }
 
+  /*
+    @brief Updates the given player's cumulative regrets.
+
+    @param player The whose strategy is being updated.
+  */
+
   void TraverseMCCFR(PlayerId player, bool prune) {
     Node<kPlayers> start_state_copy = action_abstraction_.start_state();
     start_state_copy.Deal();
     start_state_copy.ProceedPlay();
-    TraverseMCCFR(start_state_copy,
-                  info_abstraction_.ClusterArray(start_state_copy), 0, player,
-                  prune);
+    std::array<CardCluster, kPlayers> card_buckets{};
+    TraverseMCCFR(start_state_copy, card_buckets, 0, player, prune);
   }
 
   /*
@@ -372,9 +373,7 @@ class Strategy {
           AbstractAction action = actions(action_index);
           Node<kPlayers> new_state = state;
           new_state.Apply(action.play, new_state.ConvertBet(action.size));
-          std::array<CardCluster, kPlayers> new_card_buckets =
-              info_abstraction_.ClusterArray(new_state);
-          double action_value = TraverseMCCFR(new_state, new_card_buckets,
+          double action_value = TraverseMCCFR(new_state, card_buckets,
                                               next_seq, player, prune);
           action_values[action_index] = action_value;
           value += action_value * strategy[action_index];
@@ -391,7 +390,7 @@ class Strategy {
           Regret value_difference = static_cast<Regret>(std::rint(
               action_values[action_index] - value));
           regrets_[+round](card_buckets[player], seq, action_index) = std::max(
-              regret_floor_, (infoset_regret + value_difference));
+              regret_floor_, infoset_regret + value_difference);
         }
       }
       return value;
@@ -400,9 +399,7 @@ class Strategy {
                                                seq, round);
       AbstractAction action = actions(action_index);
       state.Apply(action.play, state.ConvertBet(action.size));
-      std::array<CardCluster, kPlayers> new_card_buckets =
-              info_abstraction_.ClusterArray(state);
-      return TraverseMCCFR(state, new_card_buckets,
+      return TraverseMCCFR(state, card_buckets,
                            action_abstraction_.Next(seq, round, action_index),
                            player, prune);
     }

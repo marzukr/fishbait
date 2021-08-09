@@ -108,9 +108,9 @@ class SequenceTable {
   }
 
   /*
-    @brief Reutrns the start state for the sequence table.
+    @brief Returns the start state for the sequence table.
   */
-  const Node<kPlayers> start_state() {
+  const Node<kPlayers>& start_state() {
     return start_state_;
   }
 
