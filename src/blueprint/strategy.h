@@ -118,7 +118,7 @@ class Strategy {
         average strategy and taking snapshots.
     @param verbose Whether to print debug information.
   */
-  void MCCFR(int iterations, int strategy_interval, int prune_threshold, 
+  void MCCFR(int iterations, int strategy_interval, int prune_threshold,
              double prune_probability, int LCFR_threshold,
              int discount_interval, [[maybe_unused]] int snapshot_interval,
              int strategy_delay, bool verbose) {
