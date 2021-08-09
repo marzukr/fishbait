@@ -42,7 +42,8 @@ class Strategy {
   /*
     @brief Constructor
 
-    @param start_state The starting state of the game, same starting stacks
+    @param start_state The starting state of the game, must be compatible with 
+        the Node::SameStackNoRake optimizations.
     @param actions The actions available in the abstracted game tree.
     @param iterations The number of iterations to run mccfr.
     @param strategy_interval The number of iterations between each update of the
@@ -72,9 +73,9 @@ class Strategy {
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
              }, rng_() {
-    MCCFR(start_state, iterations, strategy_interval, prune_threshold,
-          prune_probability, LCFR_threshold, discount_interval,
-          snapshot_interval, strategy_delay, verbose);
+    MCCFR(iterations, strategy_interval, prune_threshold, prune_probability,
+          LCFR_threshold, discount_interval, snapshot_interval, strategy_delay,
+          verbose);
   }
   Strategy(const Strategy& other) = default;
   Strategy& operator=(const Strategy& other) = default;
@@ -117,8 +118,8 @@ class Strategy {
         average strategy and taking snapshots.
     @param verbose Whether to print debug information.
   */
-  void MCCFR(Node<kPlayers> start_state, int iterations, int strategy_interval,
-             int prune_threshold, double prune_probability, int LCFR_threshold,
+  void MCCFR(int iterations, int strategy_interval, int prune_threshold, 
+             double prune_probability, int LCFR_threshold,
              int discount_interval, [[maybe_unused]] int snapshot_interval,
              int strategy_delay, bool verbose) {
     if (verbose) std::cout << "Starting MCCFR" << std::endl;
@@ -127,10 +128,7 @@ class Strategy {
       for (PlayerId player = 0; player < kPlayers; ++player) {
         // update strategy after strategy_inveral iterations
         if (t > strategy_delay && t % strategy_interval == 0) {
-          start_state.Deal();
-          UpdateStrategy(start_state,
-                         info_abstraction_.Cluster(start_state, player), 0,
-                         player);
+          UpdateStrategy(player);
         }
 
         // Set prune variable and traverse MCCFR
@@ -142,9 +140,7 @@ class Strategy {
             prune = true;
           }
         }
-        start_state.Deal();
-        TraverseMCCFR(start_state, info_abstraction_.ClusterArray(start_state),
-                      0, player, prune);
+        TraverseMCCFR(player, prune);
       }
 
       /* Discount all regrets and action counter every discount_interval until
@@ -258,6 +254,20 @@ class Strategy {
   }  // SampleAction()
 
   /*
+    @brief Updates the given player's average preflop strategy.
+
+    @param player The whose strategy is being updated
+  */
+  void UpdateStrategy(PlayerId player) {
+    Node<kPlayers> start_state_copy = action_abstraction_.start_state();
+    start_state_copy.Deal();
+    start_state_copy.ProceedPlay();
+    UpdateStrategy(start_state_copy,
+                   info_abstraction_.Cluster(start_state_copy, player), 0,
+                   player);
+  }
+
+  /*
     @brief Recursively updates the given player's average preflop strategy.
 
     @param state State of the game at the current recursive call.
@@ -272,11 +282,11 @@ class Strategy {
     if (round > Round::kPreFlop || !state.in_progress() ||
         state.folded(player) || state.stack(player) == 0) {
       return;
-    }
-    if (state.acting_player() == state.kChancePlayer) {
+    } else if (state.acting_player() == state.kChancePlayer) {
       state.Deal();
+      state.ProceedPlay();
       return UpdateStrategy(state,
-                            info_abstraction_.ClusterArray(state)[player], seq,
+                            info_abstraction_.Cluster(state, player), seq,
                             player);
     }
     nda::const_vector_ref<AbstractAction> actions =
@@ -289,6 +299,7 @@ class Strategy {
       UpdateStrategy(state, card_bucket,
                      action_abstraction_.Next(seq, round, action_index),
                      player);
+      return;
     } else {
       for (nda::index_t action_index = 0; action_index < actions.width();
            ++action_index) {
@@ -302,6 +313,15 @@ class Strategy {
         }
       }
     }
+  }
+
+  void TraverseMCCFR(PlayerId player, bool prune) {
+    Node<kPlayers> start_state_copy = action_abstraction_.start_state();
+    start_state_copy.Deal();
+    start_state_copy.ProceedPlay();
+    TraverseMCCFR(start_state_copy,
+                  info_abstraction_.ClusterArray(start_state_copy), 0, player,
+                  prune);
   }
 
   /*
@@ -323,12 +343,11 @@ class Strategy {
     if (!state.in_progress()) {
       state.AwardPot(state.same_stack_no_rake_);
       return state.stack(player);
-    }
-    if (state.folded(player)) {
+    } else if (state.folded(player)) {
       return state.stack(player);
-    }
-    if (state.acting_player() == state.kChancePlayer) {
+    } else if (state.acting_player() == state.kChancePlayer) {
       state.Deal();
+      state.ProceedPlay();
       return TraverseMCCFR(state, info_abstraction_.ClusterArray(state), seq,
                            player, prune);
     }
@@ -347,7 +366,7 @@ class Strategy {
         SequenceId next_seq = action_abstraction_.Next(seq, round,
                                                        action_index);
         Regret action_regret = regrets_[+round](card_buckets[player], seq,
-                                        action_index);
+                                                action_index);
         if ((next_seq != kIllegalId) &&
             (!prune || action_regret > prune_constant_)) {
           AbstractAction action = actions(action_index);
@@ -386,7 +405,7 @@ class Strategy {
       return TraverseMCCFR(state, new_card_buckets,
                            action_abstraction_.Next(seq, round, action_index),
                            player, prune);
-    }  // if (acting_player == player)
+    }
   }  // TraverseMCCFR()
 };  // class Strategy
 

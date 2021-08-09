@@ -107,6 +107,14 @@ class SequenceTable {
                                                  ActionCount(round));
   }
 
+  /*
+    @brief Reutrns the start state for the sequence table.
+  */
+  const Node<kPlayers> start_state() {
+    return start_state_;
+  }
+
+
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
     nda::size_t elements = std::accumulate(s.table_.begin(), s.table_.end(), 0,
         [](const nda::size_t sum, const nda::matrix<SequenceId>& round_table) {
