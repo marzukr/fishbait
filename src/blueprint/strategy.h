@@ -255,7 +255,7 @@ class Strategy {
   /*
     @brief Updates the given player's average preflop strategy.
 
-    @param player The whose strategy is being updated
+    @param player The player whose strategy is being updated.
   */
   void UpdateStrategy(PlayerId player) {
     Node<kPlayers> start_state_copy = action_abstraction_.start_state();
@@ -311,7 +311,7 @@ class Strategy {
   /*
     @brief Updates the given player's cumulative regrets.
 
-    @param player The whose strategy is being updated.
+    @param player The player whose strategy is being updated.
     @param prune Whether to prune actions with regrets less than
         prune_constant_.
   */
