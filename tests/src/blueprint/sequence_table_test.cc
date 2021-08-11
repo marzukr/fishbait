@@ -19,8 +19,14 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
 
   std::array row_counts = fishbait::SequenceTable<6, 2>::Count(actions,
                                                                start_state);
-  REQUIRE((row_counts[0] == 62 && row_counts[1] == 0 && row_counts[2] == 0 &&
-           row_counts[3] == 0));
+  CHECK(row_counts[0].internal_nodes == 62);
+  CHECK(row_counts[0].leaf_nodes == 6);
+  CHECK(row_counts[1].internal_nodes == 0);
+  CHECK(row_counts[1].leaf_nodes == 0);
+  CHECK(row_counts[2].internal_nodes == 0);
+  CHECK(row_counts[2].leaf_nodes == 0);
+  CHECK(row_counts[3].internal_nodes == 0);
+  CHECK(row_counts[3].leaf_nodes == 57);
 
   fishbait::SequenceTable seq{actions, start_state};
 
@@ -84,8 +90,14 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
 
   std::array row_counts = fishbait::SequenceTable<3, 4>::Count(actions,
                                                                start_state);
-  REQUIRE((row_counts[0] == 98 && row_counts[1] == 180 &&
-           row_counts[2] == 180 && row_counts[3] == 180));
+  CHECK(row_counts[0].internal_nodes == 98);
+  CHECK(row_counts[0].leaf_nodes == 77);
+  CHECK(row_counts[1].internal_nodes == 180);
+  CHECK(row_counts[1].leaf_nodes == 132);
+  CHECK(row_counts[2].internal_nodes == 180);
+  CHECK(row_counts[2].leaf_nodes == 132);
+  CHECK(row_counts[3].internal_nodes == 180);
+  CHECK(row_counts[3].leaf_nodes == 339);
 
   fishbait::SequenceTable seq{actions, start_state};
 
