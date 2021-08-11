@@ -27,6 +27,7 @@ TEST_CASE("Basic preflop indexer tests", "[poker][indexer]") {
       }
     }
     if (invalid_cards) break;
+    INFO(idx);
     hand_index_t array_index_last = preflop.IndexLast(rollout);
     if (array_index_last != idx) {
       break;

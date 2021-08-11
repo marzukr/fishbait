@@ -29,14 +29,14 @@ class ClusterTable {
   /*
     @brief Returns an array of cards clusters for the given node.
 
-    The clusters are only calculated for non folded players at the current
-    betting round.
+    The clusters are only calculated for non folded and non all-in players at
+    the current betting round.
   */
   template <PlayerN kPlayers>
   std::array<CardCluster, kPlayers> ClusterArray(const Node<kPlayers>& node) {
     std::array<CardCluster, kPlayers> card_clusters;
     for (PlayerId i = 0; i < kPlayers; ++i) {
-      if (!node.folded(i)) {
+      if (!node.folded(i) && node.stack(i) != 0) {
         card_clusters[i] = Cluster(node, i);
       }
     }

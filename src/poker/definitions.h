@@ -37,8 +37,11 @@ constexpr CardN kDeckSize = 52;
 template <typename IndexScheme>
 using Deck = std::array<IndexScheme, kDeckSize>;
 
-constexpr CardN kHandCards = 2;
-constexpr CardN kBoardCards = 5;
+constexpr std::array<CardN, kNRounds> kCardsPerRound = {2, 3, 1, 1};
+constexpr CardN kHandCards = kCardsPerRound[+Round::kPreFlop];
+constexpr CardN kBoardCards = kCardsPerRound[+Round::kFlop] +
+                              kCardsPerRound[+Round::kTurn] +
+                              kCardsPerRound[+Round::kRiver];
 constexpr CardN kPlayerCards = kHandCards + kBoardCards;
 
 template <typename IndexScheme>
@@ -50,7 +53,7 @@ using BoardArray = std::array<IndexScheme, kBoardCards>;
 template <typename IndexScheme, int kRuns>
 using MultiBoardArray = std::array<BoardArray<IndexScheme>, kRuns>;
 template <typename IndexScheme>
-using PlayerCardArray = std::array<IndexScheme, kPlayerCards>;
+using PublicHand = std::array<IndexScheme, kPlayerCards>;
 
 constexpr uint32_t kOpHandsN = N_Choose_K(kDeckSize - kHandCards - kBoardCards,
                                           kHandCards);  // 45 choose 2
