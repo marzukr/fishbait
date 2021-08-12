@@ -5,8 +5,12 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -16,6 +20,7 @@
 #include "clustering/cluster_table.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
+#include "utils/cereal.h"
 #include "utils/random.h"
 
 namespace fishbait {
@@ -33,10 +38,13 @@ class Strategy {
 
   ClusterTable info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
-  // Card Buckets x Sequences x Actions
+
+  // Indexed Card Buckets x Sequences x Actions
   std::array<InfosetActionTable<Regret>, kNRounds> regrets_;
   InfosetActionTable<ActionCount> action_counts_;
+
   Random rng_;
+  std::filesystem::path save_path_;
 
  public:
   /*
@@ -59,6 +67,9 @@ class Strategy {
     @param snapshot_interval The number of iterations between each snapshot.
     @param strategy_delay The number of iterations to wait before updating the
         average strategy and taking snapshots.
+    @param save_dir The name of the subdirectory relative to kBlueprintSaveDir
+        to save the final average strategy and snapshots to. The subdirectory
+        will be created if it does not exist.
     @param verbose Whether to print debug information.
   */
   Strategy(const Node<kPlayers>& start_state,
@@ -66,13 +77,13 @@ class Strategy {
            int strategy_interval, int prune_threshold, double prune_probability,
            Regret prune_constant, int LCFR_threshold, int discount_interval,
            Regret regret_floor, int snapshot_interval, int strategy_delay,
-           bool verbose = false)
+           std::string_view save_dir, bool verbose = false)
            : regret_floor_{regret_floor}, prune_constant_{prune_constant},
              info_abstraction_{verbose},
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
-             }, rng_() {
+             }, rng_(), save_path_{CreateSaveDir(save_dir)} {
     MCCFR(iterations, strategy_interval, prune_threshold, prune_probability,
           LCFR_threshold, discount_interval, snapshot_interval, strategy_delay,
           verbose);
@@ -102,6 +113,47 @@ class Strategy {
   }
 
   /*
+    @brief Creates a directory called save_dir in kBlueprintSaveDir.
+    
+    Used to save the final average strategy and snapshots. The directory is only
+    created if it does not already exist.
+
+    @return The path to the created directory.
+  */
+  std::filesystem::path CreateSaveDir(std::string_view save_dir) {
+    std::filesystem::path base_path(kBlueprintSaveDir);
+    std::filesystem::path save_path = base_path / save_dir;
+    std::filesystem::create_directory(save_path);
+    return save_path;
+  }
+
+  /*
+    @brief Saves a snapshot of the strategy to the save_path_.
+
+    @param iteration The current mccfr iteration number.
+    @param total_iterations The total number of mccfr iterations that will be
+        performed.
+    @param verbose Whether to print debug information.
+  */
+  void Snapshot(int iteration, int total_iterations, bool verbose) {
+    int total_digits = std::floor(std::log10(total_iterations)) + 1;
+    std::stringstream iter_ss;
+    iter_ss.fill('0');
+    iter_ss << std::setw(total_digits) << iteration;
+
+    std::stringstream regret_ss;
+    regret_ss << "regrets_" << iter_ss.str() << ".cereal";
+    std::filesystem::path regret_path = save_path_ / regret_ss.str();
+    CerealSave(regret_path.string(), &regrets_, verbose);
+
+    std::stringstream action_count_ss;
+    action_count_ss << "action_count_" << iter_ss.str() << ".cereal";
+    std::filesystem::path action_count_path = save_path_ /
+                                              action_count_ss.str();
+    CerealSave(action_count_path.string(), &action_counts_, verbose);
+  }
+
+  /*
     @brief Computes the strategy using the MCCFR algorithm.
 
     @param iterations The number of iterations to run mccfr.
@@ -119,8 +171,8 @@ class Strategy {
   */
   void MCCFR(int iterations, int strategy_interval, int prune_threshold,
              double prune_probability, int LCFR_threshold,
-             int discount_interval, [[maybe_unused]] int snapshot_interval,
-             int strategy_delay, bool verbose) {
+             int discount_interval, int snapshot_interval, int strategy_delay,
+             bool verbose) {
     if (verbose) std::cout << "Starting MCCFR" << std::endl;
     for (int t = 1; t <= iterations; ++t) {
       if (verbose) std::cout << "iteration: " << t << std::endl;
@@ -159,6 +211,10 @@ class Strategy {
                       [=](ActionCount& count) {
                         count = std::rint(count * d);
                       });
+      }
+      if ((t > strategy_delay && t % snapshot_interval == 0) ||
+          t == iterations) {
+        Snapshot(t, iterations, verbose);
       }
     }  // for t
   }  // MCCFR()
