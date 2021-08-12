@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <string>
 
 #include "poker/definitions.h"
 
@@ -56,6 +57,8 @@ inline std::ostream& operator<<(std::ostream& os, NumNodesArray& s) {
 
 using Regret = int32_t;
 using ActionCount = uint32_t;
+
+constexpr std::string_view kBlueprintSaveDir = "out/blueprint";
 
 }  // namespace fishbait
 

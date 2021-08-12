@@ -11,6 +11,7 @@
 
 #include "array/array.h"
 #include "cereal/archives/portable_binary.hpp"
+#include "cereal/types/array.hpp"
 #include "cereal/types/tuple.hpp"
 #include "cereal/types/vector.hpp"
 
