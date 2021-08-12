@@ -13,7 +13,7 @@ namespace fishbait {
 using SequenceId = uint32_t;
 using SequenceN = SequenceId;
 
-constexpr SequenceId kLeafId = 0;
+constexpr SequenceId kLeafId = std::numeric_limits<SequenceId>::max()-1;
 constexpr SequenceId kIllegalId = std::numeric_limits<SequenceId>::max();
 
 struct AbstractAction {

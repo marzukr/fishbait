@@ -91,13 +91,13 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   std::array row_counts = fishbait::SequenceTable<3, 4>::Count(actions,
                                                                start_state);
   CHECK(row_counts[0].internal_nodes == 98);
-  CHECK(row_counts[0].leaf_nodes == 77);
+  CHECK(row_counts[0].leaf_nodes == 45);
   CHECK(row_counts[1].internal_nodes == 180);
-  CHECK(row_counts[1].leaf_nodes == 132);
+  CHECK(row_counts[1].leaf_nodes == 66);
   CHECK(row_counts[2].internal_nodes == 180);
-  CHECK(row_counts[2].leaf_nodes == 132);
+  CHECK(row_counts[2].leaf_nodes == 66);
   CHECK(row_counts[3].internal_nodes == 180);
-  CHECK(row_counts[3].leaf_nodes == 339);
+  CHECK(row_counts[3].leaf_nodes == 503);
 
   fishbait::SequenceTable seq{actions, start_state};
 
@@ -113,7 +113,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   using fishbait::kLeafId;
 
   std::vector<fishbait::SequenceId> preflop_table = {1, 11, 14, 56, kLeafId, 2,
-      3, 7, kLeafId, kLeafId, kIllegalId, kIllegalId, kIllegalId, 4, kLeafId, 5,
+      3, 7, kLeafId, kLeafId, kIllegalId, kIllegalId, kIllegalId, 4, 0, 5,
       kLeafId, kLeafId, kIllegalId, kIllegalId, kLeafId, 6, 4, kIllegalId,
       kLeafId, kLeafId, kIllegalId, kIllegalId, kLeafId, 8, 8, 9, kLeafId,
       kLeafId, kIllegalId, kIllegalId, kLeafId, 10, 12, kIllegalId, kLeafId,
@@ -182,7 +182,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   }
 
   std::vector<fishbait::SequenceId> flop_table = {kIllegalId, 1, 2, kLeafId,
-      kLeafId, kIllegalId, kIllegalId, 3, kLeafId, kLeafId, kLeafId, kIllegalId,
+      kLeafId, kIllegalId, kIllegalId, 3, 0, kLeafId, kLeafId, kIllegalId,
       kIllegalId, 5, 6, kLeafId, kLeafId, kIllegalId, kIllegalId, 7, 4, kLeafId,
       kLeafId, kIllegalId, kIllegalId, 9, 10, kLeafId, kLeafId, kIllegalId,
       kIllegalId, 11, 8, kLeafId, kLeafId, kIllegalId, kIllegalId, 13, 14,
@@ -261,7 +261,7 @@ TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
   }
 
   std::vector<fishbait::SequenceId> turn_table = {kIllegalId, 1, 2, kLeafId,
-      kLeafId, kIllegalId, kIllegalId, 3, kLeafId, kLeafId, kLeafId, kIllegalId,
+      kLeafId, kIllegalId, kIllegalId, 3, 0, kLeafId, kLeafId, kIllegalId,
       kIllegalId, 5, 6, kLeafId, kLeafId, kIllegalId, kIllegalId, 7, 4, kLeafId,
       kLeafId, kIllegalId, kIllegalId, 9, 10, kLeafId, kLeafId, kIllegalId,
       kIllegalId, 11, 8, kLeafId, kLeafId, kIllegalId, kIllegalId, 13, 14,
