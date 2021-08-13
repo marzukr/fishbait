@@ -43,7 +43,7 @@ class SequenceTable {
     NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
     NumNodesArray node_counter = CountSorted(actions_, action_counter,
-                                               start_state);
+                                             start_state);
     for (RoundId i = 0; i < kNRounds; ++i) {
       table_[i] = nda::matrix<SequenceId>{{node_counter[i].internal_nodes,
                                            action_counter[i]}};
@@ -162,8 +162,8 @@ class SequenceTable {
     @return An array with the number of rows in each round.
   */
   static NumNodesArray CountSorted(const ActionArray& sorted_actions,
-                                      const NumActionsArray& num_actions,
-                                      const Node<kPlayers>& start_state) {
+                                   const NumActionsArray& num_actions,
+                                   const Node<kPlayers>& start_state) {
     NumNodesArray node_counter;
     node_counter.fill({0, 0});
     Node new_state = start_state;
@@ -215,7 +215,8 @@ class SequenceTable {
                              const NumActionsArray& num_actions, SequenceId seq,
                              NumNodesArray& node_counter,
                              RowMarkFn&& row_marker) {
-    if (node_counter[+state.round()].internal_nodes == kIllegalId) {
+    if (node_counter[+state.round()].internal_nodes == kLeafId ||
+        node_counter[+state.round()].leaf_nodes == kLeafId) {
       throw std::overflow_error("Sequence table has too many rows.");
     } else if (!state.in_progress()) {
       ++node_counter[+state.round()].leaf_nodes;

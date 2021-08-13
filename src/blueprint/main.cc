@@ -43,8 +43,8 @@ int main() {
   }};
   fishbait::Node<6> start_state;
   std::array row_counts = fishbait::SequenceTable<6, 14>::Count(actions,
-                                                               start_state);
+                                                                start_state);
   std::cout << row_counts << std::endl;
   fishbait::Strategy<6, 14> strategy(start_state, actions, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, "placeholder", true);
+                                     1, 1, 1, "placeholder", true);
 }
