@@ -30,9 +30,8 @@ class Random {
   explicit Random(Seed seed) : rng_(seed()) {}
   Random(const Random& other) = default;
   Random& operator=(const Random& other) = default;
-  std::mt19937& operator()() {
-    return rng_;
-  }
+  std::mt19937& operator()() { return rng_; }
+  void seed(Seed seed) { rng_.seed(seed()); }
 
  private:
   std::mt19937 rng_;

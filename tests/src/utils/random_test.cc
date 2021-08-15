@@ -59,3 +59,11 @@ TEST_CASE("Random seed produces different consecutive results",
          "there is a problem.");
   }
 }  // TEST_CASE "Random ints with same seed"
+
+TEST_CASE("changing seed produces the same results", "[utils][random]") {
+  fishbait::Random r1(fishbait::Random::Seed(456));
+  fishbait::Random r2;
+  r2.seed(fishbait::Random::Seed(456));
+  std::uniform_int_distribution<uint32_t> thousand(0, 999);
+  REQUIRE(thousand(r1()) == thousand(r2()));
+}  // TEST_CASE "changing seed produces the same results"
