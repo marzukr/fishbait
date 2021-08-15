@@ -14,7 +14,7 @@ namespace fishbait {
 using SequenceId = uint32_t;
 using SequenceN = SequenceId;
 
-constexpr SequenceId kLeafId = 0;
+constexpr SequenceId kLeafId = std::numeric_limits<SequenceId>::max() - 1;
 constexpr SequenceId kIllegalId = std::numeric_limits<SequenceId>::max();
 
 struct AbstractAction {
@@ -35,6 +35,25 @@ struct AbstractAction {
            max_rotation == rhs.max_rotation && max_round == rhs.max_round;
   }
 };
+
+struct node_count {
+  SequenceN internal_nodes = 0;
+  SequenceN leaf_nodes = 0;
+};
+using NumNodesArray = std::array<node_count, kNRounds>;
+
+inline std::ostream& operator<<(std::ostream& os, NumNodesArray& s) {
+  os << "internal nodes: " << s[0].internal_nodes;
+  for (std::size_t i = 1; i < s.size(); ++i) {
+    os << ", " << s[i].internal_nodes;
+  }
+  os << std::endl;
+  os << "leaf nodes: " << s[0].leaf_nodes;
+  for (std::size_t i = 1; i < s.size(); ++i) {
+    os << ", " << s[i].leaf_nodes;
+  }
+  return os;
+}
 
 using Regret = int32_t;
 using ActionCount = uint32_t;

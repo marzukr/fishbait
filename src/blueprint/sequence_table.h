@@ -25,7 +25,6 @@ class SequenceTable {
                                  kNRounds>;
   using NumActionsArray = std::array<std::size_t, kNRounds>;
   using SequenceMatrix = std::array<nda::matrix<SequenceId>, kNRounds>;
-  using NumSequenceArray = std::array<SequenceN, kNRounds>;
 
   ActionArray actions_;
   const Node<kPlayers> start_state_;
@@ -43,15 +42,16 @@ class SequenceTable {
                 : actions_{}, start_state_{start_state}, table_{} {
     NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
-    NumSequenceArray row_counter = CountSorted(actions_, action_counter,
-                                               start_state);
+    NumNodesArray node_counter = CountSorted(actions_, action_counter,
+                                             start_state);
     for (RoundId i = 0; i < kNRounds; ++i) {
-      table_[i] = nda::matrix<SequenceId>{{row_counter[i], action_counter[i]}};
+      table_[i] = nda::matrix<SequenceId>{{node_counter[i].internal_nodes,
+                                           action_counter[i]}};
     }
 
-    row_counter.fill(0);
+    node_counter.fill({0, 0});
     Node new_state = start_state_;
-    Generate(new_state, actions_, action_counter, 0, row_counter,
+    Generate(new_state, actions_, action_counter, 0, node_counter,
         [&](SequenceId seq, Round round, nda::index_t action_col,
             SequenceId val) {
           table_[+round](seq, action_col) = val;
@@ -140,7 +140,7 @@ class SequenceTable {
 
     @return Array with the number of rows in each round.
   */
-  static NumSequenceArray Count(
+  static NumNodesArray Count(
       const std::array<AbstractAction, kActions>& actions,
       const Node<kPlayers>& start_state) {
     ActionArray sorted_actions;
@@ -161,15 +161,15 @@ class SequenceTable {
 
     @return An array with the number of rows in each round.
   */
-  static NumSequenceArray CountSorted(const ActionArray& sorted_actions,
-                                      const NumActionsArray& num_actions,
-                                      const Node<kPlayers>& start_state) {
-    NumSequenceArray row_counter;
-    std::fill(row_counter.begin(), row_counter.end(), 0);
+  static NumNodesArray CountSorted(const ActionArray& sorted_actions,
+                                   const NumActionsArray& num_actions,
+                                   const Node<kPlayers>& start_state) {
+    NumNodesArray node_counter;
+    node_counter.fill({0, 0});
     Node new_state = start_state;
-    Generate(new_state, sorted_actions, num_actions, 0, row_counter,
+    Generate(new_state, sorted_actions, num_actions, 0, node_counter,
              [](SequenceId, Round, nda::index_t, SequenceId) {});
-    return row_counter;
+    return node_counter;
   }
 
   /*
@@ -202,7 +202,7 @@ class SequenceTable {
     @param actions The actions available in the abstracted game tree.
     @param num_actions Array of number of actions available at each round.
     @param seq The SequenceId corresponding to the game tree node.
-    @param row_counter An array to a count of the number of rows added to the
+    @param node_counter An array to a count of the number of rows added to the
         table so far in each round.
     @param row_marker A pointer to a function that will be called to mark a
         given value at the given Sequence and action in the table.
@@ -213,19 +213,21 @@ class SequenceTable {
   template <typename RowMarkFn>
   static SequenceId Generate(Node<kPlayers>& state, const ActionArray& actions,
                              const NumActionsArray& num_actions, SequenceId seq,
-                             NumSequenceArray& row_counter,
+                             NumNodesArray& node_counter,
                              RowMarkFn&& row_marker) {
-    if (row_counter[+state.round()] == kIllegalId) {
+    if (node_counter[+state.round()].internal_nodes == kLeafId ||
+        node_counter[+state.round()].leaf_nodes == kLeafId) {
       throw std::overflow_error("Sequence table has too many rows.");
     } else if (!state.in_progress()) {
+      ++node_counter[+state.round()].leaf_nodes;
       return kLeafId;
     } else if (state.acting_player() == state.kChancePlayer) {
       state.ProceedPlay();
-      return Generate(state, actions, num_actions, seq, row_counter,
+      return Generate(state, actions, num_actions, seq, node_counter,
                       row_marker);
     }
 
-    ++row_counter[+state.round()];
+    ++node_counter[+state.round()].internal_nodes;
     for (std::size_t j = 0; j < num_actions[+state.round()]; ++j) {
       AbstractAction action = actions[+state.round()][j];
       Chips chip_size = ActionSize(action, state);
@@ -234,8 +236,7 @@ class SequenceTable {
         new_state.Apply(action.play, chip_size);
         Round new_round = new_state.round();
         SequenceId new_state_id = Generate(new_state, actions, num_actions,
-                                           row_counter[+new_round], row_counter,
-                                           row_marker);
+            node_counter[+new_round].internal_nodes, node_counter, row_marker);
         row_marker(seq, state.round(), j, new_state_id);
       } else {
         row_marker(seq, state.round(), j, kIllegalId);
