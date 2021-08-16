@@ -25,6 +25,15 @@ class ClusterTable {
 
  public:
   explicit ClusterTable(bool verbose = false);
+  ClusterTable(const ClusterTable& other);
+  ClusterTable& operator=(const ClusterTable& other);
+
+  /*
+    @brief Returns the number of card clusters in the given round.
+  */
+  static constexpr CardCluster NumClusters(Round r) {
+    return kNumClusters[+r];
+  }
 
   /*
     @brief Returns an array of cards clusters for the given node.

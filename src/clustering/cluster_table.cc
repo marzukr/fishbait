@@ -26,4 +26,15 @@ ClusterTable::ClusterTable(bool verbose) : table_{}, preflop_indexer_{},
   }
 }
 
+ClusterTable::ClusterTable(const ClusterTable& other) : table_{other.table_},
+                                                        preflop_indexer_{},
+                                                        flop_indexer_{},
+                                                        turn_indexer_{},
+                                                        river_indexer_{} {}
+
+ClusterTable& ClusterTable::operator=(const ClusterTable& other) {
+  table_ = other.table_;
+  return *this;
+}
+
 }  // namespace fishbait

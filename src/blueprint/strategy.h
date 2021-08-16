@@ -17,7 +17,7 @@
 #include "array/array.h"
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
-#include "clustering/cluster_table.h"
+#include "clustering/definitions.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
 #include "utils/cereal.h"
@@ -25,7 +25,7 @@
 
 namespace fishbait {
 
-template <PlayerN kPlayers, int kActions>
+template <PlayerN kPlayers, std::size_t kActions, typename InfoAbstraction>
 class Strategy {
  private:
   using InfosetActionTableShape = nda::shape<nda::dim<>, nda::dim<>,
@@ -36,7 +36,7 @@ class Strategy {
   const Regret regret_floor_;
   const Regret prune_constant_;
 
-  ClusterTable info_abstraction_;
+  InfoAbstraction info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
 
   // Indexed Card Buckets x Sequences x Actions
@@ -53,6 +53,7 @@ class Strategy {
     @param start_state The starting state of the game, must be compatible with 
         the Node::SameStackNoRake optimizations.
     @param actions The actions available in the abstracted game tree.
+    @param info_abstraction An object that will abstract the card information.
     @param iterations The number of iterations to run mccfr.
     @param strategy_interval The number of iterations between each update of the
         average strategy.
@@ -70,26 +71,30 @@ class Strategy {
     @param save_dir The name of the subdirectory relative to kBlueprintSaveDir
         to save the final average strategy and snapshots to. The subdirectory
         will be created if it does not exist.
+    @param seed The seed to use for the random number generator used to sample
+        actions and stochastically prune.
     @param verbose Whether to print debug information.
   */
   Strategy(const Node<kPlayers>& start_state,
-           const std::array<AbstractAction, kActions>& actions, int iterations,
+           const std::array<AbstractAction, kActions>& actions,
+           InfoAbstraction info_abstraction, int iterations,
            int strategy_interval, int prune_threshold, double prune_probability,
            Regret prune_constant, int LCFR_threshold, int discount_interval,
            Regret regret_floor, int snapshot_interval, int strategy_delay,
-           std::string_view save_dir, bool verbose = false)
+           std::string_view save_dir, Random::Seed seed = Random::Seed{},
+           bool verbose = false)
            : regret_floor_{regret_floor}, prune_constant_{prune_constant},
-             info_abstraction_{verbose},
+             info_abstraction_{info_abstraction},
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
                  InitInfosetActionTable<ActionCount>(Round::kPreFlop)
-             }, rng_(), save_path_{CreateSaveDir(save_dir)} {
+             }, rng_{seed}, save_path_{CreateSaveDir(save_dir)} {
     MCCFR(iterations, strategy_interval, prune_threshold, prune_probability,
           LCFR_threshold, discount_interval, snapshot_interval, strategy_delay,
           verbose);
   }
   Strategy(const Strategy& other) = default;
-  Strategy& operator=(const Strategy& other) = default;
+  Strategy& operator=(const Strategy& other) = delete;
 
  private:
   /*
@@ -108,7 +113,8 @@ class Strategy {
   */
   template<typename T>
   InfosetActionTable<T> InitInfosetActionTable(Round r) {
-    return InfosetActionTable<T>{{NumClusters(r), action_abstraction_.States(r),
+    return InfosetActionTable<T>{{InfoAbstraction::NumClusters(r),
+                                  action_abstraction_.States(r),
                                   action_abstraction_.ActionCount(r)}, 0};
   }
 

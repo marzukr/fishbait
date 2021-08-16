@@ -103,6 +103,7 @@ class Node {
                              kAutoDealt can only occur during a chance node and
                              indicates that cards were dealt at the chance
                              node. */
+  inline static thread_local Random rng_;
 
  public:
   /*
@@ -261,7 +262,6 @@ class Node {
                                     "preflop chance node of the next hand to "
                                     "return to auto deal mode.");
     }
-    thread_local Random rng{};
     CardN lb;
     if (round_ == Round::kPreFlop) {
       lb = 0;
@@ -271,7 +271,7 @@ class Node {
     }
     for (CardN i = lb; i < kCumulativeCards[+round_]; ++i) {
       std::uniform_int_distribution<CardN> rand_card(i, deck_.size() - 1);
-      CardN selected_card = rand_card(rng());
+      CardN selected_card = rand_card(rng_());
       std::swap(deck_[i], deck_[selected_card]);
     }
     deck_state_ = DeckState::kAutoDealt;
@@ -645,6 +645,13 @@ class Node {
     } else {
       deck_state_ = DeckState::kManual;
     }
+  }
+
+  /* 
+    @brief Sets the seed of the random number generator used to sample cards.
+  */
+  static void SetSeed(Random::Seed seed) {
+    rng_.seed(seed);
   }
 
  private:
