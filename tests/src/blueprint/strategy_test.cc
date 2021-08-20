@@ -70,10 +70,19 @@ class TestClusters {
 TEST_CASE("mccfr 6 players all in or fold", "[blueprint][strategy]") {
   fishbait::Node<3> start_state;
   start_state.SetSeed(fishbait::Random::Seed(7));
-  std::array<fishbait::AbstractAction, 4> actions = {{
-      {fishbait::Action::kFold},
-      {fishbait::Action::kAllIn},
-      {fishbait::Action::kCheckCall},
+  std::array<fishbait::AbstractAction, 13> actions = {{
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver},
       {fishbait::Action::kBet, 1.0, 1, fishbait::Round::kPreFlop}
   }};
   TestClusters info_abstraction;

@@ -13,11 +13,18 @@
 #include "poker/node.h"
 
 TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
-  std::array<fishbait::AbstractAction, 2> actions = {{
-      {fishbait::Action::kFold}, {fishbait::Action::kAllIn}}};
+  std::array<fishbait::AbstractAction, 8> actions = {{
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver}}};
   fishbait::Node<6> start_state;
 
-  std::array row_counts = fishbait::SequenceTable<6, 2>::Count(actions,
+  std::array row_counts = fishbait::SequenceTable<6, 8>::Count(actions,
                                                                start_state);
   CHECK(row_counts[0].internal_nodes == 62);
   CHECK(row_counts[0].leaf_nodes == 6);
@@ -34,7 +41,7 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   ss.precision(10);
   ss << std::fixed << seq;
   std::string seq_str = ss.str();
-  REQUIRE(seq_str == "SequenceTable<6, 2> { preflop rows: 62; flop rows: 0; "
+  CHECK(seq_str == "SequenceTable<6, 8> { preflop rows: 62; flop rows: 0; "
                      "turn rows: 0; river rows: 0; memory: 0.0000004619 GB; }");
 
   using fishbait::kLeafId;
@@ -61,12 +68,32 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   REQUIRE(seq.ActionCount(fishbait::Round::kTurn) == 2);
   REQUIRE(seq.ActionCount(fishbait::Round::kRiver) == 2);
 
+  std::array<std::array<fishbait::AbstractAction, 2>, 4>
+    correct_action_array ={{
+        {{
+          {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
+          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop}
+        }},
+        {{
+          {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
+          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop}
+        }},
+        {{
+          {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
+          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn}
+        }},
+        {{
+          {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
+          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver}
+        }}
+      }};
+
   for (fishbait::RoundId i = 0; i < fishbait::kNRounds; ++i) {
     fishbait::Round round = fishbait::Round{i};
     nda::const_vector_ref<fishbait::AbstractAction> round_actions =
         seq.Actions(round);
-    for (int i = 0; i < round_actions.width(); ++i) {
-      REQUIRE(round_actions(i) == actions[i]);
+    for (int j = 0; j < round_actions.width(); ++j) {
+      REQUIRE(round_actions(j) == correct_action_array[i][j]);
     }
   }
 
@@ -79,16 +106,25 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   }
 }  // TEST_CASE "6 players all in or fold"
 
-TEST_CASE("3 player all in fold check pot bet", "[blueprint][sequence_table]") {
-  std::array<fishbait::AbstractAction, 4> actions = {{
-      {fishbait::Action::kFold},
-      {fishbait::Action::kAllIn},
-      {fishbait::Action::kCheckCall},
-      {fishbait::Action::kBet, 1.0, 1, fishbait::Round::kPreFlop}
+TEST_CASE("3 player all in fold check pot bet",
+          "[blueprint][sequence_table][.]") {
+  std::array<fishbait::AbstractAction, 12> actions = {{
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver},
   }};
   fishbait::Node<3> start_state;
 
-  std::array row_counts = fishbait::SequenceTable<3, 4>::Count(actions,
+  std::array row_counts = fishbait::SequenceTable<3, 12>::Count(actions,
                                                                start_state);
   CHECK(row_counts[0].internal_nodes == 98);
   CHECK(row_counts[0].leaf_nodes == 45);

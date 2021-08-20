@@ -10,45 +10,50 @@
 #include "utils/random.h"
 
 int main() {
-  // std::vector<fishbait::AbstractAction> actions = {
-  //      {fishbait::Action::kFold},
-  //      {fishbait::Action::kCheckCall},
-  //      {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop},
-  //      {fishbait::Action::kBet, 1.0/3.0, 1, fishbait::Round::kPreFlop},
-  //      {fishbait::Action::kBet, 0.5, 1},
-  //      {fishbait::Action::kBet, 2.0/3.0, 1, fishbait::Round::kPreFlop},
-  //      {fishbait::Action::kBet, 0.75, 1, fishbait::Round::kFlop},
-  //      {fishbait::Action::kBet, 1.0, 1},
-  //      {fishbait::Action::kBet, 1.25, 1, fishbait::Round::kPreFlop},
-  //      {fishbait::Action::kBet, 4.0/3.0, 1, fishbait::Round::kPreFlop},
-  //      {fishbait::Action::kBet, 1.5, 1, fishbait::Round::kFlop},
-  //      {fishbait::Action::kBet, 5.0/3.0, 1, fishbait::Round::kPreFlop},
-  //      {fishbait::Action::kBet, 1.75, 1, fishbait::Round::kPreFlop},
-  //      {fishbait::Action::kBet, 2.0, 1, fishbait::Round::kFlop},
-  //      {fishbait::Action::kBet, 3.0, 1, fishbait::Round::kPreFlop},
-  //      {fishbait::Action::kAllIn}};
-  std::array<fishbait::AbstractAction, 14> actions = {{
-      {fishbait::Action::kFold}, {fishbait::Action::kCheckCall},
+  std::array<fishbait::AbstractAction, 34> actions = {{
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn},
+      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver},
+
       {fishbait::Action::kBet, 0.4, 1, fishbait::Round::kPreFlop},
-      {fishbait::Action::kBet, 0.75, 1, fishbait::Round::kPreFlop},
-      {fishbait::Action::kBet, 0.875, 1, fishbait::Round::kPreFlop},
-      {fishbait::Action::kBet, 1.25, 1, fishbait::Round::kPreFlop},
-      {fishbait::Action::kBet, 1.5, 1, fishbait::Round::kPreFlop},
-      {fishbait::Action::kBet, 2, 1, fishbait::Round::kPreFlop},
-      {fishbait::Action::kBet, 4, 1, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 0.5, 4, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 0.6, 3, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 0.75, 3, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 0.875, 3, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 1, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 1.25, 3, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 1.5, 2, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 2, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 2.5, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 3, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 4, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 5, 0, fishbait::Round::kPreFlop},
+      {fishbait::Action::kBet, 6, 0, fishbait::Round::kPreFlop},
 
-      {fishbait::Action::kBet, 0.75, 1, fishbait::Round::kFlop},
-      {fishbait::Action::kBet, 2, 1, fishbait::Round::kFlop},
+      {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop},
+      {fishbait::Action::kBet, 0.5, 3, fishbait::Round::kFlop},
+      {fishbait::Action::kBet, 1, 0, fishbait::Round::kFlop},
+      {fishbait::Action::kBet, 2, 0, fishbait::Round::kFlop},
 
-      {fishbait::Action::kBet, 0.5, 1}, {fishbait::Action::kBet, 1.0},
-      {fishbait::Action::kAllIn}
+      {fishbait::Action::kBet, 0.5, 1, fishbait::Round::kTurn},
+      {fishbait::Action::kBet, 1, 0, fishbait::Round::kTurn},
+
+      {fishbait::Action::kBet, 0.5, 1, fishbait::Round::kRiver},
+      {fishbait::Action::kBet, 1, 0, fishbait::Round::kRiver},
   }};
   fishbait::Node<6> start_state;
-  std::array row_counts = fishbait::SequenceTable<6, 14>::Count(actions,
+  std::array row_counts = fishbait::SequenceTable<6, 34>::Count(actions,
                                                                 start_state);
   std::cout << row_counts << std::endl;
-  fishbait::ClusterTable cluster_table(true);
-  fishbait::Strategy strategy(start_state, actions, cluster_table, 1, 1, 1, 1,
-                              1, 1, 1, 1, 1, 1, "placeholder",
-                              fishbait::Random::Seed{}, true);
+  // fishbait::Strategy<6, 29> strategy(start_state, actions, 1, 1, 1, 1, 1, 1,
+  //                                    1, 1, 1, 1, "placeholder", true);
 }

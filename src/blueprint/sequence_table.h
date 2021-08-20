@@ -43,15 +43,15 @@ class SequenceTable {
     NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
     NumNodesArray node_counter = CountSorted(actions_, action_counter,
-                                             start_state);
+                                               start_state);
     for (RoundId i = 0; i < kNRounds; ++i) {
       table_[i] = nda::matrix<SequenceId>{{node_counter[i].internal_nodes,
                                            action_counter[i]}};
     }
 
-    node_counter.fill({0, 0});
+    node_counter.fill({0, 0, 0});
     Node new_state = start_state_;
-    Generate(new_state, actions_, action_counter, 0, node_counter,
+    Generate(new_state, actions_, 0, action_counter, 0, node_counter,
         [&](SequenceId seq, Round round, nda::index_t action_col,
             SequenceId val) {
           table_[+round](seq, action_col) = val;
@@ -165,9 +165,9 @@ class SequenceTable {
                                    const NumActionsArray& num_actions,
                                    const Node<kPlayers>& start_state) {
     NumNodesArray node_counter;
-    node_counter.fill({0, 0});
+    node_counter.fill({0, 0, 0});
     Node new_state = start_state;
-    Generate(new_state, sorted_actions, num_actions, 0, node_counter,
+    Generate(new_state, sorted_actions, 0, num_actions, 0, node_counter,
              [](SequenceId, Round, nda::index_t, SequenceId) {});
     return node_counter;
   }
@@ -184,14 +184,18 @@ class SequenceTable {
                           ActionArray& sorted_actions,
                           NumActionsArray& num_actions) {
     std::fill(num_actions.begin(), num_actions.end(), 0);
+    // for (std::size_t i = 0; i < kActions; ++i) {
+    //   for (RoundId round = 0; round < kNRounds; ++round) {
+    //     RoundId action_round = +actions[i].round;
+    //     if (round == action_round) {
+    //       sorted_actions[round][num_actions[round]] = actions[i];
+    //       ++num_actions[round];
+    //     }
+    //   }  // for round
     for (std::size_t i = 0; i < kActions; ++i) {
-      for (RoundId round = 0; round < kNRounds; ++round) {
-        RoundId action_round = +actions[i].max_round;
-        if (round <= action_round) {
-          sorted_actions[round][num_actions[round]] = actions[i];
-          ++num_actions[round];
-        }
-      }  // for round
+      RoundId action_round = +actions[i].round;
+      sorted_actions[action_round][num_actions[action_round]] = actions[i];
+      ++num_actions[action_round];
     }  // for i
   }
 
@@ -212,6 +216,7 @@ class SequenceTable {
   */
   template <typename RowMarkFn>
   static SequenceId Generate(Node<kPlayers>& state, const ActionArray& actions,
+                             uint32_t num_raises,
                              const NumActionsArray& num_actions, SequenceId seq,
                              NumNodesArray& node_counter,
                              RowMarkFn&& row_marker) {
@@ -223,22 +228,30 @@ class SequenceTable {
       return kLeafId;
     } else if (state.acting_player() == state.kChancePlayer) {
       state.ProceedPlay();
-      return Generate(state, actions, num_actions, seq, node_counter,
+      return Generate(state, actions, 0, num_actions, seq, node_counter,
                       row_marker);
     }
 
     ++node_counter[+state.round()].internal_nodes;
     for (std::size_t j = 0; j < num_actions[+state.round()]; ++j) {
       AbstractAction action = actions[+state.round()][j];
-      Chips chip_size = ActionSize(action, state);
+      Chips chip_size = ActionSize(action, state, num_raises);
       if (chip_size) {
         Node<kPlayers> new_state = state;
         new_state.Apply(action.play, chip_size);
         Round new_round = new_state.round();
-        SequenceId new_state_id = Generate(new_state, actions, num_actions,
-            node_counter[+new_round].internal_nodes, node_counter, row_marker);
+        uint32_t new_raise_num = num_raises;
+        if (action.play == Action::kBet) {
+          new_raise_num++;
+        }
+        SequenceId new_state_id = Generate(new_state, actions, new_raise_num,
+            num_actions, node_counter[+new_round].internal_nodes, node_counter,
+            row_marker);
         row_marker(seq, state.round(), j, new_state_id);
       } else {
+        if (state.round() == action.round) {
+          ++node_counter[+state.round()].illegal_nodes;
+        }
         row_marker(seq, state.round(), j, kIllegalId);
       }
     }  // for j
@@ -251,9 +264,9 @@ class SequenceTable {
     @return The size of the action to play if it can be played, 0 otherwise.
   */
   static Chips ActionSize(const AbstractAction& action,
-                          const Node<kPlayers>& state) {
-    if ((action.max_rotation == 0 || state.Rotation() < action.max_rotation) &&
-        (state.round() <= action.max_round)) {
+                          const Node<kPlayers>& state, uint32_t num_raises) {
+    if ((action.max_raise_num == 0 || num_raises < action.max_raise_num) &&
+        (state.round() == action.round)) {
       switch (action.play) {
         case Action::kAllIn:
           return true;
@@ -263,6 +276,24 @@ class SequenceTable {
           return state.CanFold();
         case Action::kBet:
           Chips size = state.ConvertBet(action.size);
+          if (action.size == 0.25) {
+            if (state.players_left() > 2) {
+              return false;
+            }
+            if (state.pot() < 2080) {
+              return false;
+            }
+          }
+          if ((state.players_left() > 4) && (state.round() > Round::kPreFlop)) {
+            return false;
+          }
+          if ((state.players_left() > 3) &&  (state.round() > Round::kFlop)) {
+            return false;
+          }
+          if ((1.0 * size) / (state.stack(state.acting_player())) >
+                kPotCommittedThreshold) {
+            return false;
+          }
           return state.CanBet(size) ? size : false;
       }
     }
