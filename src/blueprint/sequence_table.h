@@ -184,18 +184,13 @@ class SequenceTable {
                           ActionArray& sorted_actions,
                           NumActionsArray& num_actions) {
     std::fill(num_actions.begin(), num_actions.end(), 0);
-    // for (std::size_t i = 0; i < kActions; ++i) {
-    //   for (RoundId round = 0; round < kNRounds; ++round) {
-    //     RoundId action_round = +actions[i].round;
-    //     if (round == action_round) {
-    //       sorted_actions[round][num_actions[round]] = actions[i];
-    //       ++num_actions[round];
-    //     }
-    //   }  // for round
     for (std::size_t i = 0; i < kActions; ++i) {
-      RoundId action_round = +actions[i].round;
-      sorted_actions[action_round][num_actions[action_round]] = actions[i];
-      ++num_actions[action_round];
+      RoundId min_round = +actions[i].min_round;
+      RoundId max_round = +actions[i].max_round;
+      for (RoundId round = min_round; round <= max_round; ++round) {
+        sorted_actions[round][num_actions[round]] = actions[i];
+        ++num_actions[round];
+      }
     }  // for i
   }
 
@@ -216,12 +211,13 @@ class SequenceTable {
   */
   template <typename RowMarkFn>
   static SequenceId Generate(Node<kPlayers>& state, const ActionArray& actions,
-                             uint32_t num_raises,
+                             int num_raises,
                              const NumActionsArray& num_actions, SequenceId seq,
                              NumNodesArray& node_counter,
                              RowMarkFn&& row_marker) {
     if (node_counter[+state.round()].internal_nodes == kLeafId ||
-        node_counter[+state.round()].leaf_nodes == kLeafId) {
+        node_counter[+state.round()].leaf_nodes == kLeafId ||
+        node_counter[+state.round()].illegal_nodes == kLeafId) {
       throw std::overflow_error("Sequence table has too many rows.");
     } else if (!state.in_progress()) {
       ++node_counter[+state.round()].leaf_nodes;
@@ -240,18 +236,14 @@ class SequenceTable {
         Node<kPlayers> new_state = state;
         new_state.Apply(action.play, chip_size);
         Round new_round = new_state.round();
-        uint32_t new_raise_num = num_raises;
-        if (action.play == Action::kBet) {
-          new_raise_num++;
-        }
+        int new_raise_num = num_raises;
+        if (action.play == Action::kBet) new_raise_num++;
         SequenceId new_state_id = Generate(new_state, actions, new_raise_num,
             num_actions, node_counter[+new_round].internal_nodes, node_counter,
             row_marker);
         row_marker(seq, state.round(), j, new_state_id);
       } else {
-        if (state.round() == action.round) {
-          ++node_counter[+state.round()].illegal_nodes;
-        }
+        ++node_counter[+state.round()].illegal_nodes;
         row_marker(seq, state.round(), j, kIllegalId);
       }
     }  // for j
@@ -264,9 +256,8 @@ class SequenceTable {
     @return The size of the action to play if it can be played, 0 otherwise.
   */
   static Chips ActionSize(const AbstractAction& action,
-                          const Node<kPlayers>& state, uint32_t num_raises) {
-    if ((action.max_raise_num == 0 || num_raises < action.max_raise_num) &&
-        (state.round() == action.round)) {
+                          const Node<kPlayers>& state, int num_raises) {
+    if ((action.max_raise_num == 0) || (num_raises < action.max_raise_num)) {
       switch (action.play) {
         case Action::kAllIn:
           return true;
@@ -276,22 +267,15 @@ class SequenceTable {
           return state.CanFold();
         case Action::kBet:
           Chips size = state.ConvertBet(action.size);
-          if (action.size == 0.25) {
-            if (state.players_left() > 2) {
-              return false;
-            }
-            if (state.pot() < 2080) {
-              return false;
-            }
-          }
-          if ((state.players_left() > 4) && (state.round() > Round::kPreFlop)) {
+          if (state.pot() < action.min_pot) {
             return false;
           }
-          if ((state.players_left() > 3) &&  (state.round() > Round::kFlop)) {
+          if (action.max_players != 0 &&
+              state.players_left() > action.max_players) {
             return false;
           }
           if ((1.0 * size) / (state.stack(state.acting_player())) >
-                kPotCommittedThreshold) {
+               kPotCommittedThreshold) {
             return false;
           }
           return state.CanBet(size) ? size : false;

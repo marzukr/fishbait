@@ -13,18 +13,13 @@
 #include "poker/node.h"
 
 TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
-  std::array<fishbait::AbstractAction, 8> actions = {{
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver}}};
+  std::array<fishbait::AbstractAction, 2> actions = {{
+      {fishbait::Action::kFold, 0, 0},
+      {fishbait::Action::kAllIn, 0, 0},
+  }};
   fishbait::Node<6> start_state;
 
-  std::array row_counts = fishbait::SequenceTable<6, 8>::Count(actions,
+  std::array row_counts = fishbait::SequenceTable<6, 2>::Count(actions,
                                                                start_state);
   CHECK(row_counts[0].internal_nodes == 62);
   CHECK(row_counts[0].leaf_nodes == 6);
@@ -41,8 +36,8 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   ss.precision(10);
   ss << std::fixed << seq;
   std::string seq_str = ss.str();
-  CHECK(seq_str == "SequenceTable<6, 8> { preflop rows: 62; flop rows: 0; "
-                     "turn rows: 0; river rows: 0; memory: 0.0000004619 GB; }");
+  CHECK(seq_str == "SequenceTable<6, 2> { preflop rows: 62; flop rows: 0; "
+                   "turn rows: 0; river rows: 0; memory: 0.0000004619 GB; }");
 
   using fishbait::kLeafId;
   std::vector<fishbait::SequenceId> preflop_table = {1, 31, 2, 16, 3, 9, 4, 6,
@@ -68,32 +63,12 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   REQUIRE(seq.ActionCount(fishbait::Round::kTurn) == 2);
   REQUIRE(seq.ActionCount(fishbait::Round::kRiver) == 2);
 
-  std::array<std::array<fishbait::AbstractAction, 2>, 4>
-    correct_action_array ={{
-        {{
-          {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
-          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop}
-        }},
-        {{
-          {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
-          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop}
-        }},
-        {{
-          {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
-          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn}
-        }},
-        {{
-          {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
-          {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver}
-        }}
-      }};
-
   for (fishbait::RoundId i = 0; i < fishbait::kNRounds; ++i) {
     fishbait::Round round = fishbait::Round{i};
     nda::const_vector_ref<fishbait::AbstractAction> round_actions =
         seq.Actions(round);
     for (int j = 0; j < round_actions.width(); ++j) {
-      REQUIRE(round_actions(j) == correct_action_array[i][j]);
+      REQUIRE(round_actions(j) == actions[j]);
     }
   }
 
@@ -125,7 +100,7 @@ TEST_CASE("3 player all in fold check pot bet",
   fishbait::Node<3> start_state;
 
   std::array row_counts = fishbait::SequenceTable<3, 12>::Count(actions,
-                                                               start_state);
+                                                                start_state);
   CHECK(row_counts[0].internal_nodes == 98);
   CHECK(row_counts[0].leaf_nodes == 45);
   CHECK(row_counts[1].internal_nodes == 180);

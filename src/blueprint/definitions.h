@@ -26,14 +26,25 @@ struct AbstractAction {
   double size = 0;
 
   // Maximum raise number for this action. Inclusive.
-  uint32_t max_raise_num = 0;
+  int max_raise_num = 0;
 
-  // The round for this action
-  Round round = Round::kRiver;
+  // First round this action can be played. Inclusive.
+  Round min_round = Round::kPreFlop;
+
+  // Last round this action can be played. Inclusive.
+  Round max_round = Round::kRiver;
+
+  // Max number of players allowed for this action. Inclusive.
+  PlayerN max_players = 0;
+
+  // Min pot size for this action. Inclusive
+  Chips min_pot = 0;
 
   bool operator==(const AbstractAction& rhs) const {
     return play == rhs.play && size == rhs.size &&
-           round == rhs.round;
+    max_raise_num == rhs.max_raise_num && min_round == rhs.min_round &&
+    max_round == rhs.max_round && max_players == rhs.max_players &&
+    min_pot == rhs.min_pot;
   }
 };
 
@@ -55,6 +66,7 @@ inline std::ostream& operator<<(std::ostream& os, NumNodesArray& s) {
     os << ", " << s[i].illegal_nodes;
   }
   os << std::endl;
+  os << "total illegal nodes: " << total_illegal << std::endl;
   os << "internal nodes: " << s[0].internal_nodes;
   total_internal += s[0].internal_nodes;
   for (std::size_t i = 1; i < s.size(); ++i) {
