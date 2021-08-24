@@ -11,9 +11,9 @@
 
 int main() {
   std::array<fishbait::AbstractAction, 23> actions = {{
-      {fishbait::Action::kFold, 0, 0},
-      {fishbait::Action::kCheckCall, 0, 0},
-      {fishbait::Action::kAllIn, 0, 0},
+      {fishbait::Action::kFold},
+      {fishbait::Action::kCheckCall},
+      {fishbait::Action::kAllIn},
 
       {fishbait::Action::kBet, 0.4, 1, fishbait::Round::kPreFlop,
        fishbait::Round::kPreFlop},

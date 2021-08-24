@@ -14,8 +14,8 @@
 
 TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   std::array<fishbait::AbstractAction, 2> actions = {{
-      {fishbait::Action::kFold, 0, 0},
-      {fishbait::Action::kAllIn, 0, 0},
+      {fishbait::Action::kFold},
+      {fishbait::Action::kAllIn},
   }};
   fishbait::Node<6> start_state;
 

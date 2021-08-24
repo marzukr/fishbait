@@ -42,9 +42,9 @@ struct AbstractAction {
 
   bool operator==(const AbstractAction& rhs) const {
     return play == rhs.play && size == rhs.size &&
-    max_raise_num == rhs.max_raise_num && min_round == rhs.min_round &&
-    max_round == rhs.max_round && max_players == rhs.max_players &&
-    min_pot == rhs.min_pot;
+           max_raise_num == rhs.max_raise_num && min_round == rhs.min_round &&
+           max_round == rhs.max_round && max_players == rhs.max_players &&
+           min_pot == rhs.min_pot;
   }
 };
 

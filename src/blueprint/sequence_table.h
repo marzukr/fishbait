@@ -51,7 +51,7 @@ class SequenceTable {
 
     node_counter.fill({0, 0, 0});
     Node new_state = start_state_;
-    Generate(new_state, actions_, 0, action_counter, 0, node_counter,
+    Generate(new_state, 0, actions_, action_counter, 0, node_counter,
         [&](SequenceId seq, Round round, nda::index_t action_col,
             SequenceId val) {
           table_[+round](seq, action_col) = val;
@@ -167,7 +167,7 @@ class SequenceTable {
     NumNodesArray node_counter;
     node_counter.fill({0, 0, 0});
     Node new_state = start_state;
-    Generate(new_state, sorted_actions, 0, num_actions, 0, node_counter,
+    Generate(new_state, 0, sorted_actions, num_actions, 0, node_counter,
              [](SequenceId, Round, nda::index_t, SequenceId) {});
     return node_counter;
   }
@@ -210,8 +210,8 @@ class SequenceTable {
         terminal states.
   */
   template <typename RowMarkFn>
-  static SequenceId Generate(Node<kPlayers>& state, const ActionArray& actions,
-                             int num_raises,
+  static SequenceId Generate(Node<kPlayers>& state, int num_raises,
+                             const ActionArray& actions,
                              const NumActionsArray& num_actions, SequenceId seq,
                              NumNodesArray& node_counter,
                              RowMarkFn&& row_marker) {
@@ -224,7 +224,7 @@ class SequenceTable {
       return kLeafId;
     } else if (state.acting_player() == state.kChancePlayer) {
       state.ProceedPlay();
-      return Generate(state, actions, 0, num_actions, seq, node_counter,
+      return Generate(state, 0, actions, num_actions, seq, node_counter,
                       row_marker);
     }
 
@@ -237,8 +237,8 @@ class SequenceTable {
         new_state.Apply(action.play, chip_size);
         Round new_round = new_state.round();
         int new_raise_num = num_raises;
-        if (action.play == Action::kBet) new_raise_num++;
-        SequenceId new_state_id = Generate(new_state, actions, new_raise_num,
+        if (action.play == Action::kBet) ++new_raise_num;
+        SequenceId new_state_id = Generate(new_state, new_raise_num, actions,
             num_actions, node_counter[+new_round].internal_nodes, node_counter,
             row_marker);
         row_marker(seq, state.round(), j, new_state_id);
@@ -274,8 +274,8 @@ class SequenceTable {
               state.players_left() > action.max_players) {
             return false;
           }
-          if ((1.0 * size) / (state.stack(state.acting_player())) >
-               kPotCommittedThreshold) {
+          if (1.0 * size / state.stack(state.acting_player()) >
+              kPotCommittedThreshold) {
             return false;
           }
           return state.CanBet(size) ? size : false;
