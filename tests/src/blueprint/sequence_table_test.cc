@@ -39,6 +39,8 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   CHECK(seq_str == "SequenceTable<6, 2> { preflop rows: 62; flop rows: 0; "
                    "turn rows: 0; river rows: 0; memory: 0.0000004619 GB; }");
 
+  REQUIRE(seq.start_state() == start_state);
+
   using fishbait::kLeafId;
   std::vector<fishbait::SequenceId> preflop_table = {1, 31, 2, 16, 3, 9, 4, 6,
       kLeafId, 5, kLeafId, kLeafId, 7, 8, kLeafId, kLeafId, kLeafId, kLeafId,
@@ -81,21 +83,16 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   }
 }  // TEST_CASE "6 players all in or fold"
 
-TEST_CASE("3 player all in fold check pot bet",
-          "[blueprint][sequence_table][.]") {
+TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   std::array<fishbait::AbstractAction, 12> actions = {{
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kRiver},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver},
+      {fishbait::Action::kFold},
+      {fishbait::Action::kCheckCall},
+      {fishbait::Action::kAllIn},
+
+      {fishbait::Action::kBet, 1.0, 1, fishbait::Round::kTurn,
+       fishbait::Round::kTurn, 2, 0},
+      {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
+       fishbait::Round::kRiver, 0, 10000}
   }};
   fishbait::Node<3> start_state;
 
@@ -119,6 +116,8 @@ TEST_CASE("3 player all in fold check pot bet",
   REQUIRE(seq_str == "SequenceTable<3, 4> { preflop rows: 98; flop rows: 180; "
                      "turn rows: 180; river rows: 180; "
                      "memory: 0.0000074953 GB; }");
+
+  REQUIRE(seq.start_state() == start_state);
 
   using fishbait::kIllegalId;
   using fishbait::kLeafId;
@@ -430,4 +429,4 @@ TEST_CASE("3 player all in fold check pot bet",
                river_table[i * 3 + j]));
     }
   }
-}  // TEST_CASE "3 player all in fold check pot bet"
+}  // TEST_CASE "3 player extensive test"
