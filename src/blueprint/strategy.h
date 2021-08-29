@@ -33,8 +33,8 @@ class Strategy {
   template <typename T>
   using InfosetActionTable = nda::array<T, InfosetActionTableShape>;
 
-  const Regret regret_floor_;
-  const Regret prune_constant_;
+  Regret regret_floor_;
+  Regret prune_constant_;
 
   InfoAbstraction info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
@@ -94,7 +94,29 @@ class Strategy {
           verbose);
   }
   Strategy(const Strategy& other) = default;
-  Strategy& operator=(const Strategy& other) = delete;
+  Strategy& operator=(const Strategy& other) = default;
+
+  /* @brief Strategy serialize function. */
+  template<class Archive>
+  void serialize(Archive& archive) const {
+    archive(regret_floor_, prune_constant_, info_abstraction_,
+            action_abstraction_, regrets_, action_counts_, save_path_.string());
+  }
+
+  /*
+    @brief Loads a Strategy snapshot from the given path on disk.
+
+    @param path The path to the snapshot to load.
+    @param verbose Whether to print debug information.
+
+    @return The loaded Strategy.
+  */
+  static Strategy LoadSnapshot(const std::filesystem::path path,
+                               bool verbose = false) {
+    Strategy loaded;
+    CerealLoad(path.string(), &loaded, verbose);
+    return loaded;
+  }
 
  private:
   /*
@@ -133,6 +155,12 @@ class Strategy {
     return save_path;
   }
 
+  /* @brief Barebones constructor to load a saved strategy. */
+  Strategy() : regret_floor_{}, prune_constant_{}, info_abstraction_{},
+               action_abstraction_{Node<kPlayers>{},
+                                   std::array<AbstractAction, kActions>{}},
+               regrets_{}, action_counts_{}, rng_{}, save_path_{} { }
+
   /*
     @brief Saves a snapshot of the strategy to the save_path_.
 
@@ -141,22 +169,16 @@ class Strategy {
         performed.
     @param verbose Whether to print debug information.
   */
-  void Snapshot(int iteration, int total_iterations, bool verbose) {
+  void TakeSnapshot(int iteration, int total_iterations, bool verbose) {
     int total_digits = std::floor(std::log10(total_iterations)) + 1;
     std::stringstream iter_ss;
     iter_ss.fill('0');
     iter_ss << std::setw(total_digits) << iteration;
 
-    std::stringstream regret_ss;
-    regret_ss << "regrets_" << iter_ss.str() << ".cereal";
-    std::filesystem::path regret_path = save_path_ / regret_ss.str();
-    CerealSave(regret_path.string(), &regrets_, verbose);
-
-    std::stringstream action_count_ss;
-    action_count_ss << "action_count_" << iter_ss.str() << ".cereal";
-    std::filesystem::path action_count_path = save_path_ /
-                                              action_count_ss.str();
-    CerealSave(action_count_path.string(), &action_counts_, verbose);
+    std::stringstream strategy_ss;
+    strategy_ss << "strategy_" << iter_ss.str() << ".cereal";
+    std::filesystem::path strategy_path = save_path_ / strategy_ss.str();
+    CerealSave(strategy_path.string(), this, verbose);
   }
 
   /*
@@ -220,7 +242,7 @@ class Strategy {
       }
       if ((t > strategy_delay && t % snapshot_interval == 0) ||
           t == iterations) {
-        Snapshot(t, iterations, verbose);
+        TakeSnapshot(t, iterations, verbose);
       }
     }  // for t
   }  // MCCFR()
@@ -368,7 +390,7 @@ class Strategy {
         }
       }
     }
-  }
+  }  // UpdateStrategy()
 
   /*
     @brief Updates the given player's cumulative regrets.

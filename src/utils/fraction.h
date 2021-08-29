@@ -30,6 +30,12 @@ class Fraction {
   Fraction(const Fraction& other) = default;
   Fraction& operator=(const Fraction& other) = default;
 
+  /* @brief Fraction serialize function */
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(numerator_, denominator_);
+  }
+
   int64_t numerator() { return numerator_; }
   int64_t denominator() { return denominator_; }
 
