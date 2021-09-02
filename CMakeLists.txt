@@ -87,7 +87,10 @@ function(add_module module_path)
       clean_gcov_files(${target})
     elseif(target_type STREQUAL "INTERFACE_LIBRARY")
       set(interfaces ${interfaces} ${target} PARENT_SCOPE)
-    else()
+    elseif(target_type STREQUAL "STATIC_LIBRARY" OR
+           target_type STREQUAL "MODULE_LIBRARY" OR
+           target_type STREQUAL "SHARED_LIBRARY" OR
+           target_type STREQUAL "OBJECT_LIBRARY")
       set(libraries ${libraries} ${target} PARENT_SCOPE)
       clean_gcov_files(${target})
     endif()
@@ -98,6 +101,7 @@ add_module(external/hand-isomorphism/src)
 
 add_module(src/blueprint)
 add_module(src/clustering)
+add_module(src/interface)
 add_module(src/poker)
 add_module(src/hand_strengths)
 add_module(src/utils)
