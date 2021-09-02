@@ -22,7 +22,7 @@ class TestClusters {
  public:
   TestClusters() = default;
   TestClusters(const TestClusters&) {}
-  TestClusters& operator=(const TestClusters&) { return *this;}
+  TestClusters& operator=(const TestClusters&) { return *this; }
 
   static constexpr fishbait::CardCluster NumClusters(fishbait::Round) {
     return kNClusters;
