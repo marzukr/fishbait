@@ -38,6 +38,18 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kPreFlop);
   REQUIRE(triton.acting_player() == triton.kChancePlayer);
+  REQUIRE(triton == triton);
+  fishbait::Node triton_cp = triton;
+  REQUIRE(triton_cp == triton);
+  REQUIRE(triton_cp.big_blind() == 4000);
+  REQUIRE(triton_cp.small_blind() == 2000);
+  REQUIRE(triton_cp.ante() == 500);
+  REQUIRE(triton_cp.big_blind_ante() == true);
+  REQUIRE(triton_cp.blind_before_ante() == true);
+  REQUIRE(triton_cp.button() == 0);
+  REQUIRE(triton_cp.in_progress() == true);
+  REQUIRE(triton_cp.round() == fishbait::Round::kPreFlop);
+  REQUIRE(triton_cp.acting_player() == triton.kChancePlayer);
 
   triton.Deal();
   triton.ProceedPlay();
@@ -49,6 +61,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.pot() == 10000);
   REQUIRE(triton.bets(3) == 500);
   REQUIRE(triton.stack(3) == 500000);
+  REQUIRE(triton_cp != triton);
 
   /* ------------------------------- Preflop -------------------------------- */
 
@@ -807,6 +820,9 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.in_progress() == true);
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
   REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
+  REQUIRE(heads_up == heads_up);
+  fishbait::Node heads_up_copy(heads_up);
+  REQUIRE(heads_up == heads_up_copy);
   heads_up.Deal();
   heads_up.ProceedPlay();
 
@@ -818,6 +834,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.pot() == 10);
   REQUIRE(heads_up.bets(0) == 4);
   REQUIRE(heads_up.stack(0) == 98);
+  REQUIRE(heads_up != heads_up_copy);
 
   // Verify PlayerIndex works
   REQUIRE(heads_up.PlayerIndex(0) == 0);
@@ -1597,6 +1614,8 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.stack(4) == 8400);
 
   // Player 5 action (fold)
+  fishbait::Node game_cp = game;
+  REQUIRE(game_cp == game);
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.CanCheckCall() == true);
   REQUIRE(game.CanFold());
@@ -1611,6 +1630,7 @@ TEST_CASE("straddle", "[poker][node]") {
   REQUIRE(game.pot() == 3350);
   REQUIRE(game.bets(5) == 800);
   REQUIRE(game.stack(5) == 9200);
+  REQUIRE(game_cp != game);
 
   // Player 3 action (call)
   REQUIRE(game.Rotation() == 1);
@@ -1937,7 +1957,10 @@ TEST_CASE("awardpot same stack no rake double", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
   fishbait::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
   INFO("Preflop");
+  fishbait::Node game_cp = game;
+  REQUIRE(game == game_cp);
   game.ProceedPlay();
+  REQUIRE(game != game_cp);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);
   game.Apply(fishbait::Action::kAllIn);

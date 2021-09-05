@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -151,6 +152,16 @@ class Node {
 
   Node(const Node& other) = default;
   Node& operator=(const Node& other) = delete;  // because const members
+
+  /* @brief Equality comparison operator. */
+  bool operator==(const Node& other) const {
+    return std::memcmp(this, &other, sizeof(Node)) == 0;
+  }
+
+  /* @brief Inquality comparison operator. */
+  bool operator!=(const Node& other) const {
+    return !(*this == other);
+  }
 
   /*
     @brief Reset the state variables for the start of a new hand.
