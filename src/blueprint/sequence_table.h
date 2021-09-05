@@ -15,6 +15,7 @@
 #include "blueprint/definitions.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
+#include "utils/cereal.h"
 
 namespace fishbait {
 
@@ -27,7 +28,7 @@ class SequenceTable {
   using SequenceMatrix = std::array<nda::matrix<SequenceId>, kNRounds>;
 
   ActionArray actions_;
-  const Node<kPlayers> start_state_;
+  Node<kPlayers> start_state_;
   SequenceMatrix table_;
 
  public:
@@ -38,12 +39,13 @@ class SequenceTable {
     @param start_state The game tree node to start the table at.
   */
   SequenceTable(const std::array<AbstractAction, kActions>& actions,
-                const Node<kPlayers>& start_state)
-                : actions_{}, start_state_{start_state}, table_{} {
+                const Node<kPlayers>& start_state) : actions_{},
+                                                     start_state_{start_state},
+                                                     table_{} {
     NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
     NumNodesArray node_counter = CountSorted(actions_, action_counter,
-                                               start_state);
+                                             start_state);
     for (RoundId i = 0; i < kNRounds; ++i) {
       table_[i] = nda::matrix<SequenceId>{{node_counter[i].internal_nodes,
                                            action_counter[i]}};
@@ -59,6 +61,12 @@ class SequenceTable {
   }  // SequenceTable()
   SequenceTable(const SequenceTable& other) = default;
   SequenceTable& operator=(const SequenceTable& other) = default;
+
+  /* @brief SequenceTable serialize function */
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(actions_, start_state_, table_);
+  }
 
   /*
     @brief Returns the sequence id reached by taking the given action.

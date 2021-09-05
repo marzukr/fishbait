@@ -22,7 +22,13 @@ class TestClusters {
  public:
   TestClusters() = default;
   TestClusters(const TestClusters&) {}
-  TestClusters& operator=(const TestClusters&) { return *this;}
+  TestClusters& operator=(const TestClusters&) { return *this; }
+
+  /* @brief TestClusters serialize function */
+  template<class Archive>
+  void serialize(Archive&) {
+    return;
+  }
 
   static constexpr fishbait::CardCluster NumClusters(fishbait::Round) {
     return kNClusters;
@@ -67,23 +73,17 @@ class TestClusters {
   }
 };  // class TestClusters
 
-TEST_CASE("mccfr 6 players all in or fold", "[blueprint][strategy][.]") {
+TEST_CASE("mccfr crash test", "[blueprint][strategy]") {
   fishbait::Node<3> start_state;
-  start_state.SetSeed(fishbait::Random::Seed(7));
-  std::array<fishbait::AbstractAction, 13> actions = {{
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kFold, 0, 0, fishbait::Round::kRiver},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kCheckCall, 0, 0, fishbait::Round::kRiver},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kPreFlop},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kFlop},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kTurn},
-      {fishbait::Action::kAllIn, 0, 0, fishbait::Round::kRiver},
-      {fishbait::Action::kBet, 1.0, 1, fishbait::Round::kPreFlop}
+  std::array<fishbait::AbstractAction, 5> actions = {{
+      {fishbait::Action::kFold},
+      {fishbait::Action::kAllIn},
+      {fishbait::Action::kCheckCall},
+
+      {fishbait::Action::kBet, 1.0, 1, fishbait::Round::kTurn,
+       fishbait::Round::kTurn, 2, 0},
+      {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
+       fishbait::Round::kRiver, 0, 10000}
   }};
   TestClusters info_abstraction;
   int iterations = 6;
@@ -103,6 +103,4 @@ TEST_CASE("mccfr 6 players all in or fold", "[blueprint][strategy][.]") {
                        prune_constant, LCFR_threshold, discount_interval,
                        regret_floor, snapshot_interval, strategy_delay,
                        save_dir, fishbait::Random::Seed{68}, verbose);
-
-  start_state.SetSeed(fishbait::Random::Seed{});
-}  // TEST_CASE "mccfr 6 players all in or fold"
+}  // TEST_CASE "mccfr crash test"

@@ -12,6 +12,7 @@
 #include "poker/definitions.h"
 #include "poker/indexer.h"
 #include "poker/node.h"
+#include "utils/cereal.h"
 
 namespace fishbait {
 
@@ -71,6 +72,12 @@ class ClusterTable {
     std::stringstream ss;
     ss << +(+node.round()) << " is not a valid round." << std::endl;
     throw std::out_of_range(ss.str());
+  }
+
+  /* @brief ClusterTable serialize function */
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(table_);
   }
 };  // class ClusterTable
 

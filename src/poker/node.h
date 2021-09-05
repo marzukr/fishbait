@@ -35,19 +35,19 @@ class Node {
   // Attributes
   // --------------------------------------------------------------------------
 
-  const Chips big_blind_;         // how many chips the big blind is
-  const Chips small_blind_;       // how many chips the small blind is
-  const Chips ante_;              /* how many chips each player must contribute
-                                     to the pot on each hand in expectation */
-  const bool big_blind_ante_;     /* does the big blind pays the ante for
-                                     everyone in the game? */
-  const bool blind_before_ante_;  /* should players should cover the blind
-                                     instead of the ante if they don't have
-                                     enough chips to pay both? */
-  const QuotaT rake_;             // proportion of each hand taken as rake
-  const Chips rake_cap_;          /* maximum number of chips that can be raked;
-                                     rake_cap_ of 0 means no cap */
-  const bool no_flop_no_drop_;    // is rake taken on hands without a flop?
+  Chips big_blind_;         // how many chips the big blind is
+  Chips small_blind_;       // how many chips the small blind is
+  Chips ante_;              /* how many chips each player must contribute to the
+                               pot on each hand in expectation */
+  bool big_blind_ante_;     /* does the big blind pays the ante for everyone in
+                               the game? */
+  bool blind_before_ante_;  /* should players should cover the blind instead of
+                               the ante if they don't have enough chips to pay
+                               both? */
+  QuotaT rake_;             // proportion of each hand taken as rake
+  Chips rake_cap_;          /* maximum number of chips that can be raked;
+                               rake_cap_ of 0 means no cap */
+  bool no_flop_no_drop_;    // is rake taken on hands without a flop?
 
   // Progress information
   // --------------------------------------------------------------------------
@@ -149,9 +149,18 @@ class Node {
     std::fill(stack_, stack_ + kPlayers, default_stack);
     NewHand();
   }  // Node()
-
   Node(const Node& other) = default;
-  Node& operator=(const Node& other) = delete;  // because const members
+  Node& operator=(const Node& other) = default;
+
+  /* @brief Node serialize function */
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(big_blind_, small_blind_, ante_, big_blind_ante_,
+            blind_before_ante_, rake_, rake_cap_, no_flop_no_drop_, button_,
+            in_progress_, round_, cycled_, acting_player_, pot_good_, no_raise_,
+            folded_, players_left_, players_all_in_, pot_, bets_, stack_,
+            min_raise_, max_bet_, deck_, deck_state_);
+  }
 
   /* @brief Equality comparison operator. */
   bool operator==(const Node& other) const {

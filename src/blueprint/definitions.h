@@ -46,6 +46,12 @@ struct AbstractAction {
            max_round == rhs.max_round && max_players == rhs.max_players &&
            min_pot == rhs.min_pot;
   }
+
+  /* @brief AbstractAction serialize function */
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(play, max_raise_num, min_round, max_round, max_players, min_pot);
+  }
 };
 
 struct node_count {
