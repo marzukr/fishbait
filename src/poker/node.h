@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -159,6 +160,16 @@ class Node {
             in_progress_, round_, cycled_, acting_player_, pot_good_, no_raise_,
             folded_, players_left_, players_all_in_, pot_, bets_, stack_,
             min_raise_, max_bet_, deck_, deck_state_);
+  }
+
+  /* @brief Equality comparison operator. */
+  bool operator==(const Node& other) const {
+    return std::memcmp(this, &other, sizeof(Node)) == 0;
+  }
+
+  /* @brief Inquality comparison operator. */
+  bool operator!=(const Node& other) const {
+    return !(*this == other);
   }
 
   /*

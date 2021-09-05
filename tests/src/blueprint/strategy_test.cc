@@ -73,7 +73,7 @@ class TestClusters {
   }
 };  // class TestClusters
 
-TEST_CASE("mccfr 6 players all in or fold", "[blueprint][strategy]") {
+TEST_CASE("mccfr 6 players all in or fold", "[blueprint][strategy][.]") {
   fishbait::Node<3> start_state;
   start_state.SetSeed(fishbait::Random::Seed(7));
   std::array<fishbait::AbstractAction, 2> actions = {{
