@@ -116,6 +116,21 @@ class SequenceTable {
   }
 
   /*
+    @brief Returns the total number of legal actions in the given round.
+  */
+  std::size_t NumLegalActions(Round round) const {
+    nda::index_t last_seq = table_[+round].rows() - 1;
+    return legal_offsets_[+round][last_seq] + NumLegalActions(last_seq, round);
+  }
+
+  /*
+    @brief Returns the number of legal actions preceding the given sequence.
+  */
+  std::size_t LegalOffset(SequenceId seq, Round round) const {
+    return legal_offsets_[+round][seq];
+  }
+
+  /*
     @brief Returns the total number of actions available in the given round.
   */
   nda::size_t ActionCount(Round round) const {
@@ -135,13 +150,6 @@ class SequenceTable {
   */
   const Node<kPlayers>& start_state() {
     return start_state_;
-  }
-
-  /*
-    @brief Returns the number of legal actions preceding the given sequence.
-  */
-  std::size_t LegalOffset(SequenceId seq, Round round) const {
-    return legal_offsets_[+round][seq];
   }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
