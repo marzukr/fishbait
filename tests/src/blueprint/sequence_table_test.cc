@@ -54,6 +54,11 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
       kLeafId, 48, 55, 49, 52, 50, 51, kLeafId, kLeafId, kLeafId, kLeafId, 53,
       54, kLeafId, kLeafId, kLeafId, kLeafId, 56, 59, 57, 58, kLeafId, kLeafId,
       kLeafId, kLeafId, 60, 61, kLeafId, kLeafId, kLeafId, kLeafId};
+  std::vector<std::size_t> preflop_offsets = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18,
+      20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54,
+      56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90,
+      92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120,
+      122};
 
   REQUIRE(seq.States(fishbait::Round::kPreFlop) == 62);
   REQUIRE(seq.States(fishbait::Round::kFlop) == 0);
@@ -76,6 +81,8 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
 
   for (fishbait::SequenceId i = 0; i < 62; ++i) {
     REQUIRE(seq.NumLegalActions(i, fishbait::Round::kPreFlop) == 2);
+    REQUIRE(seq.LegalOffset(i, fishbait::Round::kPreFlop) ==
+            preflop_offsets[i]);
     for (nda::index_t j = 0; j < 2; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kPreFlop, j) ==
               preflop_table[i * 2 + j]);
@@ -130,9 +137,10 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
       kIllegalId, 12, 13, kIllegalId, kLeafId, kLeafId, kIllegalId, kLeafId,
       kLeafId, kIllegalId, kIllegalId, 15, 8, 16, 17, kIllegalId, kLeafId,
       kLeafId, kIllegalId, kLeafId, kLeafId, kIllegalId};
-
   std::vector<nda::size_t> preflop_legal_actions = {3, 3, 2, 2, 2, 2, 2, 2, 3,
       2, 2, 2, 2, 2, 2, 2, 2, 2};
+  std::vector<std::size_t> preflop_offsets = {0, 3, 6, 8, 10, 12, 14, 16, 18,
+      21, 23, 25, 27, 29, 31, 33, 35, 37};
   std::array<fishbait::AbstractAction, 3> preflop_actions = {{
       {fishbait::Action::kFold},
       {fishbait::Action::kAllIn},
@@ -148,6 +156,8 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   for (fishbait::SequenceId i = 0; i < 18; ++i) {
     REQUIRE(seq.NumLegalActions(i, fishbait::Round::kPreFlop) ==
             preflop_legal_actions[i]);
+    REQUIRE(seq.LegalOffset(i, fishbait::Round::kPreFlop) ==
+            preflop_offsets[i]);
     for (nda::index_t j = 0; j < 3; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kPreFlop, j) ==
               preflop_table[i * 3 + j]);
@@ -165,9 +175,10 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
       kIllegalId, kLeafId, kLeafId, kIllegalId, kIllegalId, kIllegalId, 17, 16,
       kIllegalId, 18, 19, kIllegalId, kIllegalId, kLeafId, kLeafId, kIllegalId,
       kIllegalId, kLeafId, kLeafId, kIllegalId, kIllegalId};
-
   std::vector<nda::size_t> flop_legal_actions = {2, 2, 2, 2, 2, 2, 2, 2, 2,
       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+  std::vector<std::size_t> flop_offsets = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18,
+      20, 22, 24, 26, 28, 30, 32, 34, 36, 38};
   std::array<fishbait::AbstractAction, 4> flop_actions = {{
       {fishbait::Action::kFold},
       {fishbait::Action::kAllIn},
@@ -184,6 +195,8 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   for (fishbait::SequenceId i = 0; i < 20; ++i) {
     REQUIRE(seq.NumLegalActions(i, fishbait::Round::kFlop) ==
             flop_legal_actions[i]);
+    REQUIRE(seq.LegalOffset(i, fishbait::Round::kFlop) ==
+            flop_offsets[i]);
     for (nda::index_t j = 0; j < 3; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kFlop, j) == flop_table[i * 4 + j]);
     }
@@ -211,6 +224,8 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
       kIllegalId, kLeafId, kLeafId, kIllegalId, kIllegalId, kIllegalId};
   std::vector<nda::size_t> turn_legal_actions = {3, 2, 3, 2, 3, 2, 3, 2, 3,
       2, 3, 2, 3, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+  std::vector<std::size_t> turn_offsets = {0, 3, 5, 8, 10, 13, 15, 18, 20, 23,
+      25, 28, 30, 33, 35, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62};
   std::array<fishbait::AbstractAction, 5> turn_actions = {{
       {fishbait::Action::kFold},
       {fishbait::Action::kAllIn},
@@ -230,6 +245,8 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   for (fishbait::SequenceId i = 0; i < 28; ++i) {
     REQUIRE(seq.NumLegalActions(i, fishbait::Round::kTurn) ==
             turn_legal_actions[i]);
+    REQUIRE(seq.LegalOffset(i, fishbait::Round::kTurn) ==
+            turn_offsets[i]);
     for (nda::index_t j = 0; j < 5; ++j) {
       REQUIRE(seq.Next(i, fishbait::Round::kTurn, j) == turn_table[i * 5 + j]);
     }
@@ -258,6 +275,9 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   std::vector<nda::size_t> river_legal_actions = {2, 2, 2, 2, 2, 2, 2, 2, 2,
       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
       2, 2};
+  std::vector<std::size_t> river_offsets = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18,
+      20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54,
+      56, 58, 60, 62, 64, 66, 68, 70};
   std::array<fishbait::AbstractAction, 4> river_actions = {{
       {fishbait::Action::kFold},
       {fishbait::Action::kAllIn},
@@ -275,6 +295,8 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   for (fishbait::SequenceId i = 0; i < 36; ++i) {
     REQUIRE(seq.NumLegalActions(i, fishbait::Round::kRiver) ==
             river_legal_actions[i]);
+    REQUIRE(seq.LegalOffset(i, fishbait::Round::kRiver) ==
+            river_offsets[i]);
     for (nda::index_t j = 0; j < 4; ++j) {
       REQUIRE((seq.Next(i, fishbait::Round::kRiver, j) ==
                river_table[i * 4 + j]));

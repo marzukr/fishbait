@@ -322,7 +322,7 @@ class SequenceTable {
       std::fill(legal_offsets_[i].begin(), legal_offsets_[i].end(), 0);
       for (SequenceId j = 1; j < legal_offsets_[i].size(); ++j) {
         legal_offsets_[i][j] = legal_offsets_[i][j - 1] +
-                               NumLegalActions(j, Round{i});
+                               NumLegalActions(j - 1, Round{i});
       }
     }
   }
