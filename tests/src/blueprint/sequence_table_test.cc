@@ -70,6 +70,8 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   REQUIRE(seq.ActionCount(fishbait::Round::kTurn) == 2);
   REQUIRE(seq.ActionCount(fishbait::Round::kRiver) == 2);
 
+  REQUIRE(seq.NumLegalActions(fishbait::Round::kPreFlop) == 124);
+
   for (fishbait::RoundId i = 0; i < fishbait::kNRounds; ++i) {
     fishbait::Round round = fishbait::Round{i};
     nda::const_vector_ref<fishbait::AbstractAction> round_actions =
@@ -148,6 +150,7 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   }};
   REQUIRE(seq.States(fishbait::Round::kPreFlop) == 18);
   REQUIRE(seq.ActionCount(fishbait::Round::kPreFlop) == 3);
+  REQUIRE(seq.NumLegalActions(fishbait::Round::kPreFlop) == 39);
   nda::const_vector_ref<fishbait::AbstractAction> round_actions =
       seq.Actions(fishbait::Round::kPreFlop);
   for (int i = 0; i < round_actions.width(); ++i) {
@@ -188,6 +191,7 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   }};
   REQUIRE(seq.States(fishbait::Round::kFlop) == 20);
   REQUIRE(seq.ActionCount(fishbait::Round::kFlop) == 4);
+  REQUIRE(seq.NumLegalActions(fishbait::Round::kFlop) == 40);
   round_actions = seq.Actions(fishbait::Round::kFlop);
   for (int i = 0; i < round_actions.width(); ++i) {
     REQUIRE(round_actions(i) == flop_actions[i]);
@@ -238,6 +242,7 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   }};
   REQUIRE(seq.States(fishbait::Round::kTurn) == 28);
   REQUIRE(seq.ActionCount(fishbait::Round::kTurn) == 5);
+  REQUIRE(seq.NumLegalActions(fishbait::Round::kTurn) == 64);
   round_actions = seq.Actions(fishbait::Round::kTurn);
   for (int i = 0; i < round_actions.width(); ++i) {
     REQUIRE(round_actions(i) == turn_actions[i]);
@@ -288,6 +293,7 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   }};
   REQUIRE(seq.States(fishbait::Round::kRiver) == 36);
   REQUIRE(seq.ActionCount(fishbait::Round::kRiver) == 4);
+  REQUIRE(seq.NumLegalActions(fishbait::Round::kRiver) == 72);
   round_actions = seq.Actions(fishbait::Round::kRiver);
   for (int i = 0; i < round_actions.width(); ++i) {
     REQUIRE(round_actions(i) == river_actions[i]);
