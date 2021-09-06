@@ -9,6 +9,7 @@
 #include <numeric>
 #include <ostream>
 #include <stdexcept>
+#include <vector>
 
 #include "array/array.h"
 #include "array/matrix.h"
@@ -27,9 +28,21 @@ class SequenceTable {
   using NumActionsArray = std::array<std::size_t, kNRounds>;
   using SequenceMatrix = std::array<nda::matrix<SequenceId>, kNRounds>;
 
+  // Array containing the available actions for each round.
   ActionArray actions_;
+
+  // Starting state of the table.
   Node<kPlayers> start_state_;
+
+  /* An array of SequenceTables for each round. For each sequence table, the
+     entry at row i column j represents the new sequence reached from taking
+     action j at sequence i. The value is kIllegalId if the action is illegal,
+     or kLeafId if the action leads to a terminal node. */
   SequenceMatrix table_;
+
+  /* For each round, the entry at index i of the vector represents the total
+     number legal actions in all sequences preceding sequence i. */
+  std::array<std::vector<std::size_t>, kNRounds> legal_offsets_;
 
  public:
   /*
@@ -41,7 +54,8 @@ class SequenceTable {
   SequenceTable(const std::array<AbstractAction, kActions>& actions,
                 const Node<kPlayers>& start_state) : actions_{},
                                                      start_state_{start_state},
-                                                     table_{} {
+                                                     table_{},
+                                                     legal_offsets_{} {
     NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
     NumNodesArray node_counter = CountSorted(actions_, action_counter,
@@ -58,6 +72,7 @@ class SequenceTable {
             SequenceId val) {
           table_[+round](seq, action_col) = val;
         });
+    ComputeLegalOffsets();
   }  // SequenceTable()
   SequenceTable(const SequenceTable& other) = default;
   SequenceTable& operator=(const SequenceTable& other) = default;
@@ -65,7 +80,7 @@ class SequenceTable {
   /* @brief SequenceTable serialize function */
   template<class Archive>
   void serialize(Archive& archive) {
-    archive(actions_, start_state_, table_);
+    archive(actions_, start_state_, table_, legal_offsets_);
   }
 
   /*
@@ -122,6 +137,12 @@ class SequenceTable {
     return start_state_;
   }
 
+  /*
+    @brief Returns the number of legal actions preceding the given sequence.
+  */
+  std::size_t LegalOffset(SequenceId seq, Round round) const {
+    return legal_offsets_[+round][seq];
+  }
 
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
     nda::size_t elements = std::accumulate(s.table_.begin(), s.table_.end(), 0,
@@ -290,6 +311,20 @@ class SequenceTable {
       }
     }
     return false;
+  }
+
+  /*
+    @brief Computes the legal_offsets_ array. 
+  */
+  void ComputeLegalOffsets() {
+    for (RoundId i = 0; i < kNRounds; ++i) {
+      legal_offsets_[i].resize(States(Round{i}));
+      std::fill(legal_offsets_[i].begin(), legal_offsets_[i].end(), 0);
+      for (SequenceId j = 1; j < legal_offsets_[i].size(); ++j) {
+        legal_offsets_[i][j] = legal_offsets_[i][j - 1] +
+                               NumLegalActions(j, Round{i});
+      }
+    }
   }
 };  // class SequenceTable
 
