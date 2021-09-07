@@ -82,11 +82,11 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
   }
 
   for (fishbait::SequenceId i = 0; i < 62; ++i) {
-    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kPreFlop) == 2);
-    REQUIRE(seq.LegalOffset(i, fishbait::Round::kPreFlop) ==
+    REQUIRE(seq.NumLegalActions(fishbait::Round::kPreFlop, i) == 2);
+    REQUIRE(seq.LegalOffset(fishbait::Round::kPreFlop, i) ==
             preflop_offsets[i]);
     for (nda::index_t j = 0; j < 2; ++j) {
-      REQUIRE(seq.Next(i, fishbait::Round::kPreFlop, j) ==
+      REQUIRE(seq.Next(fishbait::Round::kPreFlop, i, j) ==
               preflop_table[i * 2 + j]);
     }
   }
@@ -157,12 +157,12 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == preflop_actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 18; ++i) {
-    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kPreFlop) ==
+    REQUIRE(seq.NumLegalActions(fishbait::Round::kPreFlop, i) ==
             preflop_legal_actions[i]);
-    REQUIRE(seq.LegalOffset(i, fishbait::Round::kPreFlop) ==
+    REQUIRE(seq.LegalOffset(fishbait::Round::kPreFlop, i) ==
             preflop_offsets[i]);
     for (nda::index_t j = 0; j < 3; ++j) {
-      REQUIRE(seq.Next(i, fishbait::Round::kPreFlop, j) ==
+      REQUIRE(seq.Next(fishbait::Round::kPreFlop, i, j) ==
               preflop_table[i * 3 + j]);
     }
   }
@@ -197,12 +197,12 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == flop_actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 20; ++i) {
-    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kFlop) ==
+    REQUIRE(seq.NumLegalActions(fishbait::Round::kFlop, i) ==
             flop_legal_actions[i]);
-    REQUIRE(seq.LegalOffset(i, fishbait::Round::kFlop) ==
+    REQUIRE(seq.LegalOffset(fishbait::Round::kFlop, i) ==
             flop_offsets[i]);
     for (nda::index_t j = 0; j < 3; ++j) {
-      REQUIRE(seq.Next(i, fishbait::Round::kFlop, j) == flop_table[i * 4 + j]);
+      REQUIRE(seq.Next(fishbait::Round::kFlop, i, j) == flop_table[i * 4 + j]);
     }
   }
 
@@ -248,12 +248,12 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == turn_actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 28; ++i) {
-    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kTurn) ==
+    REQUIRE(seq.NumLegalActions(fishbait::Round::kTurn, i) ==
             turn_legal_actions[i]);
-    REQUIRE(seq.LegalOffset(i, fishbait::Round::kTurn) ==
+    REQUIRE(seq.LegalOffset(fishbait::Round::kTurn, i) ==
             turn_offsets[i]);
     for (nda::index_t j = 0; j < 5; ++j) {
-      REQUIRE(seq.Next(i, fishbait::Round::kTurn, j) == turn_table[i * 5 + j]);
+      REQUIRE(seq.Next(fishbait::Round::kTurn, i, j) == turn_table[i * 5 + j]);
     }
   }
 
@@ -299,12 +299,12 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
     REQUIRE(round_actions(i) == river_actions[i]);
   }
   for (fishbait::SequenceId i = 0; i < 36; ++i) {
-    REQUIRE(seq.NumLegalActions(i, fishbait::Round::kRiver) ==
+    REQUIRE(seq.NumLegalActions(fishbait::Round::kRiver, i) ==
             river_legal_actions[i]);
-    REQUIRE(seq.LegalOffset(i, fishbait::Round::kRiver) ==
+    REQUIRE(seq.LegalOffset(fishbait::Round::kRiver, i) ==
             river_offsets[i]);
     for (nda::index_t j = 0; j < 4; ++j) {
-      REQUIRE((seq.Next(i, fishbait::Round::kRiver, j) ==
+      REQUIRE((seq.Next(fishbait::Round::kRiver, i, j) ==
                river_table[i * 4 + j]));
     }
   }

@@ -28,10 +28,10 @@ namespace fishbait {
 template <PlayerN kPlayers, std::size_t kActions, typename InfoAbstraction>
 class Strategy {
  private:
-  using InfosetActionTableShape = nda::shape<nda::dim<>, nda::dim<>,
-                                             nda::dense_dim<>>;
+  // Table of values for each legal action
+  using LegalActionsTableShape = nda::shape<nda::dim<>, nda::dense_dim<>>;
   template <typename T>
-  using InfosetActionTable = nda::array<T, InfosetActionTableShape>;
+  using LegalActionsTable = nda::array<T, LegalActionsTableShape>;
 
   Regret regret_floor_;
   Regret prune_constant_;
@@ -39,12 +39,19 @@ class Strategy {
   InfoAbstraction info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
 
-  // Indexed Card Buckets x Sequences x Actions
-  std::array<InfosetActionTable<Regret>, kNRounds> regrets_;
-  InfosetActionTable<ActionCount> action_counts_;
+  std::array<LegalActionsTable<Regret>, kNRounds> regrets_;
+  LegalActionsTable<ActionCount> action_counts_;
 
   Random rng_;
   std::filesystem::path save_path_;
+
+  /* Struct to represent the indexes of an action at an infoset. round_idx is
+     the index numbered by counting all actions in a round. legal_idx is the
+     index only counting the legal actions at the infoset. */
+  struct ActionIndicies {
+    std::size_t round_idx;
+    std::size_t legal_idx;
+  };
 
  public:
   /*
@@ -87,7 +94,7 @@ class Strategy {
              info_abstraction_{info_abstraction},
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable()}, action_counts_{
-                 InitInfosetActionTable<ActionCount>(Round::kPreFlop)
+                 InitLegalActionsTable<ActionCount>(Round::kPreFlop)
              }, rng_{seed}, save_path_{CreateSaveDir(save_dir)} {
     MCCFR(iterations, strategy_interval, prune_threshold, prune_probability,
           LCFR_threshold, discount_interval, snapshot_interval, strategy_delay,
@@ -122,10 +129,10 @@ class Strategy {
   /*
     @brief Initializes regret table.
   */
-  std::array<InfosetActionTable<Regret>, kNRounds> InitRegretTable() {
-    std::array<InfosetActionTable<Regret>, kNRounds> regret_table;
+  std::array<LegalActionsTable<Regret>, kNRounds> InitRegretTable() {
+    std::array<LegalActionsTable<Regret>, kNRounds> regret_table;
     for (RoundId r = 0; r < kNRounds; ++r) {
-      regret_table[r] = InitInfosetActionTable<Regret>(Round{r});
+      regret_table[r] = InitLegalActionsTable<Regret>(Round{r});
     }
     return regret_table;
   }
@@ -134,10 +141,9 @@ class Strategy {
     @brief Initializes a card x sequence x action table for a given round.
   */
   template<typename T>
-  InfosetActionTable<T> InitInfosetActionTable(Round r) {
-    return InfosetActionTable<T>{{InfoAbstraction::NumClusters(r),
-                                  action_abstraction_.States(r),
-                                  action_abstraction_.ActionCount(r)}, 0};
+  LegalActionsTable<T> InitLegalActionsTable(Round r) {
+    return LegalActionsTable<T>{{InfoAbstraction::NumClusters(r),
+                                 action_abstraction_.NumLegalActions(r)}, 0};
   }
 
   /*
@@ -250,15 +256,17 @@ class Strategy {
   /*
     @brief Returns the sum of all positive regrets at an infoset.
 
-    @param card_bucket The card cluster id of the infoset.
-    @param seq The sequence id of the infoset.
     @param round The betting round of the infoset.
+    @param card_bucket The card cluster id of the infoset.
+    @param offset The sequence table legal offset of the infoset.
+    @param legal_actions The number of legal actions at this infoset.
   */
-  Regret PositiveRegretSum(CardCluster card_bucket, SequenceId seq,
-                           Round round) const {
+  Regret PositiveRegretSum(Round round, CardCluster card_bucket,
+                           std::size_t offset,
+                           nda::size_t legal_actions) const {
     Regret sum = 0;
-    for (nda::index_t action_id : regrets_[+round].k()) {
-      sum += std::max(0, regrets_[+round](card_bucket, seq, action_id));
+    for (std::size_t i = offset; i < offset + legal_actions; ++i) {
+      sum += std::max(0, regrets_[+round](card_bucket, i));
     }
     return sum;
   }
@@ -266,30 +274,26 @@ class Strategy {
   /*
     @brief Computes the strategy at the given infoset from regrets.
 
-    @param card_bucket The card cluster id of the infoset.
-    @param seq The sequence id of the infoset.
     @param round The betting round of the infoset.
+    @param card_bucket The card cluster id of the infoset.
+    @param offset The sequence table legal offset of the infoset.
+    @param legal_actions The number of legal actions at this infoset.
 
-    @return An array with the computed strategy.
+    @return An array with the computed strategy. The ith element of the array is
+        the probability of choosing the ith legal action.
   */
-  std::array<double, kActions> CalculateStrategy(CardCluster card_bucket,
-                                                 SequenceId seq,
-                                                 Round round) const {
-    nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
-    Regret sum = PositiveRegretSum(card_bucket, seq, round);
+  std::array<double, kActions> CalculateStrategy(Round round,
+      CardCluster card_bucket, std::size_t offset,
+      nda::size_t legal_actions) const {
+    Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
 
     std::array<double, kActions> strategy = {0};
-    for (nda::index_t action_id : regrets_[+round].k()) {
+    for (std::size_t i = 0; i < legal_actions; ++i) {
       if (sum > 0) {
-        /* We don't need to check if the action is legal here because illegal
-           actions always have a regret of 0 and thus will be assigned a
-           probability of 0 in the strategy. */
-        strategy[action_id] = std::max(0, regrets_[+round](card_bucket, seq,
-                                                           action_id));
-        strategy[action_id] /= sum;
-      } else if (action_abstraction_.Next(seq, round, action_id) !=
-                 kIllegalId) {
-        strategy[action_id] = 1.0 / legal_actions;
+        strategy[i] = std::max(0, regrets_[+round](card_bucket, offset + i));
+        strategy[i] /= sum;
+      } else {
+        strategy[i] = 1.0 / legal_actions;
       }
     }
 
@@ -299,38 +303,44 @@ class Strategy {
   /*
     @brief Samples an action from the current strategy at the given infoset.
 
+    @param round The betting round of the infoset.
     @param card_bucket The card cluster id of the infoset.
     @param seq The sequence id of the infoset.
-    @param round The betting round of the infoset.
 
-    @return The index of the sampled action.
+    @return The indicies of the sampled action.
   */
-  nda::index_t SampleAction(CardCluster card_bucket, SequenceId seq,
-                            Round round) {
+  ActionIndicies SampleAction(Round round, CardCluster card_bucket,
+                              SequenceId seq) {
+    std::size_t offset = action_abstraction_.LegalOffset(round, seq);
+    nda::size_t legal_actions = action_abstraction_.NumLegalActions(round, seq);
+    Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
+
     std::uniform_real_distribution<double> sampler(0, 1);
     double sampled = sampler(rng_());
     double bound = 0;
-    Regret sum = PositiveRegretSum(card_bucket, seq, round);
-    nda::size_t legal_actions = action_abstraction_.NumLegalActions(seq, round);
-    for (nda::index_t action_id : regrets_[+round].k()) {
+
+    nda::size_t round_actions = action_abstraction_.ActionCount(round);
+
+    std::size_t legal_i = 0;
+    for (std::size_t i = 0; i < round_actions; ++i) {
+      if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
+
       double action_prob = 0;
       if (sum > 0) {
-        /* We don't need to check if the action is legal here because illegal
-           actions always have a regret of 0 and thus will be assigned an
-           action_prob of 0. */
-        action_prob = std::max(0, regrets_[+round](card_bucket, seq,
-                                                   action_id));
+        Regret action_reget = regrets_[+round](card_bucket, offset + legal_i);
+        action_prob = std::max(0, action_reget);
         action_prob /= sum;
-      } else if (action_abstraction_.Next(seq, round, action_id) !=
-                 kIllegalId) {
+      } else {
         action_prob = 1.0 / legal_actions;
       }
 
       bound += action_prob;
       if (sampled < bound) {
-        return action_id;
+        return {i, legal_i};
       }
-    }  // for action_id
+
+      ++legal_i;
+    }  // for i
     const std::string error = std::string(__func__) +
                               ": No action was selected.";
     throw std::runtime_error(error);
@@ -370,22 +380,23 @@ class Strategy {
     nda::const_vector_ref<AbstractAction> actions =
         action_abstraction_.Actions(round);
     if (state.acting_player() == player) {
-      nda::index_t action_index = SampleAction(card_bucket, seq, round);
-      AbstractAction action = actions(action_index);
+      ActionIndicies action_idxs = SampleAction(round, card_bucket, seq);
+      AbstractAction action = actions(action_idxs.round_idx);
       state.Apply(action.play, state.ConvertBet(action.size));
-      action_counts_(card_bucket, seq, action_index) += 1;
-      return UpdateStrategy(state, card_bucket,
-                            action_abstraction_.Next(seq, round, action_index),
-                            player);
+      std::size_t offset = action_abstraction_.LegalOffset(round, seq);
+      action_counts_(card_bucket, offset + action_idxs.legal_idx) += 1;
+      SequenceId next_seq = action_abstraction_.Next(round, seq,
+                                                     action_idxs.round_idx);
+      return UpdateStrategy(state, card_bucket, next_seq, player);
     } else {
       for (nda::index_t action_index = 0; action_index < actions.width();
            ++action_index) {
-        if (action_abstraction_.Next(seq, round, action_index) != kIllegalId) {
+        if (action_abstraction_.Next(round, seq, action_index) != kIllegalId) {
           Node<kPlayers> new_state = state;
           AbstractAction action = actions(action_index);
           new_state.Apply(action.play, new_state.ConvertBet(action.size));
           UpdateStrategy(new_state, card_bucket,
-                         action_abstraction_.Next(seq, round, action_index),
+                         action_abstraction_.Next(round, seq, action_index),
                          player);
         }
       }
@@ -432,57 +443,72 @@ class Strategy {
       return TraverseMCCFR(state, info_abstraction_.ClusterArray(state), seq,
                            player, prune);
     }
+
     Round round = state.round();
     PlayerId acting_player = state.acting_player();
     nda::const_vector_ref<AbstractAction> actions =
         action_abstraction_.Actions(round);
+    std::size_t offset = action_abstraction_.LegalOffset(round, seq);
+    nda::size_t legal_actions = action_abstraction_.NumLegalActions(round, seq);
+
     if (acting_player == player) {
-      std::array<double, kActions> strategy = CalculateStrategy(
-          card_buckets[player], seq, round);
+      std::array<double, kActions> strategy = CalculateStrategy(round,
+          card_buckets[player], offset, legal_actions);
       double value = 0;
+
+      // These arrays are indexed by all round actions, not just legal ones
       std::array<double, kActions> action_values;
-      std::array<bool, kActions> explored;
-      for (nda::index_t action_index = 0; action_index < actions.width();
-           ++action_index) {
-        SequenceId next_seq = action_abstraction_.Next(seq, round,
-                                                       action_index);
-        Regret action_regret = regrets_[+round](card_buckets[player], seq,
-                                                action_index);
-        if ((next_seq != kIllegalId) &&
-            (!prune || action_regret > prune_constant_)) {
-          AbstractAction action = actions(action_index);
+      std::array<bool, kActions> explored = {false};
+      std::array<bool, kActions> legal = {false};
+
+      std::size_t legal_i = 0;
+      for (nda::index_t i = 0; i < actions.width(); ++i) {
+        SequenceId next_seq = action_abstraction_.Next(round, seq, i);
+        if (next_seq == kIllegalId) continue;
+        legal[i] = true;
+
+        Regret action_regret = regrets_[+round](card_buckets[player],
+                                                offset + legal_i);
+        if (!prune || action_regret > prune_constant_) {
+          AbstractAction action = actions(i);
           Node<kPlayers> new_state = state;
           new_state.Apply(action.play, new_state.ConvertBet(action.size));
           double action_value = TraverseMCCFR(new_state, card_buckets, next_seq,
                                               player, prune);
-          action_values[action_index] = action_value;
-          value += action_value * strategy[action_index];
-          explored[action_index] = true;
-        } else {
-          explored[action_index] = false;
+          action_values[i] = action_value;
+          value += action_value * strategy[legal_i];
+          explored[i] = true;
         }
-      }
-      for (nda::index_t action_index = 0; action_index < actions.width();
-           ++action_index) {
-        if (explored[action_index]) {
-          Regret infoset_regret = regrets_[+round](card_buckets[player], seq,
-                                                   action_index);
-          Regret value_difference = static_cast<Regret>(std::rint(
-              action_values[action_index] - value));
-          regrets_[+round](card_buckets[player], seq, action_index) = std::max(
-              regret_floor_, infoset_regret + value_difference);
+        ++legal_i;
+      }  // for i
+
+      legal_i = 0;
+      for (nda::index_t i = 0; i < actions.width(); ++i) {
+        if (!legal[i]) continue;
+        if (explored[i]) {
+          Regret& infoset_regret = regrets_[+round](card_buckets[player],
+                                                    offset + legal_i);
+          Regret value_difference =
+              static_cast<Regret>(std::rint(action_values[i] - value));
+          infoset_regret = std::max(regret_floor_,
+                                    infoset_regret + value_difference);
         }
+        ++legal_i;
       }
+
       return value;
+
+    // acting_player != player
     } else {
-      nda::index_t action_index = SampleAction(card_buckets[acting_player], seq,
-                                               round);
+      nda::index_t action_index = SampleAction(round,
+                                               card_buckets[acting_player],
+                                               seq).round_idx;
       AbstractAction action = actions(action_index);
       state.Apply(action.play, state.ConvertBet(action.size));
       return TraverseMCCFR(state, card_buckets,
-                           action_abstraction_.Next(seq, round, action_index),
+                           action_abstraction_.Next(round, seq, action_index),
                            player, prune);
-    }
+    }  // else
   }  // TraverseMCCFR()
 };  // class Strategy
 

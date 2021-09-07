@@ -86,11 +86,11 @@ class SequenceTable {
   /*
     @brief Returns the sequence id reached by taking the given action.
 
-    @param current_node Sequence of the state where the action is to be taken.
     @param round The betting round that the current_node is in.
+    @param current_node Sequence of the state where the action is to be taken.
     @param action_idx The action to take.
   */
-  SequenceId Next(SequenceId current_node, Round round,
+  SequenceId Next(Round round, SequenceId current_node,
                   nda::index_t action_idx) const {
     return table_[+round](current_node, action_idx);
   }
@@ -105,7 +105,7 @@ class SequenceTable {
   /*
     @brief Returns the number of legal actions available in the given infoset.
   */
-  nda::size_t NumLegalActions(SequenceId seq, Round round) const {
+  nda::size_t NumLegalActions(Round round, SequenceId seq) const {
     nda::size_t count = 0;
     for (nda::index_t action_id : table_[+round].j()) {
       if (table_[+round](seq, action_id) != kIllegalId) {
@@ -120,13 +120,13 @@ class SequenceTable {
   */
   std::size_t NumLegalActions(Round round) const {
     nda::index_t last_seq = table_[+round].rows() - 1;
-    return legal_offsets_[+round][last_seq] + NumLegalActions(last_seq, round);
+    return legal_offsets_[+round][last_seq] + NumLegalActions(round, last_seq);
   }
 
   /*
     @brief Returns the number of legal actions preceding the given sequence.
   */
-  std::size_t LegalOffset(SequenceId seq, Round round) const {
+  std::size_t LegalOffset(Round round, SequenceId seq) const {
     return legal_offsets_[+round][seq];
   }
 
@@ -330,7 +330,7 @@ class SequenceTable {
       std::fill(legal_offsets_[i].begin(), legal_offsets_[i].end(), 0);
       for (SequenceId j = 1; j < legal_offsets_[i].size(); ++j) {
         legal_offsets_[i][j] = legal_offsets_[i][j - 1] +
-                               NumLegalActions(j - 1, Round{i});
+                               NumLegalActions(Round{i}, j - 1);
       }
     }
   }
