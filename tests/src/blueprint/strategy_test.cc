@@ -119,6 +119,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   constexpr int kNumActions = 5;
   constexpr int kPlayers = 3;
   constexpr int kRegretFloor = -15000;
+  constexpr int kDiscountInterval = 2;
 
   TestClusters info_abstraction;
 
@@ -159,6 +160,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   fishbait::CardCluster cluster;
   fishbait::Regret regret;
   fishbait::Chips chips;
+  double discount;
 
   // Iteration 1, player 0, no pruning
   call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
@@ -956,6 +958,10 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   call_stack.pop();
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
+
+  // Iteration 2, discount
+  discount = 2.0 / kDiscountInterval / (2.0 / kDiscountInterval + 1.0);
+  REQUIRE(discount == 0.5);
 
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test helper"
