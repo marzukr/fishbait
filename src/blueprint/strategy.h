@@ -66,8 +66,8 @@ class Strategy {
         average strategy.
     @param prune_threshold The number of iterations to wait before pruning.
     @param prune_probability The probability that we prune in Traverse-MCCFR.
-    @param prune_constant Actions with regret less than this constant are
-        eligible to be pruned.
+    @param prune_constant Actions with regret less than or equal to this
+        constant are eligible to be pruned.
     @param LCFR_threshold The number of iterations to apply LCFR.
     @param discount_interval The number of iterations between each LCFR
         discount.

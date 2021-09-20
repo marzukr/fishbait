@@ -98,7 +98,7 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
       {fishbait::Action::kAllIn},
       {fishbait::Action::kCheckCall},
 
-      {fishbait::Action::kBet, 1.0, 1, fishbait::Round::kTurn,
+      {fishbait::Action::kBet, 2.0, 1, fishbait::Round::kTurn,
        fishbait::Round::kTurn, 2, 0},
       {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
        fishbait::Round::kRiver, 0, 10000}
@@ -106,7 +106,7 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
   fishbait::Node<3> start_state;
 
   std::array row_counts = fishbait::SequenceTable<3, 5>::Count(actions,
-                                                                start_state);
+                                                               start_state);
 
   CHECK(row_counts[0].internal_nodes == 18);
   CHECK(row_counts[0].leaf_nodes == 7);
@@ -235,7 +235,7 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
       {fishbait::Action::kAllIn},
       {fishbait::Action::kCheckCall},
 
-      {fishbait::Action::kBet, 1.0, 1, fishbait::Round::kTurn,
+      {fishbait::Action::kBet, 2.0, 1, fishbait::Round::kTurn,
        fishbait::Round::kTurn, 2, 0},
       {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
        fishbait::Round::kRiver, 0, 10000}
