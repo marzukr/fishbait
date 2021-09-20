@@ -37,7 +37,7 @@ def sign_to_str(sign):
 
 def signs_to_str(sign_1, sign_2):
   """sign_to_str of two signs separated by a space."""
-  return "{} {}".format(sign_to_str(sign_1), sign_to_str(sign_2))
+  return f"{sign_to_str(sign_1)} {sign_to_str(sign_2)}"
 
 def operator_to_str(operator):
   if operator == "+":
@@ -64,27 +64,26 @@ def operator_to_str(operator):
 def construct_fraction(frac_obj, it = None):
   """Returns C++ code to construct the given Python fraction."""
   if it is None:
-    return "fishbait::Fraction{{{}, {}}}".format(frac_obj.numerator,
-                                                 frac_obj.denominator)
+    return f"fishbait::Fraction{{{frac_obj.numerator}, {frac_obj.denominator}}}"
   else:
-    return "fishbait::Fraction f{}{{{}, {}}};".format(it, frac_obj.numerator,
-                                                      frac_obj.denominator)
+    return (f"fishbait::Fraction f{it}{{{frac_obj.numerator}, "
+            f"{frac_obj.denominator}}};")
 
 def construct_fraction_arith(a1, a2, operator, it):
   """Returns C++ code to construct a fraction through arithmetic."""
-  return "fishbait::Fraction f{} = {} {} {};".format(it, a1, operator, a2)
+  return f"fishbait::Fraction f{it} = {a1} {operator} {a2};"
 
 def int_type_str(bits, signed):
   """For instance, with bits=8 and signed = False, returns "uint8_t"."""
   sign_str = "" if signed else "u"
-  return "{}int{}_t".format(sign_str, bits)
+  return f"{sign_str}int{bits}_t"
 
 def construct_int(n, bits, signed, it = None):
   """Returns C++ code to construct the given integer."""
   if it is None:
-    return "{}{{{}}}".format(int_type_str(bits, signed), n)
+    return f"{int_type_str(bits, signed)}{{{n}}}"
   else:
-    return "{} i{}{{{}}}".format(int_type_str(bits, signed), it, n)
+    return f"{int_type_str(bits, signed)} i{it}{{{n}}}"
 
 def bool_py_to_cpp(bool_exp):
   """Given a python bool, return the equivalent C++ expression."""
@@ -116,10 +115,10 @@ def perform_operation(a1, a2, operator):
     return bool_py_to_cpp(a1 >= a2)
 
 def begin_test_case(name):
-  print("TEST_CASE(\"{}\", \"[utils][fraction]\") {{".format(name))
+  print(f"TEST_CASE(\"{name}\", \"[utils][fraction]\") {{")
 
 def end_test_case(name):
-  print("}}  // TEST_CASE \"{}\"".format(name))
+  print(f"}}  // TEST_CASE \"{name}\"")
   print()
 
 def arithmetic_equal_fraction_iter(operator, sign_1, sign_2, it):
@@ -131,20 +130,20 @@ def arithmetic_equal_fraction_iter(operator, sign_1, sign_2, it):
     sign_2: 1, -1, or 0 for the sign of the second fraction to compare
     it: what number to start the fraction variable naming
   """
-  print("  // {}".format(signs_to_str(sign_1, sign_2)))
+  print(f"  // {signs_to_str(sign_1, sign_2)}")
   f1 = random_fraction(sign_1)
   print("  " + construct_fraction(f1, it))
   f2 = random_fraction(sign_2)
-  print("  f{} {}= {};".format(it, operator, construct_fraction(f2)))
+  print(f"  f{it} {operator}= {construct_fraction(f2)};")
 
   f1 = perform_operation(f1, f2, operator)
 
-  print("  REQUIRE(f{}.numerator() == {});".format(it, f1.numerator))
-  print("  REQUIRE(f{}.denominator() == {});".format(it, f1.denominator))
+  print(f"  REQUIRE(f{it}.numerator() == {f1.numerator});")
+  print(f"  REQUIRE(f{it}.denominator() == {f1.denominator});")
 
 def arithmetic_equal_fraction(operator):
   """Generates a tester for +=, -=, *=, and /= a fraction."""
-  name = "fraction {} equals fraction".format(operator_to_str(operator))
+  name = f"fraction {operator_to_str(operator)} equals fraction"
   begin_test_case(name)
   it = 0
   for sign_1 in [1, -1, 0]:
@@ -166,22 +165,22 @@ def arithmetic_equal_int_iter(operator, sign_1, sign_2, bits, signed, it):
     signed: if the int is signed or unsigned
     it: what number to start the fraction variable naming
   """
-  print("  // {}".format(signs_to_str(sign_1, sign_2)))
+  print(f"  // {signs_to_str(sign_1, sign_2)}")
   f1 = random_fraction(sign_1)
   print("  " + construct_fraction(f1, it))
   i2 = random_int(sign_2, bits, signed)
   i2_str = construct_int(i2, bits, signed)
-  print("  f{} {}= {};".format(it, operator, i2_str))
+  print(f"  f{it} {operator}= {i2_str};")
 
   f1 = perform_operation(f1, i2, operator)
 
-  print("  REQUIRE(f{}.numerator() == {});".format(it, f1.numerator))
-  print("  REQUIRE(f{}.denominator() == {});".format(it, f1.denominator))
+  print(f"  REQUIRE(f{it}.numerator() == {f1.numerator});")
+  print(f"  REQUIRE(f{it}.denominator() == {f1.denominator});")
 
 def arithmetic_equal_int(operator, bits, signed):
   """Generates a tester for +=, -=, *=, and /= an int."""
-  name = "fraction {} equals {}".format(operator_to_str(operator),
-                                        int_type_str(bits, signed))
+  name = (f"fraction {operator_to_str(operator)} equals "
+          f"{int_type_str(bits, signed)}")
   begin_test_case(name)
   it = 0
   int_sign_options = [1, -1, 0] if signed else [1, 0]
@@ -207,7 +206,7 @@ def arithmetic_int_fraction_iter(operator, sign_1, sign_2, bits, signed, it,
     int_first: True to create a tester for ints op fractions. False to create a
         tester for fractions op ints.
   """
-  print("  // {}".format(signs_to_str(sign_1, sign_2)))
+  print(f"  // {signs_to_str(sign_1, sign_2)}")
   arg1 = None
   arg1_str = None
   arg2 = None
@@ -218,21 +217,21 @@ def arithmetic_int_fraction_iter(operator, sign_1, sign_2, bits, signed, it,
     arg1_str = construct_int(arg1, bits, signed)
     arg2 = random_fraction(sign_2)
     print("  " + construct_fraction(arg2, it))
-    arg2_str = "f{}".format(it)
+    arg2_str = f"f{it}"
     frac = arg2
   else:
     arg1 = random_fraction(sign_1)
     print("  " + construct_fraction(arg1, it))
-    arg1_str = "f{}".format(it)
+    arg1_str = f"f{it}"
     arg2 = random_int(sign_2, bits, signed)
     arg2_str = construct_int(arg2, bits, signed)
     frac = arg1
-  print("  f{} = {} {} {};".format(it, arg1_str, operator, arg2_str))
+  print(f"  f{it} = {arg1_str} {operator} {arg2_str};")
 
   frac = perform_operation(arg1, arg2, operator)
 
-  print("  REQUIRE(f{}.numerator() == {});".format(it, frac.numerator))
-  print("  REQUIRE(f{}.denominator() == {});".format(it, frac.denominator))
+  print(f"  REQUIRE(f{it}.numerator() == {frac.numerator});")
+  print(f"  REQUIRE(f{it}.denominator() == {frac.denominator});")
 
 def arithmetic_int_fraction(operator, bits, signed, int_first):
   """Generates a tester for +, -, *, and / a fraction and an int.
@@ -246,11 +245,9 @@ def arithmetic_int_fraction(operator, bits, signed, int_first):
   """
   name = None
   if int_first:
-    name = "{} {} fraction".format(int_type_str(bits, signed),
-                                   operator_to_str(operator))
+    name = f"{int_type_str(bits, signed)} {operator_to_str(operator)} fraction"
   else:
-    name = "fraction {} {}".format(operator_to_str(operator),
-                                   int_type_str(bits, signed))
+    name = f"fraction {operator_to_str(operator)} {int_type_str(bits, signed)}"
   begin_test_case(name)
   it = 0
   sign_1_options = [1, -1, 0]
@@ -277,7 +274,7 @@ def arithmetic_double_fraction_iter(operator, sign_1, sign_2, it, double_first):
     double_first: True to create a tester for doubles op fractions. False to
         create a tester for fractions op doubles.
   """
-  print("  // {}".format(signs_to_str(sign_1, sign_2)))
+  print(f"  // {signs_to_str(sign_1, sign_2)}")
   arg1 = None
   arg1_str = None
   arg2 = None
@@ -288,20 +285,19 @@ def arithmetic_double_fraction_iter(operator, sign_1, sign_2, it, double_first):
     arg1_str = arg1
     arg2 = random_fraction(sign_2)
     print("  " + construct_fraction(arg2, it))
-    arg2_str = "f{}".format(it)
+    arg2_str = f"f{it}"
     double = arg1
   else:
     arg1 = random_fraction(sign_1)
     print("  " + construct_fraction(arg1, it))
-    arg1_str = "f{}".format(it)
+    arg1_str = f"f{it}"
     arg2 = random_double(sign_2)
     arg2_str = arg2
     double = arg2
 
   double = perform_operation(arg1, arg2, operator)
 
-  print("  REQUIRE({} {} {} == Approx({}));".format(arg1_str, operator,
-                                                    arg2_str, double))
+  print(f"  REQUIRE({arg1_str} {operator} {arg2_str} == Approx({double}));")
 
 def arithmetic_double_fraction(operator, double_first):
   """Generates a tester for +, -, *, and / a fraction and a double.
@@ -313,9 +309,9 @@ def arithmetic_double_fraction(operator, double_first):
   """
   name = None
   if double_first:
-    name = "double {} fraction".format(operator_to_str(operator))
+    name = f"double {operator_to_str(operator)} fraction"
   else:
-    name = "fraction {} double".format(operator_to_str(operator))
+    name = f"fraction {operator_to_str(operator)} double"
   begin_test_case(name)
   it = 0
   for sign_1 in [1, -1, 0]:
@@ -336,7 +332,7 @@ def arithmetic_fraction_fraction_iter(operator, sign_1, sign_2, it):
     sign_2: 1, -1, or 0 for the sign of the second fraction to compare
     it: what number to start the fraction variable naming
   """
-  print("  // {}".format(signs_to_str(sign_1, sign_2)))
+  print(f"  // {signs_to_str(sign_1, sign_2)}")
   f1 = random_fraction(sign_1)
   f1_str = construct_fraction(f1)
   f2 = random_fraction(sign_2)
@@ -345,12 +341,12 @@ def arithmetic_fraction_fraction_iter(operator, sign_1, sign_2, it):
 
   f1 = perform_operation(f1, f2, operator)
 
-  print("  REQUIRE(f{}.numerator() == {});".format(it, f1.numerator))
-  print("  REQUIRE(f{}.denominator() == {});".format(it, f1.denominator))
+  print(f"  REQUIRE(f{it}.numerator() == {f1.numerator});")
+  print(f"  REQUIRE(f{it}.denominator() == {f1.denominator});")
 
 def arithmetic_fraction_fraction(operator):
   """Generates a tester for +, -, *, and / two fractions."""
-  name = "fraction {} fraction".format(operator_to_str(operator))
+  name = f"fraction {operator_to_str(operator)} fraction"
   begin_test_case(name)
   it = 0
   for sign_1 in [1, -1, 0]:
@@ -382,7 +378,7 @@ def comparison_test_comment(sign_1, sign_2, is_same):
       is_same_qualifier = " equal"
     else:
       is_same_qualifier = " not equal"
-  return "// {}{}".format(signs_to_str(sign_1, sign_2), is_same_qualifier)
+  return f"// {signs_to_str(sign_1, sign_2)}{is_same_qualifier}"
 
 def comparison_fraction_fraction_iter(operator, sign_1, sign_2, it, is_same):
   """Single iterator for comparison_fraction_fraction.
@@ -396,21 +392,21 @@ def comparison_fraction_fraction_iter(operator, sign_1, sign_2, it, is_same):
   """
   print("  " + comparison_test_comment(sign_1, sign_2, is_same))
   f1 = random_fraction(sign_1)
-  f1_str = "f{}".format(it)
+  f1_str = f"f{it}"
   print("  " + construct_fraction(f1, it))
   f2 = f1
   if not is_same:
     f2 = random_fraction(sign_2)
-  f2_str = "f{}".format(it + 1)
+  f2_str = f"f{it + 1}"
   print("  " + construct_fraction(f2, it + 1))
 
   result = perform_operation(f1, f2, operator)
 
-  print("  REQUIRE(({} {} {}) == {});".format(f1_str, operator, f2_str, result))
+  print(f"  REQUIRE(({f1_str} {operator} {f2_str}) == {result});")
 
 def comparison_fraction_fraction(operator):
   """Generates a tester for ==, !=, <, >, <=, and >= two fractions."""
-  name = "fraction fraction {}".format(operator_to_str(operator))
+  name = f"fraction fraction {operator_to_str(operator)}"
   begin_test_case(name)
   it = 0
   for sign_1 in [1, -1, 0]:
@@ -456,11 +452,11 @@ def comparison_fraction_num_iter(operator, sign_1, sign_2, it, is_same,
     frac_arg = fractions.Fraction(num_arg)
   else:
     frac_arg = random_fraction(frac_sign)
-  str1 = "f{}".format(it)
+  str1 = f"f{it}"
   str2 = num_arg if is_double else construct_int(num_arg, bits, signed)
   if num_first:
     str1 = num_arg if is_double else construct_int(num_arg, bits, signed)
-    str2 = "f{}".format(it)
+    str2 = f"f{it}"
   print("  " + construct_fraction(frac_arg, it))
 
   result = None
@@ -469,7 +465,7 @@ def comparison_fraction_num_iter(operator, sign_1, sign_2, it, is_same,
   else:
     result = perform_operation(frac_arg, num_arg, operator)
 
-  print("  REQUIRE(({} {} {}) == {});".format(str1, operator, str2, result))
+  print(f"  REQUIRE(({str1} {operator} {str2}) == {result});")
 
 def comparison_fraction_num(operator, num_first, is_double, bits, signed):
   """Generates a tester for ==, !=, <, >, <=, and >= two fractions.
@@ -486,16 +482,16 @@ def comparison_fraction_num(operator, num_first, is_double, bits, signed):
   name = None
   if num_first:
     if is_double:
-      name = "double fraction {}".format(operator_to_str(operator))
+      name = f"double fraction {operator_to_str(operator)}"
     else:
-      name = "{} fraction {}".format(int_type_str(bits, signed),
-                                     operator_to_str(operator))
+      name = (f"{int_type_str(bits, signed)} fraction "
+              f"{operator_to_str(operator)}")
   else:
     if is_double:
-      name = "fraction double {}".format(operator_to_str(operator))
+      name = f"fraction double {operator_to_str(operator)}"
     else:
-      name = "fraction {} {}".format(operator_to_str(operator),
-                                     int_type_str(bits, signed))
+      name = (f"fraction {operator_to_str(operator)} "
+              f"{int_type_str(bits, signed)}")
   begin_test_case(name)
   it = 0
   sign_1_options = [1, -1, 0]
@@ -537,14 +533,14 @@ def int_conversion_iter(sign, bits, signed, it):
     signed: if the int to convert to is signed or unsigned
     it: what number to start the fraction variable naming
   """
-  print("  // {}".format(sign_to_str(sign)))
+  print(f"  // {sign_to_str(sign)}")
   f1 = random_fraction(sign, bits, signed)
   print("  " + construct_fraction(f1, it))
   int_type = int_type_str(bits, signed)
 
   result = int(f1)
 
-  print("  REQUIRE(static_cast<{}>(f{}) == {});".format(int_type, it, result))
+  print(f"  REQUIRE(static_cast<{int_type}>(f{it}) == {result});")
 
 def int_conversion(bits, signed):
   """Generates a tester for int conversions.
@@ -553,7 +549,7 @@ def int_conversion(bits, signed):
     bits: how many bits to use for the int to convert to
     signed: if the int to convert to is signed or unsigned
   """
-  name = "{} conversion".format(int_type_str(bits, signed))
+  name = f"{int_type_str(bits, signed)} conversion"
   begin_test_case(name)
   sign_options = [1, -1, 0] if signed else [1, 0]
   it = 0
