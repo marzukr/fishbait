@@ -66,4 +66,5 @@ int main() {
   fishbait::Strategy strategy(start_state, actions, cluster_table, 1, 1, 1, 1,
                               1, 1, 1, 1, 1, "placeholder",
                               fishbait::Random::Seed{}, true);
+  strategy.MCCFR(1);
 }

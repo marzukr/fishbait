@@ -54,3 +54,14 @@ TEST_CASE("Save and load nda test", "[utils][cereal]") {
   }
   REQUIRE(load_matrix == save_matrix);
 }  // TEST_CASE "Save and load nda test"
+
+TEST_CASE("Save and load std::filesystem::path", "[utils][cereal]") {
+  std::filesystem::path save_path = "out/tests/path_save_test.cereal";
+  std::filesystem::remove(save_path);
+  fishbait::Cereal(fishbait::FileAction::Save, save_path.string(), &save_path);
+
+  std::filesystem::path load_path;
+  fishbait::CerealLoad(save_path.string(), &load_path);
+
+  REQUIRE(load_path == save_path);
+}  // TEST_CASE "Save and load std::filesystem::path"
