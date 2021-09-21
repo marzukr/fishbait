@@ -8,6 +8,7 @@
 #include "array/array.h"
 #include "catch2/catch.hpp"
 #include "utils/cereal.h"
+#include "utils/random.h"
 
 TEST_CASE("Save and load vector test", "[utils][cereal]") {
   const uint32_t n = 100;
@@ -65,3 +66,18 @@ TEST_CASE("Save and load std::filesystem::path", "[utils][cereal]") {
 
   REQUIRE(load_path == save_path);
 }  // TEST_CASE "Save and load std::filesystem::path"
+
+TEST_CASE("Save and load Random", "[utils][cereal]") {
+  std::filesystem::path save_path = "out/tests/random_save_test.cereal";
+  std::filesystem::remove(save_path);
+  fishbait::Random rng(fishbait::Random::Seed(8));
+  rng()();
+
+  fishbait::CerealSave(save_path.string(), &rng);
+
+  fishbait::Random load_rng(fishbait::Random::Seed(10));
+  fishbait::Cereal(fishbait::FileAction::Load, save_path.string(), &load_rng);
+
+  REQUIRE(rng()() == load_rng()());
+  REQUIRE(rng() == load_rng());
+}  // TEST_CASE "Save and load Random"
