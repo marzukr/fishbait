@@ -3,8 +3,11 @@
 #ifndef SRC_UTILS_CEREAL_H_
 #define SRC_UTILS_CEREAL_H_
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <random>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -115,6 +118,37 @@ void load(Archive& archive,  // NOLINT(runtime/references)
   archive(min, extent, stride);
   nda::dim<Min_, Extent_, Stride_> new_dim(min, extent, stride);
   m = std::move(new_dim);
+}
+
+/* std::filesystem::path cereal load/save */
+template <class Archive>
+void save(Archive& archive,  // NOLINT(runtime/references)
+          const std::filesystem::path& m) {
+  archive(m.string());
+}
+template <class Archive>
+void load(Archive& archive,  // NOLINT(runtime/references)
+          std::filesystem::path& m) {  // NOLINT(runtime/references)
+  std::string path;
+  archive(path);
+  m = path;
+}
+
+/* std::mt19937 cereal load/save */
+template <class Archive>
+void save(Archive& archive,  // NOLINT(runtime/references)
+          const std::mt19937& m) {
+  std::stringstream ss;
+  ss << m;
+  archive(ss.str());
+}
+template <class Archive>
+void load(Archive& archive,  // NOLINT(runtime/references)
+          std::mt19937& m) {  // NOLINT(runtime/references)
+  std::string rng_str;
+  archive(rng_str);
+  std::stringstream ss(rng_str);
+  ss >> m;
 }
 
 }  // namespace cereal

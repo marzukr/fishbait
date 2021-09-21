@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include <ostream>
 
 extern "C" {
   #include "hand-isomorphism/src/hand_index.h"
@@ -16,6 +17,23 @@ namespace fishbait {
 using RoundId = uint8_t;
 using RoundN = RoundId;
 enum class Round : RoundId { kPreFlop = 0, kFlop = 1, kTurn = 2, kRiver = 3 };
+inline std::ostream& operator<<(std::ostream& os, Round r) {
+  switch (r) {
+    case Round::kPreFlop:
+      os << "Preflop";
+      break;
+    case Round::kFlop:
+      os << "Flop";
+      break;
+    case Round::kTurn:
+      os << "Turn";
+      break;
+    case Round::kRiver:
+      os << "River";
+      break;
+  }
+  return os;
+}
 constexpr RoundN kNRounds = 4;
 constexpr RoundId operator+(const Round round) {
   return static_cast<RoundId>(round);

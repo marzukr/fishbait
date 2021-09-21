@@ -106,11 +106,12 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   int strategy_delay = 3;
   std::string_view save_dir = "../tests/blueprint";
   bool verbose = false;
-  fishbait::Strategy s(start_state, actions, info_abstraction, iterations,
+  fishbait::Strategy s(start_state, actions, info_abstraction,
                        strategy_interval, prune_threshold, prune_probability,
                        prune_constant, LCFR_threshold, discount_interval,
                        regret_floor, snapshot_interval, strategy_delay,
                        save_dir, fishbait::Random::Seed{68}, verbose);
+  s.MCCFR(iterations);
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test"
 

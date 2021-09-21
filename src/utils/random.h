@@ -5,6 +5,8 @@
 
 #include <random>
 
+#include "utils/cereal.h"
+
 namespace fishbait {
 
 class Random {
@@ -32,6 +34,12 @@ class Random {
   Random& operator=(const Random& other) = default;
   std::mt19937& operator()() { return rng_; }
   void seed(Seed seed) { rng_.seed(seed()); }
+
+  /* @brief Cereal function. */
+  template<class Archive>
+  void serialize(Archive& archive) {
+    archive(rng_);
+  }
 
  private:
   std::mt19937 rng_;

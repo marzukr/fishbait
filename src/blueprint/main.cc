@@ -64,6 +64,6 @@ int main() {
   std::cout << row_counts << std::endl;
   fishbait::ClusterTable cluster_table(true);
   fishbait::Strategy strategy(start_state, actions, cluster_table, 1, 1, 1, 1,
-                              1, 1, 1, 1, 1, 1, "placeholder",
+                              1, 1, 1, 1, 1, "placeholder",
                               fishbait::Random::Seed{}, true);
 }
