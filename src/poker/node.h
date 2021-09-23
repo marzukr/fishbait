@@ -577,6 +577,7 @@ class Node {
   // Attribute getter functions
   // --------------------------------------------------------------------------
 
+  static constexpr PlayerN players() { return kPlayers; }
   Chips big_blind() const { return big_blind_; }
   Chips small_blind() const { return small_blind_; }
   Chips ante() const { return ante_; }

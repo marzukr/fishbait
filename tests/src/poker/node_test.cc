@@ -39,6 +39,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.round() == fishbait::Round::kPreFlop);
   REQUIRE(triton.acting_player() == triton.kChancePlayer);
   REQUIRE(triton == triton);
+  REQUIRE(triton.players() == 8);
   fishbait::Node triton_cp = triton;
   REQUIRE(triton_cp == triton);
   REQUIRE(triton_cp.big_blind() == 4000);
@@ -50,6 +51,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton_cp.in_progress() == true);
   REQUIRE(triton_cp.round() == fishbait::Round::kPreFlop);
   REQUIRE(triton_cp.acting_player() == triton.kChancePlayer);
+  REQUIRE(triton_cp.players() == 8);
 
   triton.Deal();
   triton.ProceedPlay();
@@ -821,6 +823,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   REQUIRE(heads_up.round() == fishbait::Round::kPreFlop);
   REQUIRE(heads_up.acting_player() == heads_up.kChancePlayer);
   REQUIRE(heads_up == heads_up);
+  REQUIRE(heads_up.players() == 2);
   fishbait::Node heads_up_copy(heads_up);
   REQUIRE(heads_up == heads_up_copy);
   heads_up.Deal();
@@ -1869,6 +1872,7 @@ TEST_CASE("straddle with bb ante", "[poker][node]") {
   REQUIRE(game.in_progress() == true);
   REQUIRE(game.round() == fishbait::Round::kPreFlop);
   REQUIRE(game.acting_player() == game.kChancePlayer);
+  REQUIRE(game.players() == 6);
   REQUIRE_THROWS(game.Deal());
   game.ResetDeck();
   game.Deal();
@@ -2701,6 +2705,7 @@ TEST_CASE("rotation in hand with several rotations", "[poker][node]") {
   REQUIRE(game.cycled() == 0);
   REQUIRE(game.Rotation() == 0);
   REQUIRE(game.round() == fishbait::Round::kFlop);
+  REQUIRE(game.players() == 3);
 }  // TEST_CASE "rotation in hand with several rotations"
 
 TEST_CASE("player goes all in for less than a min raise",

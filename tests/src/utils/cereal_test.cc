@@ -78,6 +78,8 @@ TEST_CASE("Save and load Random", "[utils][cereal]") {
   fishbait::Random load_rng(fishbait::Random::Seed(10));
   fishbait::Cereal(fishbait::FileAction::Load, save_path.string(), &load_rng);
 
-  REQUIRE(rng()() == load_rng()());
+  for (int i = 0; i < 100; ++i) {
+    REQUIRE(rng()() == load_rng()());
+  }
   REQUIRE(rng() == load_rng());
 }  // TEST_CASE "Save and load Random"
