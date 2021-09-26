@@ -162,6 +162,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   fishbait::Regret regret;
   fishbait::Chips chips;
   double discount;
+  fishbait::ActionCount action_count;
 
   // Iteration 1, player 0, no pruning
   call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
@@ -1440,6 +1441,34 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // preflop chance node
   call_stack.pop();
   // Iteration 3, player 2, with pruning
+  call_stack.pop();
+  call_stack.pop();
+  REQUIRE(call_stack.size() == 0);
+
+  // Iteration 4, player 0, update strategy
+  call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
+  // preflop chance node
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Deal();
+  call_stack.top().node.ProceedPlay();
+  call_stack.emplace(call_stack.top());
+  // player 0, depth 1, preflop seq 0
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 3);
+  call_stack.top().strategy = DoubleArray{4166.0/11260, 4192.0/11260,
+                                          2902.0/11260};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.29716207412954404);
+  action_count = 0 + 1;
+  REQUIRE(action_count == 1);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 0 folded
+  // player 0, depth 1, preflop seq 0
+  call_stack.pop();
+  // preflop chance node
+  call_stack.pop();
+  // Iteration 4, player 0, update strategy
   call_stack.pop();
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
