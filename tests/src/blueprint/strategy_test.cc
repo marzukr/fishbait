@@ -288,11 +288,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 5, flop seq 5
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 2);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 4950);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -4950);
@@ -317,15 +317,15 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 1, preflop seq 0
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 3);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -1667);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 8383);
-  regret = std::rint(call_stack.top().action_values[2] -
+  regret = std::rint(0 + call_stack.top().action_values[2] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -6717);
@@ -406,11 +406,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 1, depth 2, preflop seq 5
   cluster = info_abstraction.Cluster(call_stack.top().node, 1);
   REQUIRE(cluster == 3);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -5075);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 5075);
@@ -491,11 +491,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 2, depth 3, preflop seq 2
   cluster = info_abstraction.Cluster(call_stack.top().node, 2);
   REQUIRE(cluster == 3);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -5050);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 5050);
@@ -765,11 +765,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 9, river seq 21
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 0);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -5325);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 5325);
@@ -790,15 +790,15 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 7, turn seq 14
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 0);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -4992);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 5158);
-  regret = std::rint(call_stack.top().action_values[2] -
+  regret = std::rint(0 + call_stack.top().action_values[2] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -167);
@@ -819,11 +819,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 5, flop seq 6
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 0);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -2371);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 2371);
@@ -852,18 +852,18 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 1, preflop seq 0
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 3);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(-1667 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
-  REQUIRE(regret == 10000);
-  regret = std::rint(call_stack.top().action_values[1] -
+  REQUIRE(regret == 8333);
+  regret = std::rint(8383 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
-  REQUIRE(regret == 0);
-  regret = std::rint(call_stack.top().action_values[2] -
+  REQUIRE(regret == 8383);
+  regret = std::rint(-6717 + call_stack.top().action_values[2] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
-  REQUIRE(regret == 12521);
+  REQUIRE(regret == 5804);
   // preflop chance node
   call_stack.pop();
   // Iteration 2, player 0, no pruning
@@ -1109,11 +1109,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 5, flop seq 5
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 1);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 4950);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -4950);
@@ -1142,15 +1142,15 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 0, depth 1, preflop seq 0
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
   REQUIRE(cluster == 0);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 5017);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -4983);
-  regret = std::rint(call_stack.top().action_values[2] -
+  regret = std::rint(0 + call_stack.top().action_values[2] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -33);
@@ -1325,11 +1325,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 1, depth 6, flop seq 3
   cluster = info_abstraction.Cluster(call_stack.top().node, 1);
   REQUIRE(cluster == 1);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -5050);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 5050);
@@ -1347,11 +1347,11 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 1, depth 4, flop seq 0
   cluster = info_abstraction.Cluster(call_stack.top().node, 1);
   REQUIRE(cluster == 1);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -2425);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 2425);
@@ -1373,15 +1373,15 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   // player 1, depth 2, preflop seq 1
   cluster = info_abstraction.Cluster(call_stack.top().node, 1);
   REQUIRE(cluster == 2);
-  regret = std::rint(call_stack.top().action_values[0] -
+  regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 2458);
-  regret = std::rint(call_stack.top().action_values[1] -
+  regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == -7492);
-  regret = std::rint(call_stack.top().action_values[2] -
+  regret = std::rint(0 + call_stack.top().action_values[2] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
   REQUIRE(regret == 5033);
@@ -1393,6 +1393,12 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   call_stack.pop();
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
+
+  // Iteration 3, player 2
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.38261106951932172);
+  // Iteration 3, player 2, with pruning
+  call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
 
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test helper"
