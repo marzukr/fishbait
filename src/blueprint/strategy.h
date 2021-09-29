@@ -28,7 +28,7 @@ namespace fishbait {
 template <PlayerN kPlayers, std::size_t kActions, typename InfoAbstraction>
 class Strategy {
  private:
-  // Table of values for each legal action
+  // Table of values for each legal action. Size card clusters * legal actions.
   using LegalActionsTableShape = nda::shape<nda::dim<>, nda::dense_dim<>>;
   template <typename T>
   using LegalActionsTable = nda::array<T, LegalActionsTableShape>;
@@ -36,6 +36,7 @@ class Strategy {
   InfoAbstraction info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
 
+  // round * card clusters * legal actions
   std::array<LegalActionsTable<Regret>, kNRounds> regrets_;
   LegalActionsTable<ActionCount> action_counts_;
 
@@ -120,7 +121,7 @@ class Strategy {
 
   /* @brief Strategy serialize function. */
   template<class Archive>
-  void serialize(Archive& archive) const {
+  void serialize(Archive& archive) {
     archive(info_abstraction_, action_abstraction_, regrets_, action_counts_,
             t_, strategy_interval_, prune_threshold_, prune_probability_,
             prune_constant_, LCFR_threshold_, discount_interval_, regret_floor_,
@@ -196,6 +197,15 @@ class Strategy {
     }  // for t_
   }  // MCCFR()
 
+  /* @brief action_abstraction_ getter function */
+  const auto& action_abstraction() const { return action_abstraction_; }
+
+  /* @brief regrets_ getter function */
+  const auto& regrets() const { return regrets_; }
+
+  /* @brief action_counts_ getter function */
+  const auto& action_counts() const { return action_counts_; }
+
  private:
   /*
     @brief Initializes regret table.
@@ -237,8 +247,8 @@ class Strategy {
   }
 
   /* @brief Barebones constructor to load a saved strategy. */
-  Strategy() : action_abstraction_{Node<kPlayers>{},
-                                   std::array<AbstractAction, kActions>{}} { }
+  Strategy() : action_abstraction_{std::array<AbstractAction, kActions>{},
+                                   Node<kPlayers>{}} { }
 
   /*
     @brief Saves a snapshot of the strategy to the save_path_.
