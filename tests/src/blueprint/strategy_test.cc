@@ -2197,5 +2197,36 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
 
+  // Iteration 5, player 0
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.352083241272808822);
+  // Iteration 5, player 0, with pruning
+  call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
+  // preflop chance node
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Deal();
+  call_stack.top().node.ProceedPlay();
+  call_stack.emplace(call_stack.top());
+  // player 0, depth 1, preflop seq 0
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 2);
+  call_stack.top().strategy = DoubleArray{1.0/3.0, 1.0/3.0, 1.0/3.0};
+  call_stack.top().value = 0.0;
+  call_stack.top().action_values = DoubleArray{0.0, 0.0, 0.0};
+  // player 0, depth 1, preflop seq 0, action 0
+  // action 0 pruned
+  // player 0, depth 1, preflop seq 0, action 1
+  // action 0 pruned
+  // player 0, depth 1, preflop seq 0, action 2
+  // action 0 pruned
+  // player 0, depth 1, preflop seq 0
+  // no actions explored
+  // preflop chance node
+  call_stack.pop();
+  // Iteration 5, player 0, with pruning
+  call_stack.pop();
+  call_stack.pop();
+  REQUIRE(call_stack.size() == 0);
+
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test helper"
