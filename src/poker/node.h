@@ -290,7 +290,7 @@ class Node {
       lb = kCumulativeCards[prev_round];
     }
     for (CardN i = lb; i < kCumulativeCards[+round_]; ++i) {
-      std::uniform_int_distribution<CardN> rand_card(i, deck_.size() - 1);
+      UniformIntDistribution<CardN> rand_card(i, deck_.size() - 1);
       CardN selected_card = rand_card(rng_());
       std::swap(deck_[i], deck_[selected_card]);
     }

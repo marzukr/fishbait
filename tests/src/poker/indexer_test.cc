@@ -17,7 +17,7 @@ TEST_CASE("Basic preflop indexer tests", "[poker][indexer]") {
 
   hand_index_t i = 0;
   std::set<hand_index_t> indicies_set;
-  for (hand_index_t idx = 0; idx < n_hands + 10; ++idx) {
+  for (hand_index_t idx = 0; idx < n_hands; ++idx) {
     rollout = preflop.Unindex<0>(idx);
     bool invalid_cards = false;
     for (fishbait::Card c : rollout) {

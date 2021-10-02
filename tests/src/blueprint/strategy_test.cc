@@ -218,7 +218,7 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test"
 
-TEST_CASE("mccfr test helper", "[blueprint][strategy][.]") {
+TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   Catch::StringMaker<double>::precision = 18;
   constexpr int kNumActions = 5;
   constexpr int kPlayers = 3;
