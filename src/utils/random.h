@@ -47,6 +47,18 @@ class Random {
   std::mt19937 rng_;
 };  // Random
 
+/*
+  The following code, starting from "libc++ begin" until "libc++ end" is taken
+  from libc++ and slightly modified to conform with the fishbait type naming
+  style. libc++ has the following copyright notice:
+
+  Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+  See https://llvm.org/LICENSE.txt for license information.
+  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+*/
+
+/* ------------------------------ libc++ begin ------------------------------ */
+
 template <unsigned long long _Xp, size_t _Rp>  // NOLINT(runtime/int)
 struct Log2Imp {
   static const size_t value = _Xp & ((unsigned long long)(1) << _Rp)  // NOLINT(*)
@@ -270,6 +282,8 @@ class UniformIntDistribution {
     return !(__x == __y);
   }
 };  // UniformIntDistribution
+
+/* ------------------------------- libc++ end ------------------------------- */
 
 }  // namespace fishbait
 
