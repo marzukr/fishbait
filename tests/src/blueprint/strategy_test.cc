@@ -219,7 +219,7 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
 }  // TEST_CASE "mccfr test"
 
 TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
-  Catch::StringMaker<double>::precision = 18;
+  Catch::StringMaker<double>::precision = 19;
   constexpr int kNumActions = 5;
   constexpr int kPlayers = 3;
   constexpr int kRegretFloor = -15000;
@@ -2265,6 +2265,55 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   // preflop chance node
   call_stack.pop();
   // Iteration 5, player 1, with pruning
+  call_stack.pop();
+  call_stack.pop();
+  REQUIRE(call_stack.size() == 0);
+
+  // Iteration 5, player 2
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.0009093491813846156);
+  // Iteration 5, player 2, with pruning
+  call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
+  // preflop chance node
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Deal();
+  call_stack.top().node.ProceedPlay();
+  call_stack.emplace(call_stack.top());
+  // player 0, depth 1, preflop seq 0
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 0);
+  call_stack.top().strategy = DoubleArray{1.0, 0.0, 0.0};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.5539439465152324882);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 1, depth 2, preflop seq 1
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 0);
+  call_stack.top().strategy = DoubleArray{1.0/3.0, 1.0/3.0, 1.0/3.0};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.9924161526832536717);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // player 2, depth 3, preflop seq 3
+  cluster = info_abstraction.Cluster(call_stack.top().node, 2);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  call_stack.top().value = 0.0;
+  call_stack.top().action_values = DoubleArray{0.0, 0.0};
+  // player 2, depth 3, preflop seq 3, action 0
+  // action 0 pruned
+  // player 2, depth 3, preflop seq 3, action 1
+  // action 1 pruned
+  // player 2, depth 3, preflop seq 3
+  // no actions explored
+  // player 1, depth 2, preflop seq 1
+  call_stack.pop();
+  // player 0, depth 1, preflop seq 0
+  call_stack.pop();
+  // preflop chance node
+  call_stack.pop();
+  // Iteration 5, player 2, with pruning
   call_stack.pop();
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
