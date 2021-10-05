@@ -2318,5 +2318,130 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
 
+  // Iteration 6, player 0, update strategy
+  call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
+  // preflop chance node
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Deal();
+  call_stack.top().node.ProceedPlay();
+  call_stack.emplace(call_stack.top());
+  // player 0, depth 1, preflop seq 0
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{0.0, 17.0/4984, 4967.0/4984};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.9827827818400232118);
+  action_count = 0 + 1;
+  REQUIRE(action_count == 1);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // player 1, depth 2, preflop seq 8, action 0
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 2, depth 3, preflop seq 9, action 0
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 0, depth 4, preflop seq 10
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.0026918964651754598);
+  action_count = 0 + 1;
+  REQUIRE(action_count == 1);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // terminal node, player 0 folded
+  // player 0, depth 4, preflop seq 10
+  call_stack.pop();
+  // player 2, depth 3, preflop seq 9, action 0
+  call_stack.pop();
+  // player 2, depth 3, preflop seq 9, action 1
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // flop
+  // player 2, depth 3, preflop seq 9, action 1
+  call_stack.pop();
+  // player 1, depth 2, preflop seq 8, action 0
+  call_stack.pop();
+  // player 1, depth 2, preflop seq 8, action 1
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 2, depth 3, preflop seq 11, action 0
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 0, depth 4, preflop seq 12
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.9672540226219451531);
+  action_count = 0 + 1;
+  REQUIRE(action_count == 1);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // terminal node
+  // player 0, depth 4, preflop seq 12
+  call_stack.pop();
+  // player 2, depth 3, preflop seq 11, action 0
+  call_stack.pop();
+  // player 2, depth 3, preflop seq 11, action 1
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 0, depth 4, preflop seq 13
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{0.0, 1.0};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.9248623149258298204);
+  action_count = 0 + 1;
+  REQUIRE(action_count == 1);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // terminal node
+  // player 0, depth 4, preflop seq 13
+  call_stack.pop();
+  // player 2, depth 3, preflop seq 11, action 1
+  call_stack.pop();
+  // player 1, depth 2, preflop seq 8, action 1
+  call_stack.pop();
+  // player 1, depth 2, preflop seq 8, action 2
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // player 2, depth 3, preflop seq 14, action 0
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 0, depth 4, preflop seq 15
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.3397989509912353046);
+  action_count = 0 + 1;
+  REQUIRE(action_count == 1);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 1, depth 5, preflop seq 16, player 0 folded
+  // player 0, depth 4, preflop seq 15
+  call_stack.pop();
+  // player 2, depth 3, preflop seq 14, action 0
+  call_stack.pop();
+  // player 2, depth 3, preflop seq 14, action 1
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // flop
+  // player 2, depth 3, preflop seq 14, action 1
+  call_stack.pop();
+  // player 1, depth 2, preflop seq 8, action 2
+  call_stack.pop();
+  // player 0, depth 1, preflop seq 0
+  call_stack.pop();
+  // preflop chance node
+  call_stack.pop();
+  // Iteration 6, player 0, update strategy
+  call_stack.pop();
+  call_stack.pop();
+  REQUIRE(call_stack.size() == 0);
+
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test helper"
