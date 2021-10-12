@@ -2772,5 +2772,286 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
 
+  // Iteration 6, player 1
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.6141347594965277379);
+  // Iteration 6, player 1, no pruning
+  call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
+  // preflop chance node
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Deal();
+  call_stack.top().node.ProceedPlay();
+  call_stack.emplace(call_stack.top());
+  // player 0, depth 1, preflop seq 0
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{49.0/10197, 5199.0/10197,
+                                          4949.0/10197};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.5325965163399615232);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // player 1, depth 2, preflop seq 8
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{1.0/3.0, 1.0/3.0, 1.0/3.0};
+  call_stack.top().value = 0.0;
+  call_stack.top().action_values = DoubleArray{0.0, 0.0, 0.0};
+  // player 1, depth 2, preflop seq 8, action 0
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 2, depth 3, preflop seq 9, player 1 folded
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 0, depth 4, preflop seq 10, player 1 folded
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // terminal node
+  call_stack.top().node.AwardPot(start_state.same_stack_no_rake_);
+  call_stack.top().value = call_stack.top().node.stack(1);
+  // player 0, depth 4, preflop seq 10, player 1 folded
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 2, depth 3, preflop seq 9, player 1 folded
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 1, depth 2, preflop seq 8, action 0
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[0] = tmp;
+  call_stack.top().value += call_stack.top().strategy[0] *
+                            call_stack.top().action_values[0];
+  // player 1, depth 2, preflop seq 8, action 1
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 2, depth 3, preflop seq 11
+  cluster = info_abstraction.Cluster(call_stack.top().node, 2);
+  REQUIRE(cluster == 3);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.2910827638247552307);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 0, depth 4, preflop seq 12
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 1);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.6142515188228341305);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // terminal node
+  call_stack.top().node.Deal();  // flop
+  call_stack.top().node.ProceedPlay();
+  call_stack.top().node.Deal();  // turn
+  call_stack.top().node.ProceedPlay();
+  call_stack.top().node.Deal();  // river
+  call_stack.top().node.ProceedPlay();
+  call_stack.top().node.AwardPot(start_state.same_stack_no_rake_);
+  call_stack.top().value = call_stack.top().node.stack(1);
+  // player 0, depth 4, preflop seq 12
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 2, depth 3, preflop seq 11
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 1, depth 2, preflop seq 8, action 1
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[1] = tmp;
+  call_stack.top().value += call_stack.top().strategy[1] *
+                            call_stack.top().action_values[1];
+  // player 1, depth 2, preflop seq 8, action 2
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // player 2, depth 3, preflop seq 14
+  cluster = info_abstraction.Cluster(call_stack.top().node, 2);
+  REQUIRE(cluster == 3);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.8413639921690855283);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // flop chance node
+  call_stack.top().node.Deal();
+  call_stack.top().node.ProceedPlay();
+  call_stack.emplace(call_stack.top());
+  // player 1, depth 4, flop seq 8
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 3);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  call_stack.top().value = 0.0;
+  call_stack.top().action_values = DoubleArray{0.0, 0.0};
+  // player 1, depth 4, flop seq 8, action 0
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 2, depth 5, flop seq 9
+  cluster = info_abstraction.Cluster(call_stack.top().node, 2);
+  REQUIRE(cluster == 2);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.2274679782801657946);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 0, depth 6, flop seq 10
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 2);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.381294864234608788);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // terminal node
+  call_stack.top().node.AwardPot(start_state.same_stack_no_rake_);
+  call_stack.top().value = call_stack.top().node.stack(1);
+  // player 0, depth 6, flop seq 10
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 2, depth 5, flop seq 9
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 1, depth 4, flop seq 8, action 0
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[0] = tmp;
+  call_stack.top().value += call_stack.top().strategy[0] *
+                            call_stack.top().action_values[0];
+  // player 1, depth 4, flop seq 8, action 1
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kCheckCall);
+  // player 2, depth 5, flop seq 12
+  cluster = info_abstraction.Cluster(call_stack.top().node, 2);
+  REQUIRE(cluster == 2);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.2128166464564201776);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // player 0, depth 6, flop seq 13
+  cluster = info_abstraction.Cluster(call_stack.top().node, 0);
+  REQUIRE(cluster == 2);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  sampled = sampler(rng());
+  REQUIRE(sampled == 0.3359570485139959928);
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // player 1, depth 7, flop seq 14
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 3);
+  call_stack.top().strategy = DoubleArray{0.5, 0.5};
+  call_stack.top().value = 0.0;
+  call_stack.top().action_values = DoubleArray{0.0, 0.0};
+  // player 1, depth 7, flop seq 14, action 0
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // terminal node
+  call_stack.top().node.AwardPot(start_state.same_stack_no_rake_);
+  call_stack.top().value = call_stack.top().node.stack(1);
+  // player 1, depth 7, flop seq 14, action 0
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[0] = tmp;
+  call_stack.top().value += call_stack.top().strategy[0] *
+                            call_stack.top().action_values[0];
+  // player 1, depth 7, flop seq 14, action 1
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kAllIn);
+  // terminal node
+  call_stack.top().node.Deal();  // turn
+  call_stack.top().node.ProceedPlay();
+  call_stack.top().node.Deal();  // river
+  call_stack.top().node.ProceedPlay();
+  call_stack.top().node.AwardPot(start_state.same_stack_no_rake_);
+  call_stack.top().value = call_stack.top().node.stack(1);
+  // player 1, depth 7, flop seq 14, action 1
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[1] = tmp;
+  call_stack.top().value += call_stack.top().strategy[1] *
+                            call_stack.top().action_values[1];
+  // player 1, depth 7, flop seq 14
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 3);
+  regret = std::rint(0 + call_stack.top().action_values[0] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == 4950);
+  regret = std::rint(0 + call_stack.top().action_values[1] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == -4950);
+  // player 0, depth 6, flop seq 13
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 2, depth 5, flop seq 12
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 1, depth 4, flop seq 8, action 1
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[1] = tmp;
+  call_stack.top().value += call_stack.top().strategy[1] *
+                            call_stack.top().action_values[1];
+  // player 1, depth 4, flop seq 8
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 3);
+  regret = std::rint(0 + call_stack.top().action_values[0] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == 2625);
+  regret = std::rint(0 + call_stack.top().action_values[1] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == -2625);
+  // flop chance node
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 2, depth 3, preflop seq 14
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // player 1, depth 2, preflop seq 8, action 2
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[2] = tmp;
+  call_stack.top().value += call_stack.top().strategy[2] *
+                            call_stack.top().action_values[2];
+  // player 1, depth 2, preflop seq 8
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 1);
+  regret = std::rint(0 + call_stack.top().action_values[0] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == 4108);
+  regret = std::rint(0 + call_stack.top().action_values[1] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == -5842);
+  regret = std::rint(0 + call_stack.top().action_values[2] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == 1733);
+  // player 0, depth 1, preflop seq 0
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // preflop chance node
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().value = tmp;
+  // Iteration 6, player 1, no pruning
+  call_stack.pop();
+  call_stack.pop();
+  REQUIRE(call_stack.size() == 0);
+
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test helper"
