@@ -105,7 +105,7 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   int prune_constant = 0;
   int LCFR_threshold = 3;
   int discount_interval = 2;
-  int regret_floor = -15000;
+  int regret_floor = -10000;
   int snapshot_interval = 2;
   int strategy_delay = 3;
   std::string_view save_dir = "../tests/blueprint";
@@ -125,7 +125,7 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   std::vector<fishbait::Regret> it_4_regrets_preflop = {5017, -4983, -33, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, -4983, 17, 4967, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -10050, 10050, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -10000, 10050, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 2458, -7492, 5033, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       4950, -4950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 4166, 4192, 2902, 0, 0, 0, -2525, 2525, 0, 0, 0, 0, -2538, 2538, 0, 0,
@@ -222,7 +222,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   Catch::StringMaker<double>::precision = 19;
   constexpr int kNumActions = 5;
   constexpr int kPlayers = 3;
-  constexpr int kRegretFloor = -15000;
+  constexpr int kRegretFloor = -10000;
   constexpr int kDiscountInterval = 2;
 
   TestClusters info_abstraction;
@@ -1713,7 +1713,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   regret = std::rint(0 + call_stack.top().action_values[0] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
-  REQUIRE(regret == -10050);
+  REQUIRE(regret == -10000);
   regret = std::rint(0 + call_stack.top().action_values[1] -
                      call_stack.top().value);
   regret = std::max(regret, kRegretFloor);
