@@ -215,6 +215,105 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
             it_4_action_counts[i]);
   }
 
+  auto strategy_6 =
+      fishbait::Strategy<kPlayers, kActions, TestClusters>::LoadSnapshot(
+        "out/tests/blueprint/strategy_6.cereal");
+
+  std::vector<fishbait::Regret> it_6_regrets_preflop = {5017, -4983, -33, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 5199, 4949, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 4108, -5842, 1733, 0, 0, 0, 0, 0, 0, 0, 0, -10000, 10050,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2458, -7492, 5033, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 4950, -4950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 4166, 4192, 2902, 0, 0, 0, -2525, 2525, 0, 0, 0, 0, -2538,
+      2538, 0, 0, 0, 0, 0, 0, 0, 1733, -1733, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0};
+  legal_actions = strategy_6.action_abstraction()
+                            .NumLegalActions(fishbait::Round::kPreFlop);
+  for (std::size_t i = 0; i < it_6_regrets_preflop.size(); ++i) {
+    fishbait::CardCluster cluster = i / legal_actions;
+    std::size_t offset = i % legal_actions;
+    REQUIRE(strategy_6.regrets()[+fishbait::Round::kPreFlop](cluster, offset) ==
+            it_6_regrets_preflop[i]);
+  }
+
+  std::vector<fishbait::Regret> it_6_regrets_flop = {0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, -1186, 1186, 0, 0, 0, 0, 0, 0, 4950, -4950, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2425, 2425, 0, 0, 0, 0, -5050, 5050,
+      3467, -3467, 4950, -4950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2475,
+      -2475, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2625,
+      -2625, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4950, -4950, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0};
+  legal_actions = strategy_6.action_abstraction()
+                            .NumLegalActions(fishbait::Round::kFlop);
+  for (std::size_t i = 0; i < it_6_regrets_flop.size(); ++i) {
+    fishbait::CardCluster cluster = i / legal_actions;
+    std::size_t offset = i % legal_actions;
+    REQUIRE(strategy_6.regrets()[+fishbait::Round::kFlop](cluster, offset) ==
+            it_6_regrets_flop[i]);
+  }
+
+  std::vector<fishbait::Regret> it_6_regrets_turn = {0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, -2496, 2579, -84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, -3217, 1733, 1483, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      4700, -4700, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0};
+  legal_actions = strategy_6.action_abstraction()
+                            .NumLegalActions(fishbait::Round::kTurn);
+  for (std::size_t i = 0; i < it_6_regrets_turn.size(); ++i) {
+    fishbait::CardCluster cluster = i / legal_actions;
+    std::size_t offset = i % legal_actions;
+    REQUIRE(strategy_6.regrets()[+fishbait::Round::kTurn](cluster, offset) ==
+            it_6_regrets_turn[i]);
+  }
+
+  std::vector<fishbait::Regret> it_6_regrets_river = {0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, -2662, 2662, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -4950, 4950, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  legal_actions = strategy_6.action_abstraction()
+                            .NumLegalActions(fishbait::Round::kRiver);
+  for (std::size_t i = 0; i < it_6_regrets_river.size(); ++i) {
+    fishbait::CardCluster cluster = i / legal_actions;
+    std::size_t offset = i % legal_actions;
+    REQUIRE(strategy_6.regrets()[+fishbait::Round::kRiver](cluster, offset) ==
+            it_6_regrets_river[i]);
+  }
+
+  std::vector<fishbait::ActionCount> it_6_action_counts = {0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+      0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+      0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1,
+      0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0};
+  legal_actions = strategy_6.action_abstraction()
+                            .NumLegalActions(fishbait::Round::kPreFlop);
+  for (std::size_t i = 0; i < it_6_action_counts.size(); ++i) {
+    fishbait::CardCluster cluster = i / legal_actions;
+    std::size_t offset = i % legal_actions;
+    REQUIRE(strategy_6.action_counts()(cluster, offset) ==
+            it_6_action_counts[i]);
+  }
+
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test"
 
