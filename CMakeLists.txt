@@ -6,7 +6,13 @@ find_package(Git QUIET REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 
 # Helpful warning compiler flags
-add_compile_options(-Wall -Wextra -pedantic -Werror -march=native)
+add_compile_options(-Wall -Wextra -pedantic -Werror)
+if(TGT_SYSTEM STREQUAL "Graviton2")
+  add_compile_options(-march=armv8.2-a+fp16+rcpc+dotprod+crypto
+                      -mtune=neoverse-n1)
+else()
+  add_compile_options(-march=native)
+endif()
 
 # Enable coverage compiler flags if in debug mode
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

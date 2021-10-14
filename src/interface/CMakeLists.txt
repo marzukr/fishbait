@@ -8,7 +8,7 @@ if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/venv")
     RESULTS_VARIABLE venv_status
     )
   execute_process(
-    COMMAND touch -t 0000000000 venv
+    COMMAND touch -t 200001010000 venv
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     RESULTS_VARIABLE touch_status
     )
@@ -47,15 +47,17 @@ add_custom_command(
 # build the react app and update the list of files it depends on
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build
-  COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_CURRENT_BINARY_DIR}/build
-  COMMAND yarn build
-  COMMAND ${CMAKE_COMMAND} -E rename build ${CMAKE_CURRENT_BINARY_DIR}/build
   COMMAND ${CMAKE_COMMAND} -E echo_append "${CMAKE_CURRENT_BINARY_DIR}/build "
           "${CMAKE_CURRENT_BINARY_DIR}/filelist.d : " >
           ${CMAKE_CURRENT_BINARY_DIR}/filelist.d
   COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}
           -path ${CMAKE_CURRENT_SOURCE_DIR}/node_modules -prune -o -print |
           tr '\\n' ' ' >> ${CMAKE_CURRENT_BINARY_DIR}/filelist.d
+  COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_CURRENT_BINARY_DIR}/build
+  COMMAND yarn build
+  COMMAND ${CMAKE_COMMAND} -E rename build ${CMAKE_CURRENT_BINARY_DIR}/build
+  COMMAND touch -r ${CMAKE_CURRENT_BINARY_DIR}/build
+          ${CMAKE_CURRENT_SOURCE_DIR}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "building interface frontend"
   DEPFILE ${CMAKE_CURRENT_BINARY_DIR}/filelist.d

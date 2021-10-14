@@ -9,12 +9,13 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
-    "web-vitals": "^1.0.1"
+    "web-vitals": "^1.0.1",
+    "concurrently": "^6.2.1"
   },
   "scripts": {
     "start-frontend": "react-scripts start",
     "start-api": "FLASK_ENV=development $($VENV_PY api/app.py)",
-    "start": "yarn run start-frontend & yarn run start-api",
+    "start": "concurrently -k -n frontend,api \"npm:start-frontend\" \"npm:start-api\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
