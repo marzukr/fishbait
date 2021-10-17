@@ -486,7 +486,8 @@ class Strategy {
 
         Regret action_regret = regrets_[+round](card_buckets[player],
                                                 offset + legal_i);
-        if (!prune || action_regret > prune_constant_) {
+        if (!prune || action_regret > prune_constant_ ||
+            round == Round::kRiver || next_seq == kLeafId) {
           AbstractAction action = actions(i);
           Node<kPlayers> new_state = state;
           new_state.Apply(action.play, new_state.ConvertBet(action.size));

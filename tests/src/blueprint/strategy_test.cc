@@ -124,9 +124,9 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
 
   std::vector<fishbait::Regret> it_4_regrets_preflop = {5017, -4983, -33, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, -4983, 17, 4967, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -10000, 10050, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 2458, -7492, 5033, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, -4983, 17, 4967, 6633, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -10000, 10050, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 2458, -7492, 5033, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       4950, -4950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 4166, 4192, 2902, 0, 0, 0, -2525, 2525, 0, 0, 0, 0, -2538, 2538, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -221,13 +221,13 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
 
   std::vector<fishbait::Regret> it_6_regrets_preflop = {5017, -4983, -33, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 5199, 4949, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 4108, -5842, 1733, 0, 0, 0, 0, 0, 0, 0, 0, -10000, 10050,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2458, -7492, 5033, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 4950, -4950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 4166, 4192, 2902, 0, 0, 0, -2525, 2525, 0, 0, 0, 0, -2538,
-      2538, 0, 0, 0, 0, 0, 0, 0, 1733, -1733, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0};
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 5199, 4949, 6633, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 4108, -5842, 1733, 0, 0, 0, 0, 0, 0, 0, 0, -10000,
+      10050, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2458, -7492, 5033, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 4950, -4950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 4166, 4192, 2902, 0, 0, 0, -2525, 2525, 0, 0, 0, 0,
+      -2538, 2538, 0, 0, 0, 0, 0, 0, 0, 1733, -1733, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0};
   legal_actions = strategy_6.action_abstraction()
                             .NumLegalActions(fishbait::Round::kPreFlop);
   for (std::size_t i = 0; i < it_6_regrets_preflop.size(); ++i) {
@@ -1979,13 +1979,28 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   call_stack.top().value = 0;
   call_stack.top().action_values = DoubleArray{0.0, 0.0, 0.0};
   // player 1, depth 2, preflop seq 1, action 0
-  // pruned
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // terminal node, player 1 folded
+  call_stack.top().node.AwardPot(start_state.same_stack_no_rake_);
+  call_stack.top().value = call_stack.top().node.stack(1);
+  // player 1, depth 2, preflop seq 1, action 0
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[0] = tmp;
+  call_stack.top().value += call_stack.top().strategy[0] *
+                            call_stack.top().action_values[0];
   // player 1, depth 2, preflop seq 1, action 1
   // pruned
   // player 1, depth 2, preflop seq 1, action 2
   // pruned
   // player 1, depth 2, preflop seq 1
-  // no explored actions
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 1);
+  regret = std::rint(0 + call_stack.top().action_values[0] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == 6633);
   // player 0, depth 1, preflop seq 0
   call_stack.pop();
   // preflop chance node
@@ -2348,17 +2363,32 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   // player 1, depth 2, preflop seq 1
   cluster = info_abstraction.Cluster(call_stack.top().node, 1);
   REQUIRE(cluster == 1);
-  call_stack.top().strategy = DoubleArray{1.0/3.0, 1.0/3.0, 1.0/3.0};
+  call_stack.top().strategy = DoubleArray{1.0, 0.0, 0.0};
   call_stack.top().value = 0;
   call_stack.top().action_values = DoubleArray{0.0, 0.0, 0.0};
   // player 1, depth 2, preflop seq 1, action 0
-  // action 0 pruned
+  call_stack.emplace(call_stack.top());
+  call_stack.top().node.Apply(fishbait::Action::kFold);
+  // terminal node
+  call_stack.top().node.AwardPot(start_state.same_stack_no_rake_);
+  call_stack.top().value = call_stack.top().node.stack(1);
+  // player 1, depth 2, preflop seq 1, action 0
+  tmp = call_stack.top().value;
+  call_stack.pop();
+  call_stack.top().action_values[0] = tmp;
+  call_stack.top().value += call_stack.top().strategy[0] *
+                            call_stack.top().action_values[0];
   // player 1, depth 2, preflop seq 1, action 1
   // action 1 pruned
   // player 1, depth 2, preflop seq 1, action 2
   // action 2 pruned
   // player 1, depth 2, preflop seq 1
-  // no actions explored
+  cluster = info_abstraction.Cluster(call_stack.top().node, 1);
+  REQUIRE(cluster == 1);
+  regret = std::rint(6633 + call_stack.top().action_values[0] -
+                     call_stack.top().value);
+  regret = std::max(regret, kRegretFloor);
+  REQUIRE(regret == 6633);
   // player 0, depth 1, preflop seq 0
   call_stack.pop();
   // preflop chance node
