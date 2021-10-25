@@ -22,6 +22,7 @@ add_executable(tests.out main.cc
   src/utils/fraction_test.cc
   src/utils/loop_iterator_test.cc
   src/utils/random_test.cc
+  src/utils/timer_test.cc
   )
 target_link_libraries(tests.out blueprint clustering poker hand_strengths
                       utils)

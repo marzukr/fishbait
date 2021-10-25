@@ -5,12 +5,28 @@
 
 #include <chrono>  // NOLINT(build/c++11)
 #include <iostream>
+#include <ratio>  // NOLINT(build/c++11)
+#include <string_view>
 #include <string>
 
 namespace fishbait {
 
 class Timer {
  public:
+  using Milliseconds = std::chrono::duration<double, std::milli>;
+  using Seconds = std::chrono::duration<double, std::ratio<1>>;
+  using Minutes = std::chrono::duration<double, std::ratio<60, 1>>;
+
+  template <typename Unit> static constexpr std::string_view Suffix() {
+    if constexpr (std::is_same<Unit, Milliseconds>::value) {
+      return "ms";
+    } else if (std::is_same<Unit, Seconds>::value) {
+      return "s";
+    } else if (std::is_same<Unit, Minutes>::value) {
+      return "min";
+    }
+  }
+
   Timer() : start_(std::chrono::high_resolution_clock::now()) {}
 
   Timer(const Timer& other) = default;
@@ -18,20 +34,27 @@ class Timer {
   Timer(Timer&&) = delete;
   Timer& operator=(Timer&&) = delete;
 
-  int64_t StopAndReset() {
-    using std::chrono::high_resolution_clock;
-    using std::chrono::duration_cast;
-    using std::chrono::milliseconds;
-
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start_);
-    start_ = high_resolution_clock::now();
+  /* @brief Returns the duration since the timer was last reset. */
+  template <typename Unit = Milliseconds>
+  double Check() {
+    auto stop = std::chrono::high_resolution_clock::now();
+    Unit duration = stop - start_;
     return duration.count();
   }
 
-  void StopAndReset(const std::string& message) {
-    std::cout << message << ": " << StopAndReset() / 1000.0 << "s"
-              << std::endl;
+  /* @brief Resets timer and returns the duration since it was last reset. */
+  template <typename Unit = Milliseconds>
+  double Reset() {
+    double ret = Check<Unit>();
+    start_ = std::chrono::high_resolution_clock::now();
+    return ret;
+  }
+
+  /* @brief Resets timer and prints the duration since it was last reset. */
+  template <typename Unit = Seconds>
+  inline std::ostream& Reset(std::ostream& os) {
+    os << Reset<Unit>() << " " << Suffix<Unit>();
+    return os;
   }
 
  private:

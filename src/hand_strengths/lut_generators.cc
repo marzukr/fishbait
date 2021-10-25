@@ -71,7 +71,7 @@ std::vector<ShowdownStrength> ShowdownLUT(const bool verbose) {
     if (verbose && sd_count % one_hand_approx == 0) {
       std::cout << 100.0 * sd_count / ImperfectRecallHands(Round::kRiver)
                 << "%" << std::endl;
-      t.StopAndReset("iteration time");
+      t.Reset(std::cout << "iteration time: ") << std::endl;
     }
   }  // for idx
 
@@ -123,7 +123,7 @@ nda::matrix<HistCount> EHS_LUT(IndexerT& isocalc,
       if (verbose && sd_count % kOnePercentApprox == 0) {
         std::cout << 100.0 * sd_count / (kLUTSize * kSimulationSize)
                   << "%" << std::endl;
-        t.StopAndReset("iteration time");
+        t.Reset(std::cout << "iteration time: ") << std::endl;
       }
     }  // for simulations
   }  // for idx
@@ -200,7 +200,7 @@ nda::matrix<double> RiverLUT(
     if (verbose && idx % kOnePercentApprox == 0) {
       std::cout << 100.0 * idx / (ImperfectRecallHands(Round::kRiver) * 1.0)
                 << "%" << std::endl;
-      t.StopAndReset("iteration time");
+      t.Reset(std::cout << "iteration time: ") << std::endl;
     }
   }  // for idx
   return river_lut;
@@ -248,7 +248,7 @@ nda::matrix<double> OCHS_PreflopLUT(
       if (verbose && sd_count % kOnePercentApprox == 0) {
         std::cout << 100.0 * sd_count / (kUniqueHands * kSimulationSize)
                   << "%" << std::endl;
-        t.StopAndReset("iteration time");
+        t.Reset(std::cout << "iteration time: ") << std::endl;
       }
     }  // for simulations
 

@@ -218,7 +218,7 @@ class KMeans {
           }
         }
       }
-      if (verbose) t.StopAndReset("step 1");
+      if (verbose) t.Reset(std::cout << "step 1: ") << std::endl;
 
       // Step 3
       for (uint32_t thread = 0; thread < n_threads; ++thread) {
@@ -266,7 +266,7 @@ class KMeans {
       for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread].join();
       }  // for thread
-      if (verbose) t.StopAndReset("step 2,3");
+      if (verbose) t.Reset(std::cout << "step 2,3: ") << std::endl;
 
       // Step 4
       // First, sum the data points assigned to each cluster
@@ -322,7 +322,7 @@ class KMeans {
           (*means)(i, j) /= cluster_counts[i];
         }
       }
-      if (verbose) t.StopAndReset("step 4");
+      if (verbose) t.Reset(std::cout << "step 4") << std::endl;
 
       // Step 5
       std::vector<double> cluster_to_means(k_);
@@ -344,7 +344,7 @@ class KMeans {
       for (uint32_t thread = 0; thread < n_threads; ++thread) {
         threads[thread].join();
       }  // for thread
-      if (verbose) t.StopAndReset("step 5");
+      if (verbose) t.Reset(std::cout << "step 5: ") << std::endl;
 
       // Step 6
       for (nda::index_t x = 0; x < data.rows(); ++x) {
@@ -352,13 +352,13 @@ class KMeans {
         upper_bounds[x] = upper_bounds[x] + cluster_to_means[c_x];
         upper_bound_loose[x] = true;
       }
-      if (verbose) t.StopAndReset("step 6");
+      if (verbose) t.Reset(std::cout << "step 6: ") << std::endl;
 
       // Step 7
       converged = (*clusters) == (*means);
       clusters = std::move(means);
       loss = ComputeLoss(data, *clusters, *assignments);
-      if (verbose) t.StopAndReset("step 7");
+      if (verbose) t.Reset(std::cout << "step 7") << std::endl;
 
       iteration += 1;
       if (verbose) {
