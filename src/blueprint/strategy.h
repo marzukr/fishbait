@@ -7,10 +7,8 @@
 #include <array>
 #include <cmath>
 #include <filesystem>
-#include <iomanip>
 #include <iostream>
 #include <random>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -40,26 +38,11 @@ class Strategy {
   std::array<LegalActionsTable<Regret>, kNRounds> regrets_;
   LegalActionsTable<ActionCount> action_counts_;
 
-  int t_;                     /* The current iteration. */
-  int strategy_interval_;     /* The number of iterations between each update of
-                                 the average strategy */
-  int prune_threshold_;       /* The number of iterations to wait before
-                                 pruning. */
-  double prune_probability_;  /* The probability that we prune in
-                                 Traverse-MCCFR.*/
   Regret prune_constant_;     /* Actions with regret less than or equal to this
                                  constant are eligible to be pruned. */
-  int LCFR_threshold_;        /* The number of iterations to apply LCFR. */
-  int discount_interval_;     /* The number of iterations between each LCFR
-                                 discount. */
   Regret regret_floor_;       /* Floor to cutoff negative regrets at. */
-  int snapshot_interval_;     // The number of iterations between each snapshot.
-  int strategy_delay_;        /* The number of iterations to wait before
-                                 updating the average strategy and taking
-                                 snapshots. */
 
   Random rng_;
-  std::filesystem::path save_path_;
 
   /* Struct to represent the indexes of an action at an infoset. round_idx is
      the index numbered by counting all actions in a round. legal_idx is the
@@ -77,45 +60,24 @@ class Strategy {
         the Node::SameStackNoRake optimizations.
     @param actions The actions available in the abstracted game tree.
     @param info_abstraction An object that will abstract the card information.
-    @param strategy_interval The number of iterations between each update of the
-        average strategy.
-    @param prune_threshold The number of iterations to wait before pruning.
-    @param prune_probability The probability that we prune in Traverse-MCCFR.
     @param prune_constant Actions with regret less than or equal to this
         constant are eligible to be pruned.
-    @param LCFR_threshold The number of iterations to apply LCFR.
-    @param discount_interval The number of iterations between each LCFR
-        discount.
     @param regret_floor Floor to cutoff negative regrets at.
-    @param snapshot_interval The number of iterations between each snapshot.
-    @param strategy_delay The number of iterations to wait before updating the
-        average strategy and taking snapshots.
-    @param save_dir The name of the subdirectory relative to kBlueprintSaveDir
-        to save the final average strategy and snapshots to. The subdirectory
-        will be created if it does not exist.
     @param seed The seed to use for the random number generator used to sample
         actions and stochastically prune.
     @param verbose Whether to print debug information.
   */
   Strategy(const Node<kPlayers>& start_state,
            const std::array<AbstractAction, kActions>& actions,
-           InfoAbstraction info_abstraction, int strategy_interval,
-           int prune_threshold, double prune_probability, Regret prune_constant,
-           int LCFR_threshold, int discount_interval, Regret regret_floor,
-           int snapshot_interval, int strategy_delay, std::string_view save_dir,
+           InfoAbstraction info_abstraction, Regret prune_constant,
+           Regret regret_floor,
            Random::Seed seed = Random::Seed{}, bool verbose = false)
            : info_abstraction_{info_abstraction},
              action_abstraction_{actions, start_state},
              regrets_{InitRegretTable(verbose)}, action_counts_{
                  InitLegalActionsTable<ActionCount>(Round::kPreFlop)
-             }, t_{1}, strategy_interval_{strategy_interval},
-             prune_threshold_{prune_threshold},
-             prune_probability_{prune_probability},
-             prune_constant_{prune_constant}, LCFR_threshold_{LCFR_threshold},
-             discount_interval_{discount_interval}, regret_floor_{regret_floor},
-             snapshot_interval_{snapshot_interval},
-             strategy_delay_{strategy_delay}, rng_{seed},
-             save_path_{CreateSaveDir(save_dir)} { }
+             }, prune_constant_{prune_constant}, regret_floor_{regret_floor},
+             rng_{seed} { }
   Strategy(const Strategy& other) = default;
   Strategy& operator=(const Strategy& other) = default;
 
@@ -123,9 +85,7 @@ class Strategy {
   template<class Archive>
   void serialize(Archive& archive) {
     archive(info_abstraction_, action_abstraction_, regrets_, action_counts_,
-            t_, strategy_interval_, prune_threshold_, prune_probability_,
-            prune_constant_, LCFR_threshold_, discount_interval_, regret_floor_,
-            snapshot_interval_, strategy_delay_, rng_, save_path_);
+            prune_constant_, regret_floor_, rng_);
   }
 
   /*
@@ -144,58 +104,91 @@ class Strategy {
   }
 
   /*
-    @brief Runs MCCFR for the specified number of iterations.
+    @brief Updates the given player's average preflop strategy.
 
-    @param iterations The number of iterations to run mccfr.
-    @param verbose Whether to print debug information.
+    @param player The player whose strategy is being updated.
   */
-  void MCCFR(int iterations, bool verbose = false) {
-    if (verbose) std::cout << "Starting MCCFR" << std::endl;
-    int run_until = t_ + iterations;
-    for (; t_ < run_until; ++t_) {
-      if (verbose) std::cout << "iteration: " << t_ << std::endl;
-      for (PlayerId player = 0; player < kPlayers; ++player) {
-        // update strategy after strategy_inveral iterations
-        if (t_ > strategy_delay_ && t_ % strategy_interval_ == 0) {
-          UpdateStrategy(player);
-        }
+  void UpdateStrategy(PlayerId player) {
+    Node<kPlayers> start_state_copy = action_abstraction_.start_state();
+    UpdateStrategy(start_state_copy, 0, 0, player);
+  }
 
-        // Set prune variable and traverse MCCFR
-        bool prune = false;
-        if (t_ > prune_threshold_) {
-          std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
-          double random_prune = uniform_distribution(rng_());
-          if (random_prune < prune_probability_) {
-            prune = true;
-          }
-        }
-        TraverseMCCFR(player, prune);
+  /*
+    @brief Updates the given player's cumulative regrets.
+
+    @param player The player whose strategy is being updated.
+    @param prune Whether to prune actions with regrets less than
+        prune_constant_.
+  */
+  void TraverseMCCFR(PlayerId player, bool prune) {
+    Node<kPlayers> start_state_copy = action_abstraction_.start_state();
+    std::array<CardCluster, kPlayers> card_buckets{};
+    TraverseMCCFR(start_state_copy, card_buckets, 0, player, prune);
+  }
+
+  /*
+    @brief Discounts the regrets and action counts by the given factor.
+  */
+  void Discount(double factor) {
+    for (RoundId r = 0; r < kNRounds; ++r) {
+      std::for_each(regrets_[r].data(),
+                    regrets_[r].data() + regrets_[r].size(),
+                    [=](Regret& regret) {
+                      regret = std::rint(regret * factor);
+                    });
+    }
+    std::for_each(action_counts_.data(),
+                  action_counts_.data() + action_counts_.size(),
+                  [=](ActionCount& count) {
+                    count = std::rint(count * factor);
+                  });
+  }
+
+  /*
+    @brief Samples an action from the current strategy at the given infoset.
+
+    @param round The betting round of the infoset.
+    @param card_bucket The card cluster id of the infoset.
+    @param seq The sequence id of the infoset.
+
+    @return The indicies of the sampled action.
+  */
+  ActionIndicies SampleAction(Round round, CardCluster card_bucket,
+                              SequenceId seq) {
+    std::size_t offset = action_abstraction_.LegalOffset(round, seq);
+    nda::size_t legal_actions = action_abstraction_.NumLegalActions(round, seq);
+    Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
+
+    std::uniform_real_distribution<double> sampler(0, 1);
+    double sampled = sampler(rng_());
+    double bound = 0;
+
+    nda::size_t round_actions = action_abstraction_.ActionCount(round);
+
+    std::size_t legal_i = 0;
+    for (std::size_t i = 0; i < round_actions; ++i) {
+      if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
+
+      double action_prob = 0;
+      if (sum > 0) {
+        Regret action_reget = regrets_[+round](card_bucket, offset + legal_i);
+        action_prob = std::max(0, action_reget);
+        action_prob /= sum;
+      } else {
+        action_prob = 1.0 / legal_actions;
       }
 
-      /* Discount all regrets and action counter every discount_interval until
-         LCFR_threshold */
-      if (t_ <= LCFR_threshold_ && t_ % discount_interval_ == 0) {
-        double d = (t_ * 1.0 / discount_interval_) /
-                   (t_ * 1.0 / discount_interval_ + 1);
-        for (RoundId r = 0; r < kNRounds; ++r) {
-          std::for_each(regrets_[r].data(),
-                        regrets_[r].data() + regrets_[r].size(),
-                        [=](Regret& regret) {
-                          regret = std::rint(regret * d);
-                        });
-        }
-        std::for_each(action_counts_.data(),
-                      action_counts_.data() + action_counts_.size(),
-                      [=](ActionCount& count) {
-                        count = std::rint(count * d);
-                      });
+      bound += action_prob;
+      if (sampled < bound) {
+        return {i, legal_i};
       }
-      if ((t_ > strategy_delay_ && t_ % snapshot_interval_ == 0) ||
-          t_ == run_until - 1) {
-        TakeSnapshot(t_, run_until - 1, verbose);
-      }
-    }  // for t_
-  }  // MCCFR()
+
+      ++legal_i;
+    }  // for i
+    const std::string error = std::string(__func__) +
+                              ": No action was selected.";
+    throw std::runtime_error(error);
+  }  // SampleAction()
 
   /* @brief action_abstraction_ getter function */
   const auto& action_abstraction() const { return action_abstraction_; }
@@ -231,44 +224,9 @@ class Strategy {
                                  action_abstraction_.NumLegalActions(r)}, 0};
   }
 
-  /*
-    @brief Creates a directory called save_dir in kBlueprintSaveDir.
-    
-    Used to save the final average strategy and snapshots. The directory is only
-    created if it does not already exist.
-
-    @return The path to the created directory.
-  */
-  std::filesystem::path CreateSaveDir(std::string_view save_dir) {
-    std::filesystem::path base_path(kBlueprintSaveDir);
-    std::filesystem::path save_path = base_path / save_dir;
-    std::filesystem::create_directory(save_path);
-    return save_path;
-  }
-
   /* @brief Barebones constructor to load a saved strategy. */
   Strategy() : action_abstraction_{std::array<AbstractAction, kActions>{},
                                    Node<kPlayers>{}} { }
-
-  /*
-    @brief Saves a snapshot of the strategy to the save_path_.
-
-    @param iteration The current mccfr iteration number.
-    @param total_iterations The total number of mccfr iterations that will be
-        performed.
-    @param verbose Whether to print debug information.
-  */
-  void TakeSnapshot(int iteration, int total_iterations, bool verbose) {
-    int total_digits = std::floor(std::log10(total_iterations)) + 1;
-    std::stringstream iter_ss;
-    iter_ss.fill('0');
-    iter_ss << std::setw(total_digits) << iteration;
-
-    std::stringstream strategy_ss;
-    strategy_ss << "strategy_" << iter_ss.str() << ".cereal";
-    std::filesystem::path strategy_path = save_path_ / strategy_ss.str();
-    CerealSave(strategy_path.string(), this, verbose);
-  }
 
   /*
     @brief Returns the sum of all positive regrets at an infoset.
@@ -318,62 +276,6 @@ class Strategy {
   }
 
   /*
-    @brief Samples an action from the current strategy at the given infoset.
-
-    @param round The betting round of the infoset.
-    @param card_bucket The card cluster id of the infoset.
-    @param seq The sequence id of the infoset.
-
-    @return The indicies of the sampled action.
-  */
-  ActionIndicies SampleAction(Round round, CardCluster card_bucket,
-                              SequenceId seq) {
-    std::size_t offset = action_abstraction_.LegalOffset(round, seq);
-    nda::size_t legal_actions = action_abstraction_.NumLegalActions(round, seq);
-    Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
-
-    std::uniform_real_distribution<double> sampler(0, 1);
-    double sampled = sampler(rng_());
-    double bound = 0;
-
-    nda::size_t round_actions = action_abstraction_.ActionCount(round);
-
-    std::size_t legal_i = 0;
-    for (std::size_t i = 0; i < round_actions; ++i) {
-      if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
-
-      double action_prob = 0;
-      if (sum > 0) {
-        Regret action_reget = regrets_[+round](card_bucket, offset + legal_i);
-        action_prob = std::max(0, action_reget);
-        action_prob /= sum;
-      } else {
-        action_prob = 1.0 / legal_actions;
-      }
-
-      bound += action_prob;
-      if (sampled < bound) {
-        return {i, legal_i};
-      }
-
-      ++legal_i;
-    }  // for i
-    const std::string error = std::string(__func__) +
-                              ": No action was selected.";
-    throw std::runtime_error(error);
-  }  // SampleAction()
-
-  /*
-    @brief Updates the given player's average preflop strategy.
-
-    @param player The player whose strategy is being updated.
-  */
-  void UpdateStrategy(PlayerId player) {
-    Node<kPlayers> start_state_copy = action_abstraction_.start_state();
-    UpdateStrategy(start_state_copy, 0, 0, player);
-  }
-
-  /*
     @brief Recursively updates the given player's average preflop strategy.
 
     @param state State of the game at the current recursive call.
@@ -419,19 +321,6 @@ class Strategy {
       }
     }
   }  // UpdateStrategy()
-
-  /*
-    @brief Updates the given player's cumulative regrets.
-
-    @param player The player whose strategy is being updated.
-    @param prune Whether to prune actions with regrets less than
-        prune_constant_.
-  */
-  void TraverseMCCFR(PlayerId player, bool prune) {
-    Node<kPlayers> start_state_copy = action_abstraction_.start_state();
-    std::array<CardCluster, kPlayers> card_buckets{};
-    TraverseMCCFR(start_state_copy, card_buckets, 0, player, prune);
-  }
 
   /*
     @brief Recursively updates the given player's cumulative regrets.

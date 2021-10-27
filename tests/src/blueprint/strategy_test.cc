@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <stack>
 #include <string>
@@ -15,6 +16,7 @@
 #include "poker/definitions.h"
 #include "poker/indexer.h"
 #include "poker/node.h"
+#include "utils/cereal.h"
 #include "utils/print.h"
 
 /* Dummy clustering scheme that just partitions each round into 4 clusters with
@@ -98,24 +100,73 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
        fishbait::Round::kRiver, 0, 10000}
   }};
   TestClusters info_abstraction;
-  int iterations = 6;
-  int strategy_interval = 2;
-  int prune_threshold = 1;
-  double prune_probability = 0.5;
   int prune_constant = 0;
-  int LCFR_threshold = 3;
-  int discount_interval = 2;
   int regret_floor = -10000;
-  int snapshot_interval = 2;
-  int strategy_delay = 3;
-  std::string_view save_dir = "../tests/blueprint";
   bool verbose = false;
   fishbait::Strategy s(start_state, actions, info_abstraction,
-                       strategy_interval, prune_threshold, prune_probability,
-                       prune_constant, LCFR_threshold, discount_interval,
-                       regret_floor, snapshot_interval, strategy_delay,
-                       save_dir, fishbait::Random::Seed{68}, verbose);
-  s.MCCFR(iterations);
+                       prune_constant, regret_floor, fishbait::Random::Seed{68},
+                       verbose);
+
+  std::filesystem::path base_path("out/tests/blueprint");
+  std::filesystem::create_directory(base_path);
+
+  // iteration 1
+  s.TraverseMCCFR(0, false);
+  s.TraverseMCCFR(1, false);
+  s.TraverseMCCFR(2, false);
+
+  // iteration 2
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);  /* just to run the rng like
+                                                       we would if we were
+                                                       checking for prune */
+  s.TraverseMCCFR(0, false);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(1, true);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(2, true);
+  s.Discount(0.5);
+
+  // iteration 3
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(0, false);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(1, false);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(2, true);
+
+  // iteration 4
+  s.UpdateStrategy(0);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(0, false);
+  s.UpdateStrategy(1);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(1, true);
+  s.UpdateStrategy(2);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(2, false);
+  std::filesystem::path save_path = base_path / "strategy_4.cereal";
+  CerealSave(save_path.string(), &s, false);
+
+  // iteration 5
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(0, true);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(1, true);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(2, true);
+
+  // iteration 6
+  s.UpdateStrategy(0);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(0, false);
+  s.UpdateStrategy(1);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(1, false);
+  s.UpdateStrategy(2);
+  s.SampleAction(fishbait::Round::kPreFlop, 0, 0);
+  s.TraverseMCCFR(2, false);
+  save_path = base_path / "strategy_6.cereal";
+  CerealSave(save_path.string(), &s, false);
 
   auto strategy_4 =
       fishbait::Strategy<kPlayers, kActions, TestClusters>::LoadSnapshot(
@@ -1117,7 +1168,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   // Iteration 2, player 2
   sampled = sampler(rng());
   REQUIRE(sampled == 0.41891060472224451);
-  // Iteration 2, player 1, with pruning
+  // Iteration 2, player 2, with pruning
   call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
   // preflop chance node
   call_stack.emplace(call_stack.top());
@@ -1158,7 +1209,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   call_stack.pop();
   // preflop chance node
   call_stack.pop();
-  // Iteration 2, player 1, with pruning
+  // Iteration 2, player 2, with pruning
   call_stack.pop();
   call_stack.pop();
   REQUIRE(call_stack.size() == 0);
@@ -1957,7 +2008,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   // Iteration 4, player 1
   sampled = sampler(rng());
   REQUIRE(sampled == 0.27941979158259844);
-  // Iteration 4, player 0, with pruning
+  // Iteration 4, player 1, with pruning
   call_stack.emplace(start_state, DoubleArray{0}, 0.0, DoubleArray{0});
   // preflop chance node
   call_stack.emplace(call_stack.top());
