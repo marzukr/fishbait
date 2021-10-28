@@ -104,22 +104,22 @@ class SequenceTable {
 
   /*
     @brief Returns the number of legal actions available in the given infoset.
+
+    legal_offsets_ must already be computed for this to work (this is done in
+    the constuctor)
   */
   nda::size_t NumLegalActions(Round round, SequenceId seq) const {
-    nda::size_t count = 0;
-    for (nda::index_t action_id : table_[+round].j()) {
-      if (table_[+round](seq, action_id) != kIllegalId) {
-        ++count;
-      }
+    if (seq < legal_offsets_[+round].size() - 1) {
+      return legal_offsets_[+round][seq + 1] - legal_offsets_[+round][seq];
     }
-    return count;
+    return ComputeLegalActions(round, seq);
   }
 
   /*
     @brief Returns the total number of legal actions in the given round.
   */
   std::size_t NumLegalActions(Round round) const {
-    nda::index_t last_seq = table_[+round].rows() - 1;
+    nda::index_t last_seq = legal_offsets_[+round].size() - 1;
     return legal_offsets_[+round][last_seq] + NumLegalActions(round, last_seq);
   }
 
@@ -322,6 +322,19 @@ class SequenceTable {
   }
 
   /*
+    @brief Computes the number of legal actions available in the given infoset.
+  */
+  nda::size_t ComputeLegalActions(Round round, SequenceId seq) const {
+    nda::size_t count = 0;
+    for (nda::index_t action_id : table_[+round].j()) {
+      if (table_[+round](seq, action_id) != kIllegalId) {
+        ++count;
+      }
+    }
+    return count;
+  }
+
+  /*
     @brief Computes the legal_offsets_ array. 
   */
   void ComputeLegalOffsets() {
@@ -330,7 +343,7 @@ class SequenceTable {
       std::fill(legal_offsets_[i].begin(), legal_offsets_[i].end(), 0);
       for (SequenceId j = 1; j < legal_offsets_[i].size(); ++j) {
         legal_offsets_[i][j] = legal_offsets_[i][j - 1] +
-                               NumLegalActions(Round{i}, j - 1);
+                               ComputeLegalActions(Round{i}, j - 1);
       }
     }
   }

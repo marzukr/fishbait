@@ -102,7 +102,7 @@ int main() {
 
   fishbait::Strategy strategy(start_state, actions, cluster_table,
                               kPruneConstant, kRegretFloor,
-                              fishbait::Random::Seed{}, true);
+                              fishbait::Random::Seed{});
 
   std::filesystem::path base_path("out/blueprint");
   std::filesystem::path save_path = base_path / "run_1";
@@ -119,8 +119,8 @@ int main() {
   double elapsed_time = 0;
   std::cout << "Starting MCCFR" << std::endl;
   while (elapsed_time < kTrainingTime) {
-    iteration_timer.Reset(std::cout << "iteration " << iteration << " :")
-        << std::endl;
+    std::cout << "iteration " << iteration << " :";
+    iteration_timer.Reset(std::cout) << std::endl;
     for (fishbait::PlayerId player = 0; player < kPlayers; ++player) {
       // update strategy after kStrategyInterval iterations
       if (elapsed_time > kStrategyDelay &&

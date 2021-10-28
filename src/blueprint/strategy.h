@@ -31,11 +31,15 @@ class Strategy {
   template <typename T>
   using LegalActionsTable = nda::array<T, LegalActionsTableShape>;
 
+  // Array of LegalActionsTable, one for each round
+  template <typename T>
+  using GameLegalActionsTable = std::array<LegalActionsTable<T>, kNRounds>;
+
   InfoAbstraction info_abstraction_;
   SequenceTable<kPlayers, kActions> action_abstraction_;
 
   // round * card clusters * legal actions
-  std::array<LegalActionsTable<Regret>, kNRounds> regrets_;
+  GameLegalActionsTable<Regret> regrets_;
   LegalActionsTable<ActionCount> action_counts_;
 
   Regret prune_constant_;     /* Actions with regret less than or equal to this
@@ -70,11 +74,10 @@ class Strategy {
   Strategy(const Node<kPlayers>& start_state,
            const std::array<AbstractAction, kActions>& actions,
            InfoAbstraction info_abstraction, Regret prune_constant,
-           Regret regret_floor,
-           Random::Seed seed = Random::Seed{}, bool verbose = false)
+           Regret regret_floor, Random::Seed seed = Random::Seed{})
            : info_abstraction_{info_abstraction},
              action_abstraction_{actions, start_state},
-             regrets_{InitRegretTable(verbose)}, action_counts_{
+             regrets_{InitGameLegalActionsTable<Regret>()}, action_counts_{
                  InitLegalActionsTable<ActionCount>(Round::kPreFlop)
              }, prune_constant_{prune_constant}, regret_floor_{regret_floor},
              rng_{seed} { }
@@ -199,18 +202,53 @@ class Strategy {
   /* @brief action_counts_ getter function */
   const auto& action_counts() const { return action_counts_; }
 
+  /* A representation of a strategy that stores all action probabilities
+     explicitly instead of as regrets. */
+  class Table {
+   private:
+    GameLegalActionsTable<float> probabilities_;
+
+    explicit Table(Strategy& ref)
+        : probabilities_{ref.InitGameLegalActionsTable<float>()} {}
+
+   public:
+    friend class Strategy;
+
+    const auto& probabilities() const { return probabilities_; }
+  };
+
+  /* @brief Compute the Table representation of this strategy */
+  Table ComputeTable() {
+    Table table{*this};
+    for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
+      fishbait::Round r = Round{r_id};
+      SequenceN round_seqs = action_abstraction_.States(r);
+      CardCluster n_clusters = InfoAbstraction::NumClusters(r);
+      for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
+        std::size_t offset = 0;
+        for (SequenceId seq = 0; seq < round_seqs; ++seq) {
+          nda::size_t legal_actions =
+              action_abstraction_.NumLegalActions(r, seq);
+          std::array<float, kActions> strategy =
+              CalculateStrategy<float>(r, cluster, offset, legal_actions);
+          std::copy_n(strategy.begin(), legal_actions,
+                      &table.probabilities_[r_id](cluster, offset));
+          offset += legal_actions;
+        }  // for seq
+      }  // for cluster
+    }  // for round
+    return table;
+  }
+
  private:
   /*
-    @brief Initializes regret table.
+    @brief Initializes an array LegalActionTables, one for each round.
   */
-  std::array<LegalActionsTable<Regret>, kNRounds> InitRegretTable(
-      bool verbose) {
-    std::array<LegalActionsTable<Regret>, kNRounds> regret_table;
+  template<typename DataT>
+  GameLegalActionsTable<DataT> InitGameLegalActionsTable() {
+    GameLegalActionsTable<DataT> regret_table;
     for (RoundId r = 0; r < kNRounds; ++r) {
-      regret_table[r] = InitLegalActionsTable<Regret>(Round{r});
-      if (verbose) {
-        std::cout << Round{r} << " regret table initialized." << std::endl;
-      }
+      regret_table[r] = InitLegalActionsTable<DataT>(Round{r});
     }
     return regret_table;
   }
@@ -257,12 +295,13 @@ class Strategy {
     @return An array with the computed strategy. The ith element of the array is
         the probability of choosing the ith legal action.
   */
-  std::array<double, kActions> CalculateStrategy(Round round,
+  template <typename FloatT = double>
+  std::array<FloatT, kActions> CalculateStrategy(Round round,
       CardCluster card_bucket, std::size_t offset,
       nda::size_t legal_actions) const {
     Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
 
-    std::array<double, kActions> strategy = {0};
+    std::array<FloatT, kActions> strategy = {0};
     for (std::size_t i = 0; i < legal_actions; ++i) {
       if (sum > 0) {
         strategy[i] = std::max(0, regrets_[+round](card_bucket, offset + i));
