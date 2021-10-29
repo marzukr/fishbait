@@ -7,7 +7,9 @@
 #include <array>
 #include <cmath>
 #include <filesystem>
+#include <functional>
 #include <iostream>
+#include <iterator>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -202,42 +204,79 @@ class Strategy {
   /* @brief action_counts_ getter function */
   const auto& action_counts() const { return action_counts_; }
 
-  /* A representation of a strategy that stores all action probabilities
-     explicitly instead of as regrets. */
-  class Table {
+  /* Stores the average of multiple strategies. */
+  class Average {
    private:
     GameLegalActionsTable<float> probabilities_;
+    int n_;  // How many strategies are in this average.
 
-    explicit Table(Strategy& ref)
-        : probabilities_{ref.InitGameLegalActionsTable<float>()} {}
+    explicit Average(Strategy& ref)
+        : probabilities_{ref.InitGameLegalActionsTable<float>()}, n_{0} {
+      *this += ref;
+    }
+
+    /* @brief Barebones constructor to load a saved average. */
+    Average() {}
 
    public:
     friend class Strategy;
 
-    const auto& probabilities() const { return probabilities_; }
-  };
+    /* @brief Average serialize function. */
+    template<class Archive>
+    void serialize(Archive& archive) {
+      archive(probabilities_, n_);
+    }
 
-  /* @brief Compute the Table representation of this strategy */
-  Table ComputeTable() {
-    Table table{*this};
-    for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
-      fishbait::Round r = Round{r_id};
-      SequenceN round_seqs = action_abstraction_.States(r);
-      CardCluster n_clusters = InfoAbstraction::NumClusters(r);
-      for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
-        std::size_t offset = 0;
-        for (SequenceId seq = 0; seq < round_seqs; ++seq) {
-          nda::size_t legal_actions =
-              action_abstraction_.NumLegalActions(r, seq);
-          std::array<float, kActions> strategy =
-              CalculateStrategy<float>(r, cluster, offset, legal_actions);
-          std::copy_n(strategy.begin(), legal_actions,
-                      &table.probabilities_[r_id](cluster, offset));
-          offset += legal_actions;
-        }  // for seq
-      }  // for cluster
-    }  // for round
-    return table;
+    /* @brief Loads an Average snapshot from the given path on disk. */
+    static Average LoadAverage(const std::filesystem::path path,
+                               bool verbose = false) {
+      Average loaded;
+      CerealLoad(path.string(), &loaded, verbose);
+      return loaded;
+    }
+
+    /* @brief Adds the given strategy to this average */
+    Average& operator+=(const Strategy& rhs) {
+      for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
+        fishbait::Round r = Round{r_id};
+        SequenceN round_seqs = rhs.action_abstraction_.States(r);
+        CardCluster n_clusters = InfoAbstraction::NumClusters(r);
+        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
+          std::size_t offset = 0;
+          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
+            nda::size_t legal_actions =
+                rhs.action_abstraction_.NumLegalActions(r, seq);
+            std::array<float, kActions> strategy =
+                rhs.CalculateStrategy<float>(r, cluster, offset, legal_actions);
+            std::transform(strategy.begin(),
+                           std::next(strategy.begin(), legal_actions),
+                           &probabilities_[r_id](cluster, offset),
+                           &probabilities_[r_id](cluster, offset),
+                           std::plus<float>{});
+            offset += legal_actions;
+          }  // for seq
+        }  // for cluster
+      }  // for round
+      n_ += 1;
+      return *this;
+    }
+
+    /* @brief Normalize the probabilities by dividing all of them by n_. */
+    void Normalize() {
+      for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
+        probabilities_[r_id].for_each_value([=](float& ref) {
+          ref /= n_;
+        });
+      }
+      n_ = 1;
+    }
+
+    const auto& probabilities() const { return probabilities_; }
+  };  // class Average
+
+  /* @brief Return an avg strategy where this strategy is the only datapoint. */
+  Average InitialAverage() {
+    return Average{*this};
   }
 
  private:
@@ -255,6 +294,8 @@ class Strategy {
 
   /*
     @brief Initializes a card x sequence x action table for a given round.
+
+    All entries are set to 0.
   */
   template<typename T>
   LegalActionsTable<T> InitLegalActionsTable(Round r) {

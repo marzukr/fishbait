@@ -107,6 +107,7 @@ int main() {
   std::filesystem::path base_path("out/blueprint");
   std::filesystem::path save_path = base_path / "run_1";
   std::filesystem::create_directory(save_path);
+  std::filesystem::path avg_path;
 
   using Minutes = fishbait::Timer::Minutes;
   fishbait::Timer main_timer;
@@ -151,11 +152,24 @@ int main() {
       strategy.Discount(d);
     }
 
-    /* Save a snapshot of the strategy and store to disk every kSnapshotInterval
-       minutes if it's been at least kStrategyDelay minutes. */
+    /* Save a snapshot of the strategy and update the average strategy every
+       kSnapshotInterval minutes if it's been at least kStrategyDelay
+       minutes. */
     if (elapsed_time > kStrategyDelay &&
         snapshot_timer.Check<Minutes>() >= kSnapshotInterval) {
       snapshot_timer.Reset();
+
+      if (avg_path.empty()) {
+        avg_path = save_path / "avg_table.cereal";
+        auto strat_table = strategy.InitialAverage();
+        CerealSave(avg_path.string(), &strat_table, true);
+      } else {
+        auto strat_table =
+            decltype(strategy)::Average::LoadAverage(avg_path, true);
+        strat_table += strategy;
+        CerealSave(avg_path.string(), &strat_table, true);
+      }
+
       std::stringstream strategy_ss;
       strategy_ss << "strategy_" << static_cast<int>(elapsed_time) << ".cereal";
       std::filesystem::path strategy_path = save_path / strategy_ss.str();
@@ -165,6 +179,10 @@ int main() {
     ++iteration;
     elapsed_time = main_timer.Check<fishbait::Timer::Minutes>();
   }  // while elapsed_time < kTrainingTime
+
+  auto strat_table = decltype(strategy)::Average::LoadAverage(avg_path, true);
+  strat_table.Normalize();
+  CerealSave(avg_path.string(), &strat_table, true);
 
   std::filesystem::path strategy_path = save_path / "strategy_final.cereal";
   CerealSave(strategy_path.string(), &strategy, true);
