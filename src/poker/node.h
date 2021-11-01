@@ -52,31 +52,34 @@ class Node {
   // Progress information
   // --------------------------------------------------------------------------
 
-  PlayerId button_;          // index of player on the button
-  bool in_progress_;         // is a hand is in progress?
-  Round round_;              // current betting round
-  PlayCount cycled_;         /* number of players that have been cycled through
-                                on this betting round. Also used to internally
-                                keep track of the number of straddled players
-                                before play starts. */
-  PlayerId acting_player_;   // index of player whose turn it is
-  PlayerId pot_good_;        /* number of players who still need to act before
-                                this round is over */
-  PlayerId no_raise_;        /* number of players who still need to act, but can
-                                only call or fold because another player went
-                                all in less than the min-raise */
-  bool folded_[kPlayers];    // has the given player folded?
-  PlayerId players_left_;    // number of players who haven’t folded
-  PlayerId players_all_in_;  // number of players who are all in
+  PlayerId button_;                    // index of player on the button
+  bool in_progress_;                   // is a hand is in progress?
+  Round round_;                        // current betting round
+  PlayCount cycled_;                   /* number of players that have been
+                                          cycled through on this betting round.
+                                          Also used to internally keep track of
+                                          the number of straddled players before
+                                          play starts. */
+  PlayerId acting_player_;             // index of player whose turn it is
+  PlayerId pot_good_;                  /* number of players who still need to
+                                          act before this round is over */
+  PlayerId no_raise_;                  /* number of players who still need to
+                                          act, but can only call or fold because
+                                          another player went all in less than
+                                          the min-raise */
+  std::array<bool, kPlayers> folded_;  // has the given player folded?
+  PlayerId players_left_;              // number of players who haven’t folded
+  PlayerId players_all_in_;            // number of players who are all in
 
   // Chip information
   // --------------------------------------------------------------------------
 
-  Chips pot_;              // number of chips in the pot
-  Chips bets_[kPlayers];   // number of chips each player has bet
-  Chips stack_[kPlayers];  // number of chips each player has behind
-  Chips min_raise_;        // minimum bet amount
-  Chips max_bet_;          // maximum amount that has been bet so far
+  Chips pot_;                          // number of chips in the pot
+  std::array<Chips, kPlayers> bets_;   // number of chips each player has bet
+  std::array<Chips, kPlayers> stack_;  // number of chips each player has behind
+  Chips min_raise_;                    // minimum bet amount
+  Chips max_bet_;                      /* maximum amount that has been bet so
+                                          far */
 
   // Card Information
   // --------------------------------------------------------------------------
@@ -146,7 +149,7 @@ class Node {
          deck_{UnshuffledDeck<ISO_Card>()}, deck_state_{DeckState::kAuto} {
     button_ = button_ + kPlayers - 1; /* Since NewHand() increments the button
                                          position. */
-    std::fill(stack_, stack_ + kPlayers, default_stack);
+    std::fill(stack_.begin(), stack_.end(), default_stack);
     NewHand();
   }  // Node()
   Node(const Node& other) = default;
@@ -164,7 +167,21 @@ class Node {
 
   /* @brief Equality comparison operator. */
   bool operator==(const Node& other) const {
-    return std::memcmp(this, &other, sizeof(Node)) == 0;
+    return big_blind_ == other.big_blind_ &&
+        small_blind_ == other.small_blind_ && ante_ == other.ante_ &&
+        big_blind_ante_ == other.big_blind_ante_ &&
+        blind_before_ante_ == other.blind_before_ante_ &&
+        rake_ == other.rake_ && rake_cap_ == other.rake_cap_ &&
+        no_flop_no_drop_ == other.no_flop_no_drop_ &&
+        button_ == other.button_ && in_progress_ == other.in_progress_ &&
+        round_ == other.round_ && cycled_ == other.cycled_ &&
+        acting_player_ == other.acting_player_ &&
+        pot_good_ == other.pot_good_ && no_raise_ == other.no_raise_ &&
+        folded_ == other.folded_ && players_left_ == other.players_left_ &&
+        players_all_in_ == other.players_all_in_ && pot_ == other.pot_ &&
+        bets_ == other.bets_ && stack_ == other.stack_ &&
+        min_raise_ == other.min_raise_ && max_bet_ == other.max_bet_ &&
+        deck_ == other.deck_ && deck_state_ == other.deck_state_;
   }
 
   /* @brief Inquality comparison operator. */
@@ -194,7 +211,7 @@ class Node {
     acting_player_ = kChancePlayer;
     pot_good_ = kPlayers;
     no_raise_ = 0;
-    std::fill(folded_, folded_ + kPlayers, false);
+    std::fill(folded_.begin(), folded_.end(), false);
     players_left_ = kPlayers;
     players_all_in_ = 0;
 
@@ -217,7 +234,7 @@ class Node {
     PostBlind(PlayerIndex(1), small_blind_);
     PostBlind(PlayerIndex(2), big_blind_);
     if (ante_ > 0 && blind_before_ante_) effective_ante = PostAntes();
-    players_all_in_ = std::count(stack_, stack_ + kPlayers, 0);
+    players_all_in_ = std::count(stack_.begin(), stack_.end(), 0);
     min_raise_ = big_blind_;
     max_bet_ = big_blind_ + effective_ante;
   }  // NewHand()
@@ -486,7 +503,7 @@ class Node {
     QuotaT pot_precise = QuotaT{1} * pot_;
     DivideSidePot(pot_precise, ranks, folded_, best_players, exact_awards);
     DistributeChips(&pot_, exact_awards, stack_);
-    std::fill(bets_, bets_ + kPlayers, 0);
+    std::fill(bets_.begin(), bets_.end(), 0);
   }
 
   constexpr static struct SingleRun {} single_run_{};
@@ -502,7 +519,7 @@ class Node {
     VerifyAwardablePot(__func__);
 
     if (players_left_ == 1) return FoldVictory(folded_);
-    bool processed[kPlayers];
+    std::array<bool, kPlayers> processed;
     PlayerId players_to_award = PlayersToProcess(processed);
     if (players_to_award == 1) return FoldVictory(processed);
 
@@ -539,7 +556,7 @@ class Node {
     VerifyAwardablePot(__func__);
 
     if (players_left_ == 1) return FoldVictory(folded_);
-    bool processed[kPlayers];
+    std::array<bool, kPlayers> processed;
     PlayerId players_to_award = PlayersToProcess(processed);
     if (players_to_award == 1) return FoldVictory(processed);
 
@@ -547,17 +564,17 @@ class Node {
 
     // Variables to use throughout the loops
     SevenEval::Rank ranks_run[kPlayers] = {};
-    bool processed_run[kPlayers] = {};
-    Chips bets_run[kPlayers] = {};
+    std::array<bool, kPlayers> processed_run = {};
+    std::array<Chips, kPlayers> bets_run = {};
     QuotaT side_pot;
     BestPlayersData best_players_run;
     PlayerId players_to_award_run;
 
     for (std::size_t run = 0; run < kRuns; ++run) {
-      std::copy(processed, processed + kPlayers, processed_run);
+      std::copy(processed.begin(), processed.end(), processed_run.begin());
       SetBoard(boards[run]);
       RankPlayers(processed_run, ranks_run);
-      std::copy(bets_, bets_ + kPlayers, bets_run);
+      std::copy(bets_.begin(), bets_.end(), bets_run.begin());
       players_to_award_run = players_to_award;
 
       // Loop through each side pot and award it to the appropriate player(s)
@@ -571,7 +588,7 @@ class Node {
     }  // for run
     if (ShouldRake()) Rake(&pot_, exact_awards);
     DistributeChips(&pot_, exact_awards, stack_);
-    std::fill(bets_, bets_ + kPlayers, 0);
+    std::fill(bets_.begin(), bets_.end(), 0);
   }  // AwardPot()
 
   // Attribute getter functions
@@ -904,7 +921,7 @@ class Node {
     
     @return The number of players that have not been processed.
   */
-  PlayerN PlayersToProcess(bool processed[kPlayers]) const {
+  PlayerN PlayersToProcess(std::array<bool, kPlayers>& processed) const {
     PlayerId players_to_award = kPlayers;
     for (PlayerId i = 0; i < kPlayers; ++i) {
       auto is_mucked = [&]() -> bool {
@@ -934,13 +951,13 @@ class Node {
 
     @param processed An array of whether each player is folded or mucked.
   */
-  void FoldVictory(const bool processed[kPlayers]) {
-    PlayerId winner = std::find(processed, processed + kPlayers, false) -
-                      processed;
+  void FoldVictory(const std::array<bool, kPlayers>& processed) {
+    PlayerId winner = std::find(processed.begin(), processed.end(), false) -
+                      processed.begin();
     if (ShouldRake()) pot_ -= CalculateRakeChips(pot_);
     stack_[winner] += pot_;
     pot_ = 0;
-    std::fill(bets_, bets_ + kPlayers, 0);
+    std::fill(bets_.begin(), bets_.end(), 0);
   }
 
   /*
@@ -949,7 +966,7 @@ class Node {
     @param filter Players marked as true in this array will not be ranked.
     @param output Array to write hand rankings to.
   */
-  void RankPlayers(const bool filter[kPlayers],
+  void RankPlayers(const std::array<bool, kPlayers>& filter,
                    SevenEval::Rank output[kPlayers]) const {
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!filter[i]) {
@@ -971,8 +988,8 @@ class Node {
     
     @return The size of the side pot formed.
   */
-  Chips AllocateSidePot(Chips bets[kPlayers],
-                        const bool processed[kPlayers]) const {
+  Chips AllocateSidePot(std::array<Chips, kPlayers>& bets,
+                        const std::array<bool, kPlayers>& processed) const {
     // Find the smallest non zero bet from a non processed player
     Chips min_bet = std::numeric_limits<Chips>::max();
     for (PlayerId i = 0; i < kPlayers; ++i) {
@@ -1008,7 +1025,7 @@ class Node {
         with that rank (n).
   */
   BestPlayersData BestPlayers(const SevenEval::Rank ranks[kPlayers],
-                              const bool filter[kPlayers]) const {
+                              const std::array<bool, kPlayers>& filter) const {
     std::optional<SevenEval::Rank> best_rank;
     PlayerId best_players = 0;
     for (PlayerId i = 0; i < kPlayers; ++i) {
@@ -1034,7 +1051,7 @@ class Node {
     @param exact_awards Array to add awards for each player to.
   */
   void DivideSidePot(QuotaT side_pot, const SevenEval::Rank ranks[kPlayers],
-                     const bool filter[kPlayers],
+                     const std::array<bool, kPlayers>& filter,
                      const BestPlayersData best_players,
                      QuotaT exact_awards[kPlayers]) const {
     QuotaT prize = side_pot / best_players.n;
@@ -1058,8 +1075,8 @@ class Node {
 
     @return The number of players marked as processed.
   */
-  PlayerId MarkProcessedPlayers(const Chips bets[kPlayers],
-                                bool processed[kPlayers]) const {
+  PlayerId MarkProcessedPlayers(const std::array<Chips, kPlayers>& bets,
+                                std::array<bool, kPlayers>& processed) const {
     PlayerId players_processed = 0;
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (bets[i] == 0 && !processed[i]) {
@@ -1126,7 +1143,7 @@ class Node {
         winnings.
   */
   void DistributeChips(Chips* pot, const QuotaT exact_awards[kPlayers],
-                       Chips distributions[kPlayers]) const {
+                       std::array<Chips, kPlayers>& distributions) const {
     // Award each player the floor of their exact award.
     Chips pot_awarded = 0;
     for (PlayerId i = 0; i < kPlayers; ++i) {

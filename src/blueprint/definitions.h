@@ -50,7 +50,8 @@ struct AbstractAction {
   /* @brief AbstractAction serialize function */
   template<class Archive>
   void serialize(Archive& archive) {
-    archive(play, max_raise_num, min_round, max_round, max_players, min_pot);
+    archive(play, size, max_raise_num, min_round, max_round, max_players,
+            min_pot);
   }
 };
 

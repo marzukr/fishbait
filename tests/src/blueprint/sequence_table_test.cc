@@ -309,3 +309,41 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
     }
   }
 }  // TEST_CASE "3 player extensive test"
+
+TEST_CASE("equality test", "[blueprint][sequence_table]") {
+  std::array<fishbait::AbstractAction, 5> actions_1 = {{
+      {fishbait::Action::kFold},
+      {fishbait::Action::kAllIn},
+      {fishbait::Action::kCheckCall},
+
+      {fishbait::Action::kBet, 2.0, 1, fishbait::Round::kTurn,
+       fishbait::Round::kTurn, 2, 0},
+      {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
+       fishbait::Round::kRiver, 0, 10000}
+  }};
+  fishbait::Node<3> start_state_1;
+  fishbait::SequenceTable tab1{actions_1, start_state_1};
+  fishbait::SequenceTable tab4{actions_1, start_state_1};
+  REQUIRE(tab1 == tab4);
+  REQUIRE(!(tab1 != tab4));
+
+  std::array<fishbait::AbstractAction, 5> actions_2 = {{
+      {fishbait::Action::kFold},
+      {fishbait::Action::kAllIn},
+      {fishbait::Action::kCheckCall},
+
+      {fishbait::Action::kBet, 2.0, 1, fishbait::Round::kTurn,
+       fishbait::Round::kTurn, 2, 0},
+      {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kRiver,
+       fishbait::Round::kRiver, 0, 10000}
+  }};
+  fishbait::SequenceTable tab2{actions_2, start_state_1};
+  REQUIRE(tab2 != tab1);
+  REQUIRE(!(tab2 == tab1));
+
+  fishbait::Node<3> start_state_2;
+  start_state_2.Deal();
+  fishbait::SequenceTable tab3{actions_1, start_state_2};
+  REQUIRE(tab3 != tab1);
+  REQUIRE(!(tab3 == tab1));
+}  // TEST_CASE "equality test"

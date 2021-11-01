@@ -148,7 +148,7 @@ class SequenceTable {
   /*
     @brief Returns the start state for the sequence table.
   */
-  const Node<kPlayers>& start_state() {
+  const Node<kPlayers>& start_state() const {
     return start_state_;
   }
 
@@ -184,6 +184,17 @@ class SequenceTable {
     NumActionsArray num_actions;
     SortActions(actions, sorted_actions, num_actions);
     return CountSorted(sorted_actions, num_actions, start_state);
+  }
+
+  /* @brief Checks if two SequenceTables are not the same */
+  bool operator!=(const SequenceTable& other) const {
+    /* Just need to check actions_ and start_state_ because if they are the same
+       then table_ and legal_offsets_ will also be the same */
+    return actions_ != other.actions_ | start_state_ != other.start_state_;
+  }
+
+  bool operator==(const SequenceTable& other) const {
+    return !(*this != other);
   }
 
  private:

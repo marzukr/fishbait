@@ -7,12 +7,12 @@
 
 namespace fishbait {
 
-template <typename T, std::size_t N>
-inline std::ostream& Out(std::ostream& os, std::array<T, N>&& s) {
+template <typename ArrayT>
+inline std::ostream& Out(std::ostream& os, ArrayT&& s) {
   os << "[";
-  for (std::size_t i = 0; i < N; ++i) {
+  for (std::size_t i = 0; i < s.size(); ++i) {
     os << s[i];
-    if (i != N - 1) {
+    if (i != s.size() - 1) {
       os << ", ";
     }
   }
