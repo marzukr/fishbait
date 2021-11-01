@@ -3,6 +3,8 @@
 #ifndef SRC_UTILS_MATH_H_
 #define SRC_UTILS_MATH_H_
 
+#include <numeric>
+
 namespace fishbait {
 
 constexpr uint32_t N_Choose_K(uint32_t n, uint32_t k) {
@@ -16,6 +18,12 @@ constexpr uint32_t N_Choose_K(uint32_t n, uint32_t k) {
     result /= i;
   }
   return result;
+}
+
+template <typename ArrayT>
+double Mean(const ArrayT& data) {
+  double sum = std::accumulate(data.begin(), data.end(), 0.0);
+  return sum / data.size();
 }
 
 }  // namespace fishbait

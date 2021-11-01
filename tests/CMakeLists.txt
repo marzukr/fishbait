@@ -21,6 +21,7 @@ add_executable(tests.out main.cc
   src/utils/combination_matrix_test.cc
   src/utils/fraction_test.cc
   src/utils/loop_iterator_test.cc
+  src/utils/math_test.cc
   src/utils/random_test.cc
   src/utils/timer_test.cc
   )
