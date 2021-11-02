@@ -10,6 +10,7 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -237,7 +238,37 @@ class Strategy {
 
     /* @brief Adds the given strategy to this average */
     Average& operator+=(const Strategy& rhs) {
-      for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
+      /* For preflop, normalize action counts and overwrite since action counts
+         already does averaging */
+      {
+        RoundId r_id = 0;
+        fishbait::Round r = Round{r_id};
+        SequenceN round_seqs = rhs.action_abstraction_.States(r);
+        CardCluster n_clusters = InfoAbstraction::NumClusters(r);
+        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
+          std::size_t offset = 0;
+          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
+            nda::size_t legal_actions =
+                rhs.action_abstraction_.NumLegalActions(r, seq);
+            const ActionCount* i_begin = &rhs.action_counts_(cluster, offset);
+            const ActionCount* i_end = i_begin + legal_actions;
+            float* o_begin = &probabilities_[r_id](cluster, offset);
+            float* o_end = o_begin + legal_actions;
+
+            ActionCount sum = std::accumulate(i_begin, i_end, 0);
+            if (sum > 0) {
+              std::transform(i_begin, i_end, o_begin,
+                  [=](const ActionCount& a) { return a * 1.0 / sum; });
+            } else {
+              std::fill(o_begin, o_end, 1.0 / legal_actions);
+            }
+
+            offset += legal_actions;
+          }
+        }
+      }
+
+      for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
         fishbait::Round r = Round{r_id};
         SequenceN round_seqs = rhs.action_abstraction_.States(r);
         CardCluster n_clusters = InfoAbstraction::NumClusters(r);
@@ -263,7 +294,8 @@ class Strategy {
 
     /* @brief Normalize the probabilities by dividing all of them by n_. */
     void Normalize() {
-      for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
+      // Preflop already normalized because of action counts
+      for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
         probabilities_[r_id].for_each_value([=](float& ref) {
           ref /= n_;
         });
