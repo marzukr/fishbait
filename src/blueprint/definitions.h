@@ -59,12 +59,11 @@ struct node_count {
   SequenceN internal_nodes = 0;
   SequenceN leaf_nodes = 0;
   SequenceN illegal_nodes = 0;
+  SequenceN legal_actions = 0;
 };
 using NumNodesArray = std::array<node_count, kNRounds>;
 
-inline std::ostream& operator<<(std::ostream& os, NumNodesArray& s) {
-  uint64_t total_internal = 0;
-  uint64_t total_leaf = 0;
+inline std::ostream& operator<<(std::ostream& os, const NumNodesArray&& s) {
   uint64_t total_illegal = 0;
   os << "illegal nodes: " << s[0].illegal_nodes;
   total_illegal += s[0].illegal_nodes;
@@ -74,6 +73,8 @@ inline std::ostream& operator<<(std::ostream& os, NumNodesArray& s) {
   }
   os << std::endl;
   os << "total illegal nodes: " << total_illegal << std::endl;
+
+  uint64_t total_internal = 0;
   os << "internal nodes: " << s[0].internal_nodes;
   total_internal += s[0].internal_nodes;
   for (std::size_t i = 1; i < s.size(); ++i) {
@@ -82,6 +83,18 @@ inline std::ostream& operator<<(std::ostream& os, NumNodesArray& s) {
   }
   os << std::endl;
   os << "total internal nodes: " << total_internal << std::endl;
+
+  uint64_t total_legal = 0;
+  os << "legal actions: " << s[0].legal_actions;
+  total_legal += s[0].legal_actions;
+  for (std::size_t i = 1; i < s.size(); ++i) {
+    total_legal += s[i].legal_actions;
+    os << ", " << s[i].legal_actions;
+  }
+  os << std::endl;
+  os << "total legal actions: " << total_legal << std::endl;
+
+  uint64_t total_leaf = 0;
   os << "leaf nodes: " << s[0].leaf_nodes;
   total_leaf += s[0].leaf_nodes;
   for (std::size_t i = 1; i < s.size(); ++i) {

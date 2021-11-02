@@ -23,12 +23,23 @@ TEST_CASE("6 players all in or fold", "[blueprint][sequence_table]") {
                                                                start_state);
   CHECK(row_counts[0].internal_nodes == 62);
   CHECK(row_counts[0].leaf_nodes == 6);
+  CHECK(row_counts[0].illegal_nodes == 0);
+  CHECK(row_counts[0].legal_actions == 124);
+
   CHECK(row_counts[1].internal_nodes == 0);
   CHECK(row_counts[1].leaf_nodes == 0);
+  CHECK(row_counts[1].illegal_nodes == 0);
+  CHECK(row_counts[1].legal_actions == 0);
+
   CHECK(row_counts[2].internal_nodes == 0);
   CHECK(row_counts[2].leaf_nodes == 0);
+  CHECK(row_counts[2].illegal_nodes == 0);
+  CHECK(row_counts[2].legal_actions == 0);
+
   CHECK(row_counts[3].internal_nodes == 0);
   CHECK(row_counts[3].leaf_nodes == 57);
+  CHECK(row_counts[3].illegal_nodes == 0);
+  CHECK(row_counts[3].legal_actions == 0);
 
   fishbait::SequenceTable seq{actions, start_state};
 
@@ -110,12 +121,23 @@ TEST_CASE("3 player extensive test", "[blueprint][sequence_table]") {
 
   CHECK(row_counts[0].internal_nodes == 18);
   CHECK(row_counts[0].leaf_nodes == 7);
+  CHECK(row_counts[0].illegal_nodes == 15);
+  CHECK(row_counts[0].legal_actions == 39);
+
   CHECK(row_counts[1].internal_nodes == 20);
   CHECK(row_counts[1].leaf_nodes == 7);
+  CHECK(row_counts[1].illegal_nodes == 40);
+  CHECK(row_counts[1].legal_actions == 40);
+
   CHECK(row_counts[2].internal_nodes == 28);
   CHECK(row_counts[2].leaf_nodes == 15);
+  CHECK(row_counts[2].illegal_nodes == 76);
+  CHECK(row_counts[2].legal_actions == 64);
+
   CHECK(row_counts[3].internal_nodes == 36);
   CHECK(row_counts[3].leaf_nodes == 85);
+  CHECK(row_counts[3].illegal_nodes == 72);
+  CHECK(row_counts[3].legal_actions == 72);
 
   fishbait::SequenceTable seq{actions, start_state};
 

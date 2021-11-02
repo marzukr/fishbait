@@ -65,7 +65,7 @@ class SequenceTable {
                                            action_counter[i]}};
     }
 
-    node_counter.fill({0, 0, 0});
+    node_counter.fill({0, 0, 0, 0});
     Node new_state = start_state_;
     Generate(new_state, 0, actions_, action_counter, 0, node_counter,
         [&](SequenceId seq, Round round, nda::index_t action_col,
@@ -213,7 +213,7 @@ class SequenceTable {
                                    const NumActionsArray& num_actions,
                                    const Node<kPlayers>& start_state) {
     NumNodesArray node_counter;
-    node_counter.fill({0, 0, 0});
+    node_counter.fill({0, 0, 0, 0});
     Node new_state = start_state;
     Generate(new_state, 0, sorted_actions, num_actions, 0, node_counter,
              [](SequenceId, Round, nda::index_t, SequenceId) {});
@@ -281,6 +281,7 @@ class SequenceTable {
       AbstractAction action = actions[+state.round()][j];
       Chips chip_size = ActionSize(action, state, num_raises);
       if (chip_size) {
+        ++node_counter[+state.round()].legal_actions;
         Node<kPlayers> new_state = state;
         new_state.Apply(action.play, chip_size);
         Round new_round = new_state.round();
