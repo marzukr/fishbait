@@ -15,9 +15,86 @@
 int main() {
   constexpr fishbait::PlayerN kPlayers = 6;
   fishbait::Node<kPlayers> start_state;
-  /* The following bet sizes are what we believe are close to what was used in
-     pluribus to a reasonable degree of accuracy. It results in 664,842,258
-     action sequences. */
+  /*
+    The following bet sizes are what we believe are close to what was used in
+    pluribus to a reasonable degree of accuracy. It results in a sequence table
+    with the following counts:
+
+    preflop actions: 17
+    flop actions: 7
+    turn actions: 5
+    river actions: 5
+
+    illegal nodes: 325846945, 333211308, 294466390, 369101348
+    total illegal nodes: 1322625991
+    internal nodes: 22002506, 68725968, 100425836, 126042938
+    total internal nodes: 317197248
+    legal actions: 48195657, 147870468, 207662790, 261113342
+    total legal actions: 664842257
+    leaf nodes: 4190677, 20042089, 30712047, 292700197
+    total leaf nodes: 347645010
+
+    regrets = (preflop legal actions * preflop clusters) +
+              (flop legal actions * flop clusters) +
+              (turn legal actions * turn clusters) +
+              (river legal actions * river clusters)
+            = (48195657 * 169) + (147870468 * 200) + (207662790 * 200) +
+              (261113342 * 200)
+            = 131474386033
+    regret table size = regrets * size of regret
+                      = 131474386033 * size of int32_t
+                      = 664842258 * 4 bytes
+                      = 525897544132 bytes
+                      = 489.7803 GiB
+    
+    action counts size = preflop legal actions * preflop clusters *
+                         size of action count
+                       = 48195657 * 169 * size of uint32_t
+                       = 48195657 * 169 * 4 bytes
+                       = 32580264132 bytes
+                       = 30.34274 GiB
+
+    sequence table table entries = (preflop internal nodes * preflop actions) +
+                                   (flop internal nodes * flop actions) +
+                                   (turn internal nodes * turn actions) +
+                                   (river internal nodes * river actions)
+                                 = (22002506 * 17) + (68725968 * 7) +
+                                   (100425836 * 5) + (126042938 * 5)
+                                 = 1987468248
+    sequence table table size = sequence table table entries *
+                                size of SequenceId
+                              = 1987468248 * size of uint32_t
+                              = 1987468248 * 4 bytes
+                              = 7949872992 bytes
+                              = 7.403896 GiB
+    sequence table offsets size = total internal nodes * size of offset
+                                = 317197248 * size of std::size_t
+                                = 317197248 * (up to 8 bytes)
+                                = 2537577984 bytes
+                                = 2.363304 GiB
+    action abstraction size = sequence table table size +
+                              sequence table offsets size
+                            = 7.403896 GiB + 2.363304 GiB
+                            = 9.7672 GiB
+
+    info abstraction size = (preflop hands + flop hands + turn hands +
+                             river hands) * size of CardCluster
+                          = (169 + 1286792 + 13960050 + 123156254) *
+                            size of uint32_t
+                          = 138403265 * 4 bytes
+                          = 553613060 bytes
+                          = 0.5155923 GiB
+    
+    strategy size = info abstraction size + action abstraction size +
+                    regret table size + action counts size
+                  = 0.5155923 GiB + 9.7672 GiB + 489.7803 GiB + 30.34274 GiB
+                  = 530.4058323 GiB
+
+    strategy average size = regrets * size of float
+                          = 131474386033 * 4 bytes
+                          = 525897544132 bytes
+                          = 489.7803 GiB
+  */
   std::array<fishbait::AbstractAction, 23> actions = {{
       {fishbait::Action::kFold},
       {fishbait::Action::kCheckCall},
