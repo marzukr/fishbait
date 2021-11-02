@@ -56,10 +56,26 @@ struct AbstractAction {
 };
 
 struct node_count {
-  SequenceN internal_nodes = 0;
-  SequenceN leaf_nodes = 0;
-  SequenceN illegal_nodes = 0;
-  SequenceN legal_actions = 0;
+  SequenceN internal_nodes = 0;  /* The number of sequence table rows in each
+                                    round. */
+  SequenceN leaf_nodes = 0;      /* The number of leaf nodes in each round that
+                                    end directly in that round. For instance in
+                                    preflop, folding to the big blind would
+                                    count, but two players going all in would
+                                    not count since the cards must be dealt to
+                                    the river. */
+  SequenceN illegal_nodes = 0;   /* The number of sequence table entries that
+                                    are illegal actions in this round. Both
+                                    actions that are illegal in the game and
+                                    actions that are illegal because they are
+                                    not in the action abstraction are
+                                    counted. */
+  SequenceN legal_actions = 0;   /* The number of legal actions in this round.
+                                    This is the same as the number of legal
+                                    sequence table entries in the round (the    // NOLINT(*)
+                                    action either leads to a leaf node or
+                                    another row) and is also the same as the
+                                    number of regrets in that round. */
 };
 using NumNodesArray = std::array<node_count, kNRounds>;
 
