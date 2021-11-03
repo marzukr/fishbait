@@ -25,7 +25,7 @@ struct AbstractAction {
   // Bet size proportional to the pot. Only matters if play is a kBet.
   double size = 0;
 
-  // Maximum raise number for this action. Inclusive.
+  // Maximum raise number for this action. Inclusive. 0 is always allow.
   int max_raise_num = 0;
 
   // First round this action can be played. Inclusive.
@@ -34,10 +34,11 @@ struct AbstractAction {
   // Last round this action can be played. Inclusive.
   Round max_round = Round::kRiver;
 
-  // Max number of players allowed for this action. Inclusive.
+  /* Max number of players allowed for this action. Inclusive. 0 is always
+     allow. */
   PlayerN max_players = 0;
 
-  // Min pot size for this action. Inclusive
+  // Min pot size for this action. Inclusive. 0 is always allow.
   Chips min_pot = 0;
 
   bool operator==(const AbstractAction& rhs) const {
