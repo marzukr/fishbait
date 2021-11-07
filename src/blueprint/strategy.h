@@ -391,7 +391,8 @@ class Strategy {
               std::size_t act_idx =
                   SampleAction(round, card_buckets[player], seq).round_idx;
               seq = action_abstraction_.Next(round, seq, act_idx);
-              AbstractAction action = action_abstraction_.Actions(round)[act_idx];
+              AbstractAction action =
+                  action_abstraction_.Actions(round)[act_idx];
               state.Apply(action.play, state.ConvertBet(action.size));
             } else {
               std::size_t act_idx = op.SampleAction(round,
