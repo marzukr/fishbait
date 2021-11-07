@@ -269,14 +269,18 @@ class Strategy {
    private:
     GameLegalActionsTable<float> probabilities_;
     int n_;  // How many strategies are in this average.
+    SequenceTable<kPlayers, kActions> action_abstraction_;
+    Random rng_;
 
     explicit Average(Strategy& ref)
-        : probabilities_{ref.InitGameLegalActionsTable<float>()}, n_{0} {
+        : probabilities_{ref.InitGameLegalActionsTable<float>()}, n_{0},
+          action_abstraction_{ref.action_abstraction_}, rng_{} {
       *this += ref;
     }
 
     /* @brief Barebones constructor to load a saved average. */
-    Average() {}
+    Average() : action_abstraction_{std::array<AbstractAction, kActions>{},
+                                    Node<kPlayers>{}} {}
 
    public:
     friend class Strategy;
@@ -284,7 +288,7 @@ class Strategy {
     /* @brief Average serialize function. */
     template<class Archive>
     void serialize(Archive& archive) {
-      archive(probabilities_, n_);
+      archive(probabilities_, n_, action_abstraction_, rng_);
     }
 
     /* @brief Loads an Average snapshot from the given path on disk. */
@@ -354,6 +358,7 @@ class Strategy {
     /* @brief Normalize the probabilities by dividing all of them by n_. */
     void Normalize() {
       // Preflop already normalized because of action counts
+      if (n_ == 1) return;
       for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
         probabilities_[r_id].for_each_value([=](float& ref) {
           ref /= n_;
@@ -362,7 +367,45 @@ class Strategy {
       n_ = 1;
     }
 
+    /*
+      @brief Samples an action from this average strategy at the given infoset.
+
+      Assumes this average is normal (n_ = 1).
+
+      @param round The betting round of the infoset.
+      @param card_bucket The card cluster id of the infoset.
+      @param seq The sequence id of the infoset.
+
+      @return The indicies of the sampled action.
+    */
+    ActionIndicies SampleAction(Round round, CardCluster card_bucket,
+                                SequenceId seq) {
+      std::size_t offset = action_abstraction_.LegalOffset(round, seq);
+
+      std::uniform_real_distribution<float> sampler(0, 1);
+      float sampled = sampler(rng_());
+      float bound = 0;
+
+      nda::size_t round_actions = action_abstraction_.ActionCount(round);
+
+      std::size_t legal_i = 0;
+      for (std::size_t i = 0; i < round_actions; ++i) {
+        if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
+
+        bound += probabilities_[+round](card_bucket, offset + legal_i);
+        if (sampled < bound) {
+          return {i, legal_i};
+        }
+
+        ++legal_i;
+      }  // for i
+      const std::string error = std::string(__func__) +
+                                ": No action was selected.";
+      throw std::runtime_error(error);
+    }  // SampleAction()
+
     const auto& probabilities() const { return probabilities_; }
+    const auto& action_abstraction() const { return action_abstraction_; }
   };  // class Average
 
   /* @brief Return an avg strategy where this strategy is the only datapoint. */

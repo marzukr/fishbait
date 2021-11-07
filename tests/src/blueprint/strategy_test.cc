@@ -365,6 +365,7 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   }
 
   auto prob_table = strategy_6.InitialAverage();
+  REQUIRE(prob_table.action_abstraction() == strategy_6.action_abstraction());
   auto& probabilities = prob_table.probabilities();
 
   std::vector<float> prob_table_preflop = {0.333333333, 0.333333333,
@@ -482,6 +483,8 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   CerealSave(save_path.string(), &prob_table, false);
   auto load_prob_table =
       decltype(strategy_4)::Average::LoadAverage(save_path, false);
+  REQUIRE(load_prob_table.action_abstraction() ==
+          strategy_4.action_abstraction());
   auto& avg_probs = load_prob_table.probabilities();
 
   std::vector<float> avg_table_preflop = {0.333333333, 0.333333333, 0.333333333,
