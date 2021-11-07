@@ -6,10 +6,14 @@
 #include "catch2/catch.hpp"
 #include "utils/math.h"
 
-TEST_CASE("mean test", "[utils][math]") {
+TEST_CASE("stats test", "[utils][math]") {
   std::vector<int> int_data = {3, 4, 5, 6, 7, -5};
-  REQUIRE(fishbait::Mean(int_data) == Approx(3.3333333333));
+  double int_mean = fishbait::Mean(int_data);
+  REQUIRE(int_mean == Approx(3.3333333333));
+  REQUIRE(fishbait::Std(int_data, int_mean) == Approx(3.9440531887330774));
 
   std::array<double, 4> double_data = {7.3, 8.9, 10.4, -22};
-  REQUIRE(fishbait::Mean(double_data) == Approx(1.15));
+  double double_mean = fishbait::Mean(double_data);
+  REQUIRE(double_mean == Approx(1.15));
+  REQUIRE(fishbait::Std(double_data, double_mean) == Approx(13.41053690200358));
 }  // TEST_CASE "basic timer tests"

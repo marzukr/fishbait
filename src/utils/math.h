@@ -4,6 +4,7 @@
 #define SRC_UTILS_MATH_H_
 
 #include <numeric>
+#include <cmath>
 
 namespace fishbait {
 
@@ -24,6 +25,16 @@ template <typename ArrayT>
 double Mean(const ArrayT& data) {
   double sum = std::accumulate(data.begin(), data.end(), 0.0);
   return sum / data.size();
+}
+
+template <typename ArrayT>
+double Std(const ArrayT& data, double mean) {
+  double sum = 0;
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    double diff = (*it - mean);
+    sum += diff * diff;
+  }
+  return std::sqrt(sum / data.size());
 }
 
 }  // namespace fishbait
