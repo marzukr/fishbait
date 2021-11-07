@@ -197,64 +197,6 @@ class Strategy {
     throw std::runtime_error(error);
   }  // SampleAction()
 
-  /*
-    @brief Test this strategy vs the op strategy.
-
-    Both strategies must have the same action abstraction. Assumes all players
-    start with the same amount of chips as the player on the button and there is
-    no rake.
-
-    @param op The opponent strategy to test against.
-    @param trials The number of trials to run per position.
-
-    @return A vector of (kPlayers * trials) chip gains and losses for this
-        strategy.
-  */
-  std::vector<int> Battle(Strategy& op, int trials = 1000000) {
-    if (action_abstraction_ != op.action_abstraction_) {
-      throw std::invalid_argument("op strategy does not have the same action "
-                                  "abstraction.");
-    }
-
-    std::vector<int> results(kPlayers * trials);
-    Chips default_stack = action_abstraction_.start_state().stack(0);
-    for (PlayerId player = 0; player < kPlayers; ++player) {
-      for (int i = 0; i < trials; ++i) {
-        Node<kPlayers> state = action_abstraction_.start_state();
-        SequenceId seq = 0;
-        std::array<CardCluster, kPlayers> card_buckets;
-        while (state.in_progress()) {
-          Round round = state.round();
-          if (state.acting_player() == state.kChancePlayer) {
-            state.Deal();
-            state.ProceedPlay();
-            card_buckets = op.info_abstraction_.ClusterArray(state);
-            card_buckets[player] = info_abstraction_.Cluster(state, player);
-          } else if (state.folded(player)) {
-            break;
-          } else if (state.acting_player() == player) {
-            std::size_t act_idx =
-                SampleAction(round, card_buckets[player], seq).round_idx;
-            seq = action_abstraction_.Next(round, seq, act_idx);
-            AbstractAction action = action_abstraction_.Actions(round)[act_idx];
-            state.Apply(action.play, state.ConvertBet(action.size));
-          } else {
-            std::size_t act_idx = op.SampleAction(round,
-                card_buckets[state.acting_player()], seq).round_idx;
-            seq = op.action_abstraction_.Next(round, seq, act_idx);
-            AbstractAction action =
-                op.action_abstraction_.Actions(round)[act_idx];
-            state.Apply(action.play, state.ConvertBet(action.size));
-          }
-        }  // while state.in_progress()
-        if (!state.in_progress()) state.AwardPot(state.same_stack_no_rake_);
-        results[player * trials + i] = state.stack(player) - default_stack;
-      }  // for i
-    }  // for player
-
-    return results;
-  }  // Battle()
-
   /* @brief action_abstraction_ getter function */
   const auto& action_abstraction() const { return action_abstraction_; }
 
@@ -270,11 +212,13 @@ class Strategy {
     GameLegalActionsTable<float> probabilities_;
     int n_;  // How many strategies are in this average.
     SequenceTable<kPlayers, kActions> action_abstraction_;
+    InfoAbstraction info_abstraction_;
     Random rng_;
 
     explicit Average(Strategy& ref)
         : probabilities_{ref.InitGameLegalActionsTable<float>()}, n_{0},
-          action_abstraction_{ref.action_abstraction_}, rng_{} {
+          action_abstraction_{ref.action_abstraction_},
+          info_abstraction_{ref.info_abstraction_}, rng_{} {
       *this += ref;
     }
 
@@ -288,7 +232,7 @@ class Strategy {
     /* @brief Average serialize function. */
     template<class Archive>
     void serialize(Archive& archive) {
-      archive(probabilities_, n_, action_abstraction_, rng_);
+      archive(probabilities_, n_, action_abstraction_, info_abstraction_, rng_);
     }
 
     /* @brief Loads an Average snapshot from the given path on disk. */
@@ -380,6 +324,10 @@ class Strategy {
     */
     ActionIndicies SampleAction(Round round, CardCluster card_bucket,
                                 SequenceId seq) {
+      if (n_ != 0) {
+        throw std::logic_error("SampleAction called on non normal average "
+                               "strategy");
+      }
       std::size_t offset = action_abstraction_.LegalOffset(round, seq);
 
       std::uniform_real_distribution<float> sampler(0, 1);
@@ -403,6 +351,64 @@ class Strategy {
                                 ": No action was selected.";
       throw std::runtime_error(error);
     }  // SampleAction()
+
+    /*
+      @brief Test this average strategy vs the op average strategy.
+
+      Both strategies must have the same action abstraction. Assumes all players
+      start with the same amount of chips as the player on the button and there
+      is no rake.
+
+      @param op The opponent strategy to test against.
+      @param trials The number of trials to run per position.
+
+      @return A vector of (kPlayers * trials) chip gains and losses for this
+          average strategy.
+    */
+    std::vector<int> Battle(Average& op, int trials = 1000000) {
+      if (action_abstraction_ != op.action_abstraction_) {
+        throw std::invalid_argument("op average strategy does not have the "
+                                    "same action abstraction.");
+      }
+
+      std::vector<int> results(kPlayers * trials);
+      Chips default_stack = action_abstraction_.start_state().stack(0);
+      for (PlayerId player = 0; player < kPlayers; ++player) {
+        for (int i = 0; i < trials; ++i) {
+          Node<kPlayers> state = action_abstraction_.start_state();
+          SequenceId seq = 0;
+          std::array<CardCluster, kPlayers> card_buckets;
+          while (state.in_progress()) {
+            Round round = state.round();
+            if (state.acting_player() == state.kChancePlayer) {
+              state.Deal();
+              state.ProceedPlay();
+              card_buckets = op.info_abstraction_.ClusterArray(state);
+              card_buckets[player] = info_abstraction_.Cluster(state, player);
+            } else if (state.folded(player)) {
+              break;
+            } else if (state.acting_player() == player) {
+              std::size_t act_idx =
+                  SampleAction(round, card_buckets[player], seq).round_idx;
+              seq = action_abstraction_.Next(round, seq, act_idx);
+              AbstractAction action = action_abstraction_.Actions(round)[act_idx];
+              state.Apply(action.play, state.ConvertBet(action.size));
+            } else {
+              std::size_t act_idx = op.SampleAction(round,
+                  card_buckets[state.acting_player()], seq).round_idx;
+              seq = op.action_abstraction_.Next(round, seq, act_idx);
+              AbstractAction action =
+                  op.action_abstraction_.Actions(round)[act_idx];
+              state.Apply(action.play, state.ConvertBet(action.size));
+            }
+          }  // while state.in_progress()
+          if (!state.in_progress()) state.AwardPot(state.same_stack_no_rake_);
+          results[player * trials + i] = state.stack(player) - default_stack;
+        }  // for i
+      }  // for player
+
+      return results;
+    }  // Battle()
 
     const auto& probabilities() const { return probabilities_; }
     const auto& action_abstraction() const { return action_abstraction_; }

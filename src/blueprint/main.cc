@@ -14,6 +14,8 @@
 
 int main() {
   constexpr fishbait::PlayerN kPlayers = 6;
+  constexpr int kActions = 23;
+
   fishbait::Node<kPlayers> start_state;
   /*
     The following bet sizes are what we believe are close to what was used in
@@ -90,12 +92,15 @@ int main() {
                   = 0.5155923 GiB + 9.7672 GiB + 489.7803 GiB + 30.34274 GiB
                   = 530.4058323 GiB
 
-    strategy average size = regrets * size of float
-                          = 131474386033 * 4 bytes
-                          = 525897544132 bytes
-                          = 489.7803 GiB
+    strategy average size = (regrets * size of float) +
+                            action abstraction size + info abstraction size               
+                          = (131474386033 * 4 bytes) + 9.7672 GiB +
+                            0.5155923 GiB
+                          = 525897544132 bytes + 9.7672 GiB + 0.5155923 GiB
+                          = 489.7803 GiB + 9.7672 GiB + 0.5155923 GiB
+                          = 500.0630923 GiB
   */
-  std::array<fishbait::AbstractAction, 23> actions = {{
+  std::array<fishbait::AbstractAction, kActions> actions = {{
       {fishbait::Action::kFold},
       {fishbait::Action::kCheckCall},
       {fishbait::Action::kAllIn},
