@@ -7,9 +7,12 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Helpful warning compiler flags
 add_compile_options(-Wall -Wextra -pedantic -Werror)
+
+# AWS Graviton2 optimizations
 if(TGT_SYSTEM STREQUAL "Graviton2")
   add_compile_options(-march=armv8.2-a+fp16+rcpc+dotprod+crypto
                       -mtune=neoverse-n1)
+  message(STATUS "Optimizing for AWS Graviton2")
 else()
   add_compile_options(-march=native)
 endif()

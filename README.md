@@ -10,11 +10,14 @@ From the root directory:
 2. `cd build`
 3. `cmake <options> ..`
     * Possible Options:
-        * Add `-D CMAKE_C_COMPILER=<c-compiler>` and 
-          `-D CMAKE_CXX_COMPILER=<cpp-compiler>`
-        * Use `-D CMAKE_BUILD_TYPE=Debug` to debug with gdb or lldb.
-        * Use `-D CMAKE_BUILD_TYPE=Release` to run in release mode. Release mode
+        * `-DCMAKE_C_COMPILER=<c-compiler>` and 
+          `-DCMAKE_CXX_COMPILER=<cpp-compiler>`
+        * `-DCMAKE_BUILD_TYPE=Debug` to debug with gdb or lldb.
+        * `-DCMAKE_BUILD_TYPE=Release` to run in release mode. Release mode
           will add optimizations that makes the code run faster.
+        * `-DTGT_SYSTEM=Graviton2` for AWS Graviton2 optimizations.
+        * `-DCORES=<core_count>` to instruct parallel algorithms to use
+          `<core_count>` cores.
 4. `cmake --build .`
 
 All executables will now be located in `build/bin`. So, for example, to execute
