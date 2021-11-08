@@ -46,7 +46,7 @@ class ClusterTable {
   */
   template <PlayerN kPlayers>
   std::array<CardCluster, kPlayers> ClusterArray(const Node<kPlayers>& node) {
-    std::array<CardCluster, kPlayers> card_clusters;
+    std::array<CardCluster, kPlayers> card_clusters = {0};
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!node.folded(i) && node.stack(i) != 0) {
         card_clusters[i] = Cluster(node, i);

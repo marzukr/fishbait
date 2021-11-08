@@ -658,7 +658,7 @@ class Strategy {
         for (int i = 0; i < trials; ++i) {
           Node<kPlayers> state = action_abstraction_.start_state();
           SequenceId seq = 0;
-          std::array<CardCluster, kPlayers> card_buckets;
+          std::array<CardCluster, kPlayers> card_buckets = {0};
           while (state.in_progress()) {
             Round round = state.round();
             if (state.acting_player() == state.kChancePlayer) {
