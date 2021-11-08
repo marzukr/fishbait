@@ -36,6 +36,8 @@ class TestClusters {
   TestClusters() = default;
   TestClusters(const TestClusters&) {}
   TestClusters& operator=(const TestClusters&) { return *this; }
+  bool operator==(const TestClusters&) const { return true; }
+  bool operator!=(const TestClusters&) const { return false; }
 
   /* @brief TestClusters serialize function */
   template<class Archive>
@@ -368,6 +370,10 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   }
 
   auto prob_table = strategy_6.InitialAverage();
+  auto prob_table_dup = s.InitialAverage();
+  auto prob_table_cp = prob_table;
+  REQUIRE(prob_table == prob_table_dup);
+  REQUIRE(prob_table == prob_table_cp);
   REQUIRE(prob_table.action_abstraction() == strategy_6.action_abstraction());
   auto& probabilities = prob_table.probabilities();
 
@@ -482,6 +488,8 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
      preflop strategy from action_counts */
   prob_table += strategy_4;
   prob_table.Normalize();
+  REQUIRE(prob_table != prob_table_cp);
+  REQUIRE(prob_table != prob_table_dup);
   save_path = base_path / "avg_table.cereal";
   CerealSave(save_path.string(), &prob_table, false);
   auto load_prob_table =
@@ -4122,6 +4130,7 @@ TEST_CASE("battle test", "[blueprint][strategy][.]") {
   fishbait::Strategy s2(start_state, actions, cluster_table,
                         prune_constant, regret_floor);
   auto s2_in_avg = s2.InitialAverage();
+  REQUIRE(s1_in_avg == s2_in_avg);
 
   std::vector<double> initial_means = s1_in_avg.BattleStats(s2_in_avg, kMeans,
                                                             kTrials);
@@ -4136,7 +4145,12 @@ TEST_CASE("battle test", "[blueprint][strategy][.]") {
     }
     if ((i + 1) % kAverageInterval == 0) s1_in_avg += s1;
   }
+  auto s1_in_avg_unnormal = s1_in_avg;
+  REQUIRE(s1_in_avg != s2_in_avg);
   s1_in_avg.Normalize();
+  REQUIRE(s1_in_avg != s1_in_avg_unnormal);
+  REQUIRE(s1_in_avg != s2_in_avg);
+  REQUIRE(s1_in_avg_unnormal != s2_in_avg);
   std::vector<double> trained_means = s1_in_avg.BattleStats(s2_in_avg, kMeans,
                                                             kTrials);
   double trained_mean = fishbait::Mean(trained_means);

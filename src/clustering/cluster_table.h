@@ -28,6 +28,8 @@ class ClusterTable {
   explicit ClusterTable(bool verbose = false);
   ClusterTable(const ClusterTable& other);
   ClusterTable& operator=(const ClusterTable& other);
+  bool operator!=(const ClusterTable& other) const;
+  bool operator==(const ClusterTable& other) const;
 
   /*
     @brief Returns the number of card clusters in the given round.

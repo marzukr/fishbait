@@ -457,6 +457,16 @@ class Strategy {
    public:
     friend class Strategy;
 
+    Average(const Average& other) = default;
+    Average& operator=(const Average& other) = default;
+
+    bool operator!=(const Average& other) const {
+      return probabilities_ != other.probabilities_ || n_ != other.n_ ||
+             action_abstraction_ != other.action_abstraction_ ||
+             info_abstraction_ != other.info_abstraction_;
+    }
+    bool operator==(const Average& other) const { return !(*this != other); }
+
     /* @brief Average serialize function. */
     template<class Archive>
     void serialize(Archive& archive) {

@@ -37,4 +37,12 @@ ClusterTable& ClusterTable::operator=(const ClusterTable& other) {
   return *this;
 }
 
+bool ClusterTable::operator!=(const ClusterTable& other) const {
+  return table_ != other.table_;
+}
+
+bool ClusterTable::operator==(const ClusterTable& other) const {
+  return !(*this != other);
+}
+
 }  // namespace fishbait
