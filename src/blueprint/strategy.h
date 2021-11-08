@@ -14,7 +14,7 @@
 #include <random>
 #include <stdexcept>
 #include <string>
-#include <thread>
+#include <thread>  // NOLINT(build/c++11)
 #include <vector>
 
 #include "array/array.h"
