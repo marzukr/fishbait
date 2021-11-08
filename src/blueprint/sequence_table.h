@@ -190,7 +190,7 @@ class SequenceTable {
   bool operator!=(const SequenceTable& other) const {
     /* Just need to check actions_ and start_state_ because if they are the same
        then table_ and legal_offsets_ will also be the same */
-    return actions_ != other.actions_ | start_state_ != other.start_state_;
+    return actions_ != other.actions_ || start_state_ != other.start_state_;
   }
 
   bool operator==(const SequenceTable& other) const {
