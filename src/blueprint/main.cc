@@ -183,8 +183,7 @@ int main() {
   constexpr int kStrategyDelay = 800;
 
   fishbait::Strategy strategy(start_state, actions, cluster_table,
-                              kPruneConstant, kRegretFloor,
-                              fishbait::Random::Seed{});
+                              kPruneConstant, kRegretFloor);
 
   std::filesystem::path base_path("out/blueprint");
   std::filesystem::path save_path = base_path / "run_1";

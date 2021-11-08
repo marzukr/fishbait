@@ -14,6 +14,7 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "array/array.h"
@@ -23,6 +24,8 @@
 #include "poker/definitions.h"
 #include "poker/node.h"
 #include "utils/cereal.h"
+#include "utils/config.h"
+#include "utils/math.h"
 #include "utils/random.h"
 
 namespace fishbait {
@@ -50,7 +53,7 @@ class Strategy {
                                  constant are eligible to be pruned. */
   Regret regret_floor_;       /* Floor to cutoff negative regrets at. */
 
-  Random rng_;
+  inline static thread_local Random rng_;
 
   /* Struct to represent the indexes of an action at an infoset. round_idx is
      the index numbered by counting all actions in a round. legal_idx is the
@@ -78,13 +81,12 @@ class Strategy {
   Strategy(const Node<kPlayers>& start_state,
            const std::array<AbstractAction, kActions>& actions,
            InfoAbstraction info_abstraction, Regret prune_constant,
-           Regret regret_floor, Random::Seed seed = Random::Seed{})
+           Regret regret_floor)
            : info_abstraction_{info_abstraction},
              action_abstraction_{actions, start_state},
              regrets_{InitGameLegalActionsTable<Regret>()}, action_counts_{
                  InitLegalActionsTable<ActionCount>(Round::kPreFlop)
-             }, prune_constant_{prune_constant}, regret_floor_{regret_floor},
-             rng_{seed} { }
+             }, prune_constant_{prune_constant}, regret_floor_{regret_floor} { }
   Strategy(const Strategy& other) = default;
   Strategy& operator=(const Strategy& other) = default;
 
@@ -92,7 +94,7 @@ class Strategy {
   template<class Archive>
   void serialize(Archive& archive) {
     archive(info_abstraction_, action_abstraction_, regrets_, action_counts_,
-            prune_constant_, regret_floor_, rng_);
+            prune_constant_, regret_floor_);
   }
 
   /*
@@ -167,34 +169,33 @@ class Strategy {
     Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
 
     std::uniform_real_distribution<double> sampler(0, 1);
-    double sampled = sampler(rng_());
-    double bound = 0;
-
     nda::size_t round_actions = action_abstraction_.ActionCount(round);
 
-    std::size_t legal_i = 0;
-    for (std::size_t i = 0; i < round_actions; ++i) {
-      if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
+    while (true) {
+      double sampled = sampler(rng_());
+      double bound = 0;
 
-      double action_prob = 0;
-      if (sum > 0) {
-        Regret action_reget = regrets_[+round](card_bucket, offset + legal_i);
-        action_prob = std::max(0, action_reget);
-        action_prob /= sum;
-      } else {
-        action_prob = 1.0 / legal_actions;
-      }
+      std::size_t legal_i = 0;
+      for (std::size_t i = 0; i < round_actions; ++i) {
+        if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
 
-      bound += action_prob;
-      if (sampled < bound) {
-        return {i, legal_i};
-      }
+        double action_prob = 0;
+        if (sum > 0) {
+          Regret action_reget = regrets_[+round](card_bucket, offset + legal_i);
+          action_prob = std::max(0, action_reget);
+          action_prob /= sum;
+        } else {
+          action_prob = 1.0 / legal_actions;
+        }
 
-      ++legal_i;
-    }  // for i
-    const std::string error = std::string(__func__) +
-                              ": No action was selected.";
-    throw std::runtime_error(error);
+        bound += action_prob;
+        if (sampled < bound) {
+          return {i, legal_i};
+        }
+
+        ++legal_i;
+      }  // for i
+    }
   }  // SampleAction()
 
   /* @brief action_abstraction_ getter function */
@@ -206,218 +207,11 @@ class Strategy {
   /* @brief action_counts_ getter function */
   const auto& action_counts() const { return action_counts_; }
 
-  /* Stores the average of multiple strategies. */
-  class Average {
-   private:
-    GameLegalActionsTable<float> probabilities_;
-    int n_;  // How many strategies are in this average.
-    SequenceTable<kPlayers, kActions> action_abstraction_;
-    InfoAbstraction info_abstraction_;
-    Random rng_;
-
-    explicit Average(Strategy& ref)
-        : probabilities_{ref.InitGameLegalActionsTable<float>()}, n_{0},
-          action_abstraction_{ref.action_abstraction_},
-          info_abstraction_{ref.info_abstraction_}, rng_{} {
-      *this += ref;
-    }
-
-    /* @brief Barebones constructor to load a saved average. */
-    Average() : action_abstraction_{std::array<AbstractAction, kActions>{},
-                                    Node<kPlayers>{}} {}
-
-   public:
-    friend class Strategy;
-
-    /* @brief Average serialize function. */
-    template<class Archive>
-    void serialize(Archive& archive) {
-      archive(probabilities_, n_, action_abstraction_, info_abstraction_, rng_);
-    }
-
-    /* @brief Loads an Average snapshot from the given path on disk. */
-    static Average LoadAverage(const std::filesystem::path path,
-                               bool verbose = false) {
-      Average loaded;
-      CerealLoad(path.string(), &loaded, verbose);
-      return loaded;
-    }
-
-    /* @brief Adds the given strategy to this average */
-    Average& operator+=(const Strategy& rhs) {
-      /* For preflop, normalize action counts and overwrite since action counts
-         already does averaging */
-      {
-        RoundId r_id = 0;
-        fishbait::Round r = Round{r_id};
-        SequenceN round_seqs = rhs.action_abstraction_.States(r);
-        CardCluster n_clusters = InfoAbstraction::NumClusters(r);
-        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
-          std::size_t offset = 0;
-          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
-            nda::size_t legal_actions =
-                rhs.action_abstraction_.NumLegalActions(r, seq);
-            const ActionCount* i_begin = &rhs.action_counts_(cluster, offset);
-            const ActionCount* i_end = i_begin + legal_actions;
-            float* o_begin = &probabilities_[r_id](cluster, offset);
-            float* o_end = o_begin + legal_actions;
-
-            ActionCount sum = std::accumulate(i_begin, i_end, 0);
-            if (sum > 0) {
-              std::transform(i_begin, i_end, o_begin,
-                  [=](const ActionCount& a) { return a * 1.0 / sum; });
-            } else {
-              std::fill(o_begin, o_end, 1.0 / legal_actions);
-            }
-
-            offset += legal_actions;
-          }
-        }
-      }
-
-      for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
-        fishbait::Round r = Round{r_id};
-        SequenceN round_seqs = rhs.action_abstraction_.States(r);
-        CardCluster n_clusters = InfoAbstraction::NumClusters(r);
-        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
-          std::size_t offset = 0;
-          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
-            nda::size_t legal_actions =
-                rhs.action_abstraction_.NumLegalActions(r, seq);
-            std::array<float, kActions> strategy =
-                rhs.CalculateStrategy<float>(r, cluster, offset, legal_actions);
-            std::transform(strategy.begin(),
-                           std::next(strategy.begin(), legal_actions),
-                           &probabilities_[r_id](cluster, offset),
-                           &probabilities_[r_id](cluster, offset),
-                           std::plus<float>{});
-            offset += legal_actions;
-          }  // for seq
-        }  // for cluster
-      }  // for round
-      n_ += 1;
-      return *this;
-    }
-
-    /* @brief Normalize the probabilities by dividing all of them by n_. */
-    void Normalize() {
-      // Preflop already normalized because of action counts
-      if (n_ == 1) return;
-      for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
-        probabilities_[r_id].for_each_value([=](float& ref) {
-          ref /= n_;
-        });
-      }
-      n_ = 1;
-    }
-
-    /*
-      @brief Samples an action from this average strategy at the given infoset.
-
-      Assumes this average is normal (n_ = 1).
-
-      @param round The betting round of the infoset.
-      @param card_bucket The card cluster id of the infoset.
-      @param seq The sequence id of the infoset.
-
-      @return The indicies of the sampled action.
-    */
-    ActionIndicies SampleAction(Round round, CardCluster card_bucket,
-                                SequenceId seq) {
-      if (n_ != 0) {
-        throw std::logic_error("SampleAction called on non normal average "
-                               "strategy");
-      }
-      std::size_t offset = action_abstraction_.LegalOffset(round, seq);
-
-      std::uniform_real_distribution<float> sampler(0, 1);
-      float sampled = sampler(rng_());
-      float bound = 0;
-
-      nda::size_t round_actions = action_abstraction_.ActionCount(round);
-
-      std::size_t legal_i = 0;
-      for (std::size_t i = 0; i < round_actions; ++i) {
-        if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
-
-        bound += probabilities_[+round](card_bucket, offset + legal_i);
-        if (sampled < bound) {
-          return {i, legal_i};
-        }
-
-        ++legal_i;
-      }  // for i
-      const std::string error = std::string(__func__) +
-                                ": No action was selected.";
-      throw std::runtime_error(error);
-    }  // SampleAction()
-
-    /*
-      @brief Test this average strategy vs the op average strategy.
-
-      Both strategies must have the same action abstraction. Assumes all players
-      start with the same amount of chips as the player on the button and there
-      is no rake.
-
-      @param op The opponent strategy to test against.
-      @param trials The number of trials to run per position.
-
-      @return A vector of (kPlayers * trials) chip gains and losses for this
-          average strategy.
-    */
-    std::vector<int> Battle(Average& op, int trials = 1000000) {
-      if (action_abstraction_ != op.action_abstraction_) {
-        throw std::invalid_argument("op average strategy does not have the "
-                                    "same action abstraction.");
-      }
-
-      std::vector<int> results(kPlayers * trials);
-      Chips default_stack = action_abstraction_.start_state().stack(0);
-      for (PlayerId player = 0; player < kPlayers; ++player) {
-        for (int i = 0; i < trials; ++i) {
-          Node<kPlayers> state = action_abstraction_.start_state();
-          SequenceId seq = 0;
-          std::array<CardCluster, kPlayers> card_buckets;
-          while (state.in_progress()) {
-            Round round = state.round();
-            if (state.acting_player() == state.kChancePlayer) {
-              state.Deal();
-              state.ProceedPlay();
-              card_buckets = op.info_abstraction_.ClusterArray(state);
-              card_buckets[player] = info_abstraction_.Cluster(state, player);
-            } else if (state.folded(player)) {
-              break;
-            } else if (state.acting_player() == player) {
-              std::size_t act_idx =
-                  SampleAction(round, card_buckets[player], seq).round_idx;
-              seq = action_abstraction_.Next(round, seq, act_idx);
-              AbstractAction action =
-                  action_abstraction_.Actions(round)[act_idx];
-              state.Apply(action.play, state.ConvertBet(action.size));
-            } else {
-              std::size_t act_idx = op.SampleAction(round,
-                  card_buckets[state.acting_player()], seq).round_idx;
-              seq = op.action_abstraction_.Next(round, seq, act_idx);
-              AbstractAction action =
-                  op.action_abstraction_.Actions(round)[act_idx];
-              state.Apply(action.play, state.ConvertBet(action.size));
-            }
-          }  // while state.in_progress()
-          if (!state.in_progress()) state.AwardPot(state.same_stack_no_rake_);
-          results[player * trials + i] = state.stack(player) - default_stack;
-        }  // for i
-      }  // for player
-
-      return results;
-    }  // Battle()
-
-    const auto& probabilities() const { return probabilities_; }
-    const auto& action_abstraction() const { return action_abstraction_; }
-  };  // class Average
-
-  /* @brief Return an avg strategy where this strategy is the only datapoint. */
-  Average InitialAverage() {
-    return Average{*this};
+  /* 
+    @brief Sets the seed of the random number generator used to sample actions.
+  */
+  static void SetSeed(Random::Seed seed) {
+    rng_.seed(seed);
   }
 
  private:
@@ -638,6 +432,261 @@ class Strategy {
                            player, prune);
     }  // else
   }  // TraverseMCCFR()
+
+ public:
+  /* Stores the average of multiple strategies. */
+  class Average {
+   private:
+    GameLegalActionsTable<float> probabilities_;
+    int n_;  // How many strategies are in this average.
+    SequenceTable<kPlayers, kActions> action_abstraction_;
+    InfoAbstraction info_abstraction_;
+    inline static thread_local Random rng_;
+
+    explicit Average(Strategy& ref)
+        : probabilities_{ref.InitGameLegalActionsTable<float>()}, n_{0},
+          action_abstraction_{ref.action_abstraction_},
+          info_abstraction_{ref.info_abstraction_} {
+      *this += ref;
+    }
+
+    /* @brief Barebones constructor to load a saved average. */
+    Average() : action_abstraction_{std::array<AbstractAction, kActions>{},
+                                    Node<kPlayers>{}} {}
+
+   public:
+    friend class Strategy;
+
+    /* @brief Average serialize function. */
+    template<class Archive>
+    void serialize(Archive& archive) {
+      archive(probabilities_, n_, action_abstraction_, info_abstraction_);
+    }
+
+    /* @brief Loads an Average snapshot from the given path on disk. */
+    static Average LoadAverage(const std::filesystem::path path,
+                               bool verbose = false) {
+      Average loaded;
+      CerealLoad(path.string(), &loaded, verbose);
+      return loaded;
+    }
+
+    /* @brief Adds the given strategy to this average */
+    Average& operator+=(const Strategy& rhs) {
+      /* For preflop, normalize action counts and overwrite since action counts
+         already does averaging */
+      {
+        RoundId r_id = 0;
+        fishbait::Round r = Round{r_id};
+        SequenceN round_seqs = rhs.action_abstraction_.States(r);
+        CardCluster n_clusters = InfoAbstraction::NumClusters(r);
+        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
+          std::size_t offset = 0;
+          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
+            nda::size_t legal_actions =
+                rhs.action_abstraction_.NumLegalActions(r, seq);
+            const ActionCount* i_begin = &rhs.action_counts_(cluster, offset);
+            const ActionCount* i_end = i_begin + legal_actions;
+            float* o_begin = &probabilities_[r_id](cluster, offset);
+            float* o_end = o_begin + legal_actions;
+
+            ActionCount sum = std::accumulate(i_begin, i_end, 0);
+            if (sum > 0) {
+              std::transform(i_begin, i_end, o_begin,
+                  [=](const ActionCount& a) { return a * 1.0 / sum; });
+            } else {
+              std::fill(o_begin, o_end, 1.0 / legal_actions);
+            }
+
+            offset += legal_actions;
+          }
+        }
+      }
+
+      for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
+        fishbait::Round r = Round{r_id};
+        SequenceN round_seqs = rhs.action_abstraction_.States(r);
+        CardCluster n_clusters = InfoAbstraction::NumClusters(r);
+        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
+          std::size_t offset = 0;
+          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
+            nda::size_t legal_actions =
+                rhs.action_abstraction_.NumLegalActions(r, seq);
+            std::array<float, kActions> strategy =
+                rhs.CalculateStrategy<float>(r, cluster, offset, legal_actions);
+            std::transform(strategy.begin(),
+                           std::next(strategy.begin(), legal_actions),
+                           &probabilities_[r_id](cluster, offset),
+                           &probabilities_[r_id](cluster, offset),
+                           std::plus<float>{});
+            offset += legal_actions;
+          }  // for seq
+        }  // for cluster
+      }  // for round
+      n_ += 1;
+      return *this;
+    }
+
+    /* @brief Normalize the probabilities by dividing all of them by n_. */
+    void Normalize() {
+      // Preflop already normalized because of action counts
+      if (n_ == 1) return;
+      for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
+        probabilities_[r_id].for_each_value([=](float& ref) {
+          ref /= n_;
+        });
+      }
+      n_ = 1;
+    }
+
+    /*
+      @brief Samples an action from this average strategy at the given infoset.
+
+      Assumes this average is normal (n_ = 1).
+
+      @param round The betting round of the infoset.
+      @param card_bucket The card cluster id of the infoset.
+      @param seq The sequence id of the infoset.
+
+      @return The indicies of the sampled action.
+    */
+    ActionIndicies SampleAction(Round round, CardCluster card_bucket,
+                                SequenceId seq) {
+      if (n_ != 1) {
+        throw std::logic_error("SampleAction called on non normal average "
+                               "strategy");
+      }
+      std::size_t offset = action_abstraction_.LegalOffset(round, seq);
+
+      std::uniform_real_distribution<float> sampler(0, 1);
+      nda::size_t round_actions = action_abstraction_.ActionCount(round);
+
+      while (true) {
+        float sampled = sampler(rng_());
+        float bound = 0;
+
+        std::size_t legal_i = 0;
+        for (std::size_t i = 0; i < round_actions; ++i) {
+          if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
+
+          bound += probabilities_[+round](card_bucket, offset + legal_i);
+          if (sampled < bound) {
+            return {i, legal_i};
+          }
+
+          ++legal_i;
+        }  // for i
+      }
+    }  // SampleAction()
+
+    /*
+      @brief Test this average strategy vs the op average strategy.
+
+      Both strategies must have the same action abstraction. Assumes all players
+      start with the same amount of chips as the player on the button and there
+      is no rake.
+
+      @param op The opponent strategy to test against.
+      @param means The number of times to run the trials.
+      @param trials The number of trials to run per position.
+
+      @return A vector of means from each trial.
+    */
+    std::vector<double> BattleStats(Average& op, int means = 100,
+                                    int trials = 1000000) {
+      int means_per_thread = means / kThreads;
+      std::array<std::thread, kThreads> threads;
+      std::vector<double> mean_ls(means);
+      auto run_trials = [&](int start, int end) {
+        for (int i = start; i < end; ++i) {
+          std::vector<int> results = Battle(op, trials);
+          mean_ls[i] = Mean(results);
+        }
+      };
+      for (int i = 0; i < kThreads; ++i) {
+        int start = i * means_per_thread;
+        int end;
+        if (i == kThreads - 1) {
+          end = means;
+        } else {
+          end = start + means_per_thread;
+        }
+        threads[i] = std::thread(run_trials, start, end);
+      }
+      for (int i = 0; i < kThreads; ++i) {
+        threads[i].join();
+      }
+      return mean_ls;
+    }  // BattleStats()
+
+    const auto& probabilities() const { return probabilities_; }
+    const auto& action_abstraction() const { return action_abstraction_; }
+
+   private:
+    /*
+      @brief Test this average strategy vs the op average strategy.
+
+      Both strategies must have the same action abstraction. Assumes all players
+      start with the same amount of chips as the player on the button and there
+      is no rake.
+
+      @param op The opponent strategy to test against.
+      @param trials The number of trials to run per position.
+
+      @return A vector of (kPlayers * trials) chip gains and losses for this
+          average strategy.
+    */
+    std::vector<int> Battle(Average& op, int trials = 1000000) {
+      if (action_abstraction_ != op.action_abstraction_) {
+        throw std::invalid_argument("op average strategy does not have the "
+                                    "same action abstraction.");
+      }
+
+      std::vector<int> results(kPlayers * trials);
+      Chips default_stack = action_abstraction_.start_state().stack(0);
+      for (PlayerId player = 0; player < kPlayers; ++player) {
+        for (int i = 0; i < trials; ++i) {
+          Node<kPlayers> state = action_abstraction_.start_state();
+          SequenceId seq = 0;
+          std::array<CardCluster, kPlayers> card_buckets;
+          while (state.in_progress()) {
+            Round round = state.round();
+            if (state.acting_player() == state.kChancePlayer) {
+              state.Deal();
+              state.ProceedPlay();
+              card_buckets = op.info_abstraction_.ClusterArray(state);
+              card_buckets[player] = info_abstraction_.Cluster(state, player);
+            } else if (state.folded(player)) {
+              break;
+            } else if (state.acting_player() == player) {
+              std::size_t act_idx =
+                  SampleAction(round, card_buckets[player], seq).round_idx;
+              seq = action_abstraction_.Next(round, seq, act_idx);
+              AbstractAction action =
+                  action_abstraction_.Actions(round)[act_idx];
+              state.Apply(action.play, state.ConvertBet(action.size));
+            } else {
+              std::size_t act_idx = op.SampleAction(round,
+                  card_buckets[state.acting_player()], seq).round_idx;
+              seq = op.action_abstraction_.Next(round, seq, act_idx);
+              AbstractAction action =
+                  op.action_abstraction_.Actions(round)[act_idx];
+              state.Apply(action.play, state.ConvertBet(action.size));
+            }
+          }  // while state.in_progress()
+          if (!state.in_progress()) state.AwardPot(state.same_stack_no_rake_);
+          results[player * trials + i] = state.stack(player) - default_stack;
+        }  // for i
+      }  // for player
+
+      return results;
+    }  // Battle()
+  };  // class Average
+
+  /* @brief Return an avg strategy where this strategy is the only datapoint. */
+  Average InitialAverage() {
+    return Average{*this};
+  }
 };  // class Strategy
 
 }  // namespace fishbait

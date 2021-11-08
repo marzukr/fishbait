@@ -4,7 +4,8 @@
 #include <array>
 #include <cmath>
 #include <filesystem>
-#include <iostream>
+#include <functional>
+#include <numeric>
 #include <stack>
 #include <string>
 #include <vector>
@@ -12,11 +13,13 @@
 #include "catch2/catch.hpp"
 #include "blueprint/sequence_table.h"
 #include "blueprint/strategy.h"
+#include "clustering/cluster_table.h"
 #include "clustering/definitions.h"
 #include "poker/definitions.h"
 #include "poker/indexer.h"
 #include "poker/node.h"
 #include "utils/cereal.h"
+#include "utils/math.h"
 #include "utils/print.h"
 
 /* Dummy clustering scheme that just partitions each round into 4 clusters with
@@ -103,8 +106,8 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   int prune_constant = 0;
   int regret_floor = -10000;
   fishbait::Strategy s(start_state, actions, info_abstraction,
-                       prune_constant, regret_floor,
-                       fishbait::Random::Seed{68});
+                       prune_constant, regret_floor);
+  s.SetSeed(fishbait::Random::Seed{68});
 
   std::filesystem::path base_path("out/tests/blueprint");
   std::filesystem::create_directory(base_path);
@@ -598,6 +601,7 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   }
 
   start_state.SetSeed(fishbait::Random::Seed{});
+  s.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test"
 
 TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
@@ -4027,3 +4031,116 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
 
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test helper"
+
+TEST_CASE("sample action test", "[blueprint][strategy][.]") {
+  constexpr fishbait::PlayerN kPlayers = 3;
+  constexpr int kActions = 5;
+  constexpr int kTrials = 10000;
+
+  fishbait::Node<kPlayers> start_state;
+  start_state.SetSeed(fishbait::Random::Seed(7));
+  std::array<fishbait::AbstractAction, kActions> actions = {{
+      {fishbait::Action::kFold},
+      {fishbait::Action::kAllIn},
+      {fishbait::Action::kCheckCall},
+
+      {fishbait::Action::kBet, 2.0, 1, fishbait::Round::kTurn,
+       fishbait::Round::kTurn, 2, 0},
+      {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
+       fishbait::Round::kRiver, 0, 10000}
+  }};
+  TestClusters info_abstraction;
+  int prune_constant = 0;
+  int regret_floor = -10000;
+  fishbait::Strategy s(start_state, actions, info_abstraction,
+                       prune_constant, regret_floor);
+
+  std::array<int, 3> sample_counts = {0, 0, 0};
+  for (int i = 0; i < kTrials; ++i) {
+    std::size_t sampled =
+        s.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
+    sample_counts[sampled] += 1;
+  }
+
+  auto sample_divide = [=](int a) {
+    return a * 1.0 / kTrials;
+  };
+  std::array<double, 3> observed;
+  std::transform(sample_counts.begin(), sample_counts.end(), observed.begin(),
+                 sample_divide);
+
+  // Chi-Squared test
+  std::array<double, 3> expected = {1.0/3, 1.0/3, 1.0/3};
+  auto chi_transform = [](double o, double e) {
+    double num = o - e;
+    return (num * num) / e;
+  };
+  double crit_val = std::transform_reduce(observed.begin(), observed.end(),
+      expected.begin(), 0.0, std::plus<>(), chi_transform);
+  REQUIRE(crit_val <= 0.103);  // 0.95 confidence level
+
+  auto s_avg = s.InitialAverage();
+  sample_counts = {0, 0, 0};
+  for (int i = 0; i < kTrials; ++i) {
+    std::size_t sampled =
+        s_avg.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
+    sample_counts[sampled] += 1;
+  }
+  std::transform(sample_counts.begin(), sample_counts.end(), observed.begin(),
+                 sample_divide);
+
+  crit_val = std::transform_reduce(observed.begin(), observed.end(),
+                                   expected.begin(), 0.0, std::plus<>(),
+                                   chi_transform);
+  REQUIRE(crit_val <= 0.103);
+}
+
+TEST_CASE("battle test", "[blueprint][strategy][.]") {
+  constexpr fishbait::PlayerN kPlayers = 3;
+  constexpr int kActions = 6;
+  constexpr int kMeans = 100;
+  constexpr int kTrials = 20000;
+  constexpr int kTrainTime = 10000;
+  constexpr int kAverageInterval = 1000;
+
+  fishbait::Node<kPlayers> start_state;
+  std::array<fishbait::AbstractAction, kActions> actions = {{
+      {fishbait::Action::kFold},
+      {fishbait::Action::kAllIn},
+      {fishbait::Action::kCheckCall},
+
+      {fishbait::Action::kBet, 3.0},
+      {fishbait::Action::kBet, 2.0},
+      {fishbait::Action::kBet, 1.0}
+  }};
+  fishbait::ClusterTable cluster_table(false);
+  int prune_constant = -300000000;
+  int regret_floor = -310000000;
+  fishbait::Strategy s1(start_state, actions, cluster_table,
+                        prune_constant, regret_floor);
+  auto s1_in_avg = s1.InitialAverage();
+  fishbait::Strategy s2(start_state, actions, cluster_table,
+                        prune_constant, regret_floor);
+  auto s2_in_avg = s2.InitialAverage();
+
+  std::vector<double> initial_means = s1_in_avg.BattleStats(s2_in_avg, kMeans,
+                                                            kTrials);
+  double initial_mean = fishbait::Mean(initial_means);
+  double initial_std = fishbait::Std(initial_means, initial_mean);
+  double initial_ci = fishbait::CI95(initial_means, initial_std);
+  REQUIRE(0 >= initial_mean - initial_ci);
+  REQUIRE(0 <= initial_mean + initial_ci);
+  for (int i = 0; i < kTrainTime; ++i) {
+    for (fishbait::PlayerId p = 0; p < kPlayers; ++p) {
+      s1.TraverseMCCFR(p, false);
+    }
+    if ((i + 1) % kAverageInterval == 0) s1_in_avg += s1;
+  }
+  s1_in_avg.Normalize();
+  std::vector<double> trained_means = s1_in_avg.BattleStats(s2_in_avg, kMeans,
+                                                            kTrials);
+  double trained_mean = fishbait::Mean(trained_means);
+  double trained_std = fishbait::Std(trained_means, trained_mean);
+  double trained_ci = fishbait::CI95(trained_means, trained_std);
+  REQUIRE(0 < trained_mean - trained_ci);
+}  // TEST_CASE "battle test"
