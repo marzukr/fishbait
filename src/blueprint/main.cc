@@ -190,6 +190,9 @@ int main() {
   std::filesystem::create_directory(save_path);
   std::filesystem::path avg_path;
 
+  std::filesystem::path last_save = save_path / "strategy_initial.cereal";
+  CerealSave(last_save.string(), &strategy, true);
+
   using Minutes = fishbait::Timer::Minutes;
   fishbait::Timer main_timer;
   fishbait::Timer iteration_timer;
@@ -255,6 +258,8 @@ int main() {
       strategy_ss << "strategy_" << static_cast<int>(elapsed_time) << ".cereal";
       std::filesystem::path strategy_path = save_path / strategy_ss.str();
       CerealSave(strategy_path.string(), &strategy, true);
+      std::filesystem::remove(last_save);
+      last_save = save_path;
     }
 
     ++iteration;
