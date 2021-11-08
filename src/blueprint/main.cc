@@ -184,10 +184,10 @@ int main() {
   constexpr int kStrategyDelay = 800;
 
   /* The number of means to evaluate succesive bot performance */
-  constexpr int kBattleMeans = 100;
+  constexpr int kBattleMeans = 640;
 
   /* The number of trials per mean to evaluate successive bot performance */
-  constexpr int kBattleTrials = 1000000;
+  constexpr int kBattleTrials = 10000000;
 
   fishbait::Strategy strategy(start_state, actions, cluster_table,
                               kPruneConstant, kRegretFloor);
