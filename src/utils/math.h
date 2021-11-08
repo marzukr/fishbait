@@ -21,12 +21,14 @@ constexpr uint32_t N_Choose_K(uint32_t n, uint32_t k) {
   return result;
 }
 
+/* @brief Population mean */
 template <typename ArrayT>
 double Mean(const ArrayT& data) {
   double sum = std::accumulate(data.begin(), data.end(), 0.0);
   return sum / data.size();
 }
 
+/* @brief Population standard deviation */
 template <typename ArrayT>
 double Std(const ArrayT& data, double mean) {
   double sum = 0;
@@ -35,6 +37,12 @@ double Std(const ArrayT& data, double mean) {
     sum += diff * diff;
   }
   return std::sqrt(sum / data.size());
+}
+
+/* @brief 95% confidence interval of normally distributed data */
+template <typename ArrayT>
+double CI95(const ArrayT& means, double std) {
+  return 1.96 * std / std::sqrt(means.size());
 }
 
 }  // namespace fishbait
