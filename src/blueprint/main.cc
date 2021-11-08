@@ -9,6 +9,7 @@
 #include "blueprint/strategy.h"
 #include "clustering/cluster_table.h"
 #include "poker/node.h"
+#include "utils/math.h"
 #include "utils/random.h"
 #include "utils/timer.h"
 
@@ -182,6 +183,12 @@ int main() {
      taking snapshots. */
   constexpr int kStrategyDelay = 800;
 
+  /* The number of means to evaluate succesive bot performance */
+  constexpr int kBattleMeans = 100;
+
+  /* The number of trials per mean to evaluate successive bot performance */
+  constexpr int kBattleTrials = 1000000;
+
   fishbait::Strategy strategy(start_state, actions, cluster_table,
                               kPruneConstant, kRegretFloor);
 
@@ -248,10 +255,18 @@ int main() {
         auto strat_table = strategy.InitialAverage();
         CerealSave(avg_path.string(), &strat_table, true);
       } else {
-        auto strat_table =
+        auto prev_strat_table =
             decltype(strategy)::Average::LoadAverage(avg_path, true);
-        strat_table += strategy;
-        CerealSave(avg_path.string(), &strat_table, true);
+        auto new_strat_table = prev_strat_table;
+        new_strat_table += strategy;
+        CerealSave(avg_path.string(), &new_strat_table, true);
+        std::vector<double> means = new_strat_table.BattleStats(
+            prev_strat_table, kBattleMeans, kBattleTrials);
+        double avg_improvement = fishbait::Mean(means);
+        double avg_improvement_std = fishbait::Std(means, avg_improvement);
+        double avg_improvment_err = fishbait::CI95(means, avg_improvement_std);
+        std::cout << avg_improvement << " ± " << avg_improvment_err
+                  << std::endl;
       }
 
       std::stringstream strategy_ss;
