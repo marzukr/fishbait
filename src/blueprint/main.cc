@@ -156,8 +156,8 @@ int main() {
   /* The total time to run training in minutes. 11625 minutes = ~8 days */
   constexpr double kTrainingTime = 11625;
 
-  /* The number of minutes between each update of the average strategy. */
-  constexpr int kStrategyInterval = 200;
+  /* The number of iterations between each update of the average strategy. */
+  constexpr int kStrategyInterval = 10000;
 
   /* The number of minutes to wait before pruning. */
   constexpr int kPruneThreshold = 200;
@@ -206,11 +206,10 @@ int main() {
   using Minutes = fishbait::Timer::Minutes;
   fishbait::Timer main_timer;
   fishbait::Timer iteration_timer;
-  fishbait::Timer update_strategy_timer;
   fishbait::Timer discount_timer;
   fishbait::Timer snapshot_timer;
   fishbait::Random rng;
-  int iteration = 0;
+  int iteration = 1;
   double elapsed_time = 0;
   bool check_prune = false;  // Whether or not we should prune yet
 
@@ -227,9 +226,8 @@ int main() {
     iteration_timer.Reset(std::cout) << std::endl;
     for (fishbait::PlayerId player = 0; player < kPlayers; ++player) {
       // update strategy after kStrategyInterval iterations
-      if (elapsed_time > kStrategyDelay &&
-          update_strategy_timer.Check<Minutes>() >= kStrategyInterval) {
-        update_strategy_timer.Reset();
+      if (elapsed_time > kStrategyDelay && iteration % kStrategyInterval == 0) {
+        log_fn() << "Updating preflop average" << std::endl;
         strategy.UpdateStrategy(player);
       }
 
