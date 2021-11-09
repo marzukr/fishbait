@@ -57,6 +57,13 @@ class Timer {
     return os;
   }
 
+  /* @brief Prints the duration since the timer was last reset. */
+  template <typename Unit = Seconds>
+  inline std::ostream& Check(std::ostream& os) {
+    os << Check<Unit>() << " " << Suffix<Unit>();
+    return os;
+  }
+
  private:
   std::chrono::time_point<std::chrono::high_resolution_clock> start_;
 };  // Timer
