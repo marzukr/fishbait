@@ -2,7 +2,6 @@
 
 #include <array>
 #include <ios>
-#include <iostream>
 #include <sstream>
 
 #include "array/array.h"

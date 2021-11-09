@@ -3,6 +3,8 @@
 #include <array>
 #include <filesystem>
 #include <iostream>
+#include <ostream>
+#include <string_view>
 
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
@@ -200,6 +202,7 @@ int main() {
   std::filesystem::path last_save = save_path / "strategy_initial.cereal";
   CerealSave(last_save.string(), &strategy, true);
 
+
   using Minutes = fishbait::Timer::Minutes;
   fishbait::Timer main_timer;
   fishbait::Timer iteration_timer;
@@ -209,9 +212,18 @@ int main() {
   fishbait::Random rng;
   int iteration = 0;
   double elapsed_time = 0;
-  std::cout << "Starting MCCFR" << std::endl;
+  bool check_prune = false;  // Whether or not we should prune yet
+
+  auto log_fn = [&]() -> std::ostream& {
+    std::cout << "[";
+    main_timer.Check<fishbait::Timer::Minutes>(std::cout);
+    std::cout << "]: ";
+    return std::cout;
+  };
+
+  log_fn() << "Starting MCCFR" << std::endl;
   while (elapsed_time < kTrainingTime) {
-    std::cout << "iteration " << iteration << " :";
+    log_fn() << "iteration " << iteration << ": ";
     iteration_timer.Reset(std::cout) << std::endl;
     for (fishbait::PlayerId player = 0; player < kPlayers; ++player) {
       // update strategy after kStrategyInterval iterations
@@ -223,7 +235,11 @@ int main() {
 
       // Set prune variable and traverse MCCFR
       bool prune = false;
-      if (elapsed_time > kPruneThreshold) {
+      if (!check_prune && elapsed_time > kPruneThreshold) {
+        log_fn() << "Starting prune" << std::endl;
+        check_prune = true;
+      }
+      if (check_prune) {
         std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
         double random_prune = uniform_distribution(rng());
         if (random_prune < kPruneProbability) {
@@ -240,6 +256,7 @@ int main() {
       discount_timer.Reset();
       double d = (elapsed_time / kDiscountInterval) /
                  (elapsed_time / kDiscountInterval + 1);
+      log_fn() << "Discounting by " << d << std::endl;
       strategy.Discount(d);
     }
 
@@ -249,6 +266,14 @@ int main() {
     if (elapsed_time > kStrategyDelay &&
         snapshot_timer.Check<Minutes>() >= kSnapshotInterval) {
       snapshot_timer.Reset();
+      log_fn() << "Taking a snapshot" << std::endl;
+
+      std::stringstream strategy_ss;
+      strategy_ss << "strategy_" << static_cast<int>(elapsed_time) << ".cereal";
+      std::filesystem::path strategy_path = save_path / strategy_ss.str();
+      CerealSave(strategy_path.string(), &strategy, true);
+      std::filesystem::remove(last_save);
+      last_save = save_path;
 
       if (avg_path.empty()) {
         avg_path = save_path / "avg_table.cereal";
@@ -260,21 +285,16 @@ int main() {
         auto new_strat_table = prev_strat_table;
         new_strat_table += strategy;
         CerealSave(avg_path.string(), &new_strat_table, true);
+
+        log_fn() << "Evaluating against previous average" << std::endl;
         std::vector<double> means = new_strat_table.BattleStats(
             prev_strat_table, kBattleMeans, kBattleTrials);
         double avg_improvement = fishbait::Mean(means);
         double avg_improvement_std = fishbait::Std(means, avg_improvement);
         double avg_improvment_err = fishbait::CI95(means, avg_improvement_std);
-        std::cout << avg_improvement << " ± " << avg_improvment_err
-                  << std::endl;
+        log_fn() << avg_improvement << " ± " << avg_improvment_err
+                 << std::endl;
       }
-
-      std::stringstream strategy_ss;
-      strategy_ss << "strategy_" << static_cast<int>(elapsed_time) << ".cereal";
-      std::filesystem::path strategy_path = save_path / strategy_ss.str();
-      CerealSave(strategy_path.string(), &strategy, true);
-      std::filesystem::remove(last_save);
-      last_save = save_path;
     }
 
     ++iteration;
