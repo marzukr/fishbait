@@ -4063,44 +4063,35 @@ TEST_CASE("sample action test", "[blueprint][strategy][.]") {
   fishbait::Strategy s(start_state, actions, info_abstraction,
                        prune_constant, regret_floor);
 
-  std::array<int, 3> sample_counts = {0, 0, 0};
+  std::array<int, 3> observed = {0, 0, 0};
   for (int i = 0; i < kTrials; ++i) {
     std::size_t sampled =
         s.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
-    sample_counts[sampled] += 1;
+    observed[sampled] += 1;
   }
 
-  auto sample_divide = [=](int a) {
-    return a * 1.0 / kTrials;
-  };
-  std::array<double, 3> observed;
-  std::transform(sample_counts.begin(), sample_counts.end(), observed.begin(),
-                 sample_divide);
-
   // Chi-Squared test
-  std::array<double, 3> expected = {1.0/3, 1.0/3, 1.0/3};
-  auto chi_transform = [](double o, double e) {
+  std::array<double, 3> expected = {kTrials/3.0, kTrials/3.0, kTrials/3.0};
+  auto chi_transform = [](int o, double e) {
     double num = o - e;
     return (num * num) / e;
   };
   double crit_val = std::transform_reduce(observed.begin(), observed.end(),
       expected.begin(), 0.0, std::plus<>(), chi_transform);
-  REQUIRE(crit_val <= 0.103);  // 0.95 confidence level
+  REQUIRE(crit_val <= 5.991);  // 0.95 confidence level
 
   auto s_avg = s.InitialAverage();
-  sample_counts = {0, 0, 0};
+  observed = {0, 0, 0};
   for (int i = 0; i < kTrials; ++i) {
     std::size_t sampled =
         s_avg.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
-    sample_counts[sampled] += 1;
+    observed[sampled] += 1;
   }
-  std::transform(sample_counts.begin(), sample_counts.end(), observed.begin(),
-                 sample_divide);
 
   crit_val = std::transform_reduce(observed.begin(), observed.end(),
                                    expected.begin(), 0.0, std::plus<>(),
                                    chi_transform);
-  REQUIRE(crit_val <= 0.103);
+  REQUIRE(crit_val <= 5.991);
 }
 
 TEST_CASE("battle test", "[blueprint][strategy][.]") {
