@@ -27,6 +27,7 @@
 #include "utils/config.h"
 #include "utils/math.h"
 #include "utils/random.h"
+#include "utils/thread.h"
 
 namespace fishbait {
 
@@ -139,19 +140,37 @@ class Strategy {
     @brief Discounts the regrets and action counts by the given factor.
   */
   void Discount(double factor) {
-    for (RoundId r = 0; r < kNRounds; ++r) {
-      std::for_each(regrets_[r].data(),
-                    regrets_[r].data() + regrets_[r].size(),
-                    [=](Regret& regret) {
-                      regret = std::rint(regret * factor);
-                    });
-    }
-    std::for_each(action_counts_.data(),
-                  action_counts_.data() + action_counts_.size(),
-                  [=](ActionCount& count) {
-                    count = std::rint(count * factor);
-                  });
-  }
+    for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
+      fishbait::Round r = Round{r_id};
+      CardCluster n_clusters = InfoAbstraction::NumClusters(r);
+      nda::size_t legal_actions = action_abstraction_.NumLegalActions(r);
+      auto discount_clusters = [&, factor, r_id, legal_actions]
+                               (CardCluster start, CardCluster end) {
+        for (CardCluster cluster = start; cluster < end; ++cluster) {
+          Regret* start = &regrets_[r_id](cluster, 0);
+          Regret* end = start + legal_actions;
+          std::for_each(start, end, [=](Regret& regret) {
+            regret = std::rint(regret * factor);
+          });
+        }  // for cluster
+      };  // discount_clusters()
+      DivideWork(n_clusters, discount_clusters);
+    }  // for r_id
+    CardCluster n_clusters = InfoAbstraction::NumClusters(Round::kPreFlop);
+    nda::size_t legal_actions =
+        action_abstraction_.NumLegalActions(Round::kPreFlop);
+    auto discount_act_count = [&, factor, legal_actions]
+                              (CardCluster start, CardCluster end) {
+      for (CardCluster cluster = start; cluster < end; ++cluster) {
+        ActionCount* start = &action_counts_(cluster, 0);
+        ActionCount* end = start + legal_actions;
+        std::for_each(start, end, [=](ActionCount& count) {
+          count = std::rint(count * factor);
+        });
+      }  // for cluster
+    };  // discount_act_count()
+    DivideWork(n_clusters, discount_act_count);
+  }  // Discount()
 
   /*
     @brief Samples an action from the current strategy at the given infoset.
@@ -490,48 +509,57 @@ class Strategy {
         fishbait::Round r = Round{r_id};
         SequenceN round_seqs = rhs.action_abstraction_.States(r);
         CardCluster n_clusters = InfoAbstraction::NumClusters(r);
-        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
-          std::size_t offset = 0;
-          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
-            nda::size_t legal_actions =
-                rhs.action_abstraction_.NumLegalActions(r, seq);
-            const ActionCount* i_begin = &rhs.action_counts_(cluster, offset);
-            const ActionCount* i_end = i_begin + legal_actions;
-            float* o_begin = &probabilities_[r_id](cluster, offset);
-            float* o_end = o_begin + legal_actions;
+        auto compute_clusters = [&, r_id, r, round_seqs]
+                                (CardCluster start, CardCluster end) {
+          for (CardCluster cluster = start; cluster < end; ++cluster) {
+            std::size_t offset = 0;
+            for (SequenceId seq = 0; seq < round_seqs; ++seq) {
+              nda::size_t legal_actions =
+                  rhs.action_abstraction_.NumLegalActions(r, seq);
+              const ActionCount* i_begin = &rhs.action_counts_(cluster, offset);
+              const ActionCount* i_end = i_begin + legal_actions;
+              float* o_begin = &probabilities_[r_id](cluster, offset);
+              float* o_end = o_begin + legal_actions;
 
-            ActionCount sum = std::accumulate(i_begin, i_end, 0);
-            if (sum > 0) {
-              std::transform(i_begin, i_end, o_begin,
-                  [=](const ActionCount& a) { return a * 1.0 / sum; });
-            } else {
-              std::fill(o_begin, o_end, 1.0 / legal_actions);
+              ActionCount sum = std::accumulate(i_begin, i_end, 0);
+              if (sum > 0) {
+                std::transform(i_begin, i_end, o_begin,
+                    [=](const ActionCount& a) { return a * 1.0 / sum; });
+              } else {
+                std::fill(o_begin, o_end, 1.0 / legal_actions);
+              }
+
+              offset += legal_actions;
             }
-
-            offset += legal_actions;
           }
-        }
-      }
+        };  // compute_clusters()
+        DivideWork(n_clusters, compute_clusters);
+      }  // preflop block
 
       for (RoundId r_id = 1; r_id < kNRounds; ++r_id) {
         fishbait::Round r = Round{r_id};
         SequenceN round_seqs = rhs.action_abstraction_.States(r);
         CardCluster n_clusters = InfoAbstraction::NumClusters(r);
-        for (CardCluster cluster = 0; cluster < n_clusters; ++cluster) {
-          std::size_t offset = 0;
-          for (SequenceId seq = 0; seq < round_seqs; ++seq) {
-            nda::size_t legal_actions =
-                rhs.action_abstraction_.NumLegalActions(r, seq);
-            std::array<float, kActions> strategy =
-                rhs.CalculateStrategy<float>(r, cluster, offset, legal_actions);
-            std::transform(strategy.begin(),
-                           std::next(strategy.begin(), legal_actions),
-                           &probabilities_[r_id](cluster, offset),
-                           &probabilities_[r_id](cluster, offset),
-                           std::plus<float>{});
-            offset += legal_actions;
-          }  // for seq
-        }  // for cluster
+        auto compute_clusters = [&, r_id, r, round_seqs]
+                                (CardCluster start, CardCluster end) {
+          for (CardCluster cluster = start; cluster < end; ++cluster) {
+            std::size_t offset = 0;
+            for (SequenceId seq = 0; seq < round_seqs; ++seq) {
+              nda::size_t legal_actions =
+                  rhs.action_abstraction_.NumLegalActions(r, seq);
+              std::array<float, kActions> strategy =
+                  rhs.CalculateStrategy<float>(r, cluster, offset,
+                                               legal_actions);
+              std::transform(strategy.begin(),
+                             std::next(strategy.begin(), legal_actions),
+                             &probabilities_[r_id](cluster, offset),
+                             &probabilities_[r_id](cluster, offset),
+                             std::plus<float>{});
+              offset += legal_actions;
+            }  // for seq
+          }  // for cluster
+        };  // compute_clusters()
+        DivideWork(n_clusters, compute_clusters);
       }  // for round
       n_ += 1;
       return *this;
@@ -604,8 +632,6 @@ class Strategy {
     */
     std::vector<double> BattleStats(Average& op, int means = 100,
                                     int trials = 1000000) {
-      int means_per_thread = means / kThreads;
-      std::array<std::thread, kThreads> threads;
       std::vector<double> mean_ls(means);
       auto run_trials = [&](int start, int end) {
         for (int i = start; i < end; ++i) {
@@ -613,19 +639,7 @@ class Strategy {
           mean_ls[i] = Mean(results);
         }
       };
-      for (int i = 0; i < kThreads; ++i) {
-        int start = i * means_per_thread;
-        int end;
-        if (i == kThreads - 1) {
-          end = means;
-        } else {
-          end = start + means_per_thread;
-        }
-        threads[i] = std::thread(run_trials, start, end);
-      }
-      for (int i = 0; i < kThreads; ++i) {
-        threads[i].join();
-      }
+      DivideWork(means, run_trials);
       return mean_ls;
     }  // BattleStats()
 

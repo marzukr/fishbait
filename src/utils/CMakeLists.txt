@@ -8,6 +8,7 @@ add_library(
   "math.h"
   meta.h
   random.h
+  thread.h
   timer.h
   )
 
