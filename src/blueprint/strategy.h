@@ -548,8 +548,8 @@ class Strategy {
               nda::size_t legal_actions =
                   rhs.action_abstraction_.NumLegalActions(r, seq);
               std::array<float, kActions> strategy =
-                  rhs.CalculateStrategy<float>(r, cluster, offset,
-                                               legal_actions);
+                  rhs.template CalculateStrategy<float>(r, cluster, offset,
+                                                        legal_actions);
               std::transform(strategy.begin(),
                              std::next(strategy.begin(), legal_actions),
                              &probabilities_[r_id](cluster, offset),
