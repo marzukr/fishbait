@@ -27,7 +27,8 @@ class Timer {
     }
   }
 
-  Timer() : start_(std::chrono::high_resolution_clock::now()) {}
+  Timer() : start_(std::chrono::high_resolution_clock::now()), duration_{0},
+            stopped_{false} {}
 
   Timer(const Timer& other) = default;
   Timer& operator=(const Timer& other) = default;
@@ -37,9 +38,14 @@ class Timer {
   /* @brief Returns the duration since the timer was last reset. */
   template <typename Unit = Milliseconds>
   double Check() {
-    auto stop = std::chrono::high_resolution_clock::now();
-    Unit duration = stop - start_;
-    return duration.count();
+    if (!stopped_) {
+      auto stop = std::chrono::high_resolution_clock::now();
+      Unit duration = stop - start_ + duration_;
+      return duration.count();
+    } else {
+      Unit duration = duration_;
+      return duration.count();
+    }
   }
 
   /* @brief Resets timer and returns the duration since it was last reset. */
@@ -47,7 +53,25 @@ class Timer {
   double Reset() {
     double ret = Check<Unit>();
     start_ = std::chrono::high_resolution_clock::now();
+    duration_ = Seconds::zero();
+    stopped_ = false;
     return ret;
+  }
+
+  /* @brief Stops the timer and returns the duration since it was last reset. */
+  template <typename Unit = Milliseconds>
+  double Stop() {
+    auto stop = std::chrono::high_resolution_clock::now();
+    Unit duration = stop - start_ + duration_;
+    duration_ = duration;
+    stopped_ = true;
+    return duration.count();
+  }
+
+  /* @brief Starts the timer after it was stopped. */
+  void Start() {
+    start_ = std::chrono::high_resolution_clock::now();
+    stopped_ = false;
   }
 
   /* @brief Resets timer and prints the duration since it was last reset. */
@@ -66,6 +90,8 @@ class Timer {
 
  private:
   std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+  Seconds duration_;
+  bool stopped_;
 };  // Timer
 
 }  // namespace fishbait

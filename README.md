@@ -50,3 +50,5 @@ installed for code coverage.
 * This project follows the [Google Python Style guide](https://google.github.io/styleguide/pyguide.html)
   with the following exceptions:
     * 2 spaces are used for indentation
+* Needs to be run on a processor where 32 bit integer reads and writes are
+  atomic.
