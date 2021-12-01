@@ -192,11 +192,17 @@ int main() {
   /* The number of trials per mean to evaluate successive bot performance */
   constexpr int kBattleTrials = 1000000;
 
+  using Minutes = fishbait::Timer::Minutes;
   fishbait::Timer main_timer;
+  double trained_time = 0.0;
+  fishbait::Timer train_timer;
+  fishbait::Timer discount_timer;
+  fishbait::Timer snapshot_timer;
+
   auto log_fn = [&]() -> std::ostream& {
     std::cout << "[";
     main_timer.Check<fishbait::Timer::Minutes>(std::cout);
-    std::cout << "]: ";
+    std::cout << " elapsed, " << trained_time << " min trained]: ";
     return std::cout;
   };
 
@@ -209,13 +215,7 @@ int main() {
   auto current_average = last_average;
   bool computed_initial_average = false;
 
-  using Minutes = fishbait::Timer::Minutes;
-  fishbait::Timer train_timer;
-  fishbait::Timer discount_timer;
-  fishbait::Timer snapshot_timer;
   thread_local fishbait::Random rng;
-
-  double elapsed_time = 0.0;
   bool check_prune = false;
   bool check_update = false;
   bool is_training = false;
@@ -272,14 +272,14 @@ int main() {
 
   log_fn() << "Starting MCCFR" << std::endl;
   spawn_threads();
-  while (elapsed_time < kTrainingTime) {
-    if (!check_update && elapsed_time > kStrategyDelay) {
+  while (trained_time < kTrainingTime) {
+    if (!check_update && trained_time > kStrategyDelay) {
       log_fn() << "Starting preflop average updates" << std::endl;
       if (is_training) join_threads();
       check_update = true;
     }
 
-    if (!check_prune && elapsed_time > kPruneThreshold) {
+    if (!check_prune && trained_time > kPruneThreshold) {
       log_fn() << "Starting prune" << std::endl;
       if (is_training) join_threads();
       check_prune = true;
@@ -287,11 +287,11 @@ int main() {
 
     /* Discount all regrets and action counter every kDiscountInterval until
        kLCFRThreshold */
-    if (elapsed_time < kLCFRThreshold &&
+    if (trained_time < kLCFRThreshold &&
         discount_timer.Check<Minutes>() >= kDiscountInterval) {
       if (is_training) join_threads();
-      double d = (elapsed_time / kDiscountInterval) /
-                 (elapsed_time / kDiscountInterval + 1);
+      double d = (trained_time / kDiscountInterval) /
+                 (trained_time / kDiscountInterval + 1);
       log_fn() << "Discounting by " << d << std::endl;
       strategy.Discount(d);
       discount_timer.Reset();
@@ -300,7 +300,7 @@ int main() {
     /* Save a snapshot of the strategy and update the average strategy every
        kSnapshotInterval minutes if it's been at least kStrategyDelay
        minutes. */
-    if (elapsed_time > kStrategyDelay &&
+    if (trained_time > kStrategyDelay &&
         snapshot_timer.Check<Minutes>() >= kSnapshotInterval) {
       if (is_training) join_threads();
 
@@ -313,15 +313,16 @@ int main() {
         last_average = current_average;
         log_fn() << "Computing new average" << std::endl;
         current_average += strategy;
-        log_fn() << "Evaluating new against previous averages" << std::endl;
-        std::vector<double> means = current_average.BattleStats(
-            last_average, kBattleMeans, kBattleTrials);
-        double avg_improvement = fishbait::Mean(means);
-        double avg_improvement_std = fishbait::Std(means, avg_improvement);
-        double avg_improvment_err = fishbait::CI95(means, avg_improvement_std);
-        log_fn() << avg_improvement << " ± " << avg_improvment_err
-                 << std::endl;
       }
+
+      log_fn() << "Evaluating new against previous averages" << std::endl;
+      std::vector<double> means = current_average.BattleStats(
+          last_average, kBattleMeans, kBattleTrials);
+      double avg_improvement = fishbait::Mean(means);
+      double avg_improvement_std = fishbait::Std(means, avg_improvement);
+      double avg_improvment_err = fishbait::CI95(means, avg_improvement_std);
+      log_fn() << avg_improvement << " ± " << avg_improvment_err
+                << std::endl;
 
       snapshot_timer.Reset();
     }
@@ -331,8 +332,8 @@ int main() {
       spawn_threads();
     }
     std::this_thread::sleep_for(fishbait::Timer::Seconds{60});
-    elapsed_time = train_timer.Check<fishbait::Timer::Minutes>();
-  }  // while elapsed_time < kTrainingTime
+    trained_time = train_timer.Check<fishbait::Timer::Minutes>();
+  }  // while trained_time < kTrainingTime
 
   join_threads();
   log_fn() << "Completed MCCFR" << std::endl;

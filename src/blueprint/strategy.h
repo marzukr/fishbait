@@ -609,10 +609,6 @@ class Strategy {
     */
     ActionIndicies SampleAction(Round round, CardCluster card_bucket,
                                 SequenceId seq) {
-      if (n_ != 1) {
-        throw std::logic_error("SampleAction called on non normal average "
-                               "strategy");
-      }
       std::size_t offset = action_abstraction_.LegalOffset(round, seq);
 
       std::uniform_real_distribution<float> sampler(0, 1);
@@ -626,7 +622,11 @@ class Strategy {
         for (std::size_t i = 0; i < round_actions; ++i) {
           if (action_abstraction_.Next(round, seq, i) == kIllegalId) continue;
 
-          bound += probabilities_[+round](card_bucket, offset + legal_i);
+          if (round == Round::kPreFlop) {
+            bound += probabilities_[+round](card_bucket, offset + legal_i);
+          } else {
+            bound += probabilities_[+round](card_bucket, offset + legal_i) / n_;
+          }
           if (sampled < bound) {
             return {i, legal_i};
           }
