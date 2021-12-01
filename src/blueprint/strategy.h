@@ -185,12 +185,12 @@ class Strategy {
                               SequenceId seq) {
     std::size_t offset = action_abstraction_.LegalOffset(round, seq);
     nda::size_t legal_actions = action_abstraction_.NumLegalActions(round, seq);
-    Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
 
     std::uniform_real_distribution<double> sampler(0, 1);
     nda::size_t round_actions = action_abstraction_.ActionCount(round);
 
     while (true) {
+      Regret sum = PositiveRegretSum(round, card_bucket, offset, legal_actions);
       double sampled = sampler(rng_());
       double bound = 0;
 
@@ -476,8 +476,27 @@ class Strategy {
    public:
     friend class Strategy;
 
-    Average(const Average& other) = default;
-    Average& operator=(const Average& other) = default;
+    Average(const Average& other)
+        : action_abstraction_{std::array<AbstractAction, kActions>{},
+                              Node<kPlayers>{}} {
+      *this = other;
+    };
+    Average& operator=(const Average& other) {
+      n_ = other.n_;
+      action_abstraction_ = other.action_abstraction_;
+      info_abstraction_ = other.info_abstraction_;
+      for (RoundId r_id = 0; r_id < kNRounds; ++r_id) {
+        probabilities_[r_id].reshape(other.probabilities_[r_id].shape());
+        auto compute_clusters = [&, r_id](std::size_t start, std::size_t end) {
+          const float* start_i = other.probabilities_[r_id].data() + start;
+          const float* end_i = other.probabilities_[r_id].data() + end;
+          float* start_o = probabilities_[r_id].data() + start;
+          std::copy(start_i, end_i, start_o);
+        };  // compute_clusters()
+        DivideWork(probabilities_[r_id].size(), compute_clusters);
+      }  // for round
+      return *this;
+    }
 
     bool operator!=(const Average& other) const {
       return probabilities_ != other.probabilities_ || n_ != other.n_ ||

@@ -12,19 +12,19 @@
 namespace fishbait {
 
 template <typename ComputeFn>
-inline void DivideWork(int work_n, ComputeFn&& worker) {
+inline void DivideWork(std::size_t work_n, ComputeFn&& worker) {
   std::array<std::thread, kThreads> threads;
-  int work_per_thread = work_n / kThreads;
-  int leftover = work_n % kThreads;
-  int start = 0;
-  for (int i = 0; i < kThreads; ++i) {
-    int end = start + work_per_thread;
+  std::size_t work_per_thread = work_n / kThreads;
+  std::size_t leftover = work_n % kThreads;
+  std::size_t start = 0;
+  for (std::size_t i = 0; i < kThreads; ++i) {
+    std::size_t end = start + work_per_thread;
     if (i < leftover) end += 1;
     if (start == end) break;
     threads[i] = std::thread(worker, start, end);
     start = end;
   }
-  for (int i = 0; i < std::min(kThreads, work_n); ++i) {
+  for (std::size_t i = 0; i < std::min(kThreads, work_n); ++i) {
     threads[i].join();
   }
 }

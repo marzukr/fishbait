@@ -1,6 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
 #include <array>
+#include <atomic>
 #include <filesystem>
 #include <iostream>
 #include <ostream>
@@ -191,28 +192,7 @@ int main() {
   /* The number of trials per mean to evaluate successive bot performance */
   constexpr int kBattleTrials = 1000000;
 
-  fishbait::Strategy strategy(start_state, actions, cluster_table,
-                              kPruneConstant, kRegretFloor);
-
-  std::filesystem::path base_path("out/blueprint");
-  std::filesystem::path save_path = base_path / "run_1";
-  std::filesystem::create_directory(save_path);
-  std::filesystem::path avg_path;
-
-  std::filesystem::path last_save = save_path / "strategy_initial.cereal";
-  CerealSave(last_save.string(), &strategy, true);
-
-
-  using Minutes = fishbait::Timer::Minutes;
   fishbait::Timer main_timer;
-  fishbait::Timer iteration_timer;
-  fishbait::Timer discount_timer;
-  fishbait::Timer snapshot_timer;
-  fishbait::Random rng;
-  int iteration = 1;
-  double elapsed_time = 0;
-  bool check_prune = false;  // Whether or not we should prune yet
-
   auto log_fn = [&]() -> std::ostream& {
     std::cout << "[";
     main_timer.Check<fishbait::Timer::Minutes>(std::cout);
@@ -220,42 +200,101 @@ int main() {
     return std::cout;
   };
 
-  log_fn() << "Starting MCCFR" << std::endl;
-  while (elapsed_time < kTrainingTime) {
-    log_fn() << "iteration " << iteration << ": ";
-    iteration_timer.Reset(std::cout) << std::endl;
-    for (fishbait::PlayerId player = 0; player < kPlayers; ++player) {
-      // update strategy after kStrategyInterval iterations
-      if (elapsed_time > kStrategyDelay && iteration % kStrategyInterval == 0) {
-        log_fn() << "Updating preflop average" << std::endl;
-        strategy.UpdateStrategy(player);
-      }
+  log_fn() << "initializing strategy" << std::endl;
+  fishbait::Strategy strategy(start_state, actions, cluster_table,
+                              kPruneConstant, kRegretFloor);
+  log_fn() << "initializing last average" << std::endl;
+  auto last_average = strategy.InitialAverage();
+  log_fn() << "initializing current average" << std::endl;
+  auto current_average = last_average;
+  bool computed_initial_average = false;
 
-      // Set prune variable and traverse MCCFR
-      bool prune = false;
-      if (!check_prune && elapsed_time > kPruneThreshold) {
-        log_fn() << "Starting prune" << std::endl;
-        check_prune = true;
-      }
-      if (check_prune) {
-        std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
-        double random_prune = uniform_distribution(rng());
-        if (random_prune < kPruneProbability) {
-          prune = true;
+  using Minutes = fishbait::Timer::Minutes;
+  fishbait::Timer train_timer;
+  fishbait::Timer discount_timer;
+  fishbait::Timer snapshot_timer;
+  thread_local fishbait::Random rng;
+
+  double elapsed_time = 0.0;
+  bool check_prune = false;
+  bool check_update = false;
+  bool is_training = false;
+
+  // If the training threads should continue
+  static_assert(std::atomic<bool>::is_always_lock_free);
+  std::atomic<bool> should_continue;
+  should_continue.store(true, std::memory_order_release);
+
+  auto train_fn = [&](bool thread_check_update, bool thread_check_prune) {
+    int iteration = 0;
+    while (should_continue.load(std::memory_order_acquire)) {
+      for (fishbait::PlayerId player = 0; player < kPlayers; ++player) {
+        // update strategy after kStrategyInterval iterations
+        if (thread_check_update && iteration % kStrategyInterval == 0) {
+          strategy.UpdateStrategy(player);
         }
-      }
-      strategy.TraverseMCCFR(player, prune);
-    }  // for player
+
+        // Set prune variable and traverse MCCFR
+        bool prune = false;
+        if (thread_check_prune) {
+          std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
+          double random_prune = uniform_distribution(rng());
+          if (random_prune < kPruneProbability) {
+            prune = true;
+          }
+        }
+        strategy.TraverseMCCFR(player, prune);
+      }  // for player
+      ++iteration;
+    }  // while should_continue
+  };  // train_fn()
+  std::array<std::thread, fishbait::kThreads> threads;
+  auto spawn_threads = [&]() {
+    should_continue.store(true, std::memory_order_release);
+    for (std::size_t i = 0; i < threads.size(); ++i) {
+      threads[i] = std::thread(train_fn, check_update, check_prune);
+    }
+    train_timer.Start();
+    discount_timer.Start();
+    snapshot_timer.Start();
+    is_training = true;
+  };
+  auto join_threads = [&]() {
+    should_continue.store(false, std::memory_order_release);
+    for (std::size_t i = 0; i < threads.size(); ++i) {
+      threads[i].join();
+    }
+    train_timer.Stop();
+    discount_timer.Stop();
+    snapshot_timer.Stop();
+    is_training = false;
+  };
+
+  log_fn() << "Starting MCCFR" << std::endl;
+  spawn_threads();
+  while (elapsed_time < kTrainingTime) {
+    if (!check_update && elapsed_time > kStrategyDelay) {
+      log_fn() << "Starting preflop average updates" << std::endl;
+      if (is_training) join_threads();
+      check_update = true;
+    }
+
+    if (!check_prune && elapsed_time > kPruneThreshold) {
+      log_fn() << "Starting prune" << std::endl;
+      if (is_training) join_threads();
+      check_prune = true;
+    }
 
     /* Discount all regrets and action counter every kDiscountInterval until
        kLCFRThreshold */
     if (elapsed_time < kLCFRThreshold &&
         discount_timer.Check<Minutes>() >= kDiscountInterval) {
-      discount_timer.Reset();
+      if (is_training) join_threads();
       double d = (elapsed_time / kDiscountInterval) /
                  (elapsed_time / kDiscountInterval + 1);
       log_fn() << "Discounting by " << d << std::endl;
       strategy.Discount(d);
+      discount_timer.Reset();
     }
 
     /* Save a snapshot of the strategy and update the average strategy every
@@ -263,46 +302,52 @@ int main() {
        minutes. */
     if (elapsed_time > kStrategyDelay &&
         snapshot_timer.Check<Minutes>() >= kSnapshotInterval) {
-      snapshot_timer.Reset();
-      log_fn() << "Taking a snapshot" << std::endl;
+      if (is_training) join_threads();
 
-      std::stringstream strategy_ss;
-      strategy_ss << "strategy_" << static_cast<int>(elapsed_time) << ".cereal";
-      std::filesystem::path strategy_path = save_path / strategy_ss.str();
-      CerealSave(strategy_path.string(), &strategy, true);
-      std::filesystem::remove(last_save);
-      last_save = save_path;
-
-      if (avg_path.empty()) {
-        avg_path = save_path / "avg_table.cereal";
-        auto strat_table = strategy.InitialAverage();
-        CerealSave(avg_path.string(), &strat_table, true);
+      if (!computed_initial_average) {
+        log_fn() << "Computing initial average" << std::endl;
+        current_average = strategy.InitialAverage();
+        computed_initial_average = true;
       } else {
-        auto prev_strat_table =
-            decltype(strategy)::Average::LoadAverage(avg_path, true);
-        auto new_strat_table = prev_strat_table;
-        new_strat_table += strategy;
-        CerealSave(avg_path.string(), &new_strat_table, true);
-
-        log_fn() << "Evaluating against previous average" << std::endl;
-        std::vector<double> means = new_strat_table.BattleStats(
-            prev_strat_table, kBattleMeans, kBattleTrials);
+        log_fn() << "Updating old average" << std::endl;
+        last_average = current_average;
+        log_fn() << "Computing new average" << std::endl;
+        current_average += strategy;
+        log_fn() << "Evaluating new against previous averages" << std::endl;
+        std::vector<double> means = current_average.BattleStats(
+            last_average, kBattleMeans, kBattleTrials);
         double avg_improvement = fishbait::Mean(means);
         double avg_improvement_std = fishbait::Std(means, avg_improvement);
         double avg_improvment_err = fishbait::CI95(means, avg_improvement_std);
         log_fn() << avg_improvement << " ± " << avg_improvment_err
                  << std::endl;
       }
+
+      snapshot_timer.Reset();
     }
 
-    ++iteration;
-    elapsed_time = main_timer.Check<fishbait::Timer::Minutes>();
+    if (!is_training) {
+      log_fn() << "Restarting training" << std::endl;
+      spawn_threads();
+    }
+    std::this_thread::sleep_for(fishbait::Timer::Seconds{60});
+    elapsed_time = train_timer.Check<fishbait::Timer::Minutes>();
   }  // while elapsed_time < kTrainingTime
 
-  auto strat_table = decltype(strategy)::Average::LoadAverage(avg_path, true);
-  strat_table.Normalize();
-  CerealSave(avg_path.string(), &strat_table, true);
+  join_threads();
+  log_fn() << "Completed MCCFR" << std::endl;
 
+  std::filesystem::path base_path("out/blueprint");
+  std::filesystem::path save_path = base_path / "run_1";
+  std::filesystem::create_directory(save_path);
+
+  log_fn() << "Normalizing average" << std::endl;
+  current_average.Normalize();
+  log_fn() << "Saving average" << std::endl;
+  std::filesystem::path average_path = save_path / "average_final.cereal";
+  CerealSave(average_path.string(), &current_average, false);
+
+  log_fn() << "Saving final strategy" << std::endl;
   std::filesystem::path strategy_path = save_path / "strategy_final.cereal";
-  CerealSave(strategy_path.string(), &strategy, true);
+  CerealSave(strategy_path.string(), &strategy, false);
 }

@@ -26,7 +26,7 @@ file(WRITE config.h
 
 namespace fishbait {
 
-constexpr int kThreads = ${CORES};
+constexpr std::size_t kThreads = ${CORES};
 
 }  // namespace fishbait
 

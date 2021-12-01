@@ -372,9 +372,13 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   auto prob_table = strategy_6.InitialAverage();
   auto prob_table_dup = s.InitialAverage();
   auto prob_table_cp = prob_table;
+  auto prob_table_cp2 = strategy_4.InitialAverage();
+  prob_table_cp2 = prob_table_cp;
   REQUIRE(prob_table == prob_table_dup);
   REQUIRE(prob_table == prob_table_cp);
+  REQUIRE(prob_table_cp2 == prob_table);
   REQUIRE(prob_table.action_abstraction() == strategy_6.action_abstraction());
+  prob_table = prob_table_cp2;
   auto& probabilities = prob_table.probabilities();
 
   std::vector<float> prob_table_preflop = {0.333333333, 0.333333333,
