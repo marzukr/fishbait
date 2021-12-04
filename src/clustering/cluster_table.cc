@@ -4,6 +4,7 @@
 
 #include <array>
 #include <numeric>
+#include <utility>
 
 #include "clustering/definitions.h"
 #include "poker/definitions.h"
@@ -30,10 +31,19 @@ ClusterTable::ClusterTable(const ClusterTable& other) : table_{other.table_},
                                                         preflop_indexer_{},
                                                         flop_indexer_{},
                                                         turn_indexer_{},
-                                                        river_indexer_{} {}
+                                                        river_indexer_{} { }
+
+ClusterTable::ClusterTable(ClusterTable&& other)
+    : table_{std::move(other.table_)}, preflop_indexer_{}, flop_indexer_{},
+      turn_indexer_{}, river_indexer_{} { }
 
 ClusterTable& ClusterTable::operator=(const ClusterTable& other) {
   table_ = other.table_;
+  return *this;
+}
+
+ClusterTable& ClusterTable::operator=(ClusterTable&& other) {
+  table_ = std::move(other.table_);
   return *this;
 }
 

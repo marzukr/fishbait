@@ -27,7 +27,9 @@ class ClusterTable {
  public:
   explicit ClusterTable(bool verbose = false);
   ClusterTable(const ClusterTable& other);
+  ClusterTable(ClusterTable&& other);
   ClusterTable& operator=(const ClusterTable& other);
+  ClusterTable& operator=(ClusterTable&& other);
   bool operator!=(const ClusterTable& other) const;
   bool operator==(const ClusterTable& other) const;
 

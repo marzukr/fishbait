@@ -4,6 +4,7 @@
 #include <atomic>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <ostream>
 #include <string_view>
 
@@ -201,7 +202,7 @@ int main() {
 
   auto log_fn = [&]() -> std::ostream& {
     std::cout << "[";
-    main_timer.Check<fishbait::Timer::Minutes>(std::cout);
+    main_timer.Check<Minutes>(std::cout);
     std::cout << " elapsed, " << trained_time << " min trained]: ";
     return std::cout;
   };
@@ -209,11 +210,10 @@ int main() {
   log_fn() << "initializing strategy" << std::endl;
   fishbait::Strategy strategy(start_state, actions, cluster_table,
                               kPruneConstant, kRegretFloor);
+  using AverageT = decltype(strategy)::Average;
   log_fn() << "initializing last average" << std::endl;
-  auto last_average = strategy.InitialAverage();
-  log_fn() << "initializing current average" << std::endl;
-  auto current_average = last_average;
-  bool computed_initial_average = false;
+  auto last_average = std::make_unique<AverageT>(strategy.InitialAverage());
+  decltype(last_average) current_average = nullptr;
 
   thread_local fishbait::Random rng;
   bool check_prune = false;
@@ -300,29 +300,27 @@ int main() {
     /* Save a snapshot of the strategy and update the average strategy every
        kSnapshotInterval minutes if it's been at least kStrategyDelay
        minutes. */
-    if (trained_time > kStrategyDelay &&
+    if (trained_time >= kStrategyDelay &&
         snapshot_timer.Check<Minutes>() >= kSnapshotInterval) {
       if (is_training) join_threads();
 
-      if (!computed_initial_average) {
+      if (current_average == nullptr) {
         log_fn() << "Computing initial average" << std::endl;
-        current_average = strategy.InitialAverage();
-        computed_initial_average = true;
+        current_average = std::make_unique<AverageT>(strategy.InitialAverage());
       } else {
         log_fn() << "Updating old average" << std::endl;
-        last_average = current_average;
+        *last_average = *current_average;
         log_fn() << "Computing new average" << std::endl;
-        current_average += strategy;
+        *current_average += strategy;
       }
 
       log_fn() << "Evaluating new against previous averages" << std::endl;
-      std::vector<double> means = current_average.BattleStats(
-          last_average, kBattleMeans, kBattleTrials);
+      std::vector<double> means = current_average->BattleStats(
+          *last_average, kBattleMeans, kBattleTrials);
       double avg_improvement = fishbait::Mean(means);
       double avg_improvement_std = fishbait::Std(means, avg_improvement);
       double avg_improvment_err = fishbait::CI95(means, avg_improvement_std);
-      log_fn() << avg_improvement << " ± " << avg_improvment_err
-                << std::endl;
+      log_fn() << avg_improvement << " ± " << avg_improvment_err << std::endl;
 
       snapshot_timer.Reset();
     }
@@ -343,10 +341,10 @@ int main() {
   std::filesystem::create_directory(save_path);
 
   log_fn() << "Normalizing average" << std::endl;
-  current_average.Normalize();
+  current_average->Normalize();
   log_fn() << "Saving average" << std::endl;
   std::filesystem::path average_path = save_path / "average_final.cereal";
-  CerealSave(average_path.string(), &current_average, false);
+  CerealSave(average_path.string(), current_average.get(), false);
 
   log_fn() << "Saving final strategy" << std::endl;
   std::filesystem::path strategy_path = save_path / "strategy_final.cereal";

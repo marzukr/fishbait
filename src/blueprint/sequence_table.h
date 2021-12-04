@@ -9,6 +9,7 @@
 #include <numeric>
 #include <ostream>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "array/array.h"
@@ -75,7 +76,17 @@ class SequenceTable {
     ComputeLegalOffsets();
   }  // SequenceTable()
   SequenceTable(const SequenceTable& other) = default;
+  SequenceTable(SequenceTable&& other) {
+    *this = std::move(other);
+  }
   SequenceTable& operator=(const SequenceTable& other) = default;
+  SequenceTable& operator=(SequenceTable&& other) {
+    actions_ = other.actions_;
+    start_state_ = other.start_state_;
+    table_ = std::move(other.table_);
+    legal_offsets_ = std::move(other.legal_offsets_);
+    return *this;
+  }
 
   /* @brief SequenceTable serialize function */
   template<class Archive>
@@ -188,9 +199,8 @@ class SequenceTable {
 
   /* @brief Checks if two SequenceTables are not the same */
   bool operator!=(const SequenceTable& other) const {
-    /* Just need to check actions_ and start_state_ because if they are the same
-       then table_ and legal_offsets_ will also be the same */
-    return actions_ != other.actions_ || start_state_ != other.start_state_;
+    return actions_ != other.actions_ || start_state_ != other.start_state_ ||
+           table_ != other.table_ || legal_offsets_ != other.legal_offsets_;
   }
 
   bool operator==(const SequenceTable& other) const {

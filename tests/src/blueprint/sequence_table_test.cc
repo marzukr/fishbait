@@ -367,4 +367,8 @@ TEST_CASE("equality test", "[blueprint][sequence_table]") {
   fishbait::SequenceTable tab3{actions_1, start_state_2};
   REQUIRE(tab3 != tab1);
   REQUIRE(!(tab3 == tab1));
+
+  tab2 = fishbait::SequenceTable{actions_1, start_state_1};
+  REQUIRE(!(tab2 != tab1));
+  REQUIRE(tab2 == tab1);
 }  // TEST_CASE "equality test"

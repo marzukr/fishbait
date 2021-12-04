@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>  // NOLINT(build/c++11)
+#include <utility>
 #include <vector>
 
 #include "array/array.h"
@@ -481,6 +482,11 @@ class Strategy {
                               Node<kPlayers>{}} {
       *this = other;
     };
+    Average(Average&& other)
+        : action_abstraction_{std::array<AbstractAction, kActions>{},
+                              Node<kPlayers>{}} {
+      *this = std::move(other);
+    };
     Average& operator=(const Average& other) {
       n_ = other.n_;
       action_abstraction_ = other.action_abstraction_;
@@ -495,6 +501,13 @@ class Strategy {
         };  // compute_clusters()
         DivideWork(probabilities_[r_id].size(), compute_clusters);
       }  // for round
+      return *this;
+    }
+    Average& operator=(Average&& other) {
+      n_ = other.n_;
+      action_abstraction_ = std::move(other.action_abstraction_);
+      info_abstraction_ = std::move(other.info_abstraction_);
+      probabilities_ = std::move(other.probabilities_);
       return *this;
     }
 
