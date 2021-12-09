@@ -1,25 +1,54 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import Login from './Login';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      gameStatus: null,
+      apiKey: sessionStorage.getItem("apiKey")
+    };
+    if (this.state.apiKey !== null) this.loadStatus();
+    this.updateKey = this.updateKey.bind(this);
+  }
+
+  updateKey(newKey) {
+    sessionStorage.setItem("apiKey", newKey);
+    this.setState({apiKey: newKey}, () => {
+      console.log(this.state);
+      this.loadStatus();
+    });
+  }
+
+  loadStatus() {
+    this.setState({gameStatus: 'Loading...'});
+    fetch('/api/game_status', {
+      headers: {
+        "Authorization": "Bearer: " + this.state.apiKey
+      }
+    }).then(response => {
+      if (response.status !== 200) {
+        sessionStorage.removeItem("apiKey");
+        this.setState({gameStatus: null, apiKey: null});
+      } else {
+        response.text().then(statusString => {
+          this.setState({gameStatus: statusString});
+        });
+      }
+    });
+  }
+
+  render() {
+    if (this.state.apiKey === null) {
+      return (
+        <Login updateKey={this.updateKey}/>
+      );
+    } else {
+      return (
+        <p>{this.state.gameStatus}</p>
+      );
+    }
+  }
 }
 
 export default App;
