@@ -1,5 +1,6 @@
 add_library(
   utils SHARED
+  array.h
   cereal.h
   combination_matrix.h
   fraction.cc

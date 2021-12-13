@@ -17,6 +17,7 @@ add_executable(tests.out main.cc
   src/poker/indexer_test.cc
   src/poker/node_test.cc
 
+  src/utils/array_test.cc
   src/utils/cereal_test.cc
   src/utils/combination_matrix_test.cc
   src/utils/fraction_test.cc
