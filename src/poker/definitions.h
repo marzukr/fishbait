@@ -10,6 +10,7 @@
 extern "C" {
   #include "hand-isomorphism/src/hand_index.h"
 }
+#include "utils/array.h"
 #include "utils/math.h"
 
 namespace fishbait {
@@ -83,6 +84,11 @@ inline constexpr hand_index_t ImperfectRecallHands(Round r) {
 }
 constexpr hand_index_t kUniqueHands =
     ImperfectRecallHands(Round::kPreFlop);
+
+template <PlayerN N>
+inline std::array<Chips, N> StackArray(Chips stack_size) {
+  return FilledArray<Chips, N>(stack_size);
+}
 
 }  // namespace fishbait
 

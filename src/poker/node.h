@@ -21,6 +21,7 @@
 #include "SKPokerEval/src/SevenEval.h"
 #include "poker/card_utils.h"
 #include "poker/definitions.h"
+#include "utils/array.h"
 #include "utils/fraction.h"
 #include "utils/random.h"
 
@@ -125,11 +126,11 @@ class Node {
     @param rake_cap Maximum number of chips that can be raked. 0 means no cap.
     @param no_flop_no_drop Is rake taken on hands without a flop?
   */
-  Node(PlayerId button = 0, Chips big_blind = 100, Chips small_blind = 50,
+  Node(std::array<Chips, kPlayers> stacks = StackArray<kPlayers>(10000),
+       PlayerId button = 0, Chips big_blind = 100, Chips small_blind = 50,
        Chips ante = 0, bool big_blind_ante = false,
-       bool blind_before_ante = true, Chips default_stack = 10000,
-       QuotaT rake = QuotaT{0}, Chips rake_cap = 0,
-       bool no_flop_no_drop = false)
+       bool blind_before_ante = true, QuotaT rake = QuotaT{0},
+       Chips rake_cap = 0, bool no_flop_no_drop = false)
 
          // Attributes
        : big_blind_{big_blind}, small_blind_{small_blind}, ante_{ante},
@@ -142,16 +143,22 @@ class Node {
          folded_{}, players_left_{kPlayers}, players_all_in_{0},
 
          // Chip Information
-         pot_{0}, bets_{}, stack_{}, min_raise_{big_blind},
+         pot_{0}, bets_{}, stack_{stacks}, min_raise_{big_blind},
          max_bet_{big_blind},
 
          // Card Information
          deck_{UnshuffledDeck<ISO_Card>()}, deck_state_{DeckState::kAuto} {
     button_ = button_ + kPlayers - 1; /* Since NewHand() increments the button
                                          position. */
-    std::fill(stack_.begin(), stack_.end(), default_stack);
     NewHand();
   }  // Node()
+  Node(Chips default_stack, PlayerId button = 0, Chips big_blind = 100,
+       Chips small_blind = 50, Chips ante = 0, bool big_blind_ante = false,
+       bool blind_before_ante = true, QuotaT rake = QuotaT{0},
+       Chips rake_cap = 0, bool no_flop_no_drop = false)
+       : Node(StackArray<kPlayers>(default_stack), button, big_blind,
+              small_blind, ante, big_blind_ante, blind_before_ante, rake,
+              rake_cap, no_flop_no_drop) { }
   Node(const Node& other) = default;
   Node& operator=(const Node& other) = default;
 

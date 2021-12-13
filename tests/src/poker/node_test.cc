@@ -4,6 +4,7 @@
 #include "poker/card_utils.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
+#include "utils/array.h"
 #include "utils/fraction.h"
 
 TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
@@ -25,7 +26,9 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
 
   // Construct the initial Node
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<8, double> triton(0, 4000, 2000, 500, true, true, 500000);
+  fishbait::Node<8, double> triton(
+      fishbait::FilledArray<fishbait::Chips, 8>(500000), 0, 4000, 2000, 500,
+      true, true);
   REQUIRE_THROWS(triton.NewHand());
 
   // Verify that the constructor worked correctly
@@ -809,7 +812,8 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
 
 TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<2, fishbait::Fraction> heads_up(0, 4, 2, 2, true, true, 100);
+  fishbait::Node<2, fishbait::Fraction> heads_up({100, 100}, 0, 4, 2, 2, true,
+                                                 true);
   REQUIRE_THROWS(heads_up.NewHand());
 
   // Verify that the constructor worked correctly
@@ -1126,7 +1130,7 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
 
 TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<2, double> heads_up(0, 4, 2, 2, true, false, 100);
+  fishbait::Node<2, double> heads_up({100, 100}, 0, 4, 2, 2, true, false);
   REQUIRE_THROWS(heads_up.NewHand());
 
   // Verify that the constructor worked correctly
@@ -1407,7 +1411,8 @@ TEST_CASE("heads up big blind ante ante first", "[poker][node]") {
 
 TEST_CASE("straddle", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<6, fishbait::Fraction> game(0, 100, 50, 0, true, false, 10000,
+  fishbait::Node<6, fishbait::Fraction> game(fishbait::StackArray<6>(10000), 0,
+                                             100, 50, 0, true, false,
                                              fishbait::Fraction{}, 5, true);
   REQUIRE_THROWS(game.NewHand());
 
@@ -1808,7 +1813,8 @@ TEST_CASE("straddle", "[poker][node]") {
 }  // TEST_CASE "straddle"
 
 TEST_CASE("straddle with all in", "[poker][node]") {
-  fishbait::Node<6, double> game(0, 100, 50, 0, true, false, 400);
+  fishbait::Node<6, double> game(fishbait::StackArray<6>(400), 0, 100, 50, 0,
+                                 true, false);
   REQUIRE_THROWS(game.NewHand());
 
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_throws;
@@ -1854,7 +1860,8 @@ TEST_CASE("straddle with all in", "[poker][node]") {
 }  // TEST_CASE "straddle with all in"
 
 TEST_CASE("straddle with bb ante", "[poker][node]") {
-  fishbait::Node<6, double> game(0, 100, 50, 100, true, false, 10000);
+  fishbait::Node<6, double> game(fishbait::StackArray<6>(10000), 0, 100, 50,
+                                 100, true, false);
   REQUIRE_THROWS(game.NewHand());
 
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_throws;
@@ -1910,7 +1917,8 @@ TEST_CASE("straddle with bb ante", "[poker][node]") {
 }  // TEST_CASE "straddle with bb ante"
 
 TEST_CASE("straddle with ante", "[poker][node]") {
-  fishbait::Node<6, double> game(0, 100, 50, 100, false, false, 10000);
+  fishbait::Node<6, double> game(fishbait::StackArray<6>(10000), 0, 100, 50,
+                                 100, false, false);
   REQUIRE_THROWS(game.NewHand());
 
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board_throws;
@@ -1959,7 +1967,8 @@ TEST_CASE("straddle with ante", "[poker][node]") {
 
 TEST_CASE("awardpot same stack no rake double", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
+  fishbait::Node<3, double> game({10000, 10000, 10000}, 0, 100, 50, 0, false,
+                                 false);
   INFO("Preflop");
   fishbait::Node game_cp = game;
   REQUIRE(game == game_cp);
@@ -1995,8 +2004,8 @@ TEST_CASE("awardpot same stack no rake double", "[poker][node]") {
 
 TEST_CASE("awardpot same stack no rake fraction", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<3, fishbait::Fraction> game(0, 100, 50, 0, false, false,
-                                             10000);
+  fishbait::Node<3, fishbait::Fraction> game({10000, 10000, 10000}, 0, 100, 50,
+                                             0, false, false);
   INFO("Preflop");
   game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
@@ -2029,7 +2038,8 @@ TEST_CASE("awardpot same stack no rake fraction", "[poker][node]") {
 
 TEST_CASE("awardpot single run double", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<3, double> game(0, 100, 50, 100, true, false, 10000);
+  fishbait::Node<3, double> game({10000, 10000, 10000}, 0, 100, 50, 100, true,
+                                 false);
   REQUIRE_THROWS(game.Apply(fishbait::Action::kAllIn));
   INFO("Preflop");
   game.ProceedPlay();
@@ -2067,8 +2077,8 @@ TEST_CASE("awardpot single run double", "[poker][node]") {
 
 TEST_CASE("awardpot single run fraction", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<4, fishbait::Fraction> game(0, 100, 50, 100, true, false,
-                                             10000);
+  fishbait::Node<4, fishbait::Fraction> game(10000, 0, 100, 50, 100, true,
+                                             false);
   REQUIRE_THROWS(game.Apply(fishbait::Action::kAllIn));
   INFO("Preflop");
   game.ProceedPlay();
@@ -2114,7 +2124,7 @@ TEST_CASE("awardpot single run fraction", "[poker][node]") {
 TEMPLATE_TEST_CASE("awardpot multi run", "[poker][node]", double,
                    fishbait::Fraction) {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<5, TestType> game(0, 2, 1, 0, true, false, 11);
+  fishbait::Node<5, TestType> game(11, 0, 2, 1, 0, true, false);
   INFO("Preflop");
   game.ProceedPlay();
   // Preflop fold to big blind
@@ -2223,7 +2233,7 @@ TEMPLATE_TEST_CASE("awardpot multi run rake no flop no drop",
   auto Card = fishbait::ISOCardFromStr;
   TestType rake{1};
   rake /= 20;
-  fishbait::Node<5, TestType> game(0, 2, 1, 0, true, false, 11, rake, 0, true);
+  fishbait::Node<5, TestType> game(11, 0, 2, 1, 0, true, false, rake, 0, true);
   // Preflop fold to big blind
   game.ProceedPlay();
   game.Apply(fishbait::Action::kFold);
@@ -2330,7 +2340,7 @@ TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker][node]",
   auto Card = fishbait::ISOCardFromStr;
   TestType rake{1};
   rake /= 20;
-  fishbait::Node<4, TestType> game(0, 100, 50, 100, true, false, 10000, rake,
+  fishbait::Node<4, TestType> game(10000, 0, 100, 50, 100, true, false, rake,
                                    100, false);
   game.ProceedPlay();
   game.Apply(fishbait::Action::kAllIn);
@@ -2373,7 +2383,7 @@ TEMPLATE_TEST_CASE("awardpot single run rake rake cap", "[poker][node]",
 }  // TEMPLATE_TEST_CASE "awardpot single run rake rake cap"
 
 TEST_CASE("bb ante with change", "[poker][node]") {
-  fishbait::Node<3, double> game(0, 100, 50, 100, true, false, 250);
+  fishbait::Node<3, double> game(250, 0, 100, 50, 100, true, false);
   REQUIRE(game.players_all_in() == 1);
   REQUIRE(game.bets(0) == 83);
   REQUIRE(game.bets(1) == 133);
@@ -2417,7 +2427,7 @@ TEST_CASE("bb ante with change", "[poker][node]") {
 }  // TEST_CASE "bb ante with change"
 
 TEST_CASE("ante all players all in", "[poker][node]") {
-  fishbait::Node<3, double> game(0, 100, 50, 100, false, false, 100);
+  fishbait::Node<3, double> game(100, 0, 100, 50, 100, false, false);
   REQUIRE(game.players_all_in() == 3);
   REQUIRE(game.bets(0) == 100);
   REQUIRE(game.bets(1) == 100);
@@ -2440,7 +2450,7 @@ TEST_CASE("ante all players all in", "[poker][node]") {
 
 TEST_CASE("regular hand heads up", "[poker][node]") {
   auto Card = fishbait::ISOCardFromStr;
-  fishbait::Node<2, double> game(0, 100, 50, 0, false, false, 10000);
+  fishbait::Node<2, double> game(10000, 0, 100, 50, 0, false, false);
 
   // Verify that the constructor worked correctly
   REQUIRE(game.big_blind() == 100);
@@ -2649,7 +2659,7 @@ TEST_CASE("regular hand heads up", "[poker][node]") {
 }  // TEST_CASE "regular hand heads up"
 
 TEST_CASE("rotation in hand with several rotations", "[poker][node]") {
-  fishbait::Node<3, double> game(0, 100, 50, 0, false, false, 10000);
+  fishbait::Node<3, double> game(10000, 0, 100, 50, 0, false, false);
 
   game.ProceedPlay();
   REQUIRE(game.cycled() == 0);
@@ -2710,8 +2720,8 @@ TEST_CASE("rotation in hand with several rotations", "[poker][node]") {
 
 TEST_CASE("player goes all in for less than a min raise",
           "[poker][node]") {
-  fishbait::Node<3, fishbait::Fraction> game(0, 100, 50, 0, false, false,
-                                             10000);
+  fishbait::Node<3, fishbait::Fraction> game(10000, 0, 100, 50, 0, false,
+                                             false);
   INFO("Hand 1");
 
   INFO("Preflop");
@@ -2768,7 +2778,7 @@ TEST_CASE("player goes all in for less than a min raise",
 }  // TEST_CASE "player goes all in for less than a min raise"
 
 TEST_CASE("non zero button test", "[poker][node]") {
-  fishbait::Node<4, double> game(2, 100, 50, 0, false, false, 10000);
+  fishbait::Node<4, double> game(10000, 2, 100, 50, 0, false, false);
   game.ProceedPlay();
   REQUIRE(game.button() == 2);
   REQUIRE(game.acting_player() == 1);
@@ -2784,7 +2794,7 @@ TEST_CASE("non zero button test", "[poker][node]") {
 
 TEMPLATE_TEST_CASE("convert bet 1", "[poker][node]", double,
                    fishbait::Fraction) {
-  fishbait::Node<2, TestType> game(0, 75, 25, 0, false, false, 1000);
+  fishbait::Node<2, TestType> game(1000, 0, 75, 25, 0, false, false);
 
   INFO("Preflop");
   game.ProceedPlay();
@@ -2807,7 +2817,7 @@ TEMPLATE_TEST_CASE("convert bet 1", "[poker][node]", double,
 
 TEMPLATE_TEST_CASE("convert bet 2", "[poker][node]", double,
                    fishbait::Fraction) {
-  fishbait::Node<3, TestType> game(0, 5, 2, 0, false, false, 500);
+  fishbait::Node<3, TestType> game(500, 0, 5, 2, 0, false, false);
 
   INFO("Preflop");
   game.ProceedPlay();
@@ -2834,7 +2844,7 @@ TEMPLATE_TEST_CASE("convert bet 2", "[poker][node]", double,
 
 TEST_CASE("deal cards test", "[poker][node]") {
   for (int trial = 0; trial < 100; ++trial) {
-    fishbait::Node<6, double> game(0, 5, 2, 0, false, false, 500);
+    fishbait::Node<6, double> game(500, 0, 5, 2, 0, false, false);
     game.Deal();  // preflop
     game.ProceedPlay();
     game.Apply(fishbait::Action::kAllIn);
