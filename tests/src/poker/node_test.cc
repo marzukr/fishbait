@@ -919,12 +919,13 @@ TEST_CASE("heads up big blind ante big blind first", "[poker][node]") {
   heads_up.Deal();
   heads_up.ProceedPlay();
 
-  fishbait::HandArray<fishbait::ISO_Card, 2> cards0 = {{{Card("7c"),
-      Card("2h")}, {Card("Ah"), Card("As")}}};
+  // fishbait::HandArray<fishbait::ISO_Card, 2> cards0 = {{{Card("7c"),
+  //     Card("2h")}, {Card("Ah"), Card("As")}}};
   fishbait::MultiBoardArray<fishbait::ISO_Card, 1> board0 = {{{Card("9c"),
       Card("6c"), Card("Ks"), Card("5c"), Card("4d")}}};
   heads_up.SetBoard(board0[0]);
-  heads_up.SetHands(cards0);
+  heads_up.SetHand(0, {Card("7c"), Card("2h")});
+  heads_up.SetHand(1, {Card("Ah"), Card("As")});
   REQUIRE(heads_up.PlayerCards(1) == std::array{Card("Ah"), Card("As"),
       Card("9c"), Card("6c"), Card("Ks"), Card("5c"), Card("4d")});
   heads_up.AwardPot(heads_up.single_run_);

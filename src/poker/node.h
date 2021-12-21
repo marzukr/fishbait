@@ -669,6 +669,11 @@ class Node {
   // Card information setter functions
   // --------------------------------------------------------------------------
 
+  void SetHand(PlayerId player, const Hand<ISO_Card>& hand) {
+    std::copy(hand.begin(), hand.end(),
+              std::next(deck_.begin(), player * kHandCards));
+    deck_state_ = DeckState::kManual;
+  }
   void SetHands(const HandArray<ISO_Card, kPlayers>& hands) {
     std::copy_n(&hands[0][0], kPlayers * kHandCards, deck_.begin());
     deck_state_ = DeckState::kManual;
