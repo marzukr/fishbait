@@ -158,7 +158,11 @@ class Node {
        Chips rake_cap = 0, bool no_flop_no_drop = false)
        : Node(StackArray<kPlayers>(default_stack), button, big_blind,
               small_blind, ante, big_blind_ante, blind_before_ante, rake,
-              rake_cap, no_flop_no_drop) { }
+              rake_cap, no_flop_no_drop) {}
+  Node(const Node& other, std::array<Chips, kPlayers> stacks)
+      : Node(stacks, other.button_, other.big_blind_, other.small_blind_,
+             other.ante_, other.big_blind_ante_, other.blind_before_ante_,
+             other.rake_, other.rake_cap_, other.no_flop_no_drop_) {}
   Node(const Node& other) = default;
   Node& operator=(const Node& other) = default;
 

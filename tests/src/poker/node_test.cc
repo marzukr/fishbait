@@ -2877,3 +2877,34 @@ TEST_CASE("deal cards test", "[poker][node]") {
     }  // for player
   }  // for trial
 }  // TEST_CASE "deal cards test"
+
+TEST_CASE("copy with stack test", "[poker][node]") {
+  fishbait::Node<3, double> game({10000, 10000, 10000}, 0, 100, 50, 0, false,
+                                 false);
+  fishbait::Node game_cp2{game, {20000, 20000, 20000}};
+  REQUIRE(game != game_cp2);
+  REQUIRE(game_cp2.button() == 0);
+  REQUIRE(game_cp2.big_blind() == 100);
+  REQUIRE(game_cp2.small_blind() == 50);
+  REQUIRE(game_cp2.ante() == 0);
+  REQUIRE(game_cp2.big_blind_ante() == false);
+  REQUIRE(game_cp2.blind_before_ante() == false);
+  REQUIRE(game_cp2.in_progress() == true);
+  REQUIRE(game_cp2.round() == fishbait::Round::kPreFlop);
+  REQUIRE(game_cp2.acting_player() == game.kChancePlayer);
+  game_cp2.ProceedPlay();
+  REQUIRE(game_cp2.cycled() == 0);
+  REQUIRE(game_cp2.acting_player() == 0);
+  for (fishbait::PlayerId i = 0; i < 3; ++i) {
+    REQUIRE(game_cp2.folded(i) == false);
+  }
+  REQUIRE(game_cp2.players_left() == 3);
+  REQUIRE(game_cp2.players_all_in() == 0);
+  REQUIRE(game_cp2.pot() == 150);
+  REQUIRE(game_cp2.bets(0) == 0);
+  REQUIRE(game_cp2.bets(1) == 50);
+  REQUIRE(game_cp2.bets(2) == 100);
+  REQUIRE(game_cp2.stack(0) == 20000);
+  REQUIRE(game_cp2.stack(1) == 19950);
+  REQUIRE(game_cp2.stack(2) == 19900);
+}  // TEST_CASE "copy with stack test"
