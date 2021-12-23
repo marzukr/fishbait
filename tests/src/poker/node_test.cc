@@ -133,6 +133,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanFold());
+  REQUIRE(triton.NeededToCall() == 10000);
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kPreFlop);
@@ -196,11 +197,12 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.bets(1) == 2500);
   REQUIRE(triton.stack(1) == 498000);
 
-  // Test Kuznetsov's action (fold)
+  // Test Kuznetsov's action (call)
   REQUIRE(triton.PlayerIndex(2) == 2);
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanFold());
+  REQUIRE(triton.NeededToCall() == 6000);
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kFlop);
@@ -226,6 +228,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanFold() == false);
+  REQUIRE(triton.NeededToCall() == 0);
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kFlop);
@@ -259,6 +262,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanFold());
+  REQUIRE(triton.NeededToCall() == 30000);
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kFlop);
@@ -693,10 +697,11 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.bets(3) == 2500);
   REQUIRE(triton.stack(3) == 490000);
 
-  // Test Paul Phua's action (fold)
+  // Test Paul Phua's action (call)
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanFold());
+  REQUIRE(triton.NeededToCall() == 8000);
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kFlop);
@@ -724,6 +729,7 @@ TEST_CASE("Triton cash game first 3 hands", "[poker][node]") {
   REQUIRE(triton.Rotation() == 0);
   REQUIRE(triton.CanCheckCall() == true);
   REQUIRE(triton.CanFold() == false);
+  REQUIRE(triton.NeededToCall() == 0);
   REQUIRE(triton.Apply(fishbait::Action::kCheckCall) == true);
   REQUIRE(triton.in_progress() == true);
   REQUIRE(triton.round() == fishbait::Round::kFlop);

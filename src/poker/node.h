@@ -354,15 +354,23 @@ class Node {
   }
 
   /*
+    @brief Returns the number of chips the acting_player_ needs to call.
+
+    If the acting_player_ can check, then returns 0.
+  */
+  Chips NeededToCall() const {
+    Chips prev_bet = bets_[acting_player_];
+    return max_bet_ - prev_bet;
+  }
+
+  /*
     @brief If the current acting_player_ can check/call.
     
     @return True if the current acting_player_ can check/call. Otherwise returns
         false. Also returns false if the player must go all in to call.
   */
   bool CanCheckCall() const {
-    Chips prev_bet = bets_[acting_player_];
-    Chips needed_to_call = max_bet_ - prev_bet;
-    return in_progress_ && needed_to_call < stack_[acting_player_];
+    return in_progress_ && NeededToCall() < stack_[acting_player_];
   }
 
   /*
