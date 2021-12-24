@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "SKPokerEval/src/SevenEval.h"
+#include "blueprint/definitions.h"
 #include "poker/card_utils.h"
 #include "poker/definitions.h"
 #include "utils/array.h"
@@ -148,9 +149,7 @@ class Node {
 
          // Card Information
          deck_{UnshuffledDeck<ISO_Card>()}, deck_state_{DeckState::kAuto} {
-    button_ = button_ + kPlayers - 1; /* Since NewHand() increments the button
-                                         position. */
-    NewHand();
+    NewHand(button_);
   }  // Node()
   Node(Chips default_stack, PlayerId button = 0, Chips big_blind = 100,
        Chips small_blind = 50, Chips ante = 0, bool big_blind_ante = false,
@@ -201,9 +200,29 @@ class Node {
   }
 
   /*
+    @brief Resets the node to how it was before this hand started.
+
+    Call NewHand() after Erase() to redo this hand.
+  */
+  void Erase() {
+    if (pot_ == 0) {
+      std::string func{__func__};
+      throw std::logic_error(func + " called when pot is empty. If the pot is "
+                                    "0, this means AwardPot() has been called. "
+                                    "The node cannot be erased if AwardPot() "
+                                    "has already been called for this hand.");
+    }
+    pot_ = 0;
+    for (PlayerId p = 0; p < kPlayers; ++p) {
+      stack_[p] += bets_[p];
+      bets_[p] = 0;
+    }
+  }
+
+  /*
     @brief Reset the state variables for the start of a new hand.
   */
-  void NewHand() {
+  void NewHand(PlayerId button = kChancePlayer) {
     if (pot_ != 0) {
       std::string func{__func__};
       throw std::logic_error(func + " called when pot is not empty. If the pot "
@@ -215,7 +234,11 @@ class Node {
     // Attributes are constants and don't need to be set
 
     // Progress Information
-    button_ = (button_ + 1) % kPlayers;
+    if (button == kChancePlayer) {
+      button_ = (button_ + 1) % kPlayers;
+    } else {
+      button_ = button;
+    }
     in_progress_ = true;
     round_ = Round::kPreFlop;
     cycled_ = 0;  // no straddled players by default
@@ -395,6 +418,23 @@ class Node {
   }
 
   /*
+    @brief If the current acting_player_ can perform the given AbstractAction.
+  */
+  bool IsLegal(const AbstractAction& a) const {
+    if (a.play == Action::kFold) {
+      return CanFold();
+    } else if (a.play == Action::kCheckCall) {
+      return CanCheckCall();
+    } else if (a.play == Action::kAllIn) {
+      return in_progress_;
+    } else if (a.play == Action::kBet) {
+      Chips bet_size = ProportionToChips(a.size);
+      return CanBet(bet_size);
+    }
+    return false;
+  }
+
+  /*
     @brief Converts a pot proportion into chips for the current acting player.
   */
   Chips ProportionToChips(QuotaT pot_proportion) const {
@@ -415,8 +455,7 @@ class Node {
     Chips needed_to_call = max_bet_ - prev_bet;
     Chips new_pot = pot_ + needed_to_call;
     QuotaT surplus = QuotaT(bet_size) - QuotaT(needed_to_call);
-    QuotaT pot_proportion = surplus / new_pot;
-    return std::max(pot_proportion, QuotaT{0});
+    return surplus / new_pot;
   }
 
   /*
@@ -473,6 +512,22 @@ class Node {
     CyclePlayers(true);
     return in_progress_;
   }  // Apply()
+
+  /*
+    @brief Apply the given AbstractAction to this Node object.
+    
+    Must only be called when the game is in progress. Otherwise throws.
+
+    @return True if the game is still in progress after this move, false if this
+        move has ended the game.
+  */
+  bool Apply(const AbstractAction& action) {
+    if (action.play == Action::kBet) {
+      Chips bet_size = ProportionToChips(action.size);
+      return Apply(action.play, bet_size);
+    }
+    return Apply(action.play);
+  }
 
   /* @brief Proceeds play after a chance node. */
   void ProceedPlay() {

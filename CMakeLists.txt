@@ -110,9 +110,10 @@ add_module(external/hand-isomorphism/src)
 
 add_module(src/blueprint)
 add_module(src/clustering)
+add_module(src/hand_strengths)
 add_module(src/interface)
 add_module(src/poker)
-add_module(src/hand_strengths)
+add_module(src/relay)
 add_module(src/utils)
 
 add_module(tests)

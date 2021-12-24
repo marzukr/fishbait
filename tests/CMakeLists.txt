@@ -17,6 +17,8 @@ add_executable(tests.out main.cc
   src/poker/indexer_test.cc
   src/poker/node_test.cc
 
+  src/relay/commander_test.cc
+
   src/utils/array_test.cc
   src/utils/cereal_test.cc
   src/utils/combination_matrix_test.cc
@@ -26,7 +28,7 @@ add_executable(tests.out main.cc
   src/utils/random_test.cc
   src/utils/timer_test.cc
   )
-target_link_libraries(tests.out blueprint clustering poker hand_strengths
+target_link_libraries(tests.out blueprint clustering hand_strengths poker relay
                       utils)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/out/tests
