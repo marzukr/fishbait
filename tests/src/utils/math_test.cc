@@ -5,6 +5,7 @@
 
 #include "catch2/catch.hpp"
 #include "utils/math.h"
+#include "utils/random.h"
 
 TEST_CASE("stats test", "[utils][math]") {
   std::vector<int> int_data = {3, 4, 5, 6, 7, -5};
@@ -34,3 +35,30 @@ TEST_CASE("normalize test", "[utils][math]") {
     REQUIRE(double_data[i] == Approx(expected[i]));
   }
 }  // TEST_CASE "normalize test"
+
+TEST_CASE("chi-squared test", "[utils][math]") {
+  std::vector<int> observed = {180, 250, 120, 225, 225};
+  std::array<int, 5> expected = {200, 200, 200, 200, 200};
+  double test_stat = fishbait::ChiSqTestStat(observed, expected);
+  REQUIRE(test_stat == 52.75);
+}  // TEST_CASE "chi-squared test"
+
+TEST_CASE("sample test", "[utils][math]") {
+  constexpr int kTrials = 20000;
+  std::vector<double> probabilities = {0.1, 0.1, 0.2, 0.3, 0.2, 0.1};
+  fishbait::Random rng;
+
+  std::array<int, 6> observed{0};
+  for (int i = 0; i < kTrials; ++i) {
+    std::size_t sampled = Sample(probabilities, rng);
+    observed[sampled] += 1;
+  }
+
+  // Chi-Squared test
+  std::array<double, 6> expected;
+  for (int i = 0; i < 6; ++i) {
+    expected[i] = probabilities[i] * kTrials;
+  }
+  REQUIRE(fishbait::ChiSqTestStat(observed, expected) <=
+          11.070);  // 0.05 significance level, 5 degrees of freedom
+}  // TEST_CASE "sample test"

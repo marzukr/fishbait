@@ -4,8 +4,12 @@
 #define SRC_UTILS_MATH_H_
 
 #include <algorithm>
-#include <numeric>
 #include <cmath>
+#include <functional>
+#include <numeric>
+#include <random>
+
+#include "utils/random.h"
 
 namespace fishbait {
 
@@ -54,6 +58,47 @@ void Normalize(ArrayT& data) {
   std::for_each(data.begin(), data.end(), [=](T& item) {
     item /= sum;
   });
+}
+
+/*
+  @brief Sample an index given an array of probabilities.
+
+  @param data The list of probabilities to sample from.
+  @param rng The random number generator to use to sample.
+*/
+template <typename ArrayT>
+std::size_t Sample(const ArrayT& data, Random& rng) {
+  std::uniform_real_distribution<double> sampler(0, 1);
+  while (true) {
+    double sampled = sampler(rng());
+    double bound = 0;
+
+    for (std::size_t i = 0; i < data.size(); ++i) {
+      bound += data[i];
+      if (sampled < bound) {
+        return i;
+      }
+    }  // for i
+  }
+}
+
+/*
+  @brief Computed the chi-squared test statistic for the given data.
+
+  @param observed The observed frequency of each class.
+  @param expected The expected frequency of each class.
+*/
+template <typename ArrayT1, typename ArrayT2>
+double ChiSqTestStat(const ArrayT1& observed, const ArrayT2& expected) {
+  using T1 = typename ArrayT1::value_type;
+  using T2 = typename ArrayT2::value_type;
+  auto chi_transform = [](T1 o, T2 e) {
+    double num = o - e;
+    return (num * num) / e;
+  };
+  return std::transform_reduce(observed.begin(), observed.end(),
+                               expected.begin(), 0.0, std::plus<>(),
+                               chi_transform);
 }
 
 }  // namespace fishbait

@@ -4156,13 +4156,8 @@ TEST_CASE("sample action test", "[blueprint][strategy]") {
 
   // Chi-Squared test
   std::array<double, 3> expected = {kTrials/3.0, kTrials/3.0, kTrials/3.0};
-  auto chi_transform = [](int o, double e) {
-    double num = o - e;
-    return (num * num) / e;
-  };
-  double crit_val = std::transform_reduce(observed.begin(), observed.end(),
-      expected.begin(), 0.0, std::plus<>(), chi_transform);
-  REQUIRE(crit_val <= 5.991);  // 0.95 confidence level
+  REQUIRE(fishbait::ChiSqTestStat(observed, expected) <=
+          5.991);  // 0.05 significance level, 2 degrees of freedom
 
   auto s_avg = s.InitialAverage();
   observed = {0, 0, 0};
@@ -4175,11 +4170,7 @@ TEST_CASE("sample action test", "[blueprint][strategy]") {
   for (int i = 0; i < 3; ++i) {
     REQUIRE(policy[i] == Approx(1.0/3.0));
   }
-
-  crit_val = std::transform_reduce(observed.begin(), observed.end(),
-                                   expected.begin(), 0.0, std::plus<>(),
-                                   chi_transform);
-  REQUIRE(crit_val <= 5.991);
+  REQUIRE(fishbait::ChiSqTestStat(observed, expected) <= 5.991);
 }
 
 TEST_CASE("battle test", "[blueprint][strategy][.]") {
