@@ -325,7 +325,7 @@ class SequenceTable {
         case Action::kFold:
           return state.CanFold();
         case Action::kBet:
-          Chips size = state.ConvertBet(action.size);
+          Chips size = state.ProportionToChips(action.size);
           if (state.pot() < action.min_pot) {
             return false;
           }

@@ -397,7 +397,7 @@ class Node {
   /*
     @brief Converts a pot proportion into chips for the current acting player.
   */
-  Chips ConvertBet(QuotaT pot_proportion) const {
+  Chips ProportionToChips(QuotaT pot_proportion) const {
     Chips prev_bet = bets_[acting_player_];
     Chips needed_to_call = max_bet_ - prev_bet;
     Chips new_pot = pot_ + needed_to_call;
@@ -405,6 +405,18 @@ class Node {
     double double_bet = static_cast<double>(exact_bet);
     Chips rounded_bet = std::rint(double_bet);
     return rounded_bet;
+  }
+
+  /*
+    @brief Converts chips into a pot proportion for the current acting player.
+  */
+  QuotaT ChipsToProportion(Chips bet_size) const {
+    Chips prev_bet = bets_[acting_player_];
+    Chips needed_to_call = max_bet_ - prev_bet;
+    Chips new_pot = pot_ + needed_to_call;
+    QuotaT surplus = QuotaT(bet_size) - QuotaT(needed_to_call);
+    QuotaT pot_proportion = surplus / new_pot;
+    return std::max(pot_proportion, QuotaT{0});
   }
 
   /*

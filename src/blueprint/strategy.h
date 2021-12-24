@@ -336,7 +336,7 @@ class Strategy {
     if (state.acting_player() == player) {
       ActionIndicies action_idxs = SampleAction(round, card_bucket, seq);
       AbstractAction action = actions(action_idxs.round_idx);
-      state.Apply(action.play, state.ConvertBet(action.size));
+      state.Apply(action.play, state.ProportionToChips(action.size));
       std::size_t offset = action_abstraction_.LegalOffset(round, seq);
       action_counts_(card_bucket, offset + action_idxs.legal_idx) += 1;
       SequenceId next_seq = action_abstraction_.Next(round, seq,
@@ -348,7 +348,8 @@ class Strategy {
         if (action_abstraction_.Next(round, seq, action_index) != kIllegalId) {
           Node<kPlayers> new_state = state;
           AbstractAction action = actions(action_index);
-          new_state.Apply(action.play, new_state.ConvertBet(action.size));
+          new_state.Apply(action.play,
+                          new_state.ProportionToChips(action.size));
           UpdateStrategy(new_state, card_bucket,
                          action_abstraction_.Next(round, seq, action_index),
                          player);
@@ -414,7 +415,8 @@ class Strategy {
             round == Round::kRiver || next_seq == kLeafId) {
           AbstractAction action = actions(i);
           Node<kPlayers> new_state = state;
-          new_state.Apply(action.play, new_state.ConvertBet(action.size));
+          new_state.Apply(action.play,
+                          new_state.ProportionToChips(action.size));
           double action_value = TraverseMCCFR(new_state, card_buckets, next_seq,
                                               player, prune);
           action_values[i] = action_value;
@@ -446,7 +448,7 @@ class Strategy {
                                                card_buckets[acting_player],
                                                seq).round_idx;
       AbstractAction action = actions(action_index);
-      state.Apply(action.play, state.ConvertBet(action.size));
+      state.Apply(action.play, state.ProportionToChips(action.size));
       return TraverseMCCFR(state, card_buckets,
                            action_abstraction_.Next(round, seq, action_index),
                            player, prune);
@@ -720,14 +722,14 @@ class Strategy {
               seq = action_abstraction_.Next(round, seq, act_idx);
               AbstractAction action =
                   action_abstraction_.Actions(round)[act_idx];
-              state.Apply(action.play, state.ConvertBet(action.size));
+              state.Apply(action.play, state.ProportionToChips(action.size));
             } else {
               std::size_t act_idx = op.SampleAction(round,
                   card_buckets[state.acting_player()], seq).round_idx;
               seq = op.action_abstraction_.Next(round, seq, act_idx);
               AbstractAction action =
                   op.action_abstraction_.Actions(round)[act_idx];
-              state.Apply(action.play, state.ConvertBet(action.size));
+              state.Apply(action.play, state.ProportionToChips(action.size));
             }
           }  // while state.in_progress()
           if (!state.in_progress()) state.AwardPot(state.same_stack_no_rake_);

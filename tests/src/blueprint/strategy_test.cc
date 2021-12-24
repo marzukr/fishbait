@@ -1318,7 +1318,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   sampled = sampler(rng());
   REQUIRE(sampled == 0.88673216355398687);
   call_stack.emplace(call_stack.top());
-  chips = call_stack.top().node.ConvertBet(2.0);
+  chips = call_stack.top().node.ProportionToChips(2.0);
   call_stack.top().node.Apply(fishbait::Action::kBet, chips);
   // player 0, depth 7, turn seq 14
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
@@ -4045,7 +4045,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
                             call_stack.top().action_values[1];
   // player 2, depth 6, turn seq 8, action 2
   call_stack.emplace(call_stack.top());
-  chips = call_stack.top().node.ConvertBet(2.0);
+  chips = call_stack.top().node.ProportionToChips(2.0);
   call_stack.top().node.Apply(fishbait::Action::kBet, chips);
   // player 0, depth 7, turn seq 14
   cluster = info_abstraction.Cluster(call_stack.top().node, 0);
