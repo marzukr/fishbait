@@ -261,9 +261,9 @@ class Commander {
       /* Find the largest bet size smaller than the requested size and the
          smallest bet size larger than the requested size */
       int min_i = -1;
-      double min_size;
+      double min_size = 0;
       int max_i = -1;
-      double max_size;
+      double max_size = 0;
       for (std::size_t i = 0; i < actions.size(); ++i) {
         if (action_abstraction_.Next(round, abstract_seq_, i) == kIllegalId) {
           continue;
