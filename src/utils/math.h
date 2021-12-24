@@ -3,6 +3,7 @@
 #ifndef SRC_UTILS_MATH_H_
 #define SRC_UTILS_MATH_H_
 
+#include <algorithm>
 #include <numeric>
 #include <cmath>
 
@@ -43,6 +44,16 @@ double Std(const ArrayT& data, double mean) {
 template <typename ArrayT>
 double CI95(const ArrayT& means, double std) {
   return 1.96 * std / std::sqrt(means.size());
+}
+
+/* @brief Normalize an array of probabilities. */
+template <typename ArrayT>
+void Normalize(ArrayT& data) {
+  using T = typename ArrayT::value_type;
+  T sum = std::accumulate(data.begin(), data.end(), T{0});
+  std::for_each(data.begin(), data.end(), [=](T& item) {
+    item /= sum;
+  });
 }
 
 }  // namespace fishbait

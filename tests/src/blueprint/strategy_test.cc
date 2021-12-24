@@ -4127,7 +4127,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
 TEST_CASE("sample action test", "[blueprint][strategy]") {
   constexpr fishbait::PlayerN kPlayers = 3;
   constexpr int kActions = 5;
-  constexpr int kTrials = 10000;
+  constexpr int kTrials = 20000;
 
   fishbait::Node<kPlayers> start_state;
   start_state.SetSeed(fishbait::Random::Seed(7));
@@ -4171,8 +4171,10 @@ TEST_CASE("sample action test", "[blueprint][strategy]") {
         s_avg.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
     observed[sampled] += 1;
   }
-  REQUIRE(s_avg.Policy(fishbait::Round::kPreFlop, 0, 0) ==
-          std::array<float, 5>{1.0/3.0, 1.0/3.0, 1.0/3.0});
+  std::array policy = s_avg.Policy(fishbait::Round::kPreFlop, 0, 0);
+  for (int i = 0; i < 3; ++i) {
+    REQUIRE(policy[i] == Approx(1.0/3.0));
+  }
 
   crit_val = std::transform_reduce(observed.begin(), observed.end(),
                                    expected.begin(), 0.0, std::plus<>(),
