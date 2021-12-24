@@ -15,78 +15,13 @@
 #include "blueprint/strategy.h"
 #include "clustering/cluster_table.h"
 #include "clustering/definitions.h"
+#include "clustering/test_clusters.h"
 #include "poker/definitions.h"
 #include "poker/indexer.h"
 #include "poker/node.h"
 #include "utils/cereal.h"
 #include "utils/math.h"
 #include "utils/print.h"
-
-/* Dummy clustering scheme that just partitions each round into 4 clusters with
-   modulus of the ISO card index. */
-class TestClusters {
- private:
-  fishbait::Indexer<2> preflop_indexer_;
-  fishbait::Indexer<2, 3> flop_indexer_;
-  fishbait::Indexer<2, 4> turn_indexer_;
-  fishbait::Indexer<2, 5> river_indexer_;
-  static constexpr fishbait::CardCluster kNClusters = 4;
-
- public:
-  TestClusters() = default;
-  TestClusters(const TestClusters&) {}
-  TestClusters& operator=(const TestClusters&) { return *this; }
-  bool operator==(const TestClusters&) const { return true; }
-  bool operator!=(const TestClusters&) const { return false; }
-
-  /* @brief TestClusters serialize function */
-  template<class Archive>
-  void serialize(Archive&) {
-    return;
-  }
-
-  static constexpr fishbait::CardCluster NumClusters(fishbait::Round) {
-    return kNClusters;
-  }
-
-  template <fishbait::PlayerN kPlayers>
-  std::array<fishbait::CardCluster, kPlayers> ClusterArray(
-      const fishbait::Node<kPlayers>& node) {
-    std::array<fishbait::CardCluster, kPlayers> card_clusters;
-    for (fishbait::PlayerId i = 0; i < kPlayers; ++i) {
-      if (!node.folded(i) && node.stack(i) != 0) {
-        card_clusters[i] = Cluster(node, i);
-      }
-    }
-    return card_clusters;
-  }  // ClusterArray()
-
-  template <fishbait::PlayerN kPlayers>
-  fishbait::CardCluster Cluster(const fishbait::Node<kPlayers>& node,
-                                fishbait::PlayerId player) {
-    std::array player_cards = node.PlayerCards(player);
-    hand_index_t idx;
-    switch (node.round()) {
-      case fishbait::Round::kPreFlop:
-        idx = preflop_indexer_.IndexLast(player_cards);
-        break;
-      case fishbait::Round::kFlop:
-        idx = flop_indexer_.IndexLast(player_cards);
-        break;
-      case fishbait::Round::kTurn:
-        idx = turn_indexer_.IndexLast(player_cards);
-        break;
-      case fishbait::Round::kRiver:
-        idx = river_indexer_.IndexLast(player_cards);
-        break;
-      default:
-        std::stringstream ss;
-        ss << +(+node.round()) << " is not a valid round." << std::endl;
-        throw std::out_of_range(ss.str());
-    }
-    return idx % kNClusters;
-  }
-};  // class TestClusters
 
 TEST_CASE("mccfr test", "[blueprint][strategy]") {
   constexpr fishbait::PlayerN kPlayers = 3;
@@ -104,7 +39,7 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
       {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
        fishbait::Round::kRiver, 0, 10000}
   }};
-  TestClusters info_abstraction;
+  fishbait::TestClusters info_abstraction;
   int prune_constant = 0;
   int regret_floor = -10000;
   fishbait::Strategy s(start_state, actions, info_abstraction,
@@ -173,8 +108,8 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   CerealSave(save_path.string(), &s, false);
 
   auto strategy_4 =
-      fishbait::Strategy<kPlayers, kActions, TestClusters>::LoadSnapshot(
-        "out/tests/blueprint/strategy_4.cereal");
+      fishbait::Strategy<kPlayers, kActions, fishbait::TestClusters>
+              ::LoadSnapshot("out/tests/blueprint/strategy_4.cereal");
   std::size_t legal_actions;
 
   std::vector<fishbait::Regret> it_4_regrets_preflop = {5017, -4983, -33, 0, 0,
@@ -271,8 +206,8 @@ TEST_CASE("mccfr test", "[blueprint][strategy]") {
   }
 
   auto strategy_6 =
-      fishbait::Strategy<kPlayers, kActions, TestClusters>::LoadSnapshot(
-        "out/tests/blueprint/strategy_6.cereal");
+      fishbait::Strategy<kPlayers, kActions, fishbait::TestClusters>
+              ::LoadSnapshot("out/tests/blueprint/strategy_6.cereal");
 
   std::vector<fishbait::Regret> it_6_regrets_preflop = {5017, -4983, -33, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -768,7 +703,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   constexpr int kRegretFloor = -10000;
   constexpr int kDiscountInterval = 2;
 
-  TestClusters info_abstraction;
+  fishbait::TestClusters info_abstraction;
 
   fishbait::Node<kPlayers> start_state;
   start_state.SetSeed(fishbait::Random::Seed(7));
@@ -4189,7 +4124,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
   start_state.SetSeed(fishbait::Random::Seed{});
 }  // TEST_CASE "mccfr test helper"
 
-TEST_CASE("sample action test", "[blueprint][strategy][.]") {
+TEST_CASE("sample action test", "[blueprint][strategy]") {
   constexpr fishbait::PlayerN kPlayers = 3;
   constexpr int kActions = 5;
   constexpr int kTrials = 10000;
@@ -4206,7 +4141,7 @@ TEST_CASE("sample action test", "[blueprint][strategy][.]") {
       {fishbait::Action::kBet, 0.25, 1, fishbait::Round::kFlop,
        fishbait::Round::kRiver, 0, 10000}
   }};
-  TestClusters info_abstraction;
+  fishbait::TestClusters info_abstraction;
   int prune_constant = 0;
   int regret_floor = -10000;
   fishbait::Strategy s(start_state, actions, info_abstraction,
@@ -4236,6 +4171,8 @@ TEST_CASE("sample action test", "[blueprint][strategy][.]") {
         s_avg.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
     observed[sampled] += 1;
   }
+  REQUIRE(s_avg.Policy(fishbait::Round::kPreFlop, 0, 0) ==
+          std::array<float, 5>{1.0/3.0, 1.0/3.0, 1.0/3.0});
 
   crit_val = std::transform_reduce(observed.begin(), observed.end(),
                                    expected.begin(), 0.0, std::plus<>(),

@@ -5,6 +5,7 @@ add_library(
   definitions.h
   distance.h
   k_means.h
+  test_clusters.h
   )
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

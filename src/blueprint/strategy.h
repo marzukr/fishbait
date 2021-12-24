@@ -652,6 +652,37 @@ class Strategy {
     }  // SampleAction()
 
     /*
+      @brief Returns the strategy at the given infoset.
+
+      @param round The betting round of the infoset.
+      @param card_bucket The card cluster id of the infoset.
+      @param seq The sequence id of the infoset.
+    */
+    std::array<float, kActions> Policy(Round round, CardCluster card_bucket,
+                                       SequenceId seq) {
+      std::array<float, kActions> policy;
+      std::size_t offset = action_abstraction_.LegalOffset(round, seq);
+      nda::size_t round_actions = action_abstraction_.ActionCount(round);
+      std::size_t legal_i = 0;
+      for (std::size_t i = 0; i < round_actions; ++i) {
+        if (action_abstraction_.Next(round, seq, i) == kIllegalId) {
+          policy[i] = 0;
+          continue;
+        }
+
+        if (round == Round::kPreFlop) {
+          policy[i] = probabilities_[+round](card_bucket, offset + legal_i);
+        } else {
+          policy[i] = probabilities_[+round](card_bucket, offset + legal_i);
+          policy[i] /= n_;
+        }
+
+        ++legal_i;
+      }  // for i
+      return policy;
+    }  // Policy()
+
+    /*
       @brief Test this average strategy vs the op average strategy.
 
       Both strategies must have the same action abstraction. Assumes all players
@@ -679,6 +710,7 @@ class Strategy {
 
     const auto& probabilities() const { return probabilities_; }
     const auto& action_abstraction() const { return action_abstraction_; }
+    auto& info_abstraction() { return info_abstraction_; }
 
    private:
     /*

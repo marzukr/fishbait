@@ -46,6 +46,23 @@ using PlayerN = PlayerId;
 using Chips = uint32_t;
 
 enum class Action : uint8_t { kFold, kCheckCall, kBet, kAllIn };
+inline std::ostream& operator<<(std::ostream& os, Action a) {
+  switch (a) {
+    case Action::kFold:
+      os << "Fold";
+      break;
+    case Action::kCheckCall:
+      os << "Check/Call";
+      break;
+    case Action::kBet:
+      os << "Bet";
+      break;
+    case Action::kAllIn:
+      os << "All In";
+      break;
+  }
+  return os;
+}
 
 using Card = uint8_t;
 using CardN = Card;
