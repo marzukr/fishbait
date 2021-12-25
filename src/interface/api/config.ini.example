@@ -1,0 +1,3 @@
+[DEFAULT]
+# Set the secret key
+SECRET_KEY =

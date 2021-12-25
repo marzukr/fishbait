@@ -12,6 +12,7 @@
 #include "array/array.h"
 #include "blueprint/definitions.h"
 #include "blueprint/sequence_table.h"
+#include "blueprint/strategy.h"
 #include "clustering/cluster_table.h"
 #include "clustering/definitions.h"
 #include "poker/definitions.h"
@@ -23,6 +24,10 @@ namespace fishbait {
 
 template <PlayerId kPlayers, std::size_t kActions, typename InfoAbstraction>
 class Commander {
+ public:
+  using AverageT =
+      typename Strategy<kPlayers, kActions, InfoAbstraction>::Average;
+
  private:
   // The state of the abstracted game used to determine the strategy
   Node<kPlayers> abstract_state_;
@@ -30,8 +35,6 @@ class Commander {
   // The state of the actual game. Also holds the truth about card information.
   Node<kPlayers> actual_state_;
 
-  using AverageT =
-      typename Strategy<kPlayers, kActions, InfoAbstraction>::Average;
   // The abstracted strategy to use
   AverageT strategy_;
 
