@@ -1,3 +1,6 @@
 add_library(
-  relay INTERFACE
+  relay SHARED
+  commander.cc
+  commander.h
   )
+target_link_libraries(relay blueprint clustering poker utils)

@@ -677,6 +677,22 @@ class Node {
     std::fill(bets_.begin(), bets_.end(), 0);
   }  // AwardPot()
 
+  /* @brief Returns a snapshot of the current state of this Node. */
+  NodeSnapshot<kPlayers> Snapshot() const {
+    NodeSnapshot<kPlayers> ret{kPlayers, big_blind_, small_blind_, ante_,
+        big_blind_ante_, blind_before_ante_, static_cast<double>(rake_),
+        rake_cap_, no_flop_no_drop_, button_, in_progress_, +round_,
+        acting_player_, {}, players_left_, players_all_in_, pot_, {}, {},
+        min_raise_, NeededToCall(), {}, {}};
+    std::copy(folded_.begin(), folded_.end(), ret.folded);
+    std::copy(bets_.begin(), bets_.end(), ret.bets);
+    std::copy(stack_.begin(), stack_.end(), ret.stack);
+    auto hands_end = std::next(deck_.begin(), kPlayers * kHandCards);
+    std::copy(deck_.begin(), hands_end, ret.hands[0]);
+    std::copy_n(hands_end, kBoardCards, ret.board);
+    return ret;
+  }
+
   // Attribute getter functions
   // --------------------------------------------------------------------------
 

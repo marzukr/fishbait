@@ -1,4 +1,4 @@
-# FISHBAIT 🐟
+# Fishbait 🐟
 **F**ully **I**nsightful **S**uperhuman **H**old'em **B**ot with
 **A**rtificially **I**ntelligent **T**hought. An AI agent designed to play
 poker. Inspired by the Pluribus poker bot developed by CMU and Facebook.

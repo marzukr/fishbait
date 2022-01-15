@@ -58,7 +58,7 @@ class Commander {
       : abstract_state_{strategy.action_abstraction().start_state()},
         actual_state_{abstract_state_}, strategy_{strategy},
         action_abstraction_{strategy_.action_abstraction()}, abstract_seq_{0},
-        fishbait_seat_{}, first_round_action_{true}, rng_{} {}
+        fishbait_seat_{0}, first_round_action_{true}, rng_{} {}
 
   /* @brief Resets the game with the given actual state and fishbait seat. */
   void Reset(Node<kPlayers> actual_start, PlayerId fishbait_seat) {
@@ -74,6 +74,11 @@ class Commander {
   /* @brief Sets the given player's hand. */
   void SetHand(PlayerId player, const Hand<ISO_Card>& hand) {
     actual_state_.SetHand(player, hand);
+  }
+
+  /* @brief Sets the game's public card board. */
+  void SetBoard(const BoardArray<ISO_Card>& board) {
+    actual_state_.SetBoard(board);
   }
 
   /* @brief Deals the appropriate cards according to the round. */

@@ -1,0 +1,136 @@
+/* Copyright 2021 Marzuk Rashid */
+
+.playerBorderBox {
+  border-top: 1px rgba(0, 0, 0, 0.1) solid;
+}
+
+.playerInfoBox {
+  display: grid;
+  grid-template-columns: 35px 1fr 1fr 30%;
+  grid-template-rows: 50% 50%;
+  padding: 0 5px;
+  height: 100%;
+}
+
+.playerInfoBox.folded {
+  opacity: 50%;
+}
+
+.playerIdBox {
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 1;
+  grid-row-end: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16pt;
+}
+
+.dealerButton {
+  width: 20pt;
+  height: 20pt;
+  background-color: black;
+  border-radius: 10pt;
+  color: white;
+  text-align: center;
+}
+
+.playerNameBox {
+  grid-column-start: 2;
+  grid-column-end: 4;
+  grid-row-start: 1;
+  grid-row-end: 2;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding-left: 5px;
+  padding-bottom: 6px;
+  line-height: 1;
+}
+
+.playerNameBoxName {
+  margin-right: 5px;
+}
+
+.cursorClass {
+  border-right: 2px solid transparent; /* The typwriter cursor */
+  height: 1em;
+}
+
+@keyframes cursorPulse {
+  from {
+    border-color: black;
+  }
+
+  50% {
+    border-color: transparent;
+  }
+
+  to {
+    border-color: black;
+  }
+}
+
+.cursorClass.active {
+  animation: cursorPulse 1s step-end 1s infinite;
+}
+
+.playerBetBox {
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 5px;
+  padding-left: 5px;
+  padding-top: 4px;
+}
+
+.playerStackBox {
+  grid-column-start: 3;
+  grid-column-end: 4;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 5px;
+  padding-top: 4px;
+}
+
+.playerCardBox {
+  grid-column-start: 4;
+  grid-column-end: 5;
+  grid-row-start: 1;
+  grid-row-end: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  padding-right: 3px;
+}
+
+.playerCardBox .card {
+  margin: 10px 3px;
+  padding: 3px;
+}
+
+.playerCardBox .card.active {
+  margin: 8px 1px;
+}
+
+.playerCardBox .cardInnerFront {
+  padding: 0 6pt;
+}
+
+.playerCardBox .cardNumberLabel {
+  font-size: 14pt;
+  height: 14pt;
+}
+
+.playerCardBox .cardSuitLabel {
+  font-size: 14pt;
+  height: 14pt;
+}

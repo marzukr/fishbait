@@ -45,7 +45,7 @@ using PlayerId = uint8_t;
 using PlayerN = PlayerId;
 using Chips = uint32_t;
 
-enum class Action : uint8_t { kFold, kCheckCall, kBet, kAllIn };
+enum class Action : uint8_t { kFold = 0, kCheckCall = 1, kBet = 2, kAllIn = 3 };
 inline std::ostream& operator<<(std::ostream& os, Action a) {
   switch (a) {
     case Action::kFold:
@@ -106,6 +106,35 @@ template <PlayerN N>
 inline std::array<Chips, N> StackArray(Chips stack_size) {
   return FilledArray<Chips, N>(stack_size);
 }
+
+/* Snapshot of a Node object. Refer to the Node class for more information about
+   the member variables */
+template <PlayerId kPlayers>
+struct NodeSnapshot {
+  PlayerN players;
+  Chips big_blind;
+  Chips small_blind;
+  Chips ante;
+  bool big_blind_ante;
+  bool blind_before_ante;
+  double rake;
+  Chips rake_cap;
+  bool no_flop_no_drop;
+  PlayerId button;
+  bool in_progress;
+  RoundId round;
+  PlayerId acting_player;
+  bool folded[kPlayers];
+  PlayerN players_left;
+  PlayerN players_all_in;
+  Chips pot;
+  Chips bets[kPlayers];
+  Chips stack[kPlayers];
+  Chips min_raise;
+  Chips needed_to_call;
+  ISO_Card hands[kPlayers][kHandCards];
+  ISO_Card board[kBoardCards];
+};
 
 }  // namespace fishbait
 

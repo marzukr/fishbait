@@ -1,0 +1,10 @@
+/* Copyright 2021 Marzuk Rashid */
+
+.cardView {
+  height: 12vh;
+  display: flex;
+  justify-content: space-evenly;
+  padding: 0 5px;
+  left: 0;
+  right: 0;
+}

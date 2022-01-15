@@ -4127,7 +4127,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
 TEST_CASE("sample action test", "[blueprint][strategy]") {
   constexpr fishbait::PlayerN kPlayers = 3;
   constexpr int kActions = 5;
-  constexpr int kTrials = 30000;
+  constexpr int kTrials = 60000;
 
   fishbait::Node<kPlayers> start_state;
   start_state.SetSeed(fishbait::Random::Seed(7));

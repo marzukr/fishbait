@@ -44,7 +44,7 @@ TEST_CASE("chi-squared test", "[utils][math]") {
 }  // TEST_CASE "chi-squared test"
 
 TEST_CASE("sample test", "[utils][math]") {
-  constexpr int kTrials = 30000;
+  constexpr int kTrials = 60000;
   std::vector<double> probabilities = {0.1, 0.1, 0.2, 0.3, 0.2, 0.1};
   fishbait::Random rng;
 

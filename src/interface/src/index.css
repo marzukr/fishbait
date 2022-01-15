@@ -1,13 +1,21 @@
+/* Copyright 2021 Marzuk Rashid */
+
 @import url('https://fonts.googleapis.com/css2?family=Readex+Pro&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@700&family=Readex+Pro&display=swap');
 
 :root {
   --green: #13B95B;
-  --greenHighlight: #15CB64;
+  --gray: #CED3DC;
+  --red: #FB3640;
+  --gold: #ffd60a;
+  --black: black;
 }
 
 body {
   font-family: 'Readex Pro', sans-serif;
   margin: 0;
+  overflow: hidden;
+  background-color: white;
 }
 
 .boxSpace {
@@ -19,37 +27,51 @@ body {
   height: 100vh;
 }
 
-.inputButton {
-  height: 36px;
+.disabled {
+  opacity: 25%;
 }
 
-.inputButton > input[type=password] {
-  font-size: 36pt;
-  height: 36px;
-  width: auto;
-  border-width: 1px 0 1px 1px;
-  border-color: black;
-  border-radius: 6px 0 0 6px;
-  box-sizing: border-box;
-  vertical-align: top;
-  width: calc(100% - 36px);
+button:active:not(.disabled) {
+  filter: brightness(85%);
 }
 
-.inputButton > button {
-  height: 36px;
-  width: 36px;
-  font-size: 16pt;
-  border-radius: 0 6px 6px 0;
-  border-width: 1px;
-  border-color: black;
-  box-sizing: border-box;
-  vertical-align: top;
-  background-color: var(--green);
-  color: white;
+button:hover:not(.disabled) {
+  cursor: pointer;
+}
+
+.hide {
+  display: none !important;
+}
+
+.header {
+  height: 6vh;
+  left: 0;
   right: 0;
-  position: absolute;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16pt;
+  padding: 0 8pt 1vh;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
 }
 
-.inputButton > button:active {
-  background-color: var(--greenHighlight);
+.headerButton {
+  width: 24pt;
+  height: 24pt;
+  font-size: 16pt;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  background-color: var(--gray);
+  border-radius: 6px;
+  color: black;
+  padding: 0;
+}
+
+.headerPad {
+  width: 24pt;
+  height: 24pt;
 }
