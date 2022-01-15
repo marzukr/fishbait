@@ -14,6 +14,9 @@
 
 namespace fishbait {
 
+ClusterTable::ClusterTable() : table_{}, preflop_indexer_{}, flop_indexer_{},
+                               turn_indexer_{}, river_indexer_{} {}
+
 ClusterTable::ClusterTable(bool verbose) : table_{}, preflop_indexer_{},
                                            flop_indexer_{}, turn_indexer_{},
                                            river_indexer_{} {

@@ -28,6 +28,10 @@ class TestClusters {
   bool operator==(const TestClusters&) const { return true; }
   bool operator!=(const TestClusters&) const { return false; }
 
+  static TestClusters BlankTable() {
+    return TestClusters();
+  }
+
   /* @brief TestClusters serialize function */
   template<class Archive>
   void serialize(Archive&) {

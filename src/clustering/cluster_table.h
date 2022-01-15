@@ -24,14 +24,32 @@ class ClusterTable {
   Indexer<2, 4> turn_indexer_;
   Indexer<2, 5> river_indexer_;
 
+  /*
+    @brief Constructs a blank ClusterTable. Will crash if used!
+    
+    Only used for loading a ClusterTable from a cereal save.
+  */
+  ClusterTable();
+
  public:
-  explicit ClusterTable(bool verbose = false);
+  /* @brief Constructs a ClusterTable from the files in build/out/clustering */
+  explicit ClusterTable(bool verbose);
+
   ClusterTable(const ClusterTable& other);
   ClusterTable(ClusterTable&& other);
   ClusterTable& operator=(const ClusterTable& other);
   ClusterTable& operator=(ClusterTable&& other);
   bool operator!=(const ClusterTable& other) const;
   bool operator==(const ClusterTable& other) const;
+
+  /*
+    @brief Returns a blank ClusterTable. Will crash if used!
+
+    Should only be used for loading a ClusterTable from a cereal save.
+  */
+  static ClusterTable BlankTable() {
+    return ClusterTable();
+  }
 
   /*
     @brief Returns the number of card clusters in the given round.

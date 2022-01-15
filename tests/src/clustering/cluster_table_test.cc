@@ -8,7 +8,7 @@
 
 TEST_CASE("ClusterTable bounds check", "[.][clustering][cluster_table]") {
   constexpr fishbait::PlayerN kPlayers = 6;
-  fishbait::ClusterTable table;
+  fishbait::ClusterTable table{false};
   fishbait::Node<kPlayers> game;
   for (fishbait::RoundId round = 0; round < fishbait::kNRounds; ++round) {
     for (int trial = 0; trial < 100; ++trial) {

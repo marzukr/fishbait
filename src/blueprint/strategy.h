@@ -474,19 +474,22 @@ class Strategy {
 
     /* @brief Barebones constructor to load a saved average. */
     Average() : action_abstraction_{std::array<AbstractAction, kActions>{},
-                                    Node<kPlayers>{}} {}
+                                    Node<kPlayers>{}},
+                info_abstraction_{InfoAbstraction::BlankTable()} {}
 
    public:
     friend class Strategy;
 
     Average(const Average& other)
         : action_abstraction_{std::array<AbstractAction, kActions>{},
-                              Node<kPlayers>{}} {
+                              Node<kPlayers>{}},
+          info_abstraction_{InfoAbstraction::BlankTable()} {
       *this = other;
     };
     Average(Average&& other)
         : action_abstraction_{std::array<AbstractAction, kActions>{},
-                              Node<kPlayers>{}} {
+                              Node<kPlayers>{}},
+          info_abstraction_{InfoAbstraction::BlankTable()} {
       *this = std::move(other);
     };
     Average& operator=(const Average& other) {

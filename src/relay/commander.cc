@@ -30,7 +30,7 @@ using NodeSnapshotT = NodeSnapshot<hparam::kPlayers>;
 */
 CommanderT* CommanderNew(char* location) {
   std::filesystem::path avg_loc{location};
-  return new CommanderT{CommanderT::AverageT::LoadAverage(avg_loc)};
+  return new CommanderT{CommanderT::AverageT::LoadAverage(avg_loc, true)};
 }
 
 /* @brief Deallocate the given Commander object. */
