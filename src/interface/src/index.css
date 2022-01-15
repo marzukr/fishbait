@@ -28,7 +28,7 @@ body {
 }
 
 .disabled {
-  opacity: 25%;
+  opacity: 0.25;
 }
 
 button:active:not(.disabled) {
