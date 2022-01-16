@@ -59,14 +59,14 @@ class Card extends React.Component {
     let cardClick = undefined;
     if (this.props.isModifying) {
       cardClass += ' active';
-    } else if (this.props.card !== null) {
+    } else if (decomposed.isComplete) {
       cardClass += ' hideable';
       cardClick = () => {
         this.setState({ hidden: !this.state.hidden });
       }
     }
-    if (this.state.hidden ||
-        (!decomposed.isComplete && !this.props.isModifying)) {
+    if (!this.props.isModifying &&
+        (this.state.hidden || !decomposed.isComplete)) {
       cardClass += ' flipped';
     }
     return (

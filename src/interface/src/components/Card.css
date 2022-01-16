@@ -13,8 +13,8 @@
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.35);
   box-sizing: content-box;
   position: relative;
-  transition: transform 0.6s;
   transform-style: preserve-3d;
+  transition: rotate 0.6s;
 }
 
 @keyframes pulse {
@@ -33,9 +33,7 @@
 
 .card.active {
   animation: pulse 1.5s linear infinite;
-  outline: 2px solid var(--gold);
-  outline-offset: -2px;
-  box-shadow: 0px 0px 10px var(--gold);
+  box-shadow: 0px 0px 5px 2px var(--gold);
 }
 
 .card.hideable {
@@ -43,7 +41,7 @@
 }
 
 .card.flipped {
-  transform: rotateY(180deg);
+  rotate: y 180deg;
 }
 
 .cardInnerBack {
