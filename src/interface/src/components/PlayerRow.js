@@ -59,7 +59,7 @@ class PlayerRow extends React.Component {
       <div className='playerBorderBox'>
         <div className={playerInfoBoxClass}>
           <div className='playerIdBox'>
-            <div className={playerIdClass}>{this.props.playerId}.</div>
+            <div className={playerIdClass}>{this.props.playerId + 1}.</div>
           </div>
           <div className='playerNameBox'>
             <div className='playerNameBoxName'>{nameStr}</div>

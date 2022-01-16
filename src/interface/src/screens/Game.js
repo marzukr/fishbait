@@ -72,8 +72,18 @@ class Game extends React.Component {
       this.setState({ actionScratch: { action: actionName, size: null } });
     } else if (code === 'allin') {
       this.setState({ actionScratch: { action: 'All In', size: null } });
-    } else if (code === 'bet') {
-      this.setState({ actionScratch: { action: 'Bet', size: null } });
+    } else if (code === 'delete') {
+      let newAction = null;
+      let newSize = null;
+      if (this.state.actionScratch.action === 'Bet') {
+        if (this.state.actionScratch.size !== null) {
+          newAction = 'Bet';
+          if (this.state.actionScratch.size > 10) {
+            newSize = this.state.actionScratch.size / 10 >> 0;
+          }
+        }
+      }
+      this.setState({ actionScratch: { action: newAction, size: newSize } });
     } else if (code !== 'next') {
       let prevSize = this.state.actionScratch.size === null
           ? 0

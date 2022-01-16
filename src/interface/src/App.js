@@ -14,6 +14,7 @@ import { isoToAsciiString } from 'utils/hands';
         backend.
     apiKey: The API key to use to access the flask backend.
     settings: If we are currently on the settings page.
+    makingRequest: If we are currently querying the api.
 */
 class App extends React.Component {
   constructor(props) {
@@ -21,7 +22,8 @@ class App extends React.Component {
     this.state = {
       gameState: null,
       apiKey: sessionStorage.getItem('apiKey'),
-      settings: false
+      settings: false,
+      makingRequest: false,
     };
     this.updateKey = this.updateKey.bind(this);
     this.reponseCallback = this.reponseCallback.bind(this);
@@ -63,27 +65,46 @@ class App extends React.Component {
     }
   }
 
+  safeRequest(request) {
+    if (this.state.makingRequest) {
+      return new Promise.reject(new Error('Already making an api request.'));
+    }
+    return new Promise((resolve, _) => {
+      this.setState({ makingRequest: true }, resolve);
+    }).then(() => request()).then(() => (
+      new Promise((resolve, _) => {
+        this.setState({ makingRequest: false }, resolve);
+      })
+    ));
+  }
+
   /*
     Attempts to load the game state from the flask backend with the current API
     key. Sets the key and game state to null if it fails.
   */
   loadStatus() {
-    fetch('/api/state', {
-      headers: {
-        'Authorization': 'Bearer: ' + this.state.apiKey
-      }
-    }).then(this.reponseCallback);
+    let request = () => (
+      fetch('/api/state', {
+        headers: {
+          'Authorization': 'Bearer: ' + this.state.apiKey
+        }
+      }).then(this.reponseCallback)
+    );
+    return this.safeRequest(request);
   }
 
   async apiCall(route, obj) {
-    return fetch('/api/' + route, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer: ' + this.state.apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(obj)
-    }).then(this.reponseCallback);
+    let request = () => (
+      fetch('/api/' + route, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer: ' + this.state.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(obj)
+      }).then(this.reponseCallback)
+    );
+    return this.safeRequest(request);
   }
 
   toggleSettings() {

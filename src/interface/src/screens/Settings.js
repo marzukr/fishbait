@@ -105,11 +105,11 @@ class Settings extends React.Component {
           <div className={idBoxClass} id={`button${i}`}
                onClick={this.dealerClick}>
             <div className='settingsDealerButton'></div>
-            <div className='settingsIdLabel'>{i}.</div>
+            <div className='settingsIdLabel'>{i + 1}.</div>
           </div>
           {playerName}
           <input type='text' className='settingsInput'
-                 value={this.state.stack[i]}
+                 value={this.state.stack[i]} pattern='[0-9]*'
                  onChange={this.handleChangeArray.bind(this, 'stack', i)}>
           </input>
         </div>
@@ -141,14 +141,14 @@ class Settings extends React.Component {
             <div className='settingsTableRow headerCol1'>
               <div>Small Blind:</div>
               <input type='text' className='settingsInput'
-                     value={this.state.smallBlind}
+                     value={this.state.smallBlind} pattern='[0-9]*'
                      onChange={this.handleChange.bind(this, 'smallBlind')}>
               </input>
             </div>
             <div className='settingsTableRow headerCol1'>
               <div>Big Blind:</div>
               <input type='text' className='settingsInput'
-                     value={this.state.bigBlind}
+                     value={this.state.bigBlind} pattern='[0-9]*'
                      onChange={this.handleChange.bind(this, 'bigBlind')}>
               </input>
             </div>
