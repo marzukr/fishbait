@@ -81,8 +81,9 @@ class Game extends React.Component {
       let newSize = prevSize * 10 + code;
       this.setState({ actionScratch: { action: 'Bet', size: newSize } });
     } else {
-      this.props.apiCall('apply', this.state.actionScratch);
-      this.setState({ actionScratch: { action: null, size: null } });
+      this.props.apiCall('apply', this.state.actionScratch).then(() => {
+        this.setState({ actionScratch: { action: null, size: null } });
+      });
     }
   }
 
@@ -91,13 +92,16 @@ class Game extends React.Component {
       let scratchMucked =
           this.state.handScratch[0] === this.state.handScratch[1] &&
           this.state.handScratch[0] === null;
+      let afterSend = () => {
+        this.setState({ handScratch: [null, null], selectedCard: 0 });
+      };
       if (scratchMucked) {
-        this.props.apiCall('set_hand', { hand: this.state.handScratch });
+        this.props.apiCall('set_hand', { hand: this.state.handScratch })
+                  .then(afterSend);
       } else {
         let isoHand = this.state.handScratch.map(c => asciiStringToIso[c]);
-        this.props.apiCall('set_hand', { hand: isoHand });
+        this.props.apiCall('set_hand', { hand: isoHand }).then(afterSend);
       }
-      this.setState({ handScratch: [null, null], selectedCard: 0 });
     };
     if (code !== 'next') {
       let newCard =
@@ -138,9 +142,10 @@ class Game extends React.Component {
         }
       }
       newBoard = newBoard.map(c => asciiStringToIso[c]);
-      this.props.apiCall('set_board', { board: newBoard });
-      this.setState({ boardScratch: [null, null, null, null, null],
-                      selectedBoardOffset: 0 });
+      this.props.apiCall('set_board', { board: newBoard }).then(() => {
+        this.setState({ boardScratch: [null, null, null, null, null],
+                        selectedBoardOffset: 0 });
+      });
     }
   }
 

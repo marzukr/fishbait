@@ -112,17 +112,17 @@
   padding-right: 3px;
 }
 
-.playerCardBox .card {
+.playerCardBox .cardContainer {
   margin: 10px 3px;
-  padding: 3px;
-}
-
-.playerCardBox .card.active {
-  margin: 8px 1px;
 }
 
 .playerCardBox .cardInnerFront {
   padding: 0 6pt;
+}
+
+.playerCardBox .cardBackPattern {
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
 }
 
 .playerCardBox .cardNumberLabel {

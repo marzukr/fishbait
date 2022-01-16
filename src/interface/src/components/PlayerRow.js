@@ -21,6 +21,7 @@ import Card from './Card';
         this player, or the action currently being entered by the user.
     modifying: The id of the card we are modifying if we are modifying this
         player's hand. Otherwise null.
+    hideCards: Boolean. If this player's cards should be hidden.
 */
 class PlayerRow extends React.Component {
   render() {
@@ -48,9 +49,11 @@ class PlayerRow extends React.Component {
         ? 'playerInfoBox folded'
         : 'playerInfoBox';
     let generateCard = (id) => {
-      let card = this.props.hand === null ? null : this.props.hand[id];
       let isModifying = this.props.modifying === id ? true : false;
-      return <Card card={card} isModifying={isModifying}/>
+      let card = this.props.hand === null ? null : this.props.hand[id];
+      let key = `${id}${this.props.hideCards}`;
+      return <Card card={card} isModifying={isModifying}
+                   shouldHide={this.props.hideCards} key={key}/>
     };
     return (
       <div className='playerBorderBox'>

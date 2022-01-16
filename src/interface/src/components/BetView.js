@@ -5,7 +5,7 @@ import 'components/BetView.css';
 import PlayerRow from 'components/PlayerRow';
 
 /*
-  This component creates the board of public cards at the top of the interface.
+  This component creates the table of bets and cards for each player.
 
   props:
     players: How many players are in the game?
@@ -50,7 +50,8 @@ class BetView extends React.Component {
                    isActingPlayer={isActingPlayer} bet={this.props.bets[i]}
                    stack={this.props.stack[i]} hand={hand}
                    folded={this.props.folded[i]} action={action}
-                   modifying={modifying}/>
+                   modifying={modifying}
+                   hideCards={i === this.props.fishbaitSeat}/>
       );
     }
     let callAmount = this.props.neededToCall === null

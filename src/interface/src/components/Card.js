@@ -10,8 +10,16 @@ import { isSuit } from 'utils/hands';
   props:
     card: The card this component is representing.
     isModifying: Boolean if this card is being modified.
+    shouldHide: If this card should be hidden by default when not being edited.
 */
 class Card extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hidden: this.props.shouldHide,
+    }
+  }
+
   asciiSuitToSymbol(suit) {
     if (suit === 'h') return {symbol: '♥', color: 'red'};
     if (suit === 'c') return {symbol: '♣', color: 'black'};
@@ -27,42 +35,51 @@ class Card extends React.Component {
   decomposeCard() {
     let card = this.props.card;
     if (card === null) {
-      return { number: '', suit: '', color: 'black', hide: true };
+      return { number: '', suit: '', color: 'black', isComplete: false };
     }
     if (card.length === 2) {
       let asciiSymbol = this.asciiSuitToSymbol(card[1]);
       return { number: this.shortNumToCardNum(card[0]),
                suit: asciiSymbol.symbol, color: asciiSymbol.color,
-               hide: false };
+               isComplete: true };
     }
     if (isSuit(card)) {
       let asciiSymbol = this.asciiSuitToSymbol(card);
       return { number: '', suit: asciiSymbol.symbol, color: asciiSymbol.color,
-               hide: true };
+               isComplete: false };
     } else {
       return { number: this.shortNumToCardNum(card), suit: '', color: 'black',
-               hide: true };
+               isComplete: false };
     }
   }
 
   render() {
     let decomposed = this.decomposeCard();
-    let backClass = 'cardInnerBack';
-    let frontClass = 'cardInnerFront';
     let cardClass = 'card';
-    if (!decomposed.hide || this.props.isModifying) {
-      backClass += ' hide';
-    } else {
-      frontClass += ' hide';
+    let cardClick = undefined;
+    if (this.props.isModifying) {
+      cardClass += ' active';
+    } else if (this.props.card !== null) {
+      cardClass += ' hideable';
+      cardClick = () => {
+        this.setState({ hidden: !this.state.hidden });
+      }
     }
-    if (this.props.isModifying) cardClass += ' active';
+    if (this.state.hidden ||
+        (!decomposed.isComplete && !this.props.isModifying)) {
+      cardClass += ' flipped';
+    }
     return (
-      <div className={cardClass}>
-        <div className={backClass}></div>
-        <div className={frontClass}
-             style={{color: `var(--${decomposed.color})`}}>
-          <div className='cardNumberLabel'>{decomposed.number}</div>
-          <div className='cardSuitLabel'>{decomposed.suit}</div>
+      <div className='cardContainer'>
+        <div className={cardClass} onClick={cardClick}>
+          <div className='cardInnerBack'>
+            <div className='cardBackPattern'></div>
+          </div>
+          <div className='cardInnerFront'
+              style={{color: `var(--${decomposed.color})`}}>
+            <div className='cardNumberLabel'>{decomposed.number}</div>
+            <div className='cardSuitLabel'>{decomposed.suit}</div>
+          </div>
         </div>
       </div>
     );

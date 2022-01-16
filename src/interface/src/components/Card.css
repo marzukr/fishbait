@@ -1,13 +1,20 @@
 /* Copyright 2021 Marzuk Rashid */
 
-.card {
+.cardContainer {
   flex-grow: 1;
   margin: 10px 5px;
+  perspective: 25vh;
+}
+
+.card {
+  width: 100%;
+  height: 100%;
   border-radius: 6px;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.35);
-  padding: 5px;
   box-sizing: content-box;
   position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
 }
 
 @keyframes pulse {
@@ -16,7 +23,7 @@
   }
 
   50% {
-    transform: scale(1.05, 1.05);
+    transform: scale(1.1, 1.1);
   }
 
   to {
@@ -26,14 +33,32 @@
 
 .card.active {
   animation: pulse 1.5s linear infinite;
-  margin: 8px 3px;
-  border: 2px solid var(--gold);
-  box-shadow: 0px 0px 5px var(--gold);
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+  box-shadow: 0px 0px 10px var(--gold);
+}
+
+.card.hideable {
+  cursor: pointer;
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
 }
 
 .cardInnerBack {
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+}
+
+.cardBackPattern {
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
   border-radius: 3px;
   background-color: #11a651;
   opacity: 1;
@@ -50,6 +75,9 @@
   bottom: 0;
   left: 0;
   right: 0;
+  backface-visibility: hidden;
+  z-index: 2;
+  transform: rotateY(0deg);
 }
 
 .cardNumberLabel {
@@ -58,6 +86,7 @@
   font-size: 20pt;
   text-align: left;
   height: 24pt;
+  user-select: none;
 }
 
 .cardSuitLabel {
@@ -66,4 +95,5 @@
   font-size: 20pt;
   text-align: right;
   height: 20pt;
+  user-select: none;
 }
