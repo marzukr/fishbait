@@ -55,10 +55,11 @@ class Card extends React.Component {
 
   render() {
     let decomposed = this.decomposeCard();
+    let cardContainerClass = 'cardContainer';
     let cardClass = 'card';
     let cardClick = undefined;
     if (this.props.isModifying) {
-      cardClass += ' active';
+      cardContainerClass += ' active';
     } else if (decomposed.isComplete) {
       cardClass += ' hideable';
       cardClick = () => {
@@ -70,7 +71,7 @@ class Card extends React.Component {
       cardClass += ' flipped';
     }
     return (
-      <div className='cardContainer'>
+      <div className={cardContainerClass}>
         <div className={cardClass} onClick={cardClick}>
           <div className='cardInnerBack'>
             <div className='cardBackPattern'></div>
