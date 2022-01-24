@@ -1,3 +1,5 @@
+# Copyright 2021 Marzuk Rashid
+
 add_library(
   clustering SHARED
   cluster_table.cc

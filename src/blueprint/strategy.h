@@ -662,7 +662,7 @@ class Strategy {
       @param seq The sequence id of the infoset.
     */
     std::array<float, kActions> Policy(Round round, CardCluster card_bucket,
-                                       SequenceId seq) {
+                                       SequenceId seq) const {
       std::array<float, kActions> policy;
       std::size_t offset = action_abstraction_.LegalOffset(round, seq);
       nda::size_t round_actions = action_abstraction_.ActionCount(round);

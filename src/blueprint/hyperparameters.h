@@ -46,7 +46,7 @@ constexpr int kActions = 23;
           = 131474386033
   regret table size = regrets * size of regret
                     = 131474386033 * size of int32_t
-                    = 664842258 * 4 bytes
+                    = 131474386033 * 4 bytes
                     = 525897544132 bytes
                     = 489.7803 GiB
   
