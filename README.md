@@ -9,7 +9,10 @@ From the root directory:
 1. `mkdir -p build`
 2. `cd build`
 3. `cmake <options> ..`
-    * Possible Options:
+    * Required Options:
+        * `-DDB_PASSWORD=` to set the Postgres DB password used by Fishbait.
+        * `-DDB_HOST=` to set the Postgres DB host location.
+    * Optional Options:
         * `-DCMAKE_C_COMPILER=<c-compiler>` and 
           `-DCMAKE_CXX_COMPILER=<cpp-compiler>`
         * `-DCMAKE_BUILD_TYPE=Debug` to debug with gdb or lldb.

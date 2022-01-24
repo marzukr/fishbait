@@ -14,3 +14,7 @@
 [submodule "external/array"]
 	path = external/array
 	url = https://github.com/marzukr/array.git
+[submodule "external/libpqxx"]
+	path = external/libpqxx
+	url = https://github.com/marzukr/libpqxx.git
+	branch = 7.6

@@ -7,9 +7,6 @@ find_package(Git QUIET REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Helpful warning compiler flags
-add_compile_options(-Wall -Wextra -pedantic -Werror)
-
 # AWS Graviton2 optimizations
 if(TGT_SYSTEM STREQUAL "Graviton2")
   add_compile_options(-march=armv8.2-a+fp16+rcpc+dotprod+crypto
@@ -58,6 +55,8 @@ include_directories(src)
 include_directories(external)
 include_directories(external/Catch2/single_include)
 include_directories(external/cereal/include)
+include_directories(external/libpqxx/include)
+include_directories(${CMAKE_BINARY_DIR}/external/libpqxx/include)
 
 #[[ Configures such that the target's .gcno and .gcda coverage files are deleted 
     when make clean is run ]]
@@ -108,7 +107,20 @@ function(add_module module_path)
   endforeach()
 endfunction()
 
+# Ensure the DB settings are set
+if(NOT DEFINED DB_PASSWORD)
+  message(FATAL_ERROR "Must configure Postgres DB password for fishbait user")
+endif()
+if(NOT DEFINED DB_HOST)
+  message(FATAL_ERROR "Must configure Postgres host")
+endif()
+
+# Add external modules before setting any compiler flags
 add_module(external/hand-isomorphism/src)
+add_module(external/libpqxx)
+
+# Helpful warning compiler flags
+add_compile_options(-Wall -Wextra -pedantic -Werror)
 
 add_module(src/blueprint)
 add_module(src/clustering)

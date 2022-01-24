@@ -30,6 +30,7 @@ file(WRITE config.h
 namespace fishbait {
 
 constexpr std::size_t kThreads = ${CORES};
+constexpr std::string_view kDbCxnStr =\"host=${DB_HOST} user=fishbait password=${DB_PASSWORD} dbname=fishbait\";  // NOLINT
 
 }  // namespace fishbait
 
