@@ -7,9 +7,6 @@ find_package(Git QUIET REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Helpful warning compiler flags
-add_compile_options(-Wall -Wextra -pedantic -Werror)
-
 # AWS Graviton2 optimizations
 if(TGT_SYSTEM STREQUAL "Graviton2")
   add_compile_options(-march=armv8.2-a+fp16+rcpc+dotprod+crypto
@@ -58,6 +55,9 @@ include_directories(src)
 include_directories(external)
 include_directories(external/Catch2/single_include)
 include_directories(external/cereal/include)
+include_directories(external/hdf5/c++/src)
+include_directories(external/hdf5/src)
+include_directories(${CMAKE_BINARY_DIR}/external/hdf5/src)
 
 #[[ Configures such that the target's .gcno and .gcda coverage files are deleted 
     when make clean is run ]]
@@ -109,6 +109,11 @@ function(add_module module_path)
 endfunction()
 
 add_module(external/hand-isomorphism/src)
+set(HDF5_BUILD_CPP_LIB ON)
+add_module(external/hdf5)
+
+# Helpful warning compiler flags only for our source files
+add_compile_options(-Wall -Wextra -pedantic -Werror)
 
 add_module(src/blueprint)
 add_module(src/clustering)

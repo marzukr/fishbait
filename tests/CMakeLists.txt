@@ -20,6 +20,7 @@ add_executable(tests.out main.cc
   src/poker/node_test.cc
 
   src/relay/commander_test.cc
+  src/relay/scribe_test.cc
 
   src/utils/array_test.cc
   src/utils/cereal_test.cc

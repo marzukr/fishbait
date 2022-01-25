@@ -168,11 +168,17 @@ class Node {
   /* @brief Node serialize function */
   template<class Archive>
   void serialize(Archive& archive) {
-    archive(big_blind_, small_blind_, ante_, big_blind_ante_,
-            blind_before_ante_, rake_, rake_cap_, no_flop_no_drop_, button_,
-            in_progress_, round_, cycled_, acting_player_, pot_good_, no_raise_,
-            folded_, players_left_, players_all_in_, pot_, bets_, stack_,
-            min_raise_, max_bet_, deck_, deck_state_);
+    archive(CEREAL_NVP(big_blind_), CEREAL_NVP(small_blind_), CEREAL_NVP(ante_),
+            CEREAL_NVP(big_blind_ante_), CEREAL_NVP(blind_before_ante_),
+            CEREAL_NVP(rake_), CEREAL_NVP(rake_cap_),
+            CEREAL_NVP(no_flop_no_drop_), CEREAL_NVP(button_),
+            CEREAL_NVP(in_progress_), CEREAL_NVP(round_), CEREAL_NVP(cycled_),
+            CEREAL_NVP(acting_player_), CEREAL_NVP(pot_good_),
+            CEREAL_NVP(no_raise_), CEREAL_NVP(folded_),
+            CEREAL_NVP(players_left_), CEREAL_NVP(players_all_in_),
+            CEREAL_NVP(pot_), CEREAL_NVP(bets_), CEREAL_NVP(stack_),
+            CEREAL_NVP(min_raise_), CEREAL_NVP(max_bet_), CEREAL_NVP(deck_),
+            CEREAL_NVP(deck_state_));
   }
 
   /* @brief Equality comparison operator. */

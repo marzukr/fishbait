@@ -163,6 +163,13 @@ class SequenceTable {
     return start_state_;
   }
 
+  /*
+    @brief Returns the table for the sequence table.
+  */
+  const SequenceMatrix& table() const {
+    return table_;
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const SequenceTable& s) {
     nda::size_t elements = std::accumulate(s.table_.begin(), s.table_.end(), 0,
         [](const nda::size_t sum, const nda::matrix<SequenceId>& round_table) {

@@ -65,7 +65,8 @@ class ClusterTable {
     the current betting round.
   */
   template <PlayerN kPlayers>
-  std::array<CardCluster, kPlayers> ClusterArray(const Node<kPlayers>& node) {
+  std::array<CardCluster, kPlayers> ClusterArray(
+      const Node<kPlayers>& node) const {
     std::array<CardCluster, kPlayers> card_clusters = {0};
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!node.folded(i) && node.stack(i) != 0) {
@@ -79,7 +80,7 @@ class ClusterTable {
     @brief Returns the card cluster for the given player in the given node.
   */
   template <PlayerN kPlayers>
-  CardCluster Cluster(const Node<kPlayers>& node, PlayerId player) {
+  CardCluster Cluster(const Node<kPlayers>& node, PlayerId player) const {
     std::array player_cards = node.PlayerCards(player);
     switch (node.round()) {
       case Round::kPreFlop:
@@ -95,6 +96,9 @@ class ClusterTable {
     ss << +(+node.round()) << " is not a valid round." << std::endl;
     throw std::out_of_range(ss.str());
   }
+
+  /* @brief Returns a const reference to the raw table. */
+  const auto& table() const { return table_; }
 
   /* @brief ClusterTable serialize function */
   template<class Archive>

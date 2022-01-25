@@ -1,6 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
 #include <array>
+#include <filesystem>
 #include <random>
 #include <utility>
 
@@ -13,7 +14,7 @@
 #include "relay/commander.h"
 #include "utils/random.h"
 
-TEST_CASE("commander throw test", "[relay][commander]") {
+TEST_CASE("commander throw test", "[relay][commander][.]") {
   constexpr fishbait::PlayerN kPlayers = 3;
   constexpr int kActions = 5;
 
@@ -44,8 +45,11 @@ TEST_CASE("commander throw test", "[relay][commander]") {
   }
   avg.Normalize();
 
-  fishbait::Commander<kPlayers, kActions, fishbait::TestClusters>
-      napoleon(std::move(avg));
+  std::filesystem::remove("out/tests/commander_test_strat.hdf");
+  using CommanderT = fishbait::Commander<kPlayers, kActions,
+                                         fishbait::TestClusters>;
+  CommanderT napoleon(
+      CommanderT::ScribeT{avg, "out/tests/commander_test_strat.hdf"});
   fishbait::Node<kPlayers> sim_game{200, 0, 2, 1};
   fishbait::PlayerId fishbait_seat = 0;
   napoleon.Reset(sim_game, fishbait_seat);
@@ -95,5 +99,6 @@ TEST_CASE("commander throw test", "[relay][commander]") {
         break;
       }
     }
+    if (i % 10000 == 0) std::cout << i << std::endl;
   }
 }  // TEST_CASE "commander throw test"

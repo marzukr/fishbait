@@ -10,6 +10,7 @@
 #include "poker/definitions.h"
 #include "poker/node.h"
 #include "relay/commander.h"
+#include "relay/scribe.h"
 #include "utils/cereal.h"
 
 namespace fishbait {
@@ -30,7 +31,7 @@ using NodeSnapshotT = NodeSnapshot<hparam::kPlayers>;
 */
 CommanderT* CommanderNew(char* location) {
   std::filesystem::path avg_loc{location};
-  return new CommanderT{CommanderT::AverageT::LoadAverage(avg_loc, true)};
+  return new CommanderT{CommanderT::ScribeT{avg_loc}};
 }
 
 /* @brief Deallocate the given Commander object. */

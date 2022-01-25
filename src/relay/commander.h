@@ -4,6 +4,7 @@
 #define SRC_RELAY_COMMANDER_H_
 
 #include <algorithm>
+#include <functional>
 #include <optional>
 #include <random>
 #include <stdexcept>
@@ -15,8 +16,10 @@
 #include "blueprint/strategy.h"
 #include "clustering/cluster_table.h"
 #include "clustering/definitions.h"
+#include "clustering/matchmaker.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
+#include "relay/scribe.h"
 #include "utils/math.h"
 #include "utils/random.h"
 
@@ -25,8 +28,7 @@ namespace fishbait {
 template <PlayerId kPlayers, std::size_t kActions, typename InfoAbstraction>
 class Commander {
  public:
-  using AverageT =
-      typename Strategy<kPlayers, kActions, InfoAbstraction>::Average;
+  using ScribeT = Scribe<kPlayers, kActions, InfoAbstraction>;
 
  private:
   // The state of the abstracted game used to determine the strategy
@@ -36,10 +38,10 @@ class Commander {
   Node<kPlayers> actual_state_;
 
   // The abstracted strategy to use
-  AverageT strategy_;
+  ScribeT strategy_;
 
-  // Alias to strategy_'s action abstraction for easier access
-  const SequenceTable<kPlayers, kActions>& action_abstraction_;
+  // Class to index our cards for us
+  Matchmaker info_abstraction_;
 
   // The sequence id of the current state of the abstract game
   SequenceId abstract_seq_;
@@ -54,16 +56,15 @@ class Commander {
   Random rng_;
 
  public:
-  explicit Commander(AverageT&& strategy)
-      : abstract_state_{strategy.action_abstraction().start_state()},
-        actual_state_{abstract_state_}, strategy_{strategy},
-        action_abstraction_{strategy_.action_abstraction()}, abstract_seq_{0},
+  explicit Commander(Scribe<kPlayers, kActions, InfoAbstraction>&& strategy)
+      : abstract_state_{strategy.StartState()}, actual_state_{abstract_state_},
+        strategy_{strategy}, info_abstraction_{}, abstract_seq_{0},
         fishbait_seat_{0}, first_round_action_{true}, rng_{} {}
 
   /* @brief Resets the game with the given actual state and fishbait seat. */
   void Reset(Node<kPlayers> actual_start, PlayerId fishbait_seat) {
     actual_state_ = actual_start;
-    abstract_state_ = strategy_.action_abstraction().start_state();
+    abstract_state_ = strategy_.StartState();
     abstract_state_.Erase();
     abstract_state_.NewHand(actual_state_.button());
     abstract_seq_ = 0;
@@ -202,14 +203,16 @@ class Commander {
 
     // Sample the action
     Round r = actual_state_.round();
-    InfoAbstraction& info_abstraction = strategy_.info_abstraction();
-    CardCluster cc = info_abstraction.Cluster(actual_state_, fishbait_seat_);
+    auto access_fn = std::bind(&ScribeT::GetCluster, &strategy_,
+                               std::placeholders::_1, std::placeholders::_2);
+    CardCluster cc = info_abstraction_.Cluster(actual_state_, fishbait_seat_,
+                                               access_fn);
     std::array policy = strategy_.Policy(r, cc, abstract_seq_);
-    nda::const_vector_ref<AbstractAction> actions =
-        action_abstraction_.Actions(r);
+    std::array actions = strategy_.Actions(r);
+    hsize_t n_actions = strategy_.ActionCount(r);
     for (nda::size_t i = 0; i < policy.size(); ++i) {
       /* Filter out all actions that are illegal in the actual game */
-      if (!actual_state_.IsLegal(actions[i]) || i >= actions.size()) {
+      if (!actual_state_.IsLegal(actions[i]) || i >= n_actions) {
         policy[i] = 0;
       }
     }
@@ -219,7 +222,7 @@ class Commander {
 
     // Apply the action to the abstract game
     abstract_state_.Apply(action);
-    abstract_seq_ = action_abstraction_.Next(r, abstract_seq_, action_idx);
+    abstract_seq_ = strategy_.Next(r, abstract_seq_, action_idx);
     first_round_action_ = false;
 
     // Apply the action to the actual game
@@ -259,8 +262,8 @@ class Commander {
   void ApplyAbstract(Action play,
                      std::optional<double> size = std::optional<double>{}) {
     Round round = abstract_state_.round();
-    nda::const_vector_ref<AbstractAction> actions =
-        action_abstraction_.Actions(round);
+    std::array actions = strategy_.Actions(round);
+    hsize_t num_actions = strategy_.ActionCount(round);
     nda::index_t action_idx = -1;
 
     /* If the request action is a bet and there is a requested size given, then
@@ -272,8 +275,8 @@ class Commander {
       double min_size = 0;
       int max_i = -1;
       double max_size = 0;
-      for (std::size_t i = 0; i < actions.size(); ++i) {
-        if (action_abstraction_.Next(round, abstract_seq_, i) == kIllegalId) {
+      for (std::size_t i = 0; i < num_actions; ++i) {
+        if (strategy_.Next(round, abstract_seq_, i) == kIllegalId) {
           continue;
         }
         AbstractAction a = actions[i];
@@ -349,14 +352,14 @@ class Commander {
        corresponding next abstract sequence id. */
     Chips size_chips = abstract_state_.ProportionToChips(*size);
     abstract_state_.Apply(play, size_chips);
-    for (std::size_t i = 0; i < actions.size() && action_idx == -1; ++i) {
+    for (std::size_t i = 0; i < num_actions && action_idx == -1; ++i) {
       const AbstractAction& a = actions[i];
       if (a.play == play && (a.play != Action::kBet || a.size == *size)) {
         action_idx = i;
         break;
       }
     }
-    abstract_seq_ = action_abstraction_.Next(round, abstract_seq_, action_idx);
+    abstract_seq_ = strategy_.Next(round, abstract_seq_, action_idx);
   }  // ApplyAbstract()
 
   /*

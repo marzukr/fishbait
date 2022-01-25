@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "array/array.h"
+#include <cereal/archives/json.hpp>
 #include "cereal/archives/portable_binary.hpp"
 #include "cereal/types/array.hpp"
 #include "cereal/types/string.hpp"
@@ -65,6 +66,18 @@ void Cereal(FileAction action, std::string path, T* data,
       break;
   }
 }
+
+template <typename T>
+void CerealSaveJSON(std::ostream& output, T* save) {
+  cereal::JSONOutputArchive archive(output);
+  archive(*save);
+}  // CerealSaveJSON
+
+template <typename T>
+void CerealLoadJSON(std::istream& input_str, T* load) {
+  cereal::JSONInputArchive iarchive(input_str);
+  iarchive(*load);
+}  // CerealLoadJSON
 
 }  // namespace fishbait
 

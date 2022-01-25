@@ -4,6 +4,7 @@
 #define SRC_CLUSTERING_TEST_CLUSTERS_H_
 
 #include <array>
+#include <vector>
 
 #include "clustering/definitions.h"
 #include "poker/definitions.h"
@@ -15,6 +16,7 @@ namespace fishbait {
    modulus of the ISO card index. */
 class TestClusters {
  private:
+  std::array<std::vector<CardCluster>, kNRounds> table_;
   Indexer<2> preflop_indexer_;
   Indexer<2, 3> flop_indexer_;
   Indexer<2, 4> turn_indexer_;
@@ -22,9 +24,19 @@ class TestClusters {
   static constexpr CardCluster kNClusters = 4;
 
  public:
-  TestClusters() = default;
-  TestClusters(const TestClusters&) {}
-  TestClusters& operator=(const TestClusters&) { return *this; }
+  TestClusters() {
+    for (RoundId rid = 0; rid < kNRounds; ++rid) {
+      table_[rid].resize(kImperfectRecallHands[rid]);
+      for (hand_index_t i = 0; i < kImperfectRecallHands[rid]; ++i) {
+        table_[rid][i] = i % kNClusters;
+      }
+    }
+  }
+  TestClusters(const TestClusters& other) : table_{other.table_} {};
+  TestClusters& operator=(const TestClusters& other) {
+    table_ = other.table_;
+    return *this;
+  }
   bool operator==(const TestClusters&) const { return true; }
   bool operator!=(const TestClusters&) const { return false; }
 
@@ -43,7 +55,8 @@ class TestClusters {
   }
 
   template <PlayerN kPlayers>
-  std::array<CardCluster, kPlayers> ClusterArray(const Node<kPlayers>& node) {
+  std::array<CardCluster, kPlayers> ClusterArray(
+      const Node<kPlayers>& node) const {
     std::array<CardCluster, kPlayers> card_clusters;
     for (PlayerId i = 0; i < kPlayers; ++i) {
       if (!node.folded(i) && node.stack(i) != 0) {
@@ -54,7 +67,7 @@ class TestClusters {
   }  // ClusterArray()
 
   template <PlayerN kPlayers>
-  CardCluster Cluster(const Node<kPlayers>& node, PlayerId player) {
+  CardCluster Cluster(const Node<kPlayers>& node, PlayerId player) const {
     std::array player_cards = node.PlayerCards(player);
     hand_index_t idx;
     switch (node.round()) {
@@ -77,6 +90,9 @@ class TestClusters {
     }
     return idx % kNClusters;
   }
+
+  /* @brief Returns a const reference to the raw table. */
+  const auto& table() const { return table_; }
 };  // class TestClusters
 
 }  // namespace fishbait

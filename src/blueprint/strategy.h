@@ -76,9 +76,6 @@ class Strategy {
     @param prune_constant Actions with regret less than or equal to this
         constant are eligible to be pruned.
     @param regret_floor Floor to cutoff negative regrets at.
-    @param seed The seed to use for the random number generator used to sample
-        actions and stochastically prune.
-    @param verbose Whether to print debug information.
   */
   Strategy(const Node<kPlayers>& start_state,
            const std::array<AbstractAction, kActions>& actions,
@@ -713,7 +710,7 @@ class Strategy {
 
     const auto& probabilities() const { return probabilities_; }
     const auto& action_abstraction() const { return action_abstraction_; }
-    auto& info_abstraction() { return info_abstraction_; }
+    const auto& info_abstraction() const { return info_abstraction_; }
 
    private:
     /*

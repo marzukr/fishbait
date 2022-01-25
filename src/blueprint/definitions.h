@@ -48,6 +48,10 @@ struct AbstractAction {
            min_pot == rhs.min_pot;
   }
 
+  bool operator!=(const AbstractAction& rhs) const {
+    return !(*this == rhs);
+  }
+
   /* @brief AbstractAction serialize function */
   template<class Archive>
   void serialize(Archive& archive) {

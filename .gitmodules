@@ -14,3 +14,7 @@
 [submodule "external/array"]
 	path = external/array
 	url = https://github.com/marzukr/array.git
+[submodule "external/hdf5"]
+	path = external/hdf5
+	url = https://github.com/marzukr/hdf5
+	branch = 1.12/master
