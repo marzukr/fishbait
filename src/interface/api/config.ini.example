@@ -1,3 +1,4 @@
 [DEFAULT]
 # Set the secret key
 SECRET_KEY =
+STRATEGY_LOCATION =

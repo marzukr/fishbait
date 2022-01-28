@@ -126,10 +126,8 @@ commander_new_hand = wrap_function(lib, 'CommanderNewHand', None,
 class Pigeon:
   '''Sends messages between python clients and the fishbait C++ AI.'''
 
-  def __init__(self):
-    avg_loc = os.path.join(pigeon_script_dir,'../../build/out/blueprint/run_1/'
-                                             'average_final.cereal')
-    self.commander = commander_new(bytes(avg_loc, 'utf-8'))
+  def __init__(self, strategy_loc):
+    self.commander = commander_new(bytes(strategy_loc, 'utf-8'))
     self.last_state = {
       'player_names': ['Biden', 'Harris', 'Pelosi', 'McCarthy', 'Schumer',
                        'McConnell'],

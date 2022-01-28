@@ -23,6 +23,27 @@ From the root directory:
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.
 
+## Deployment
+1. Build the project as detailed above.
+2. Copy `src/interface/fishbait.nginx.example` to
+   `/etc/nginx/sites-available/fishbait.nginx` and replace the placeholders
+     * Set the `host` property to the absolute path of
+       `build/src/interface/build`
+     * Set the `server_name` property to be whatever url the interface is to be
+       deployed on.
+3. `sudo ln -s /etc/nginx/sites-available/fishbait.nginx /etc/nginx/sites-enabled/fishbait.nginx`
+4. `sudo systemctl reload nginx`
+5. Configure `src/interface/api/config.ini`
+6. Copy `src/interface/fishbait.service.example` to
+   `/etc/systemd/system/fishbait.service` and replace the placeholders
+     * Set the `WorkingDirectory` to the absolute path of `src/interface`
+     * Set the placeholder in `ExecStart` to be the absolute path of
+       `build/src/interface/venv/bin/gunicorn`
+7. `sudo systemctl daemon-reload`
+8. `sudo systemctl start fishbait`
+9. Setup https/ssl with the appropriate
+   [certbot instructions](https://certbot.eff.org/)
+
 ## Testing
 Unit tests can be run with `./bin/tests.out` from the `build` directory.
 If the project is built in debug mode, a code coverage report can be generated
@@ -38,6 +59,7 @@ installed for code coverage.
 - [cpplint](https://github.com/cpplint/cpplint) (runs during the pre-commit
   hook)
 - [pylint](https://pylint.org) (runs during the pre-commit hook)
+- nginx (to deploy the interface)
 
 ## Other Notes
 * Do not put commas in the Catch2 tester descriptions

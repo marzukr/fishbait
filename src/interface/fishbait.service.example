@@ -1,0 +1,12 @@
+[Unit]
+Description=Fishbait Flask API hosted with gunicorn
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=PLACEHOLDER
+ExecStart=PLACEHOLDER -b 127.0.0.1:5000 api.app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

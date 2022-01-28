@@ -17,7 +17,11 @@ config.read('api/config.ini')
 
 app = Flask(__name__)
 
-revere = Pigeon()
+strategy_loc = config.get('DEFAULT', 'STRATEGY_LOCATION', fallback=None)
+if strategy_loc is not None:
+  revere = Pigeon(strategy_loc)
+else:
+  raise KeyError('STRATEGY_LOCATION not defined in config.ini')
 
 def authenticate(route):
   def authenticator():
