@@ -3,14 +3,15 @@
 **A**rtificially **I**ntelligent **T**hought. An AI agent designed to play
 poker. Inspired by the Pluribus poker bot developed by CMU and Facebook.
 
-## Build Steps
+## Development Setup
 From the root directory:
 
 1. Create the build folder: `mkdir -p build`
-2. Navigate to the build folder: `cd build`
-3. Generate the build files: `cmake <options> ..`
+2. Create the hyperparameters file: `cp src/blueprint/hyperparameters.h.dev src/blueprint/hyperparameters.h`
+3. Navigate to the build folder: `cd build`
+4. Generate the build files: `cmake <options> ..`
     * Possible Options:
-        * `-DCMAKE_C_COMPILER=<c-compiler>` and 
+        * `-DCMAKE_C_COMPILER=<c-compiler>` and
           `-DCMAKE_CXX_COMPILER=<cpp-compiler>`
         * `-DCMAKE_BUILD_TYPE=Debug` to debug with gdb or lldb.
         * `-DCMAKE_BUILD_TYPE=Release` to run in release mode. Release mode
@@ -18,13 +19,17 @@ From the root directory:
         * `-DTGT_SYSTEM=Graviton2` for AWS Graviton2 optimizations.
         * `-DCORES=<core_count>` to instruct parallel algorithms to use
           `<core_count>` cores.
-4. Create a folder for clustering files: `mkdir -p out/clustering`
-5. Download the card cluster files to the newly created folder
+5. Create a folder for clustering files: `mkdir -p out/clustering`
+6. Download the card cluster files to the newly created folder
    * [Flop](https://drive.google.com/file/d/1Q_9M-KGe0855QksD6sro9DI0V4aUwyk9/view?usp=sharing)
    * [Turn](https://drive.google.com/file/d/1KRE-eHi8ryvrnbBjCNCGVTujuCLi9hKz/view?usp=sharing)
    * [River](https://drive.google.com/file/d/1qNSfJKBzAZ2CQGYvplQqjAXPHIkbe3sI/view?usp=sharing)
-6. Build the code: `cmake --build .`
+7. Build the code: `cmake --build .`
    * `cmake --build . -- -j CORES` to run a parallel build.
+8. Generate the dev strategy: `./bin/blueprint.out`
+9. Convert the dev strategy to the hdf5 format: `./bin/avg_to_hd5.out out/blueprint/dev/average_final.cereal out/blueprint/dev/blueprint_dev.hdf`
+10. Create the api config file: `cp ../src/interface/api/config.ini.example ../src/interface/api/config.ini`
+11. Start the development web server: `./bin/interface.sh`
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.
