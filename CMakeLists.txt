@@ -109,7 +109,10 @@ function(add_module module_path)
 endfunction()
 
 add_module(external/hand-isomorphism/src)
+set(HDF5_EXTERNALLY_CONFIGURED 1)
 set(HDF5_BUILD_CPP_LIB ON)
+set(BUILD_STATIC_LIBS OFF)
+set(BUILD_TESTING OFF)
 add_module(external/hdf5)
 
 # Helpful warning compiler flags only for our source files

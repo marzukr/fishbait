@@ -6,9 +6,9 @@ poker. Inspired by the Pluribus poker bot developed by CMU and Facebook.
 ## Build Steps
 From the root directory:
 
-1. `mkdir -p build`
-2. `cd build`
-3. `cmake <options> ..`
+1. Create the build folder: `mkdir -p build`
+2. Navigate to the build folder: `cd build`
+3. Generate the build files: `cmake <options> ..`
     * Possible Options:
         * `-DCMAKE_C_COMPILER=<c-compiler>` and 
           `-DCMAKE_CXX_COMPILER=<cpp-compiler>`
@@ -18,7 +18,13 @@ From the root directory:
         * `-DTGT_SYSTEM=Graviton2` for AWS Graviton2 optimizations.
         * `-DCORES=<core_count>` to instruct parallel algorithms to use
           `<core_count>` cores.
-4. `cmake --build .`
+4. Create a folder for clustering files: `mkdir -p out/clustering`
+5. Download the card cluster files to the newly created folder
+   * [Flop](https://drive.google.com/file/d/1Q_9M-KGe0855QksD6sro9DI0V4aUwyk9/view?usp=sharing)
+   * [Turn](https://drive.google.com/file/d/1KRE-eHi8ryvrnbBjCNCGVTujuCLi9hKz/view?usp=sharing)
+   * [River](https://drive.google.com/file/d/1qNSfJKBzAZ2CQGYvplQqjAXPHIkbe3sI/view?usp=sharing)
+6. Build the code: `cmake --build .`
+   * `cmake --build . -- -j CORES` to run a parallel build.
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.
