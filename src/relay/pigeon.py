@@ -3,33 +3,22 @@
 '''Python interface for the Fishbait AI'''
 
 import os
-try:
-  from ctypes import windll
-except ImportError:
-  from ctypes import cdll
+from ctypes import cdll
 from ctypes import Structure, c_void_p, c_char_p, c_uint32, c_uint8, c_bool
 from ctypes import c_double, Array
 
 pigeon_script_dir = os.path.dirname(__file__)
 fishbait_lib_dir = os.path.join(pigeon_script_dir, '../../build/lib')
-possible_lib_exts = ['.so', '.dylib', '.dll']
+possible_lib_exts = ['.so', '.dylib']
 lib = None
 for ext in possible_lib_exts:
   lib_path = os.path.join(fishbait_lib_dir, 'librelay' + ext)
-  if ext == '.dll':
-    try:
-      lib = windll.LoadLibrary(lib_path)
-    except OSError:
-      pass
-    else:
-      break
+  try:
+    lib = cdll.LoadLibrary(lib_path)
+  except OSError:
+    pass
   else:
-    try:
-      lib = cdll.LoadLibrary(lib_path)
-    except OSError:
-      pass
-    else:
-      break
+    break
 if lib is None:
   raise Exception('Fishbait shared library not found.')
 
@@ -95,7 +84,7 @@ class ActionStruct(Structure):
 
 def wrap_function(clib, funcname, restype, argtypes):
   '''Simplify wrapping ctypes functions'''
-  func = clib.__getattr__(funcname)
+  func = getattr(clib, funcname)
   func.restype = restype
   func.argtypes = argtypes
   return func
