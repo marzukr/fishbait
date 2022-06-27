@@ -19,17 +19,16 @@ From the root directory:
         * `-DTGT_SYSTEM=Graviton2` for AWS Graviton2 optimizations.
         * `-DCORES=<core_count>` to instruct parallel algorithms to use
           `<core_count>` cores.
-5. Create a folder for clustering files: `mkdir -p out/clustering`
-6. Download the card cluster files to the newly created folder
+5. Build the code: `cmake --build .`
+   * `cmake --build . -- -j CORES` to run a parallel build.
+6. Download the card cluster files to `build/out/clustering`
    * [Flop](https://drive.google.com/file/d/1Q_9M-KGe0855QksD6sro9DI0V4aUwyk9/view?usp=sharing)
    * [Turn](https://drive.google.com/file/d/1KRE-eHi8ryvrnbBjCNCGVTujuCLi9hKz/view?usp=sharing)
    * [River](https://drive.google.com/file/d/1qNSfJKBzAZ2CQGYvplQqjAXPHIkbe3sI/view?usp=sharing)
-7. Build the code: `cmake --build .`
-   * `cmake --build . -- -j CORES` to run a parallel build.
-8. Generate the dev strategy: `./bin/blueprint.out`
-9. Convert the dev strategy to the hdf5 format: `./bin/avg_to_hd5.out out/blueprint/dev/average_final.cereal out/blueprint/dev/blueprint_dev.hdf`
-10. Create the api config file: `cp ../src/interface/api/config.ini.example ../src/interface/api/config.ini`
-11. Start the development web server: `./bin/interface.sh`
+7. Generate the dev strategy: `./bin/blueprint.out`
+8. Convert the dev strategy to the hdf5 format: `./bin/avg_to_hd5.out out/blueprint/dev/average_final.cereal out/blueprint/dev/blueprint_dev.hdf`
+9. Create the api config file: `cp ../src/interface/api/config.ini.example ../src/interface/api/config.ini`
+10. Start the development web server: `./bin/interface.sh`
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.

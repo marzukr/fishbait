@@ -109,10 +109,11 @@ function(add_module module_path)
 endfunction()
 
 add_module(external/hand-isomorphism/src)
-set(HDF5_EXTERNALLY_CONFIGURED 1)
-set(HDF5_BUILD_CPP_LIB ON)
-set(BUILD_STATIC_LIBS OFF)
-set(BUILD_TESTING OFF)
+set(HDF5_EXTERNALLY_CONFIGURED ON CACHE BOOL "Set hdf5 variables externally"
+    FORCE)
+set(HDF5_BUILD_CPP_LIB ON CACHE BOOL "Build hdf5 cpp lib" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "Don't build hdf5 testing" FORCE)
+set(HDF5_INSTALL_BIN_DIR external)
 add_module(external/hdf5)
 
 # Helpful warning compiler flags only for our source files
