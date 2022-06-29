@@ -50,22 +50,24 @@ def create_new_session() -> Dict[str, str]:
 
 @app.route('/api/new_session', methods=['GET'])
 def new_session():
-  if len(sessions) >= 1000:
+  if len(sessions) >= MAX_SESSIONS:
     current_time = datetime.now(timezone.utc).timestamp()
     to_remove = None
     for session_id, session in sessions.items():
       if current_time - session.updated >= SESSION_TIMEOUT:
         to_remove = session_id
+        break
     if to_remove is not None:
       sessions.pop(to_remove)
       return create_new_session()
     else:
       return ({
-        'error': ('Our servers are currently overloaded because we are in beta '
-                  'and our capacity is limited. Please try again in 30 '
-                  'minutes.')
+        'error_message': ('Our servers are currently overloaded because we are '
+                          'in beta and our capacity is limited. Please try '
+                          'again in 30 minutes.'),
+        'forseen_error_code': 1,
       }, 503, {
-        'Retry-After': SESSION_TIMEOUT
+        'Retry-After': SESSION_TIMEOUT,
       })
   else:
     return create_new_session()
@@ -75,11 +77,13 @@ def session_guard(route):
     session_id = request.args.get('session_id')
     if session_id is None:
       return ({
-        'error': 'A session ID was not provided.'
+        'error_message': 'A session ID was not provided.',
+        'forseen_error_code': 2,
       }, 400)
     elif session_id not in sessions:
       return ({
-        'error': 'The provided session id was not found.'
+        'error_message': 'The provided session id was not found.',
+        'forseen_error_code': 3,
       }, 404)
     sessions[session_id].updated = datetime.now(timezone.utc).timestamp()
     return route(sessions[session_id].revere)

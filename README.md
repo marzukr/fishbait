@@ -29,6 +29,8 @@ From the root directory:
 8. Convert the dev strategy to the hdf5 format: `./bin/avg_to_hd5.out out/blueprint/dev/average_final.cereal out/blueprint/dev/blueprint_dev.hdf`
 9. Create the api config file: `cp ../src/interface/api/config.ini.example ../src/interface/api/config.ini`
 10. Start the development web server: `./bin/interface.sh`
+   * `./bin/interface.sh frontend` to only start the frontend server
+   * `./bin/interface.sh backend` to only start the backend server
 
 All executables will now be located in `build/bin`. So, for example, to execute
 `poker_demo.out`, simply run `./bin/poker_demo.out` from the `build` directory.
