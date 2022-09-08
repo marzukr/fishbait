@@ -19,7 +19,7 @@ jobs:
           python-version: '3.8'
       - run: pip install pylint
       - run: find . -type f -name "*.py" | xargs pylint
-  build_test:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repo
