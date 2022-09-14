@@ -27,7 +27,7 @@ From the root directory:
    * [River](https://drive.google.com/file/d/1qNSfJKBzAZ2CQGYvplQqjAXPHIkbe3sI/view?usp=sharing)
 7. Generate the dev strategy: `./bin/blueprint.out`
 8. Convert the dev strategy to the hdf5 format: `./bin/avg_to_hd5.out out/blueprint/dev/average_final.cereal out/blueprint/dev/blueprint_dev.hdf`
-9. Create the api config file: `cp ../src/interface/api/config.ini.example ../src/interface/api/config.ini`
+9. Create the api config file: `cp ../src/interface/api/settings.py.example ../src/interface/api/settings.py`
 10. Start the development web server: `./bin/interface.sh`
    * `./bin/interface.sh frontend` to only start the frontend server
    * `./bin/interface.sh backend` to only start the backend server
@@ -45,7 +45,7 @@ All executables will now be located in `build/bin`. So, for example, to execute
        deployed on.
 3. `sudo ln -s /etc/nginx/sites-available/fishbait.nginx /etc/nginx/sites-enabled/fishbait.nginx`
 4. `sudo systemctl reload nginx`
-5. Configure `src/interface/api/config.ini`
+5. Configure `src/interface/api/settings.py`
 6. Copy `src/interface/fishbait.service.example` to
    `/etc/systemd/system/fishbait.service` and replace the placeholders
      * Set the `WorkingDirectory` to the absolute path of `src/interface`

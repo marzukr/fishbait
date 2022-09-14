@@ -1,0 +1,14 @@
+# Copyright 2021 Marzuk Rashid
+
+'''Global config for the fishbait API'''
+
+STRATEGY_LOCATION: str = '../../build/out/blueprint/dev/blueprint_dev.hdf'
+RELAY_LIB_LOCATION: str = '../../build/lib/librelay.dylib'
+
+MAX_SESSIONS: int = 0
+SESSION_ID_BYTES: int = 8
+SESSION_TIMEOUT: int = 1800  # in seconds
+
+PLAYERS: int = 6
+HAND_CARDS: int = 2
+BOARD_CARDS: int = 5

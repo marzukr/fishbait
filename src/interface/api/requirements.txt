@@ -1,2 +1,4 @@
 flask==2.0.1
 gunicorn==20.1.0
+pylint==2.15.2
+cpplint==1.6.1
