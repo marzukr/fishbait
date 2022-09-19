@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime, timezone
 from typing import Dict
 
-from flask import Flask, request
+from flask import Flask, request, make_response
 
 from pigeon import Pigeon, Action
 import settings
@@ -29,16 +29,16 @@ sessions: Dict[str, Session] = {}
 def api_status():
   return 'FISHBAIT API Running'
 
-def create_new_session() -> Dict[str, str]:
+def create_new_session():
   token_candidate = secrets.token_hex(settings.SESSION_ID_BYTES)
   while token_candidate in sessions:
     token_candidate = secrets.token_hex(settings.SESSION_ID_BYTES)
   updated_time = datetime.now(timezone.utc).timestamp()
-  new_revere = Pigeon(settings.STRATEGY_LOCATION)
+  new_revere = Pigeon()
   sessions[token_candidate] = Session(updated_time, new_revere)
-  return {
-    'new_session_id': token_candidate
-  }
+  resp = make_response()
+  resp.set_cookie(settings.SESSION_ID_KEY, token_candidate)
+  return resp
 
 @app.route('/api/new_session', methods=['GET'])
 def new_session():
@@ -59,7 +59,7 @@ def new_session():
 
 def session_guard(route):
   def guarded_route():
-    session_id = request.args.get('session_id')
+    session_id = request.cookies.get(settings.SESSION_ID_KEY)
     if session_id is None:
       return MissingSessionIdError.flask_tuple()
     elif session_id not in sessions:

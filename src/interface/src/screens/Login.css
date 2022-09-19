@@ -8,18 +8,12 @@
   transform: translateY(-50%);
 }
 
-.passwordLabel {
-  font-size: 18pt;
-  margin-bottom: 9pt;
-  margin-top: 0;
-}
-
 .inputButton {
   height: 36px;
   display: flex;
 }
 
-.inputButton>input[type=password] {
+.inputButton>input[type=email] {
   font-size: 18px;
   height: 36px;
   width: auto;

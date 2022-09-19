@@ -34,9 +34,22 @@ class Login extends React.Component {
     return (
       <div className='boxSpace'>
         <div className='passwordGroup'>
-          <p className='passwordLabel'>Password:</p>
+          <p style={{ textAlign: 'justify' }}>
+            Aw, snap! We've got a lot of people visiting us, so we don't have
+            room for you right now.
+          </p>
+          
+          <p style={{ textAlign: 'justify' }}>
+            We're sorry about that! You might have better luck in a few hours.
+            We're working hard to build more space for you.
+          </p>
+
+          <p style={{ textAlign: 'justify' }}>
+            In the meantime, if you give us your email, we can let you
+            know when we've got more capacity:
+          </p>
           <form className='inputButton' onSubmit={this.handleSubmit}>
-            <input type='password' value={this.state.value}
+            <input type='email' value={this.state.value} placeholder='mail@example.com'
                    onChange={this.handleChange}/>
             <button type='submit'><i className='fas fa-chevron-right'/></button>
           </form>

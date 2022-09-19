@@ -5,9 +5,10 @@
 STRATEGY_LOCATION: str = '../../build/out/blueprint/dev/blueprint_dev.hdf'
 RELAY_LIB_LOCATION: str = '../../build/lib/librelay.dylib'
 
-MAX_SESSIONS: int = 0
+MAX_SESSIONS: int = 1000
 SESSION_ID_BYTES: int = 8
 SESSION_TIMEOUT: int = 1800  # in seconds
+SESSION_ID_KEY = 'session_id'
 
 PLAYERS: int = 6
 HAND_CARDS: int = 2

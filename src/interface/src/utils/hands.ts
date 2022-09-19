@@ -1,20 +1,20 @@
 // Copyright 2021 Marzuk Rashid
 
 /* Returns if the given string is a suit. */
-export function isSuit(entry) {
+export function isSuit(entry: string) {
   return entry === 's' || entry === 'c' || entry === 'd' || entry === 'h';
 }
 
-/*
-  Constructs a card with the given inputs:
-    constructCard('T', 's') returns 'Ts'
-    constructCard('s', 'T') returns 'Ts'
-    constructCard('s', 'h') returns 'h'
-    constructCard('T', 'A') returns 'A'
-    constructCard('Ts', 'A') returns 'As'
-    etc.
-*/
-export function constructCard(previousEntry, newEntry) {
+/**
+ * Constructs a card with the given inputs:
+ *  - constructCard('T', 's') returns 'Ts'
+ *  - constructCard('s', 'T') returns 'Ts'
+ *  - constructCard('s', 'h') returns 'h'
+ *  - constructCard('T', 'A') returns 'A'
+ *  - constructCard('Ts', 'A') returns 'As'
+ *  - etc.
+ */
+export function constructCard(previousEntry: string | null, newEntry: string) {
   if (previousEntry === null) return newEntry;
   let isNewSuit = isSuit(newEntry);
   if (previousEntry.length === 2) {
@@ -40,8 +40,8 @@ export function constructCard(previousEntry, newEntry) {
   }
 }  // constructCard()
 
-/* Mapping from ISO card ids to ascii strings. */
-export let isoToAsciiString = {
+/** Mapping from ISO card ids to ascii strings. */
+export const isoToAsciiString: Record<number, string> = {
   0: '2s', 1: '2h', 2: '2d', 3: '2c', 4: '3s', 5: '3h', 6: '3d', 7: '3c',
   8: '4s', 9: '4h', 10: '4d', 11: '4c', 12: '5s', 13: '5h', 14: '5d', 15: '5c',
   16: '6s', 17: '6h', 18: '6d', 19: '6c', 20: '7s', 21: '7h', 22: '7d',
@@ -52,8 +52,8 @@ export let isoToAsciiString = {
   51: 'Ac'
 };
 
-/* Mapping from ISO card ids to symbol strings. */
-export let isoToSymbolString = {
+/** Mapping from ISO card ids to symbol strings. */
+export const isoToSymbolString = {
   0: '2♠', 1: '2♥', 2: '2♦', 3: '2♣', 4: '3♠', 5: '3♥', 6: '3♦', 7: '3♣',
   8: '4♠', 9: '4♥', 10: '4♦', 11: '4♣', 12: '5♠', 13: '5♥', 14: '5♦', 15: '5♣',
   16: '6♠', 17: '6♥', 18: '6♦', 19: '6♣', 20: '7♠', 21: '7♥', 22: '7♦',
@@ -64,7 +64,7 @@ export let isoToSymbolString = {
   51: 'A♣'
 };
 
-export let asciiStringToIso = {
+export const asciiStringToIso: Record<string, number> = {
   '2s': 0, '2h': 1, '2d': 2, '2c': 3, '3s': 4, '3h': 5, '3d': 6, '3c': 7,
   '4s': 8, '4h': 9, '4d': 10, '4c': 11, '5s': 12, '5h': 13, '5d': 14, '5c': 15,
   '6s': 16, '6h': 17, '6d': 18, '6c': 19, '7s': 20, '7h': 21, '7d': 22,

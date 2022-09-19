@@ -218,7 +218,7 @@ class PigeonState:
   '''If blinds should be posted before the ante'''
   rake: float = False
   '''The size of the rake as proportion of the pot'''
-  rake_cap: int = False
+  rake_cap: int = 0
   '''The maximum size of the rake. 0 if no maximum'''
   no_flop_no_drop: bool = True
   '''If hands that end preflop are not raked'''
@@ -431,7 +431,8 @@ P = ParamSpec('P')
 class Pigeon:
   '''Sends messages between python clients and the fishbait C++ AI.'''
 
-  def __init__(self, strategy_loc: str):
+  def __init__(self):
+    strategy_loc = settings.STRATEGY_LOCATION
     self._commander: CommanderPtr = commander_new(bytes(strategy_loc, 'utf-8'))
     self._state: PigeonState = PigeonState()
     self._update_state()
