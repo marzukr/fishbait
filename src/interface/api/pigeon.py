@@ -4,7 +4,7 @@
 
 from typing import (
   Callable, Concatenate, Dict, Generic, List, Literal, TypedDict, Optional,
-  TypeVar, ParamSpec
+  TypeVar, ParamSpec, Type
 )
 from dataclasses import asdict, dataclass, field
 from enum import Enum
@@ -21,12 +21,6 @@ from ctypes import (
 )
 
 import settings
-from ctypes_wrappers import (
-  wrap_function_1,
-  wrap_function_2,
-  wrap_function_3,
-  wrap_function_6,
-)
 
 
 lib = cdll.LoadLibrary(settings.RELAY_LIB_LOCATION)
@@ -113,84 +107,78 @@ class ActionStruct(Structure):
     return ActionStruct.ActionDict(action=action, size=size)
 
 
-commander_new = wrap_function_1(
-  lib, 'CommanderNew',
-  restype=CommanderPtr,
-  argtypes=(c_char_p,)
-)
-commander_delete = wrap_function_1(
-  lib, 'CommanderDelete',
-  restype=None,
-  argtypes=(CommanderPtr,)
-)
-commander_reset = wrap_function_6(
-  lib, 'CommanderReset',
-  restype=None,
-  argtypes=(
-    CommanderPtr,
-    Chips * settings.PLAYERS,
-    PlayerId,
-    Chips,
-    Chips,
-    PlayerId,
-  ),
-)
-commander_set_hand = wrap_function_3(
-  lib, 'CommanderSetHand',
-  restype=None,
-  argtypes=(
-    CommanderPtr,
-    PlayerId,
-    ISOCard * settings.HAND_CARDS,
-  ),
-)
-commander_proceed_play = wrap_function_1(
-  lib, 'CommanderProceedPlay',
-  restype=None,
-  argtypes=(CommanderPtr,),
-)
-commander_state = wrap_function_1(
-  lib, 'CommanderState',
-  restype=NodeSnapshot,
-  argtypes=(CommanderPtr,),
-)
-commander_fishbait_seat = wrap_function_1(
-  lib, 'CommanderFishbaitSeat',
-  restype=PlayerId,
-  argtypes=(CommanderPtr,),
-)
-commander_query = wrap_function_1(
-  lib, 'CommanderQuery',
-  restype=ActionStruct,
-  argtypes=(CommanderPtr,),
-)
-commander_apply = wrap_function_3(
-  lib, 'CommanderApply',
-  restype=None,
-  argtypes=(
-    CommanderPtr,
-    ActionCode,
-    Chips,
-  ),
-)
-commander_set_board = wrap_function_2(
-  lib, 'CommanderSetBoard',
-  restype=None,
-  argtypes=(
-    CommanderPtr,
-    ISOCard * settings.BOARD_CARDS,
-  ),
-)
-commander_award_pot = wrap_function_1(
-  lib, 'CommanderAwardPot',
-  restype=None,
-  argtypes=(CommanderPtr,),
-)
-commander_new_hand = wrap_function_1(
-  lib, 'CommanderNewHand',
-  restype=None,
-  argtypes=(CommanderPtr,),
-)
+R = TypeVar('R')
+def wrap_function(funcname: str, restype: Type[R]):
+  func: Callable[[], R] = getattr(lib, funcname)
+  func.restype = restype if restype is not type(None) else None
+  func.argtypes = []
+  return func
+
+A = TypeVar('A')
+P = ParamSpec('P')
+def add_arg(argtype: Type[A], func: Callable[P, R]):
+  n_func: Callable[Concatenate[A, P], R] = func
+  n_func.argtypes = [argtype] + n_func.argtypes
+  return n_func
+
+commander_new = (
+  add_arg(c_char_p,
+  wrap_function('CommanderNew', restype=CommanderPtr)
+))
+commander_delete = (
+  add_arg(CommanderPtr,
+  wrap_function('CommanderDelete', restype=type(None))
+))
+commander_reset = (
+  add_arg(CommanderPtr,
+  add_arg(Chips * settings.PLAYERS,
+  add_arg(PlayerId,
+  add_arg(Chips,
+  add_arg(Chips,
+  add_arg(PlayerId,
+  wrap_function('CommanderReset', restype=type(None))
+)))))))
+commander_set_hand = (
+  add_arg(CommanderPtr,
+  add_arg(PlayerId,
+  add_arg(ISOCard * settings.HAND_CARDS,
+  wrap_function('CommanderSetHand', restype=type(None))
+))))
+commander_proceed_play = (
+  add_arg(CommanderPtr,
+  wrap_function('CommanderProceedPlay', restype=type(None))
+))
+commander_state = (
+  add_arg(CommanderPtr,
+  wrap_function('CommanderState', restype=NodeSnapshot)
+))
+commander_fishbait_seat = (
+  add_arg(CommanderPtr,
+  wrap_function('CommanderFishbaitSeat', restype=PlayerId)
+))
+commander_query = (
+  add_arg(CommanderPtr,
+  wrap_function('CommanderQuery', restype=ActionStruct)
+))
+commander_apply = (
+  add_arg(CommanderPtr,
+  add_arg(ActionCode,
+  add_arg(Chips,
+  wrap_function('CommanderApply', restype=type(None))
+))))
+commander_set_board = (
+  add_arg(CommanderPtr,
+  add_arg(ISOCard * settings.BOARD_CARDS,
+  wrap_function('CommanderSetBoard', restype=type(None))
+)))
+commander_award_pot = (
+  add_arg(CommanderPtr,
+  wrap_function('CommanderAwardPot', restype=type(None))
+))
+commander_new_hand = (
+  add_arg(CommanderPtr,
+  wrap_function('CommanderNewHand', restype=type(None))
+))
 
 
 @dataclass
