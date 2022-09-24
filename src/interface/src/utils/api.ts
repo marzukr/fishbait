@@ -129,6 +129,7 @@ enum ApiErrorCode {
   MISSING_SESSION_ID = 'MissingSessionIdError',
   UNKNOWN_SESSION_ID = 'UnknownSessionIdError',
   SERVER_OVERLOADED = 'ServerOverloadedError',
+  INVALID_EMAIL = 'InvalidEmailError',
 }
 
 const apiErrorAgent = unsnakeAgent(objectAgent({
@@ -242,8 +243,6 @@ export const useApi = () => {
     []
   );
 
-  const defaultApiCall = apiCallFactory();
-
   const getNewSession = useCallback(
     () => {
       const newSessionHandler = async (error: ApiError) => {
@@ -345,9 +344,14 @@ export const useApi = () => {
     }
   ) => gameStateApiPostWithRetry('reset', params);
 
-  const joinEmailList = (email: string) => (
-    defaultApiCall(apiPostParams('join-email-list', { email }))
-  );
+  const joinEmailList = (email: string) => {
+    const emailHandler = async (error: ApiError) => {
+      if (error.name !== ApiErrorCode.INVALID_EMAIL) throw error;
+      return false;
+    }
+    const apiCaller = apiCallFactory(undefined, emailHandler);
+    return apiCaller(apiPostParams('join-email-list', { email }));
+  };
 
   useEffect(() => { state() }, [state]);
 
