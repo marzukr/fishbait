@@ -1,5 +1,9 @@
 /* Copyright 2021 Marzuk Rashid */
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Readex+Pro&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@700&family=Readex+Pro&display=swap');
 

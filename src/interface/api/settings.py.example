@@ -13,3 +13,5 @@ SESSION_ID_KEY = 'session_id'
 PLAYERS: int = 6
 HAND_CARDS: int = 2
 BOARD_CARDS: int = 5
+
+EMAIL_LIST_LOCATION: str = '../../build/emails.txt'

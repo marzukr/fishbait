@@ -6,7 +6,9 @@ import GameInput from 'components/GameInput';
 import CardBoard from 'components/CardBoard';
 import BetView from 'components/BetView';
 import { constructCard, asciiStringToIso } from 'utils/hands';
-import { Api, ActionInterface, Action, BoardNeedsCards } from 'utils/api';
+import {
+  Api, ActionInterface, Action, BoardNeedsCards, useSafeAsync
+} from 'utils/api';
 import { Nullable } from 'utils/customs';
 
 interface GameProps {
@@ -46,6 +48,8 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
   // board cards being input. For example offset 0 on the turn corresponds to
   // card 4 on the board:
   const [selectedBoardOffset, setSelectedBoardOffset] = useState(0);
+
+  const safeAsync = useSafeAsync();
 
   const gameState = api.gameState;
   if (gameState === null) return null;
@@ -104,7 +108,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
 
     // code is 'next':
     } else {
-      api.apply(actionScratch).then(() => setActionScratch({
+      safeAsync(api.apply(actionScratch)).then(() => setActionScratch({
         action: null,
         size: null,
       }));
@@ -121,10 +125,10 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
         setSelectedCard(0);
       };
       if (scratchMucked) {
-        api.setHand([null, null]).then(afterSend);
+        safeAsync(api.setHand([null, null])).then(afterSend);
       } else {
         const isoHand = handScratch.map(c => c ? asciiStringToIso[c] : null);
-        api.setHand(isoHand).then(afterSend);
+        safeAsync(api.setHand(isoHand)).then(afterSend);
       }
     };
     if (code !== 'next') {
@@ -165,7 +169,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
         }
       }
       const newIsoBoard = newBoard.map(c => c ? asciiStringToIso[c] : null);
-      api.setBoard(newIsoBoard).then(() => {
+      safeAsync(api.setBoard(newIsoBoard)).then(() => {
         setBoardScratch([null, null, null, null, null]);
         setSelectedBoardOffset(0);
       });

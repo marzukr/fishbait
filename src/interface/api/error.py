@@ -33,3 +33,7 @@ class MissingSessionIdError(ApiError):
 class UnknownSessionIdError(ApiError):
   message = 'The provided session id was not found.'
   status_code = 404
+
+class InvalidEmailError(ApiError):
+  message = 'The provided email is invalid.'
+  status_code = 400

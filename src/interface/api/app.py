@@ -14,6 +14,7 @@ from error import (
   ServerOverloadedError,
   MissingSessionIdError,
   UnknownSessionIdError,
+  InvalidEmailError,
 )
 
 app = Flask(__name__)
@@ -40,7 +41,7 @@ def create_new_session():
   resp.set_cookie(settings.SESSION_ID_KEY, token_candidate)
   return resp
 
-@app.route('/api/new_session', methods=['GET'])
+@app.route('/api/new-session', methods=['GET'])
 def new_session():
   if len(sessions) >= settings.MAX_SESSIONS:
     current_time = datetime.now(timezone.utc).timestamp()
@@ -74,7 +75,7 @@ def session_guard(route):
 def state(revere: Pigeon):
   return revere.state_dict()
 
-@app.route('/api/set_hand', methods=['POST'])
+@app.route('/api/set-hand', methods=['POST'])
 @session_guard
 def set_hand(revere: Pigeon):
   data = request.get_json()
@@ -94,14 +95,14 @@ def apply(revere: Pigeon):
   revere.apply(Action(data['action']), size)
   return revere.state_dict()
 
-@app.route('/api/set_board', methods=['POST'])
+@app.route('/api/set-board', methods=['POST'])
 @session_guard
 def set_board(revere: Pigeon):
   data = request.get_json()
   revere.set_board(data['board'])
   return revere.state_dict()
 
-@app.route('/api/new_hand', methods=['POST'])
+@app.route('/api/new-hand', methods=['POST'])
 @session_guard
 def new_hand(revere: Pigeon):
   revere.new_hand()
@@ -114,6 +115,16 @@ def reset(revere: Pigeon):
   revere.reset(data['stack'], data['button'], data['big_blind'],
                data['small_blind'], data['fishbait_seat'], data['player_names'])
   return revere.state_dict()
+
+@app.route('/api/join-email-list', methods=['POST'])
+def join_email_list():
+  data = request.get_json()
+  email = data['email']
+  if len(email) > 254 or '\n' in email:
+    return InvalidEmailError.flask_tuple()
+  with open(settings.EMAIL_LIST_LOCATION, 'a', encoding='utf-8') as email_list:
+    email_list.write(f'{email}\n')
+  return make_response()
 
 if __name__ == '__main__':
   app.run(debug=True)

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 import 'screens/Settings.css';
-import { Api } from 'utils/api';
+import { Api, useSafeAsync } from 'utils/api';
 
 interface SettingsProps {
   api: Api;
@@ -27,6 +27,8 @@ export const Settings: React.FC<SettingsProps> = ({ api, toggleSettings }) => {
   const [fishbaitSeat, setFishbaitSeat] = useState(
     gameState?.fishbaitSeat || 0
   );
+
+  const safeAsync = useSafeAsync();
 
   if (gameState === null) return null;
 
@@ -61,14 +63,14 @@ export const Settings: React.FC<SettingsProps> = ({ api, toggleSettings }) => {
   };
 
   const saveClick = () => {
-    api.reset({
+    safeAsync(api.reset({
       stack: stack.map(s => Number(s)),
       button,
       fishbaitSeat,
       playerNames,
       bigBlind: Number(bigBlind),
       smallBlind: Number(smallBlind),
-    }).then(() => {
+    })).then(() => {
       toggleSettings();
     });
   };

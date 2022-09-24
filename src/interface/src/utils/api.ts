@@ -1,6 +1,6 @@
 // Copyright 2022 Marzuk Rashid
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { isEqual, mapKeys, snakeCase } from 'lodash';
 
 import {
@@ -124,10 +124,18 @@ const gameStateAgent = unsnakeAgent(objectAgent({
 }));
 export type GameState = Stamped<typeof gameStateAgent>;
 
+
+enum ApiErrorCode {
+  MISSING_SESSION_ID = 'MissingSessionIdError',
+  UNKNOWN_SESSION_ID = 'UnknownSessionIdError',
+  SERVER_OVERLOADED = 'ServerOverloadedError',
+}
+
 const apiErrorAgent = unsnakeAgent(objectAgent({
   errorMessage: stringAgent,
-  errorCode: stringAgent,
+  errorCode: enumAgent(ApiErrorCode),
 }));
+
 class ApiError extends Error {
   constructor(rawObj: unknown) {
     const apiError = apiErrorAgent.stamp(rawObj);
@@ -136,16 +144,11 @@ class ApiError extends Error {
     this.name = apiError.errorCode;
   }
 }
-enum ApiErrorCode {
-  MISSING_SESSION_ID = 'MissingSessionIdError',
-  UNKNOWN_SESSION_ID = 'UnknownSessionIdError',
-  SERVER_OVERLOADED = 'ServerOverloadedError',
-}
 
-class AlreadyRequestingApiError extends Error {
+class NetworkError extends Error {
   constructor() {
-    super('Already making an api request.');
-    Object.setPrototypeOf(this, ApiError.prototype);
+    super("A network error occured when trying to access the API");
+    Object.setPrototypeOf(this, NetworkError.prototype);
   }
 }
 
@@ -155,175 +158,151 @@ enum RequestMethod {
 }
 
 interface ApiCallParams {
-  route: string,
-  method: RequestMethod,
-  headers?: HeadersInit,
-  body?: BodyInit,
-  fallbackParams?: ApiCallParams,
+  route: string;
+  method: RequestMethod;
+  headers?: HeadersInit;
+  body?: BodyInit;
 }
 
-const newSessionParams: ApiCallParams = {
-  route: 'new_session',
-  method: RequestMethod.GET,
-};
-
-const getStateParams: ApiCallParams = {
+const getStateParams = {
   route: 'state',
   method: RequestMethod.GET,
 };
 
 /** This hook returns an object that can make API requests. */
 export const useApi = () => {
-  const isMakingRequest = useRef(false);
   const [canConnect, setCanConnect] = useState(true);
   const [isServerFull, setIsServerFull] = useState(false);
   const [unexpectedError, setUnexpectedError] = useState(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
 
-  /**
-   * This makes an API call without checking if we are already making an API
-   * call. Don't use this unless you know what you're doing.
-   * 
-   * Returns either a Response object, null if there was an error we handled. Or
-   * throws an ApiError if we don't know what to do with it.
-   */
-  const apiCall = useCallback(
-    async (
-      { route, method, headers, body, fallbackParams }: ApiCallParams,
-    ): Promise<Response | null> => {
-      // Try to make the fetch request. If the server or network is down, we set
-      // the appropriate state and return null.
-      const tryFetch = async () => {
-        try {
-          const response = await fetch(`/api/${route}`, {
-            method: method,
-            headers: headers,
-            body: body,
-          });
+  const fetchFromApi = async (
+    { route, method, headers, body }: ApiCallParams,
+  ) => {
+    let response;
+    try {
+      response = await fetch(`/api/${route}`, {
+        method: method,
+        headers: headers,
+        body: body,
+      });
+    } catch {
+      throw new NetworkError();
+    }
+
+    // Check if the reponse we got is an ApiError. If it isn't we return the
+    // response.
+    const responseToApiError = async (localResponse: Response) => {
+      try {
+        const jsonResp = localResponse.clone();
+        const responseJson = await jsonResp.json();
+        return new ApiError(responseJson);
+      } catch {
+        return;
+      }
+    };
+    const apiError = await responseToApiError(response);
+    if (apiError === undefined) return response;
+
+    // If we got an ApiError, it's not our job to handle it. So we throw it.
+    throw apiError;
+  };
+
+  const apiCallFactory = useCallback(
+    (
+      processor?: (r: Response) => Promise<void>,
+      handler?: (e: ApiError) => Promise<boolean>
+    ) => {
+      const retFn = async (params: ApiCallParams) => {
+        const initialPromise = fetchFromApi(params);
+        const processed = initialPromise.then(processor);
+        const successProm = processed.then(() => {
           setCanConnect(true);
-          return response;
-        } catch {
-          setCanConnect(false);
-          return null;
-        }
+          setUnexpectedError(false);
+          return true;
+        });
+        const promCatch = successProm.catch((error: unknown) => {
+          if (error instanceof NetworkError) {
+            setCanConnect(false);
+            return false;
+          } else if (error instanceof ApiError && handler) {
+            return handler(error);
+          } else {
+            throw error;
+          }
+        });
+        const catchallCatch = promCatch.catch(() => {
+          setUnexpectedError(true);
+          return false;
+        });
+        return catchallCatch;
       }
-      const response = await tryFetch();
-      if (response === null) return null;
-  
-      // Check if the reponse we got is an ApiError. If it isn't we return the
-      // response.
-      const responseToApiError = async (localResponse: Response) => {
-        try {
-          const jsonResp = localResponse.clone();
-          const responseJson = await jsonResp.json();
-          return new ApiError(responseJson);
-        } catch {
-          setIsServerFull(false);
-          return null;
-        }
-      };
-      const apiError = await responseToApiError(response);
-      if (apiError === null) return response;
-      
-      // If we got here, then we have received an ApiError from the server.
-      // First we check if we have a missing or unknown session id:
-      if (
-        apiError.name === ApiErrorCode.MISSING_SESSION_ID
-        || apiError.name === ApiErrorCode.UNKNOWN_SESSION_ID
-      ) {
-        // If we have fallbackParams, then try to get a new session id. If that
-        // succeeds then return the result of the fallbackParams.
-        if (fallbackParams) {
-          await apiCall(newSessionParams);
-          return apiCall(fallbackParams);
-        }
-        // If we don't have fallbackParams, return null.
-        return null;
-      // If the server is currently overloaded, set the appropriate state and
-      // then return null.
-      } else if (apiError.name === ApiErrorCode.SERVER_OVERLOADED) {
-        setIsServerFull(true);
-        return null;
-      }
-      // If we got an ApiError that we don't know what to do with, throw it.
-      throw apiError;
+      return retFn;
     },
     []
   );
 
-  const apiCallWithGameStateImpl = useCallback(
-    async (apiCallParams: ApiCallParams) => {
-      const tryToMakeApiCall = async () => {
-        try {
-          // This will throw if we are already making a request or if we
-          // encountered an unexpected ApiError
-          const result = await apiCall({
-            ...apiCallParams,
-            fallbackParams: getStateParams,
-          });
-          setUnexpectedError(false);
-          return result;
-        } catch (error) {
-          if (!(error instanceof AlreadyRequestingApiError)) {
-            setUnexpectedError(true);
-          } else {
-            setUnexpectedError(false);
-          }
-          return null;
+  const defaultApiCall = apiCallFactory();
+
+  const getNewSession = useCallback(
+    () => {
+      const newSessionHandler = async (error: ApiError) => {
+        if (error.name === ApiErrorCode.SERVER_OVERLOADED) {
+          setIsServerFull(true);
+          return false;
+        }
+        throw error;
+      }
+      const newSessionProcessor = async () => setIsServerFull(false);
+      const apiCaller = apiCallFactory(newSessionProcessor, newSessionHandler);
+      return apiCaller({
+        route: 'new-session',
+        method: RequestMethod.GET,
+      });
+    },
+    [apiCallFactory]
+  );
+
+  const gameStateProcesssor = async (response: Response) => {
+    const rawResult = await response.json();
+    const stamped = gameStateAgent.stamp(rawResult);
+    setGameState(stamped);
+    setIsServerFull(false);
+  };
+
+  const getState = useCallback(
+    () => {
+      const gameStateApiCall = apiCallFactory(gameStateProcesssor);
+      return gameStateApiCall(getStateParams);
+    },
+    [apiCallFactory]
+  );
+
+  const gameStateHandler = useCallback(
+    async (error: ApiError) => {
+      if (
+        error.name === ApiErrorCode.MISSING_SESSION_ID
+        || error.name === ApiErrorCode.UNKNOWN_SESSION_ID
+      ) {
+        const hasNewSession = await getNewSession();
+        if (hasNewSession) {
+          return await getState();
         }
       }
-
-      // This will be null if we encountered an already handled error:
-      const response = await tryToMakeApiCall();
-      if (response === null) return;
-
-      // If we get here, we should have a valid GameState object:
-      const tryToMakeGameState = async () => {
-        try {
-          const rawResult = await response.json();
-          const stamped = gameStateAgent.stamp(rawResult);
-          setGameState(stamped);
-          setUnexpectedError(false);
-          return;
-        } catch {
-          setUnexpectedError(true);
-          return;
-        }
-      };
-      return tryToMakeGameState();
+      return false;
     },
-    [apiCall]
+    [getNewSession, getState]
   );
 
-  /**
-   * Checks if we are already making an API request. If not, makes an API
-   * request to the server. Otherwise throws.
-   */
-  const apiCallWithGameState = useCallback(
-    async (params: ApiCallParams) => {
-      if (isMakingRequest.current) {
-        throw new AlreadyRequestingApiError();
-      }
-      isMakingRequest.current = true;
-      try {
-        const response = await apiCallWithGameStateImpl(params);
-        isMakingRequest.current = false;
-        return response;
-      } catch(e) {
-        isMakingRequest.current = false;
-        throw e;
-      }
-    },
-    [apiCallWithGameStateImpl]
+  const gameStateApiCallWithRetry = useMemo(
+    () => apiCallFactory(gameStateProcesssor, gameStateHandler),
+    [apiCallFactory, gameStateHandler]
   );
 
-  const state = useCallback(
-    () => apiCallWithGameState(getStateParams),
-    [apiCallWithGameState]
-  );
-
-  const apiPostWithGameState = async (route: string, bodyContent?: object) => {
-    return apiCallWithGameState({
+  const apiPostParams = (
+    route: string, bodyContent?: object
+  ): ApiCallParams => {
+    return {
       route: route,
       method: RequestMethod.POST,
       headers: bodyContent ? {
@@ -332,29 +311,43 @@ export const useApi = () => {
       body: bodyContent
         ? JSON.stringify(mapKeys(bodyContent, (_, key) => snakeCase(key)))
         : undefined
-    });
+    }
   };
 
+  const gameStateApiPostWithRetry = (route: string, bodyContent?: object) => {
+    const params = apiPostParams(route, bodyContent);
+    return gameStateApiCallWithRetry(params);
+  };
+
+  const state = useCallback(
+    () => gameStateApiCallWithRetry(getStateParams),
+    [gameStateApiCallWithRetry]
+  );
+
   const apply = (action: Nullable<ActionInterface>) => (
-    apiPostWithGameState('apply', action)
+    gameStateApiPostWithRetry('apply', action)
   );
 
   const setHand = (hand: Array<number | null>) => (
-    apiPostWithGameState('set_hand', { hand })
+    gameStateApiPostWithRetry('set-hand', { hand })
   );
 
   const setBoard = (board: Array<number | null>) => (
-    apiPostWithGameState('set_board', { board })
+    gameStateApiPostWithRetry('set-board', { board })
   );
 
-  const newHand = () => apiPostWithGameState('new_hand');
+  const newHand = () => gameStateApiPostWithRetry('new-hand');
 
   const reset = (
     params: {
       stack: number[], button: number, fishbaitSeat: number,
       playerNames: string[], bigBlind: number, smallBlind: number,
     }
-  ) => apiPostWithGameState('reset', params);
+  ) => gameStateApiPostWithRetry('reset', params);
+
+  const joinEmailList = (email: string) => (
+    defaultApiCall(apiPostParams('join-email-list', { email }))
+  );
 
   useEffect(() => { state() }, [state]);
 
@@ -373,6 +366,8 @@ export const useApi = () => {
     newHand,
     /** Resets the game */
     reset,
+    /** Adds the user to our email list */
+    joinEmailList,
 
     /** Variables *************************************************************/
 
@@ -387,3 +382,43 @@ export const useApi = () => {
   };
 };
 export type Api = ReturnType<typeof useApi>;
+
+/** Hook to keep track of if a React component is mounted */
+const useMountedState = () => {
+  const mountedRef = useRef(false);
+  const isMounted = useCallback(() => mountedRef.current, []);
+  useEffect(
+    () => {
+      mountedRef.current = true;
+      return () => {
+        mountedRef.current = false;
+      };
+    },
+    []
+  );
+  return isMounted
+};
+
+/**
+ * This hook will return a promise that only resolves if the component in which
+ * it's contained is mounted. Needed for API callbacks that modify component
+ * state.
+ */
+export const useSafeAsync = () => {
+  const isMounted = useMountedState();
+  const safeAsync = useCallback(
+    async <T>(promise: Promise<T>) => {
+      return new Promise<T>(
+        (resolve) => {
+          promise.then(
+            (value) => {
+              if (isMounted()) resolve(value);
+            }
+          );
+        }
+      );
+    },
+    [isMounted]
+  );
+  return safeAsync
+}
