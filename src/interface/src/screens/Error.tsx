@@ -6,7 +6,7 @@ import { Api, useSafeAsync } from 'utils/api';
 
 interface ErrorInterface {
   api: Api,
-  initialMessages: string[],
+  initialMessages: JSX.Element[],
   displayEmailForm: boolean,
 }
 
@@ -30,7 +30,7 @@ export const Error: React.FC<ErrorInterface> = (
     setSubmitEnabled(false);
     safeAsync(api.joinEmailList(email)).then(() => {
       setDisplayForm(false);
-      setMessages(['Thank you! I hope to get back to you shortly.']);
+      setMessages([<>Thank you! I hope to get back to you shortly.</>]);
     });
   }
 

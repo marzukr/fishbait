@@ -6,6 +6,7 @@ import { Game } from 'screens/Game';
 import { Settings } from 'screens/Settings';
 import { Error } from 'screens/Error';
 import { useApi } from 'utils/api';
+import { DiscordButton } from 'components/DiscordButton';
 
 enum AppError {
   CONNECTION_ISSUE = 'connectionIssue',
@@ -24,10 +25,18 @@ export const App: React.FC = () => {
 
   if (!api.canConnect) {
     const serverDownMessages = [
-      `We are having trouble connecting to Fishbait. Your internet connection
-      might be down.`,
-      `If your internet is working, then Fishbait might have gotten tilted. If
-      this issue persists, please contact fishbait@marzuk.io for support.`
+      <>
+        We are unable to connect to Fishbait. Your internet connection might be
+        down.
+      </>,
+      <>
+        If your internet is working, then Fishbait might have gotten tilted.
+      </>,
+      <>
+        {'If this issue persists, please message us on the official '}
+        <DiscordButton />{' server. You can also contact '}
+        <a href='mailto:fishbait@marzuk.io'>fishbait@marzuk.io</a>
+      </>
     ];
     return (
       <Error
@@ -36,11 +45,16 @@ export const App: React.FC = () => {
     );
   } else if (api.isServerFull) {
     const serverFullMessages = [
-      `Hi there! I'm Fishbait—an AI agent designed to play poker :)`,
-      `Although I'd love to play some hands with you, my CPUs are at maximum
-      capacity.`,
-      `Come back in a few hours. I should have a chance to rest before then.`,
-      `I can also notify you when I upgrade my CPUs:`,
+      <>Hi there! I'm Fishbait—an AI agent designed to play poker :)</>,
+      <>
+        Although I'd love to play some hands with you, my CPUs are at maximum
+        capacity.
+      </>,
+      <>
+        {'If you want the latest updates on my capacity, join our '}
+        <DiscordButton /> server.
+      </>,
+      <>I can also update you via email:</>,
     ];
     return (
       <Error
@@ -49,9 +63,15 @@ export const App: React.FC = () => {
     );
   } else if (api.unexpectedError) {
     const unexpectedErrorMessages = [
-      `We have encountered an unexpected error. Refreshing the page or using a
-      different browser will probably resolve this.`,
-      `If this issue persists, please contact fishbait@marzuk.io for support.`
+      <>
+        We have encountered an unexpected error. Refreshing the page or using a
+        different web browser will probably resolve this.
+      </>,
+      <>
+        {'If this issue persists, please message us on the official '}
+        <DiscordButton />{' server. You can also contact '}
+        <a href='mailto:fishbait@marzuk.io'>fishbait@marzuk.io</a>
+      </>
     ];
     return (
       <Error
