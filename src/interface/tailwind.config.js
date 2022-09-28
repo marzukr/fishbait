@@ -11,7 +11,8 @@ module.exports = {
       colors: {
         green: {
           550: '#13B95B',
-        }
+        },
+        discord: '#5865F2',
       },
       fontFamily: {
         sans: ['Readex Pro', 'sans-serif'],

@@ -24,8 +24,10 @@
   },
   "scripts": {
     "start-frontend": "react-scripts start",
-    "start-api": "FLASK_ENV=development $($VENV_PY api/app.py)",
-    "start": "concurrently -k -n frontend,api \"npm:start-frontend\" \"npm:start-api\"",
+    "start-api": "$($VENV_BIN/flask --app api/app.py run)",
+    "start-depot": "$($VENV_BIN/python api/depot.py)",
+    "start-backend": "concurrently -k -n depot,api \"npm:start-depot\" \"npm:start-api\"",
+    "start": "concurrently -k -n frontend,backend \"npm:start-frontend\" \"npm:start-backend\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

@@ -2,8 +2,9 @@
 
 '''The messenger between the python API and the fishbait AI'''
 
+from abc import abstractmethod, ABC
 from typing import (
-  Callable, Concatenate, Dict, Generic, List, Literal, TypedDict, Optional,
+  Any, Callable, Concatenate, Dict, Generic, List, Literal, TypedDict, Optional,
   TypeVar, ParamSpec, Type
 )
 from dataclasses import asdict, dataclass, field
@@ -413,10 +414,56 @@ class PigeonState:
     self._set_can_muck()
 
 
-T = TypeVar('T')
-P = ParamSpec('P')
+class PigeonInterface(ABC):
+  '''Interface for a Pigeon's public functions'''
 
-class Pigeon:
+  @abstractmethod
+  def reset(
+    self, stacks: List[int], button: int, big_blind: int, small_blind: int,
+    fishbait_seat: int, player_names: List[str]
+  ) -> None:
+    '''Resets fishbait to a state with the given parameters.
+
+    Args:
+      stacks: A list of the stack size of each player.
+      button: Seat number of the button.
+      big_blind: Size of the big blind in number of chips.
+      small_blind: Size of the small blind in number of chips.
+      fishbait_seat: Seat number of fishbait.
+      player_names: A list of names for each player.
+    '''
+    raise NotImplementedError()
+
+  @abstractmethod
+  def set_hand(self, hand: List[Optional[int]]) -> None:
+    '''Sets the hand of the player who currently needs a card.
+
+    Args:
+      hand: List of cards to set the given player's hand to. Passing None for
+          both cards mucks the player.
+    '''
+    raise NotImplementedError()
+
+  @abstractmethod
+  def apply(self, action: Action, size: int = 0) -> None:
+    '''Applies the given action to the current acting player.'''
+    raise NotImplementedError()
+
+  @abstractmethod
+  def set_board(self, board: List[int]) -> None:
+    raise NotImplementedError()
+
+  @abstractmethod
+  def state_dict(self) -> Dict[str, Any]:
+    '''Returns the current state of the game as a dictionary'''
+    raise NotImplementedError()
+
+  @abstractmethod
+  def new_hand(self) -> None:
+    raise NotImplementedError()
+
+T = TypeVar('T')
+class Pigeon(PigeonInterface):
   '''Sends messages between python clients and the fishbait C++ AI.'''
 
   def __init__(self):
@@ -476,16 +523,6 @@ class Pigeon:
     self, stacks: List[int], button: int, big_blind: int, small_blind: int,
     fishbait_seat: int, player_names: List[str]
   ):
-    '''Resets fishbait to a state with the given parameters.
-
-    Args:
-      stacks: A list of the stack size of each player.
-      button: Seat number of the button.
-      big_blind: Size of the big blind in number of chips.
-      small_blind: Size of the small blind in number of chips.
-      fishbait_seat: Seat number of fishbait.
-      player_names: A list of names for each player.
-    '''
     stacks = (Chips * settings.PLAYERS)(*stacks)
     commander_reset(self._commander, stacks, button, big_blind, small_blind,
                     fishbait_seat)
@@ -494,12 +531,6 @@ class Pigeon:
 
   @_AutoAdvance
   def set_hand(self, hand: List[Optional[int]]):
-    '''Sets the hand of the player who currently needs a card.
-
-    Args:
-      hand: List of cards to set the given player's hand to. Passing None for
-          both cards mucks the player.
-    '''
     if hand == [None] * settings.HAND_CARDS:
       hand = [0] * settings.HAND_CARDS
     hand = (ISOCard * settings.HAND_CARDS)(*hand)
@@ -508,7 +539,6 @@ class Pigeon:
 
   @_AutoAdvance
   def apply(self, action: Action, size: int = 0):
-    '''Applies the given action to the current acting player.'''
     can_check = self._state.needed_to_call == 0
     if action == Action.CHECK and not can_check:
       raise ValueError('The currently acting player cannot check.')
@@ -530,7 +560,6 @@ class Pigeon:
     commander_set_board(self._commander, board)
 
   def state_dict(self):
-    '''Returns the current state of the game as a dictionary'''
     return asdict(self._state)
 
   def new_hand(self):

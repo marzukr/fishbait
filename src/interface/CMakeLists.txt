@@ -75,14 +75,12 @@ add_custom_target(interface ALL
 file(WRITE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/interface.sh
      "#!/bin/sh\n"
      "cd ${CMAKE_CURRENT_SOURCE_DIR}\n"
-     "export VENV_PY=${CMAKE_CURRENT_BINARY_DIR}/venv/bin/python\n"
-     "if [ \"$1\" = \"frontend\" ]; then\n"
-     "  yarn start-frontend\n"
-     "elif [ \"$1\" = \"backend\" ]; then\n"
-     "  yarn start-api\n"
-     "else\n"
+     "export VENV_BIN=${CMAKE_CURRENT_BINARY_DIR}/venv/bin\n"
+     "if [ -z \"$1\" ]; then\n"
      "  yarn start\n"
-     "fi"
+     "else\n"
+     "  eval \"yarn start-$1\"\n"
+     "fi\n"
      )
 file(CHMOD ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/interface.sh
      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE
