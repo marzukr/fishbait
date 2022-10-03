@@ -39,6 +39,9 @@ const actionInterfaceAgent = objectAgent({
 });
 export type ActionInterface = Stamped<typeof actionInterfaceAgent>;
 
+const cardAgent = nullable(stringAgent);
+export type CardT = Stamped<typeof cardAgent>;
+
 /**
  * A class that mirrors PigeonState on the backend. It is received from the
  * backend and is used to store the game state on the frontend.
@@ -97,13 +100,13 @@ const gameStateAgent = unsnakeAgent(objectAgent({
       if (isEqual(val, [null, null])) return [null, null];
       return val.map(c => c ? isoToAsciiString[c] : null);
     },
-    nullable(arrayAgent(nullable(stringAgent)))
+    nullable(arrayAgent(cardAgent))
   )),
   /** The cards on the public board. Null if we don't know the card yet. */
   board: arrayAgent(conversionAgent(
     nullable(numberAgent),
     (c) => c ? isoToAsciiString[c] : null,
-    nullable(stringAgent)
+    cardAgent
   )),
   /** Which player number fishbait is */
   fishbaitSeat: numberAgent,

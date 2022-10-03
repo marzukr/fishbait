@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <memory>
+#include <string>
 #include <utility>
 
 #include "blueprint/hyperparameters.h"
@@ -21,6 +23,18 @@ template class Commander<hparam::kPlayers, hparam::kActions, ClusterTable>;
 using CommanderT = Commander<hparam::kPlayers, hparam::kActions, ClusterTable>;
 template struct NodeSnapshot<hparam::kPlayers>;
 using NodeSnapshotT = NodeSnapshot<hparam::kPlayers>;
+
+std::unique_ptr<std::string> error_message = nullptr;
+void ClearError() {
+  error_message = nullptr;
+}
+const char* CheckError() {
+  if (!error_message) return nullptr;
+  return error_message.get()->c_str();
+}
+void HandleError(const std::exception& e) {
+  error_message = std::make_unique<std::string>(e.what());
+}
 
 /*
   @brief Creates a new Commander from the given Average strategy file.
@@ -48,36 +62,62 @@ void CommanderDelete(CommanderT* c) {
   @param small_blind Size of the small blind in number of chips.
   @param fishbait_seat Seat number of fishbait.
 */
-void CommanderReset(CommanderT* c, Chips stacks[3], PlayerId button,
-                    Chips big_blind, Chips small_blind,
-                    PlayerId fishbait_seat) {
-  std::array<Chips, hparam::kPlayers> stack_arr;
-  std::copy_n(stacks, hparam::kPlayers, stack_arr.begin());
-  Node<hparam::kPlayers> start_state{stack_arr, button, big_blind, small_blind};
-  c->Reset(start_state, fishbait_seat);
+void CommanderReset(
+  CommanderT* c, Chips stacks[3], PlayerId button, Chips big_blind,
+  Chips small_blind, PlayerId fishbait_seat
+) {
+  try {
+    std::array<Chips, hparam::kPlayers> stack_arr;
+    std::copy_n(stacks, hparam::kPlayers, stack_arr.begin());
+    Node<hparam::kPlayers> start_state{
+      stack_arr, button, big_blind, small_blind
+    };
+    c->Reset(start_state, fishbait_seat);
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 /* @brief Deals the given player the given hand. */
-void CommanderSetHand(CommanderT* c, PlayerId player,
-                      ISO_Card hand[kHandCards]) {
-  Hand<ISO_Card> player_hand;
-  std::copy_n(hand, player_hand.size(), player_hand.begin());
-  c->SetHand(player, player_hand);
+void CommanderSetHand(
+  CommanderT* c, PlayerId player, ISO_Card hand[kHandCards]
+) {
+  try {
+    Hand<ISO_Card> player_hand;
+    std::copy_n(hand, player_hand.size(), player_hand.begin());
+    c->SetHand(player, player_hand);
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 /* @brief Proceeds play to the next round. */
 void CommanderProceedPlay(CommanderT* c) {
-  c->ProceedPlay();
+  try {
+    c->ProceedPlay();
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 /* @brief Get the current state of the game. */
 NodeSnapshotT CommanderState(CommanderT* c) {
-  return c->State().Snapshot();
+  try {
+    return c->State().Snapshot();
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
+  return {};
 }
 
 /* @brief Returns fishbait's player id. */
 PlayerId CommanderFishbaitSeat(CommanderT* c) {
-  return c->fishbait_seat();
+  try {
+    return c->fishbait_seat();
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
+  return 0;
 }
 
 struct ActionStruct {
@@ -87,27 +127,48 @@ struct ActionStruct {
 };
 
 ActionStruct CommanderQuery(CommanderT* c) {
-  bool can_check = c->State().NeededToCall() == 0;
-  std::pair fish_act = c->Query();
-  return { fish_act.first, fish_act.second, can_check };
+  try {
+    bool can_check = c->State().NeededToCall() == 0;
+    std::pair fish_act = c->Query();
+    return { fish_act.first, fish_act.second, can_check };
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
+  return {};
 }
 
 void CommanderApply(CommanderT* c, Action play, Chips size) {
-  c->Apply(play, size);
+  try {
+    c->Apply(play, size);
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 void CommanderSetBoard(CommanderT* c, ISO_Card board[kBoardCards]) {
-  BoardArray<ISO_Card> board_arr;
-  std::copy_n(board, kBoardCards, board_arr.begin());
-  c->SetBoard(board_arr);
+  try {
+    BoardArray<ISO_Card> board_arr;
+    std::copy_n(board, kBoardCards, board_arr.begin());
+    c->SetBoard(board_arr);
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 void CommanderAwardPot(CommanderT* c) {
-  c->AwardPot();
+  try {
+    c->AwardPot();
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 void CommanderNewHand(CommanderT* c) {
-  c->NewHand();
+  try {
+    c->NewHand();
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 }  // extern "C"

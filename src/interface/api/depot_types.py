@@ -73,7 +73,15 @@ class PigeonProxy(PigeonInterface):
     def execute(session_id: str, fn_name: str, *args, **kwargs):
       revere = sessions[session_id].revere
       fn = getattr(revere, fn_name)
-      return fn(*args, **kwargs)
+      try:
+        result = fn(*args, **kwargs)
+      except:
+        # We should not get an error from Pigeon. If we do, something has gone
+        # horribly wrong and we need to delete this session to preserve the
+        # integrity of the server:
+        sessions.pop(session_id)
+        raise
+      return result
 
     def __get__(self, obj, objtype=None):
       def wrapped_send(*args, **kwargs):

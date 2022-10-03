@@ -4,12 +4,11 @@
 
 from abc import abstractmethod, ABC
 from typing import (
-  Any, Callable, Concatenate, Dict, Generic, List, Literal, TypedDict, Optional,
-  TypeVar, ParamSpec, Type
+  Any, Callable, Concatenate, Dict, List, Literal, TypedDict, Optional, TypeVar,
+  ParamSpec, Type, Generic
 )
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-
 from ctypes import cdll
 from ctypes import (
   Structure,
@@ -22,6 +21,8 @@ from ctypes import (
 )
 
 import settings
+import props
+from error import InvalidStateTransitionError
 
 
 lib = cdll.LoadLibrary(settings.RELAY_LIB_LOCATION)
@@ -75,13 +76,6 @@ class NodeSnapshot(Structure):
     return mapping[self.round]
 
 
-class Action(str, Enum):
-  FOLD = 'Fold'
-  CHECK = 'Check'
-  CALL = 'Call'
-  BET = 'Bet'
-  ALL_IN = 'All In'
-
 class ActionStruct(Structure):
   '''A ctypes Structure for the C++ ActionStruct struct in commander.cc'''
   _fields_ = [
@@ -90,96 +84,128 @@ class ActionStruct(Structure):
     ('could_check', c_bool)
   ]
 
-  class ActionDict(TypedDict):
-    action: Action
-    size: int
-
-  def to_dict(self) -> ActionDict:
-    mapping: Dict[int, Literal['Check/Call'] | Action] = {
-      0: Action.FOLD, 1: 'Check/Call', 2: Action.BET, 3: Action.ALL_IN
+  def to_props(self) -> props.ActionProps:
+    mapping: Dict[int, Literal['Check/Call'] | props.ActionType] = {
+      0: props.ActionType.FOLD,
+      1: 'Check/Call',
+      2: props.ActionType.BET,
+      3: props.ActionType.ALL_IN
     }
     action = mapping[self.action]
     size = self.size
     if action == 'Check/Call':
       if self.could_check:
-        action = Action.CHECK
+        action = props.ActionType.CHECK
       else:
-        action = Action.CALL
-    return ActionStruct.ActionDict(action=action, size=size)
+        action = props.ActionType.CALL
+    return props.ActionProps(dict(action=action, size=size))
 
-
-R = TypeVar('R')
-def wrap_function(funcname: str, restype: Type[R]):
-  func: Callable[[], R] = getattr(lib, funcname)
-  func.restype = restype if restype is not type(None) else None
-  func.argtypes = []
-  return func
 
 A = TypeVar('A')
-P = ParamSpec('P')
-def add_arg(argtype: Type[A], func: Callable[P, R]):
-  n_func: Callable[Concatenate[A, P], R] = func
-  n_func.argtypes = [argtype] + n_func.argtypes
-  return n_func
+class LibArg(Generic[A]):
+  def __init__(self, arg: Type[A]):
+    self.arg = arg
 
-commander_new = (
-  add_arg(c_char_p,
-  wrap_function('CommanderNew', restype=CommanderPtr)
-))
-commander_delete = (
-  add_arg(CommanderPtr,
-  wrap_function('CommanderDelete', restype=type(None))
-))
+R = TypeVar('R')
+class LibRet(Generic[R]):
+  def __init__(self, ret: Type[R]):
+    self.ret = ret
+
+P = ParamSpec('P')
+S = TypeVar('S')
+class LibFn(Generic[P, R]):
+  '''Wraps ctypes functions with the appropriate types'''
+
+  def __init__(self, func: Callable[P, R], argtypes: List, restype):
+    self.func: Any = func
+
+    self.argtypes = argtypes
+    self.func.argtypes = self.argtypes
+
+    self.restype = restype
+    self.func.restype = self.restype
+
+  @classmethod
+  def name(cls, name: str):
+    func = getattr(lib, name)
+    return LibFn[[], None](func, [], None)
+
+  @staticmethod
+  def _clear_error():
+    clearer = lib.ClearError
+    clearer.argtypes = []
+    clearer.restype = None
+    clearer()
+
+  @staticmethod
+  def _check_error() -> bytes | None:
+    checker = lib.CheckError
+    checker.argtypes = []
+    checker.restype = c_char_p
+    check_result = checker()
+    return check_result
+
+  def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+    self._clear_error()
+    result = self.func(*args, **kwargs)
+    error = self._check_error()
+    if error is not None:
+      error_msg = error.decode('utf-8')
+      raise InvalidStateTransitionError(error_msg)
+    return result
+
+  def arg(self, arg: Type[A]):
+    new_arg_fn: Callable[Concatenate[A, P], R] = self.func
+    new_argtypes = [arg] + self.argtypes
+    return LibFn[Concatenate[A, P], R](
+      new_arg_fn, new_argtypes, self.restype  # type: ignore
+    )
+
+  def ret(self, ret: Type[S]):
+    new_res_fn: Callable[P, S] = self.func
+    return LibFn[P, S](new_res_fn, self.argtypes, ret)
+
+# Note: arguments here are in reverse order
+commander_new = LibFn.name('CommanderNew').ret(CommanderPtr).arg(c_char_p)
+commander_delete = LibFn.name('CommanderDelete').arg(CommanderPtr)
 commander_reset = (
-  add_arg(CommanderPtr,
-  add_arg(Chips * settings.PLAYERS,
-  add_arg(PlayerId,
-  add_arg(Chips,
-  add_arg(Chips,
-  add_arg(PlayerId,
-  wrap_function('CommanderReset', restype=type(None))
-)))))))
+  LibFn.name('CommanderReset')
+  .arg(PlayerId)
+  .arg(Chips)
+  .arg(Chips)
+  .arg(PlayerId)
+  .arg(Chips * settings.PLAYERS)
+  .arg(CommanderPtr)
+)
 commander_set_hand = (
-  add_arg(CommanderPtr,
-  add_arg(PlayerId,
-  add_arg(ISOCard * settings.HAND_CARDS,
-  wrap_function('CommanderSetHand', restype=type(None))
-))))
-commander_proceed_play = (
-  add_arg(CommanderPtr,
-  wrap_function('CommanderProceedPlay', restype=type(None))
-))
+  LibFn.name('CommanderSetHand')
+  .arg(ISOCard * settings.HAND_CARDS)
+  .arg(PlayerId)
+  .arg(CommanderPtr)
+)
+commander_proceed_play = LibFn.name('CommanderProceedPlay').arg(CommanderPtr)
 commander_state = (
-  add_arg(CommanderPtr,
-  wrap_function('CommanderState', restype=NodeSnapshot)
-))
+  LibFn.name('CommanderState').ret(NodeSnapshot).arg(CommanderPtr)
+)
 commander_fishbait_seat = (
-  add_arg(CommanderPtr,
-  wrap_function('CommanderFishbaitSeat', restype=PlayerId)
-))
+  LibFn.name('CommanderFishbaitSeat').ret(PlayerId).arg(CommanderPtr)
+)
 commander_query = (
-  add_arg(CommanderPtr,
-  wrap_function('CommanderQuery', restype=ActionStruct)
-))
+  LibFn.name('CommanderQuery').ret(ActionStruct).arg(CommanderPtr)
+)
 commander_apply = (
-  add_arg(CommanderPtr,
-  add_arg(ActionCode,
-  add_arg(Chips,
-  wrap_function('CommanderApply', restype=type(None))
-))))
+  LibFn.name('CommanderApply')
+  .arg(Chips)
+  .arg(ActionCode)
+  .arg(CommanderPtr)
+)
 commander_set_board = (
-  add_arg(CommanderPtr,
-  add_arg(ISOCard * settings.BOARD_CARDS,
-  wrap_function('CommanderSetBoard', restype=type(None))
-)))
-commander_award_pot = (
-  add_arg(CommanderPtr,
-  wrap_function('CommanderAwardPot', restype=type(None))
-))
-commander_new_hand = (
-  add_arg(CommanderPtr,
-  wrap_function('CommanderNewHand', restype=type(None))
-))
+  LibFn.name('CommanderSetBoard')
+  .arg(ISOCard * settings.BOARD_CARDS)
+  .arg(CommanderPtr)
+)
+commander_award_pot = LibFn.name('CommanderAwardPot').arg(CommanderPtr)
+commander_new_hand = LibFn.name('CommanderNewHand').arg(CommanderPtr)
 
 
 @dataclass
@@ -278,7 +304,7 @@ class PigeonState:
     default_factory=lambda: [False] * settings.PLAYERS
   )
   '''If each player's hand is known or not'''
-  last_action: List[Optional[ActionStruct.ActionDict]] = field(
+  last_action: List[Optional[props.ActionProps]] = field(
     default_factory=lambda: [None] * settings.PLAYERS
   )
   '''What each player's last action was'''
@@ -435,17 +461,17 @@ class PigeonInterface(ABC):
     raise NotImplementedError()
 
   @abstractmethod
-  def set_hand(self, hand: List[Optional[int]]) -> None:
+  def set_hand(self, hand: props.Hand) -> None:
     '''Sets the hand of the player who currently needs a card.
 
     Args:
-      hand: List of cards to set the given player's hand to. Passing None for
+      hand: List of cards to set the given player's hand to. Passing 0 for
           both cards mucks the player.
     '''
     raise NotImplementedError()
 
   @abstractmethod
-  def apply(self, action: Action, size: int = 0) -> None:
+  def apply(self, action: props.ActionType, size: int = 0) -> None:
     '''Applies the given action to the current acting player.'''
     raise NotImplementedError()
 
@@ -475,16 +501,11 @@ class Pigeon(PigeonInterface):
   def __del__(self):
     commander_delete(self._commander)
 
-  class _AutoAdvance(Generic[P, T]):
-    '''Decorator to advance the game after calling the given function'''
-
-    def __init__(self, fn: Callable[Concatenate['Pigeon', P], T]):
-      self._fn = fn
-
-    def __call__(
-      self, pigeon_obj: 'Pigeon', *args: P.args, **kwargs: P.kwargs
-    ) -> T:
-      result = self._fn(pigeon_obj, *args, **kwargs)
+  @staticmethod
+  def _auto_advance(fn: Callable[Concatenate['Pigeon', P], T]):
+    # pylint: disable=protected-access
+    def auto_advancer(pigeon_obj: 'Pigeon', *args: P.args, **kwargs: P.kwargs):
+      result = fn(pigeon_obj, *args, **kwargs)
       pigeon_obj._update_state()
 
       state = pigeon_obj._state
@@ -513,11 +534,7 @@ class Pigeon(PigeonInterface):
         pigeon_obj._award_pot()
 
       return result
-
-    def __get__(self, pigeon_obj: 'Pigeon', _):
-      def partial(*args: P.args, **kwargs: P.kwargs) -> T:
-        return self(pigeon_obj, *args, **kwargs)
-      return partial
+    return auto_advancer
 
   def reset(
     self, stacks: List[int], button: int, big_blind: int, small_blind: int,
@@ -529,30 +546,35 @@ class Pigeon(PigeonInterface):
     self._state = PigeonState(player_names=player_names)
     self._update_state()
 
-  @_AutoAdvance
-  def set_hand(self, hand: List[Optional[int]]):
-    if hand == [None] * settings.HAND_CARDS:
-      hand = [0] * settings.HAND_CARDS
-    hand = (ISOCard * settings.HAND_CARDS)(*hand)
-    commander_set_hand(self._commander, self._state.player_needs_hand, hand)
+  @_auto_advance
+  def set_hand(self, hand: props.Hand):
+    iso_hand = (ISOCard * settings.HAND_CARDS)(*hand)
+    if self._state.player_needs_hand is None:
+      raise InvalidStateTransitionError('No player needs a hand right now')
+    commander_set_hand(self._commander, self._state.player_needs_hand, iso_hand)
     self._state.known_cards[self._state.player_needs_hand] = True
 
-  @_AutoAdvance
-  def apply(self, action: Action, size: int = 0):
+  @_auto_advance
+  def apply(self, action: props.ActionType, size: int = 0):
     can_check = self._state.needed_to_call == 0
-    if action == Action.CHECK and not can_check:
-      raise ValueError('The currently acting player cannot check.')
+    if action == props.ActionType.CHECK and not can_check:
+      raise InvalidStateTransitionError(
+        'The currently acting player cannot check.'
+      )
     action_map = {
-      Action.FOLD: 0, Action.CHECK: 1, Action.CALL: 1, Action.BET: 2,
-      Action.ALL_IN: 3
+      props.ActionType.FOLD: 0,
+      props.ActionType.CHECK: 1,
+      props.ActionType.CALL: 1,
+      props.ActionType.BET: 2,
+      props.ActionType.ALL_IN: 3,
     }
     action_code = action_map[action]
     commander_apply(self._commander, action_code, size)
     self._state.last_action[self._state.acting_player] = (
-      ActionStruct(action_code, size, can_check).to_dict()
+      ActionStruct(action_code, size, can_check).to_props()
     )
 
-  @_AutoAdvance
+  @_auto_advance
   def set_board(self, board: List[int]):
     self._state.known_board = [card is not None for card in board]
     board = [0 if card is None else card for card in board]
@@ -569,7 +591,7 @@ class Pigeon(PigeonInterface):
     self._state.known_board = [False] * settings.BOARD_CARDS
     self._update_state()
 
-  @_AutoAdvance
+  @_auto_advance
   def _proceed_play(self):
     '''Proceeds play to the next round.'''
     commander_proceed_play(self._commander)
@@ -582,10 +604,10 @@ class Pigeon(PigeonInterface):
     '''
     self._state.pull_from_commander(self._commander)
 
-  @_AutoAdvance
+  @_auto_advance
   def _query(self):
     '''Asks fishbait to decide on an action and take it.'''
-    action_taken = commander_query(self._commander).to_dict()
+    action_taken = commander_query(self._commander).to_props()
     fishbait_seat = commander_fishbait_seat(self._commander)
     self._state.last_action[fishbait_seat] = action_taken
 

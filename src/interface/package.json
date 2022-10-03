@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start-frontend": "react-scripts start",
-    "start-api": "$($VENV_BIN/flask --app api/app.py run)",
+    "start-api": "$($VENV_BIN/flask --app api/app.py --debug run)",
     "start-depot": "$($VENV_BIN/python api/depot.py)",
     "start-backend": "concurrently -k -n depot,api \"npm:start-depot\" \"npm:start-api\"",
     "start": "concurrently -k -n frontend,backend \"npm:start-frontend\" \"npm:start-backend\"",

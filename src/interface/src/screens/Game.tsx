@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 
 import GameInput from 'components/GameInput';
-import CardBoard from 'components/CardBoard';
+import { CardBoard } from 'components/CardBoard';
 import BetView from 'components/BetView';
 import { constructCard, asciiStringToIso } from 'utils/hands';
 import {
-  Api, ActionInterface, Action, BoardNeedsCards, useSafeAsync
+  Api, ActionInterface, Action, BoardNeedsCards, useSafeAsync, CardT
 } from 'utils/api';
 import { Nullable } from 'utils/customs';
 
@@ -24,7 +24,6 @@ interface GameProps {
  */
 export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
   // Where an entered hand is written if a hand is being input:
-  type CardT = string | null;
   const [handScratch, setHandScratch] = useState<CardT[]>([null, null]);
 
   // Which card of the hand is being input if applicable:
@@ -46,8 +45,11 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
 
   // Offset of the selected board card being input from the start of the set of
   // board cards being input. For example offset 0 on the turn corresponds to
-  // card 4 on the board:
-  const [selectedBoardOffset, setSelectedBoardOffset] = useState(0);
+  // card 4 on the board. If null, then no card is selected.
+  const [
+    selectedBoardOffset,
+    setSelectedBoardOffset
+  ] = useState<number | null>(0);
 
   const safeAsync = useSafeAsync();
 
@@ -149,7 +151,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
 
   const handleBoardInput = (code: string) => {
     const toBoard = gameState.boardNeedsCards;
-    if (toBoard === null) return;
+    if (toBoard === null || selectedBoardOffset === null) return;
     const idx = toBoard.start + selectedBoardOffset;
     if (code !== 'next') {
       const newCard = constructCard(boardScratch[idx], code);
@@ -169,6 +171,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
         }
       }
       const newIsoBoard = newBoard.map(c => c ? asciiStringToIso[c] : null);
+      setSelectedBoardOffset(null);
       safeAsync(api.setBoard(newIsoBoard)).then(() => {
         setBoardScratch([null, null, null, null, null]);
         setSelectedBoardOffset(0);
@@ -210,6 +213,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
   }
 
   const verifyScratchBoard = (toBoard: BoardNeedsCards) => {
+    if (selectedBoardOffset === null) return false;
     const start = toBoard.start;
     const end = toBoard.end;
     const idx = start + selectedBoardOffset;
@@ -283,18 +287,6 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
       return <GameInput type={'new hand'} handler={callback} disabled={[]}/>
     }
   })();
-  const modifyingBoard = (() => {
-    if (toBoard === null) {
-      return null;
-    } else {
-      return {
-        start: toBoard.start,
-        end: toBoard.end,
-        offset: selectedBoardOffset,
-        scratch: boardScratch,
-      };
-    }
-  })();
   const actingPlayer = gameState.inProgress ? gameState.actingPlayer : null;
 
   return (
@@ -307,17 +299,19 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
           <i className='fas fa-cog'></i>
         </button>
       </div>
-      <CardBoard board={gameState.board} modifyingBoard={modifyingBoard} />
-      <BetView players={gameState.players}
-               playerNames={gameState.playerNames}
-               fishbaitSeat={gameState.fishbaitSeat}
-               button={gameState.button} actingPlayer={actingPlayer}
-               bets={gameState.bets} stack={gameState.stack}
-               neededToCall={neededToCall} pot={gameState.pot}
-               minRaise={minRaise} hands={gameState.hands}
-               folded={gameState.folded} lastAction={gameState.lastAction}
-               modifyingHand={modifyingHand}
-               enteredAction={actionScratch} />
+      <CardBoard
+        board={gameState.board} boardNeedsCards={gameState.boardNeedsCards}
+        offset={selectedBoardOffset} scratch={boardScratch} 
+      />
+      <BetView
+        players={gameState.players} playerNames={gameState.playerNames}
+        fishbaitSeat={gameState.fishbaitSeat} button={gameState.button}
+        actingPlayer={actingPlayer} bets={gameState.bets}
+        stack={gameState.stack} neededToCall={neededToCall} pot={gameState.pot}
+        minRaise={minRaise} hands={gameState.hands} folded={gameState.folded}
+        lastAction={gameState.lastAction} modifyingHand={modifyingHand}
+        enteredAction={actionScratch}
+      />
       {properInput}
     </div>
   );
