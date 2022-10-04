@@ -31,7 +31,6 @@ lib = cdll.LoadLibrary(settings.RELAY_LIB_LOCATION)
 Chips = c_uint32
 PlayerId = c_uint8
 CommanderPtr = c_void_p
-ISOCard = c_uint8
 RoundId = c_uint8
 ActionCode = c_uint8
 
@@ -67,8 +66,8 @@ class NodeSnapshot(Structure):
     ('stack', Chips * settings.PLAYERS),
     ('min_raise', Chips),
     ('needed_to_call', Chips),
-    ('hands', (ISOCard * settings.HAND_CARDS) * settings.PLAYERS),
-    ('board', ISOCard * settings.BOARD_CARDS)
+    ('hands', (props.ISOCard * settings.HAND_CARDS) * settings.PLAYERS),
+    ('board', props.ISOCard * settings.BOARD_CARDS)
   ]
 
   def round_name(self):
@@ -84,7 +83,7 @@ class ActionStruct(Structure):
     ('could_check', c_bool)
   ]
 
-  def to_props(self) -> props.ActionProps:
+  def to_props(self) -> props.ApplyProps:
     mapping: Dict[int, Literal['Check/Call'] | props.ActionType] = {
       0: props.ActionType.FOLD,
       1: 'Check/Call',
@@ -98,7 +97,7 @@ class ActionStruct(Structure):
         action = props.ActionType.CHECK
       else:
         action = props.ActionType.CALL
-    return props.ActionProps(dict(action=action, size=size))
+    return props.ApplyProps(dict(action=action, size=size))
 
 
 A = TypeVar('A')
@@ -179,7 +178,7 @@ commander_reset = (
 )
 commander_set_hand = (
   LibFn.name('CommanderSetHand')
-  .arg(ISOCard * settings.HAND_CARDS)
+  .arg(props.ISOCard * settings.HAND_CARDS)
   .arg(PlayerId)
   .arg(CommanderPtr)
 )
@@ -201,7 +200,7 @@ commander_apply = (
 )
 commander_set_board = (
   LibFn.name('CommanderSetBoard')
-  .arg(ISOCard * settings.BOARD_CARDS)
+  .arg(props.ISOCard * settings.BOARD_CARDS)
   .arg(CommanderPtr)
 )
 commander_award_pot = LibFn.name('CommanderAwardPot').arg(CommanderPtr)
@@ -304,7 +303,7 @@ class PigeonState:
     default_factory=lambda: [False] * settings.PLAYERS
   )
   '''If each player's hand is known or not'''
-  last_action: List[Optional[props.ActionProps]] = field(
+  last_action: List[Optional[props.ApplyProps]] = field(
     default_factory=lambda: [None] * settings.PLAYERS
   )
   '''What each player's last action was'''
@@ -476,7 +475,7 @@ class PigeonInterface(ABC):
     raise NotImplementedError()
 
   @abstractmethod
-  def set_board(self, board: List[int]) -> None:
+  def set_board(self, board: props.Board) -> None:
     raise NotImplementedError()
 
   @abstractmethod
@@ -548,9 +547,9 @@ class Pigeon(PigeonInterface):
 
   @_auto_advance
   def set_hand(self, hand: props.Hand):
-    iso_hand = (ISOCard * settings.HAND_CARDS)(*hand)
     if self._state.player_needs_hand is None:
       raise InvalidStateTransitionError('No player needs a hand right now')
+    iso_hand = hand.c_arr()
     commander_set_hand(self._commander, self._state.player_needs_hand, iso_hand)
     self._state.known_cards[self._state.player_needs_hand] = True
 
@@ -575,11 +574,9 @@ class Pigeon(PigeonInterface):
     )
 
   @_auto_advance
-  def set_board(self, board: List[int]):
+  def set_board(self, board: props.Board):
     self._state.known_board = [card is not None for card in board]
-    board = [0 if card is None else card for card in board]
-    board = (ISOCard * settings.BOARD_CARDS)(*board)
-    commander_set_board(self._commander, board)
+    commander_set_board(self._commander, board.c_arr())
 
   def state_dict(self):
     return asdict(self._state)

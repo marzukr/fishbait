@@ -25,7 +25,7 @@ from error import (
   InvalidEmailError,
   ValidationError,
 )
-from props import SetHandProps, ActionProps
+from props import SetHandProps, ApplyProps, SetBoardProps
 
 app = Flask(__name__)
 depot_server.connect()
@@ -115,15 +115,15 @@ def set_hand(revere: PigeonInterface):
 @app.route('/api/apply', methods=['POST'])
 @session_guard
 def apply(revere: PigeonInterface):
-  action = ActionProps(request.get_json())
+  action = ApplyProps(request.get_json())
   revere.apply(action.action, action.size)
   return revere.state_dict()
 
 @app.route('/api/set-board', methods=['POST'])
 @session_guard
 def set_board(revere: PigeonInterface):
-  data = request.get_json()
-  revere.set_board(data['board'])
+  board = SetBoardProps(request.get_json()).board
+  revere.set_board(board)
   return revere.state_dict()
 
 @app.route('/api/new-hand', methods=['POST'])

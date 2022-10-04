@@ -4,7 +4,8 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Type, Generic, TypeVar
+from typing import Any, Type, Generic, TypeVar
+from ctypes import c_uint8
 
 import settings
 from error import ValidationError
@@ -17,11 +18,15 @@ class BaseProps:
   def __init__(self, candidate_obj) -> None:
     pass
 
-def propclass(custom_props):
+T = TypeVar('T')
+def propclass(custom_props: Type[T]) -> Type[T]:
   '''
   Takes an arbitrary object and attempts to convert it to our type. We do this
   by checking that each property in our type is defined in the arbitrary object,
   and then copying the value over if so.
+
+  This is also a dataclass. Note that with this pattern, all props must be typed
+  as `Prop` so the dataclass picks them up.
   '''
 
   if not issubclass(custom_props, BaseProps):
@@ -48,12 +53,14 @@ def propclass(custom_props):
         )
         raise new_err from exc
 
-  dataclass_props = dataclass(custom_props)
+  # Note: We need set the __init__ method manually here instead of putting it in
+  # BaseProps so that we override the __init__ set by dataclass. We need
+  # dataclass so that we can convert any props objects to dicts with asdict and
+  # put props objects inside other dataclasses (such as PigeonState)
+  dataclass_props: Any = dataclass(custom_props)
   dataclass_props.__init__ = init_fn
   return dataclass_props
 
-
-T = TypeVar('T')
 class Prop(Generic[T]):
   '''
   A descriptor that takes an arbitrary object and attempts to convert it to a
@@ -78,42 +85,70 @@ class Prop(Generic[T]):
 # API specific props and types -------------------------------------------------
 # ------------------------------------------------------------------------------
 
-class Hand(list[int]):
-  '''This class represents a Hand and validates a given object to be a Hand.'''
+ISOCard = c_uint8
+
+class CardSet(list[int | None]):
+  '''
+  This class represents a set of cards and validates a given object to be a set
+  of cards.
+  '''
+
+  SET_SIZE: int | None = None
 
   def __init__(self, requested):
     if not isinstance(requested, list):
       raise ValidationError(f'{requested} is not a list')
 
-    if not len(requested) == settings.HAND_CARDS:
-      raise ValidationError(f'{requested} is not the proper length of a hand')
+    if self.SET_SIZE is None:
+      raise TypeError('attempted to create a CardSet with a None SET_SIZE')
 
-    if all(it is None for it in requested):
-      # If all cards are None, we consider this hand mucked. We then init a Hand
-      # with all cards set to 0 because this is how the C++ code represents
-      # mucked cards.
-      super().__init__([0] * settings.HAND_CARDS)
-      return
+    if not len(requested) == self.SET_SIZE:
+      raise ValidationError(
+        f'{requested} is not the proper length of a {self.__class__.__name__}'
+      )
 
-    if any(not isinstance(item, int) for item in requested):
-      raise ValidationError(f'{requested} is not only ints or only null')
+    if not all(isinstance(item, int | None) for item in requested):
+      raise ValidationError(f'{requested} is not only ints or null')
+
+    defined_cards = [card for card in requested if isinstance(card, int)]
 
     if any(
-      item < 0 or item >= settings.CARDS_IN_DECK
-      for item in requested
+      card < 0 or card >= settings.CARDS_IN_DECK
+      for card in defined_cards
     ):
       raise ValidationError(f'{requested} has an invalid card number')
 
-    if len(set(requested)) != len(requested):
+    if len(set(defined_cards)) != len(defined_cards):
       raise ValidationError(f'{requested} has duplicate cards')
 
     super().__init__(requested)
 
-# Note: with this pattern, all props must be typed as `Prop` so the dataclass
-# picks them up:
+  def c_arr(self):
+    cleaned_list = [c if isinstance(c, int) else 0 for c in self]
+    if self.SET_SIZE is None:
+      raise TypeError('attemped to use a CardSet with a None SET_SIZE')
+    return (ISOCard * self.SET_SIZE)(*cleaned_list)
+
+class Hand(CardSet):
+  '''This class represents a Hand and validates a given object to be a Hand.'''
+
+  SET_SIZE: int | None = settings.HAND_CARDS
+
+  def __init__(self, requested):
+    super().__init__(requested)
+    # If the super init doesn't throw, we know we have a list of 2 unique valid
+    # cards where some or all elements may also be None. We want to narrow this
+    # to confirm that either all the elements are None or all the elements are
+    # ints to verify that this is a valid hand:
+    if not (
+      all(it is None for it in requested)
+      or all(isinstance(it, int) for it in requested)
+    ):
+      raise ValidationError(f'{requested} is not only ints or only null')
+
 @propclass
 class SetHandProps(BaseProps):
-  hand: Prop = Prop(Hand)
+  hand: Prop[Hand] = Prop(Hand)
 
 
 class ActionType(str, Enum):
@@ -137,6 +172,15 @@ class ActionSize(int):
       raise ValidationError(f'{err}') from err
 
 @propclass
-class ActionProps(BaseProps):
-  action: Prop = Prop(ActionType)
-  size: Prop = Prop(ActionSize)
+class ApplyProps(BaseProps):
+  action: Prop[ActionType] = Prop(ActionType)
+  size: Prop[ActionSize] = Prop(ActionSize)
+
+
+class Board(CardSet):
+  '''This class is a Board and validates a given object to be a Board.'''
+  SET_SIZE: int | None = settings.BOARD_CARDS
+
+@propclass
+class SetBoardProps(BaseProps):
+  board: Prop[Board] = Prop(Board)
