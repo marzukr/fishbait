@@ -1,11 +1,12 @@
 [Unit]
-Description=Fishbait Flask API hosted with gunicorn
+Description=Fishbait Game State Depot
+Requires=network.target
 After=network.target
 
 [Service]
 User=ubuntu
 WorkingDirectory=PLACEHOLDER
-ExecStart=PLACEHOLDER -b 127.0.0.1:5000 api.app:app
+ExecStart=PLACEHOLDER api/depot.py
 Restart=always
 
 [Install]
