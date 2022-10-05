@@ -3,9 +3,9 @@
 # setup venv if it doesn't exist
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/venv")
   message(STATUS "Creating python virtual environment")
-  find_package(Python3)
+  find_package(Python3 3.10)
   execute_process(
-    COMMAND ${Python3_EXECUTABLE} "-m" "venv" "venv"
+    COMMAND ${Python3_EXECUTABLE} "-m" "venv" "venv" "--copies"
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     RESULTS_VARIABLE venv_status
     )
@@ -73,8 +73,14 @@ add_custom_target(interface ALL
 
 # create server run script
 file(WRITE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/interface.sh
+     "#!/bin/sh\n"
      "cd ${CMAKE_CURRENT_SOURCE_DIR}\n"
-     "VENV_PY=${CMAKE_CURRENT_BINARY_DIR}/venv/bin/python yarn start"
+     "export VENV_BIN=${CMAKE_CURRENT_BINARY_DIR}/venv/bin\n"
+     "if [ -z \"$1\" ]; then\n"
+     "  yarn start\n"
+     "else\n"
+     "  eval \"yarn start-$1\"\n"
+     "fi\n"
      )
 file(CHMOD ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/interface.sh
      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE

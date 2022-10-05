@@ -2,89 +2,150 @@
 
 """Webserver for the FISHBAIT web interface."""
 
-from flask import Flask, request, abort
-import configparser
-import os
-import sys
-import json
-api_dir = os.path.dirname(__file__)
-relay_dir = os.path.join(api_dir, '../../relay')
-sys.path.append(relay_dir)
-from pigeon import Pigeon  # pylint: disable=wrong-import-position
+from datetime import datetime, timezone
+from multiprocessing.managers import RemoteError
+import re
+from typing import Any
+import logging
 
-config = configparser.ConfigParser()
-config.read('api/config.ini')
+from flask import Flask, request, make_response
+from werkzeug.exceptions import BadRequest
+
+from pigeon import PigeonInterface
+import settings
+from depot_types import (
+  depot_server, TryCreateNewSession, GetSession, SetSession
+)
+import error
+from error import (
+  ApiError,
+  ServerOverloadedError,
+  MissingSessionIdError,
+  UnknownSessionIdError,
+  InvalidEmailError,
+  ValidationError,
+)
+from props import SetHandProps, ApplyProps, SetBoardProps
 
 app = Flask(__name__)
+depot_server.connect()
+log = logging.getLogger(__name__)
 
-strategy_loc = config.get('DEFAULT', 'STRATEGY_LOCATION', fallback=None)
-if strategy_loc is not None:
-  revere = Pigeon(strategy_loc)
-else:
-  raise KeyError('STRATEGY_LOCATION not defined in config.ini')
+def handle_api_error(e: ApiError):
+  return e.flask_tuple()
 
-def authenticate(route):
-  def authenticator():
-    auth_token = request.headers.get('Authorization')
-    if not auth_token:
-      abort(401)
-    if auth_token[:8] != 'Bearer: ':
-      abort(401)
-    if auth_token[8:] != config.get('DEFAULT', 'SECRET_KEY', fallback=None):
-      abort(401)
-    return route()
-  authenticator.__name__ = route.__name__
-  return authenticator
+def handle_remote_error(e: RemoteError):
+  match = re.search(r'error\.([A-z]*?): ((.|\n)*)\n-{75}', f'{e}')
+  if match is None:
+    log.exception(e)
+    raise ApiError('Could not parse depot error') from e
+  error_name, error_msg = match.group(1, 2)
+  error_type = getattr(error, error_name)
+  parsed_error = error_type(error_msg)
+  raise parsed_error from e
+
+def handle_bad_request(e: BadRequest):
+  raise ValidationError(f'{e}') from e
+
+@app.errorhandler(Exception)
+def handle_exceptions(e: Exception):
+  error_handler: Any = None
+  if isinstance(e, ApiError):
+    error_handler = handle_api_error
+  elif isinstance(e, RemoteError):
+    error_handler = handle_remote_error
+  elif isinstance(e, BadRequest):
+    error_handler = handle_bad_request
+  else:
+    log.exception(e)
+    return ApiError().flask_tuple()
+
+  try:
+    return error_handler(e)
+  except Exception as new_exc:  # pylint: disable=broad-except
+    if type(e) is type(new_exc):
+      log.exception(new_exc)
+      rec_er = RecursionError('Could not reduce the encountered error')
+      raise rec_er from new_exc
+    return handle_exceptions(new_exc)
 
 @app.route('/api', methods=['GET'])
 def api_status():
   return 'FISHBAIT API Running'
 
-@app.route('/api/state', methods=['GET'])
-@authenticate
-def state():
-  return json.dumps(revere.state())
+@app.route('/api/new-session', methods=['GET'])
+def new_session():
+  new_session_id = TryCreateNewSession.send()
+  if new_session_id is None:
+    raise ServerOverloadedError()
+  resp = make_response()
+  resp.set_cookie(settings.SESSION_ID_KEY, new_session_id)
+  return resp
 
-@app.route('/api/set_hand', methods=['POST'])
-@authenticate
-def set_hand():
-  data = request.get_json()
-  revere.set_hand(data['hand'])
-  return json.dumps(revere.state())
+def session_guard(route):
+  def guarded_route():
+    session_id = request.cookies.get(settings.SESSION_ID_KEY)
+    if session_id is None:
+      raise MissingSessionIdError()
+
+    session = GetSession.send(session_id)
+    if session is None:
+      raise UnknownSessionIdError()
+
+    session.updated = datetime.now(timezone.utc).timestamp()
+    route_result = route(session.revere)
+    SetSession.send(session_id, session)
+    return route_result
+
+  guarded_route.__name__ = route.__name__
+  return guarded_route
+
+@app.route('/api/state', methods=['GET'])
+@session_guard
+def state(revere: PigeonInterface):
+  return revere.state_dict()
+
+@app.route('/api/set-hand', methods=['POST'])
+@session_guard
+def set_hand(revere: PigeonInterface):
+  hand = SetHandProps(request.get_json()).hand
+  revere.set_hand(hand)
+  return revere.state_dict()
 
 @app.route('/api/apply', methods=['POST'])
-@authenticate
-def apply():
-  data = request.get_json()
-  def parse_size(data):
-    if 'size' in data:
-      if data['size'] is not None:
-        return data['size']
-    return 0
-  size = parse_size(data)
-  revere.apply(data['action'], size)
-  return json.dumps(revere.state())
+@session_guard
+def apply(revere: PigeonInterface):
+  action = ApplyProps(request.get_json())
+  revere.apply(action.action, action.size)
+  return revere.state_dict()
 
-@app.route('/api/set_board', methods=['POST'])
-@authenticate
-def set_board():
-  data = request.get_json()
-  revere.set_board(data['board'])
-  return json.dumps(revere.state())
+@app.route('/api/set-board', methods=['POST'])
+@session_guard
+def set_board(revere: PigeonInterface):
+  board = SetBoardProps(request.get_json()).board
+  revere.set_board(board)
+  return revere.state_dict()
 
-@app.route('/api/new_hand', methods=['POST'])
-@authenticate
-def new_hand():
+@app.route('/api/new-hand', methods=['POST'])
+@session_guard
+def new_hand(revere: PigeonInterface):
   revere.new_hand()
-  return json.dumps(revere.state())
+  return revere.state_dict()
 
 @app.route('/api/reset', methods=['POST'])
-@authenticate
-def reset():
+@session_guard
+def reset(revere: PigeonInterface):
   data = request.get_json()
   revere.reset(data['stack'], data['button'], data['big_blind'],
                data['small_blind'], data['fishbait_seat'], data['player_names'])
-  return json.dumps(revere.state())
+  return revere.state_dict()
 
-if __name__ == '__main__':
-  app.run(debug=True)
+@app.route('/api/join-email-list', methods=['POST'])
+def join_email_list():
+  data = request.get_json()
+  email = data['email']
+  if len(email) > 254 or '\n' in email:
+    raise InvalidEmailError()
+  with open(settings.EMAIL_LIST_LOCATION, 'a', encoding='utf-8') as email_list:
+    email_list.write(f'{email}\n')
+  return make_response()

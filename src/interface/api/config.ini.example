@@ -1,4 +1,0 @@
-[DEFAULT]
-# Set the secret key
-SECRET_KEY = replace_me_in_production
-STRATEGY_LOCATION = ../../build/out/blueprint/dev/blueprint_dev.hdf

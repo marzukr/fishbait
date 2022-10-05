@@ -609,11 +609,9 @@ class Node {
   */
   void AwardPot(SingleRun) {
     VerifyAwardablePot(__func__);
-
-    if (players_left_ == 1) return FoldVictory(folded_);
     std::array<bool, kPlayers> processed;
-    PlayerId players_to_award = PlayersToProcess(processed);
-    if (players_to_award == 1) return FoldVictory(processed);
+    PlayerN players_to_award = AwardTrivialVictory(processed);
+    if (players_to_award == 0) return;
 
     SevenEval::Rank ranks[kPlayers];
     RankPlayers(processed, ranks);
@@ -646,11 +644,9 @@ class Node {
   template <std::size_t kRuns>
   void AwardPot(MultiRun, const MultiBoardArray<ISO_Card, kRuns>& boards) {
     VerifyAwardablePot(__func__);
-
-    if (players_left_ == 1) return FoldVictory(folded_);
     std::array<bool, kPlayers> processed;
-    PlayerId players_to_award = PlayersToProcess(processed);
-    if (players_to_award == 1) return FoldVictory(processed);
+    PlayerN players_to_award = AwardTrivialVictory(processed);
+    if (players_to_award == 0) return;
 
     QuotaT exact_awards[kPlayers]{};
 
@@ -1057,7 +1053,7 @@ class Node {
   }
 
   /*
-    @brief Awards the pot to the singular player that remains.
+    @brief Awards the pot to the singular player that remains not folded.
     
     It is assumed there is only one player left who hasn't folded or mucked
     their cards.
@@ -1071,6 +1067,37 @@ class Node {
     stack_[winner] += pot_;
     pot_ = 0;
     std::fill(bets_.begin(), bets_.end(), 0);
+  }
+
+  /*
+    @brief Awards the pot to the singular player that remains.
+
+    That is, the singular player that is not folded or mucked. If more than one
+    such player exists, we return false. Otherwise we return true. If there is
+    no such player, we throw.
+
+    @param processed An array to write if a player has been processed or not to.
+      We only write to this if we don't award the pot.
+
+    @return The number of players we still need to award. If 0 but we didn't
+      throw, then we already awarded the pot.
+  */
+  PlayerN AwardTrivialVictory(std::array<bool, kPlayers>& processed) {
+    if (players_left_ == 1) {
+      FoldVictory(folded_);
+      return 0;
+    }
+    PlayerId players_to_award = PlayersToProcess(processed);
+    if (players_to_award == 1) {
+      FoldVictory(processed);
+      return 0;
+    } else if (players_to_award == 0) {
+      throw std::logic_error(
+        std::string{__func__} + " called when there are no remaining players "
+        "in the game."
+      );
+    }
+    return players_to_award;
   }
 
   /*

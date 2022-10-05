@@ -1,21 +1,33 @@
 {
-  "name": "interface",
+  "name": "fishbait",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "@types/jest": "^29.0.2",
+    "@types/lodash": "^4.14.185",
+    "@types/node": "^18.7.18",
+    "@types/react": "^18.0.20",
+    "@types/react-dom": "^18.0.6",
+    "autoprefixer": "^10.4.12",
+    "concurrently": "^6.2.1",
+    "lodash": "^4.17.21",
+    "postcss": "^8.4.16",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "4.0.3",
-    "web-vitals": "^1.0.1",
-    "concurrently": "^6.2.1"
+    "react-scripts": "5.0.0",
+    "tailwindcss": "^3.1.8",
+    "typescript": "^4.8.3",
+    "web-vitals": "^1.0.1"
   },
   "scripts": {
     "start-frontend": "react-scripts start",
-    "start-api": "FLASK_ENV=development $($VENV_PY api/app.py)",
-    "start": "concurrently -k -n frontend,api \"npm:start-frontend\" \"npm:start-api\"",
+    "start-api": "$($VENV_BIN/flask --app api/app.py --debug run)",
+    "start-depot": "$($VENV_BIN/python api/depot.py)",
+    "start-backend": "concurrently -k -n depot,api \"npm:start-depot\" \"npm:start-api\"",
+    "start": "concurrently -k -n frontend,backend \"npm:start-frontend\" \"npm:start-backend\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -23,7 +35,8 @@
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest"
+      "react-app/jest",
+      "plugin:react-hooks/recommended"
     ]
   },
   "browserslist": {
