@@ -9,7 +9,7 @@ export const DiscordButton: React.FC = () => {
   return (
     <a
       className={`
-        bg-discord text-white no-underline px-0.5 rounded hover:shadow-md
+        bg-[#5865F2] text-white no-underline px-0.5 rounded hover:shadow-md
         transition-shadow
       `} href={DISCORD_INVITE_LINK} target='_blank' rel='noopener noreferrer'
     >
