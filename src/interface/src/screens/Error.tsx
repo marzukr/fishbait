@@ -10,7 +10,7 @@ interface ErrorInterface {
   displayEmailForm: boolean,
 }
 
-/** This screen is displayed when the server is at capacity. */
+/** This screen is displayed when we encounter an error from the API. */
 export const Error: React.FC<ErrorInterface> = (
   { api, initialMessages, displayEmailForm }
 ) => {
