@@ -25,19 +25,19 @@ from error import (
   InvalidEmailError,
   ValidationError,
 )
-from props import SetHandProps, ApplyProps, SetBoardProps
+from props import SetHandProps, ApplyProps, SetBoardProps, ResetProps
 
 app = Flask(__name__)
 depot_server.connect()
 log = logging.getLogger(__name__)
 
 def handle_api_error(e: ApiError):
+  log.exception(e)
   return e.flask_tuple()
 
 def handle_remote_error(e: RemoteError):
   match = re.search(r'error\.([A-z]*?): ((.|\n)*)\n-{75}', f'{e}')
   if match is None:
-    log.exception(e)
     raise ApiError('Could not parse depot error') from e
   error_name, error_msg = match.group(1, 2)
   error_type = getattr(error, error_name)
@@ -45,7 +45,7 @@ def handle_remote_error(e: RemoteError):
   raise parsed_error from e
 
 def handle_bad_request(e: BadRequest):
-  raise ValidationError(f'{e}') from e
+  raise ValidationError() from e
 
 @app.errorhandler(Exception)
 def handle_exceptions(e: Exception):
@@ -61,7 +61,9 @@ def handle_exceptions(e: Exception):
     return ApiError().flask_tuple()
 
   try:
-    return error_handler(e)
+    result = error_handler(e)
+    log.exception(e)
+    return result
   except Exception as new_exc:  # pylint: disable=broad-except
     if type(e) is type(new_exc):
       log.exception(new_exc)
@@ -135,9 +137,12 @@ def new_hand(revere: PigeonInterface):
 @app.route('/api/reset', methods=['POST'])
 @session_guard
 def reset(revere: PigeonInterface):
-  data = request.get_json()
-  revere.reset(data['stack'], data['button'], data['big_blind'],
-               data['small_blind'], data['fishbait_seat'], data['player_names'])
+  reset_props = ResetProps(request.get_json())
+  revere.reset(
+    reset_props.stack, reset_props.button, reset_props.big_blind,
+    reset_props.small_blind, reset_props.fishbait_seat,
+    reset_props.player_names
+  )
   return revere.state_dict()
 
 @app.route('/api/join-email-list', methods=['POST'])

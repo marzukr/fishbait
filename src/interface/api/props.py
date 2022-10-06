@@ -5,10 +5,21 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Type, Generic, TypeVar
-from ctypes import c_uint8
+from ctypes import _SimpleCData, Array
+import logging
+from collections.abc import Iterable
 
 import settings
 from error import ValidationError
+
+log = logging.getLogger(__name__)
+
+# ------------------------------------------------------------------------------
+# Type Vars --------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+T = TypeVar('T')
+C = TypeVar('C', bound=_SimpleCData)
 
 # ------------------------------------------------------------------------------
 # Base Props and Validation Classes --------------------------------------------
@@ -18,7 +29,6 @@ class BaseProps:
   def __init__(self, candidate_obj) -> None:
     pass
 
-T = TypeVar('T')
 def propclass(custom_props: Type[T]) -> Type[T]:
   '''
   Takes an arbitrary object and attempts to convert it to our type. We do this
@@ -42,16 +52,8 @@ def propclass(custom_props: Type[T]) -> Type[T]:
       if candidate_val == not_found_err and is_dict:
         candidate_val = candidate_obj.get(prop, not_found_err)
       if candidate_val == not_found_err:
-        raise ValidationError(f'{prop} not found in {candidate_obj}')
-      try:
-        setattr(self, prop, candidate_val)
-      except ValidationError as err:
-        raise err
-      except Exception as exc:
-        new_err = ValidationError(
-          f'validation failed on {prop} from {candidate_obj}'
-        )
-        raise new_err from exc
+        raise ValidationError()
+      setattr(self, prop, candidate_val)
 
   # Note: We need set the __init__ method manually here instead of putting it in
   # BaseProps so that we override the __init__ set by dataclass. We need
@@ -82,33 +84,97 @@ class Prop(Generic[T]):
     obj.__dict__[self.name] = stamped_value
 
 # ------------------------------------------------------------------------------
-# API specific props and types -------------------------------------------------
+# Base Props and Validation Classes --------------------------------------------
 # ------------------------------------------------------------------------------
 
-ISOCard = c_uint8
+class TypedList(Generic[T], list[T]):
+  '''
+  Represents a list of a specific type. Subclasses can also specify a specific
+  length.
+  '''
 
-class CardSet(list[int | None]):
+  LIST_LEN: int | None = None
+  '''The required length of the list or None if any length is ok'''
+
+  LIST_TYPE: Type[T]
+  '''
+  The type of this typed List. If undefined, the constructor will fail. This is
+  because typed list should not be directly constructed. One should subclass it.
+  '''
+
+  def __init__(self, requested):
+    if not isinstance(requested, Iterable):
+      raise ValidationError()
+    processed = [
+      i if isinstance(i, self.LIST_TYPE) else self.LIST_TYPE(i)
+      for i in requested
+    ]
+    super().__init__(processed)
+
+    if self.LIST_LEN is None:
+      return
+
+    if not len(self) == self.LIST_LEN:
+      raise ValidationError()
+
+  def c_clean(self) -> list:
+    return self
+
+  def c_arr(self, c_type: Type[C]) -> Array[C]:
+    cleaned = self.c_clean()
+    if self.LIST_LEN is None:
+      raise TypeError('attemped to use c_arr with a None LIST_LEN')
+    if self.LIST_LEN == 0:
+      raise TypeError('attemped to use c_arr with a 0 LIST_LEN')
+    return (c_type * self.LIST_LEN)(*cleaned)
+
+class ValidationInt(int):
+  '''An MINIMUM <= self < MAXIMUM'''
+
+  MINIMUM: int | None = None
+  MAXIMUM: int | None = None
+
+  def __new__(cls, requested):
+    try:
+      self = super().__new__(cls, requested)
+    except (ValueError, TypeError) as err:
+      raise ValidationError() from err
+    if cls.MINIMUM is not None and self < cls.MINIMUM:
+      raise ValidationError()
+    if cls.MAXIMUM is not None and self >= cls.MAXIMUM:
+      raise ValidationError()
+    return self
+
+# ------------------------------------------------------------------------------
+# API specific types -----------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+class CardSet(TypedList[int | None]):
   '''
   This class represents a set of cards and validates a given object to be a set
   of cards.
   '''
 
-  SET_SIZE: int | None = None
+  LIST_LEN: int | None = None
+  '''
+  Default to None but if we try to construct with this set to None we will
+  throw. This is because CardSets should not be constructed directly. They
+  should be subclassed with LIST_LEN defined.
+  '''
+
+  LIST_TYPE = int | None
 
   def __init__(self, requested):
-    if not isinstance(requested, list):
-      raise ValidationError(f'{requested} is not a list')
+    super().__init__(requested)
 
-    if self.SET_SIZE is None:
-      raise TypeError('attempted to create a CardSet with a None SET_SIZE')
+    # If the super init doesn't throw, we know requested is a valid list of int
+    # or None of unknown length. We now want to validate that it is a valid Card
+    # set:
+    if self.LIST_LEN is None:
+      raise TypeError('attempted to create a CardSet with a None LIST_LEN')
 
-    if not len(requested) == self.SET_SIZE:
-      raise ValidationError(
-        f'{requested} is not the proper length of a {self.__class__.__name__}'
-      )
-
-    if not all(isinstance(item, int | None) for item in requested):
-      raise ValidationError(f'{requested} is not only ints or null')
+    # LIST_LEN is not None and super init didn't throw implies requested has
+    # length LIST_LEN where LIST_LEN is an int >= 0
 
     defined_cards = [card for card in requested if isinstance(card, int)]
 
@@ -116,26 +182,22 @@ class CardSet(list[int | None]):
       card < 0 or card >= settings.CARDS_IN_DECK
       for card in defined_cards
     ):
-      raise ValidationError(f'{requested} has an invalid card number')
+      raise ValidationError()
 
     if len(set(defined_cards)) != len(defined_cards):
-      raise ValidationError(f'{requested} has duplicate cards')
+      raise ValidationError()
 
-    super().__init__(requested)
-
-  def c_arr(self):
-    cleaned_list = [c if isinstance(c, int) else 0 for c in self]
-    if self.SET_SIZE is None:
-      raise TypeError('attemped to use a CardSet with a None SET_SIZE')
-    return (ISOCard * self.SET_SIZE)(*cleaned_list)
+  def c_clean(self) -> list:
+    return [c if isinstance(c, int) else 0 for c in self]
 
 class Hand(CardSet):
   '''This class represents a Hand and validates a given object to be a Hand.'''
 
-  SET_SIZE: int | None = settings.HAND_CARDS
+  LIST_LEN: int | None = settings.HAND_CARDS
 
   def __init__(self, requested):
     super().__init__(requested)
+
     # If the super init doesn't throw, we know we have a list of 2 unique valid
     # cards where some or all elements may also be None. We want to narrow this
     # to confirm that either all the elements are None or all the elements are
@@ -144,11 +206,19 @@ class Hand(CardSet):
       all(it is None for it in requested)
       or all(isinstance(it, int) for it in requested)
     ):
-      raise ValidationError(f'{requested} is not only ints or only null')
+      raise ValidationError()
 
-@propclass
-class SetHandProps(BaseProps):
-  hand: Prop[Hand] = Prop(Hand)
+class Board(CardSet):
+  '''This class is a Board and validates a given object to be a Board.'''
+  LIST_LEN: int | None = settings.BOARD_CARDS
+
+
+class ChipCount(ValidationInt):
+  MINIMUM: int | None = 0
+
+class PlayerNumber(ValidationInt):
+  MINIMUM: int | None = 0
+  MAXIMUM: int | None = settings.PLAYERS
 
 
 class ActionType(str, Enum):
@@ -160,27 +230,45 @@ class ActionType(str, Enum):
 
   @classmethod
   def _missing_(cls, value):
-    raise ValidationError(f'\'{value}\' is not a valid {cls.__name__}')
+    raise ValidationError()
 
-class ActionSize(int):
+class ActionSize(ChipCount):
   def __new__(cls, requested):
     if requested is None:
       return super().__new__(cls, 0)
-    try:
-      return super().__new__(cls, requested)
-    except ValueError as err:
-      raise ValidationError(f'{err}') from err
+    return super().__new__(cls, requested)
+
+
+class ChipPlayerList(TypedList[ChipCount]):
+  LIST_LEN = settings.PLAYERS
+  LIST_TYPE = ChipCount
+
+class StrPlayerList(TypedList[str]):
+  LIST_LEN = settings.PLAYERS
+  LIST_TYPE = str
+
+# ------------------------------------------------------------------------------
+# API Props --------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+@propclass
+class SetHandProps(BaseProps):
+  hand: Prop[Hand] = Prop(Hand)
 
 @propclass
 class ApplyProps(BaseProps):
   action: Prop[ActionType] = Prop(ActionType)
   size: Prop[ActionSize] = Prop(ActionSize)
 
-
-class Board(CardSet):
-  '''This class is a Board and validates a given object to be a Board.'''
-  SET_SIZE: int | None = settings.BOARD_CARDS
-
 @propclass
 class SetBoardProps(BaseProps):
   board: Prop[Board] = Prop(Board)
+
+@propclass
+class ResetProps(BaseProps):
+  stack: Prop[ChipPlayerList] = Prop(ChipPlayerList)
+  button: Prop[PlayerNumber] = Prop(PlayerNumber)
+  big_blind: Prop[ChipCount] = Prop(ChipCount)
+  small_blind: Prop[ChipCount] = Prop(ChipCount)
+  fishbait_seat: Prop[PlayerNumber] = Prop(PlayerNumber)
+  player_names: Prop[StrPlayerList] = Prop(StrPlayerList)

@@ -33,6 +33,7 @@ PlayerId = c_uint8
 CommanderPtr = c_void_p
 RoundId = c_uint8
 ActionCode = c_uint8
+ISOCard = c_uint8
 
 
 class Round(str, Enum):
@@ -66,8 +67,8 @@ class NodeSnapshot(Structure):
     ('stack', Chips * settings.PLAYERS),
     ('min_raise', Chips),
     ('needed_to_call', Chips),
-    ('hands', (props.ISOCard * settings.HAND_CARDS) * settings.PLAYERS),
-    ('board', props.ISOCard * settings.BOARD_CARDS)
+    ('hands', (ISOCard * settings.HAND_CARDS) * settings.PLAYERS),
+    ('board', ISOCard * settings.BOARD_CARDS)
   ]
 
   def round_name(self):
@@ -178,7 +179,7 @@ commander_reset = (
 )
 commander_set_hand = (
   LibFn.name('CommanderSetHand')
-  .arg(props.ISOCard * settings.HAND_CARDS)
+  .arg(ISOCard * settings.HAND_CARDS)
   .arg(PlayerId)
   .arg(CommanderPtr)
 )
@@ -200,7 +201,7 @@ commander_apply = (
 )
 commander_set_board = (
   LibFn.name('CommanderSetBoard')
-  .arg(props.ISOCard * settings.BOARD_CARDS)
+  .arg(ISOCard * settings.BOARD_CARDS)
   .arg(CommanderPtr)
 )
 commander_award_pot = LibFn.name('CommanderAwardPot').arg(CommanderPtr)
@@ -444,8 +445,9 @@ class PigeonInterface(ABC):
 
   @abstractmethod
   def reset(
-    self, stacks: List[int], button: int, big_blind: int, small_blind: int,
-    fishbait_seat: int, player_names: List[str]
+    self, stacks: props.ChipPlayerList, button: props.PlayerNumber,
+    big_blind: props.ChipCount, small_blind: props.ChipCount,
+    fishbait_seat: props.PlayerNumber, player_names: props.StrPlayerList
   ) -> None:
     '''Resets fishbait to a state with the given parameters.
 
@@ -470,7 +472,7 @@ class PigeonInterface(ABC):
     raise NotImplementedError()
 
   @abstractmethod
-  def apply(self, action: props.ActionType, size: int = 0) -> None:
+  def apply(self, action: props.ActionType, size: props.ActionSize) -> None:
     '''Applies the given action to the current acting player.'''
     raise NotImplementedError()
 
@@ -536,12 +538,14 @@ class Pigeon(PigeonInterface):
     return auto_advancer
 
   def reset(
-    self, stacks: List[int], button: int, big_blind: int, small_blind: int,
-    fishbait_seat: int, player_names: List[str]
+    self, stacks: props.ChipPlayerList, button: props.PlayerNumber,
+    big_blind: props.ChipCount, small_blind: props.ChipCount,
+    fishbait_seat: props.PlayerNumber, player_names: props.StrPlayerList
   ):
-    stacks = (Chips * settings.PLAYERS)(*stacks)
-    commander_reset(self._commander, stacks, button, big_blind, small_blind,
-                    fishbait_seat)
+    c_stacks = stacks.c_arr(Chips)
+    commander_reset(
+      self._commander, c_stacks, button, big_blind, small_blind, fishbait_seat
+    )
     self._state = PigeonState(player_names=player_names)
     self._update_state()
 
@@ -549,12 +553,12 @@ class Pigeon(PigeonInterface):
   def set_hand(self, hand: props.Hand):
     if self._state.player_needs_hand is None:
       raise InvalidStateTransitionError('No player needs a hand right now')
-    iso_hand = hand.c_arr()
+    iso_hand = hand.c_arr(ISOCard)
     commander_set_hand(self._commander, self._state.player_needs_hand, iso_hand)
     self._state.known_cards[self._state.player_needs_hand] = True
 
   @_auto_advance
-  def apply(self, action: props.ActionType, size: int = 0):
+  def apply(self, action: props.ActionType, size: props.ActionSize):
     can_check = self._state.needed_to_call == 0
     if action == props.ActionType.CHECK and not can_check:
       raise InvalidStateTransitionError(
@@ -576,7 +580,7 @@ class Pigeon(PigeonInterface):
   @_auto_advance
   def set_board(self, board: props.Board):
     self._state.known_board = [card is not None for card in board]
-    commander_set_board(self._commander, board.c_arr())
+    commander_set_board(self._commander, board.c_arr(ISOCard))
 
   def state_dict(self):
     return asdict(self._state)

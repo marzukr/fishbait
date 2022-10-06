@@ -7,9 +7,12 @@ import secrets
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Type, TypeVar, Generic, ParamSpec
 from multiprocessing.managers import BaseManager
+import logging
 
 from pigeon import Pigeon, PigeonInterface
 import settings
+
+log = logging.getLogger(__name__)
 
 
 class Depot(BaseManager):
@@ -75,11 +78,12 @@ class PigeonProxy(PigeonInterface):
       fn = getattr(revere, fn_name)
       try:
         result = fn(*args, **kwargs)
-      except:
+      except Exception as e:
         # We should not get an error from Pigeon. If we do, something has gone
         # horribly wrong and we need to delete this session to preserve the
         # integrity of the server:
         sessions.pop(session_id)
+        log.exception(e)
         raise
       return result
 
