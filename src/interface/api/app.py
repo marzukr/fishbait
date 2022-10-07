@@ -36,7 +36,8 @@ def handle_api_error(e: ApiError):
 def handle_remote_error(e: RemoteError):
   match = re.search(r'error\.([A-z]*?): ((.|\n)*)\n-{75}', f'{e}')
   if match is None:
-    raise ApiError('Could not parse depot error') from e
+    log.error('Could not parse depot error')
+    raise ApiError() from e
   error_name, error_msg = match.group(1, 2)
   error_type = getattr(error, error_name)
   parsed_error = error_type(error_msg)

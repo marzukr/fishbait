@@ -19,12 +19,14 @@ from ctypes import (
   c_bool,
   c_double,
 )
+import logging
 
 import settings
 import props
 from error import InvalidStateTransitionError
 
 
+log = logging.getLogger(__name__)
 lib = cdll.LoadLibrary(settings.RELAY_LIB_LOCATION)
 
 
@@ -151,7 +153,8 @@ class LibFn(Generic[P, R]):
     error = self._check_error()
     if error is not None:
       error_msg = error.decode('utf-8')
-      raise InvalidStateTransitionError(error_msg)
+      log.exception(error_msg)
+      raise InvalidStateTransitionError()
     return result
 
   def arg(self, arg: Type[A]):
@@ -552,7 +555,8 @@ class Pigeon(PigeonInterface):
   @_auto_advance
   def set_hand(self, hand: props.Hand):
     if self._state.player_needs_hand is None:
-      raise InvalidStateTransitionError('No player needs a hand right now')
+      log.error('No player needs a hand right now')
+      raise InvalidStateTransitionError()
     iso_hand = hand.c_arr(ISOCard)
     commander_set_hand(self._commander, self._state.player_needs_hand, iso_hand)
     self._state.known_cards[self._state.player_needs_hand] = True
@@ -561,9 +565,8 @@ class Pigeon(PigeonInterface):
   def apply(self, action: props.ActionType, size: props.ActionSize):
     can_check = self._state.needed_to_call == 0
     if action == props.ActionType.CHECK and not can_check:
-      raise InvalidStateTransitionError(
-        'The currently acting player cannot check.'
-      )
+      log.error('The currently acting player cannot check.')
+      raise InvalidStateTransitionError()
     action_map = {
       props.ActionType.FOLD: 0,
       props.ActionType.CHECK: 1,
