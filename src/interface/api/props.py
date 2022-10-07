@@ -129,7 +129,7 @@ class TypedList(Generic[T], list[T]):
     return (c_type * self.LIST_LEN)(*cleaned)
 
 class ValidationInt(int):
-  '''An MINIMUM <= self < MAXIMUM'''
+  '''An integer such that MINIMUM <= self < MAXIMUM'''
 
   MINIMUM: int | None = None
   MAXIMUM: int | None = None
@@ -247,6 +247,16 @@ class StrPlayerList(TypedList[str]):
   LIST_LEN = settings.PLAYERS
   LIST_TYPE = str
 
+
+class Email(str):
+  MAX_EMAIL_LEN = 254
+
+  def __new__(cls, requested):
+    self = super().__new__(cls, requested)
+    if len(self) > self.MAX_EMAIL_LEN or '\n' in self:
+      raise ValidationError()
+    return self
+
 # ------------------------------------------------------------------------------
 # API Props --------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -272,3 +282,7 @@ class ResetProps(BaseProps):
   small_blind: Prop[ChipCount] = Prop(ChipCount)
   fishbait_seat: Prop[PlayerNumber] = Prop(PlayerNumber)
   player_names: Prop[StrPlayerList] = Prop(StrPlayerList)
+
+@propclass
+class JoinEmailListProps(BaseProps):
+  email: Prop[Email] = Prop(Email)

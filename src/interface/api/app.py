@@ -18,14 +18,12 @@ from depot_types import (
 )
 import error
 from error import (
-  ApiError,
-  ServerOverloadedError,
-  MissingSessionIdError,
-  UnknownSessionIdError,
-  InvalidEmailError,
+  ApiError, ServerOverloadedError, MissingSessionIdError, UnknownSessionIdError,
   ValidationError,
 )
-from props import SetHandProps, ApplyProps, SetBoardProps, ResetProps
+from props import (
+  SetHandProps, ApplyProps, SetBoardProps, ResetProps, JoinEmailListProps
+)
 
 app = Flask(__name__)
 depot_server.connect()
@@ -147,10 +145,7 @@ def reset(revere: PigeonInterface):
 
 @app.route('/api/join-email-list', methods=['POST'])
 def join_email_list():
-  data = request.get_json()
-  email = data['email']
-  if len(email) > 254 or '\n' in email:
-    raise InvalidEmailError()
+  props = JoinEmailListProps(request.get_json())
   with open(settings.EMAIL_LIST_LOCATION, 'a', encoding='utf-8') as email_list:
-    email_list.write(f'{email}\n')
+    email_list.write(f'{props.email}\n')
   return make_response()
