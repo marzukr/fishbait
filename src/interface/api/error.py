@@ -20,14 +20,21 @@ class ApiError(Exception):
   response_headers: dict = {}
 
   def __init__(self, message: Optional[str] = None) -> None:
-    self.message = message or self.__class__.message
-    super().__init__(self.message)
+    # We don't override self.message or __class__.message to ensure the default
+    # error message is always preserved and we never expose confidential
+    # internal details externally
+    exc_message = message or self.__class__.message
+    super().__init__(exc_message)
 
-  def flask_tuple(self):
+  @classmethod
+  def flask_tuple(cls):
+    # Using cls ensures we are always returning the generic default error
+    # message to flask to avoid exposing confidential internal details to
+    # potential attackers:
     return ({
-      'error_message': self.message,
-      'error_code': self.__class__.__name__,
-    }, self.__class__.status_code, self.response_headers)
+      'error_message': cls.message,
+      'error_code': cls.__name__,
+    }, cls.status_code, cls.response_headers)
 
 class ServerOverloadedError(ApiError):
   message = (
