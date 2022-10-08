@@ -38,6 +38,7 @@ const actionInterfaceAgent = objectAgent({
   size: numberAgent,
 });
 export type ActionInterface = Stamped<typeof actionInterfaceAgent>;
+export type PartialAction = Nullable<ActionInterface>;
 
 const cardAgent = nullable(stringAgent);
 export type CardT = Stamped<typeof cardAgent>;

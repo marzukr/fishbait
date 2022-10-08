@@ -4,12 +4,11 @@ import React, { useState } from 'react';
 
 import GameInput from 'components/GameInput';
 import { CardBoard } from 'components/CardBoard';
-import BetView from 'components/BetView';
+import { BetView } from 'components/BetView';
 import { constructCard, asciiStringToIso } from 'utils/hands';
 import {
-  Api, ActionInterface, Action, BoardNeedsCards, useSafeAsync, CardT
+  Api, Action, BoardNeedsCards, useSafeAsync, CardT, PartialAction
 } from 'utils/api';
-import { Nullable } from 'utils/customs';
 
 interface GameProps {
   /** Our Api object */
@@ -31,7 +30,6 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
 
   // Object of { action, size } where an entered action is written if an action
   // is being input:
-  type PartialAction = Nullable<ActionInterface>;
   const [actionScratch, setActionScratch] = useState<PartialAction>({
     action: null,
     size: null,
@@ -56,20 +54,21 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
   const gameState = api.gameState;
   if (gameState === null) return null;
 
-  const isChanceNode = () => (
+  const isChanceNode = (
     gameState.actingPlayer === gameState.players && gameState.inProgress
   );
 
-  const isFishbaitTurn = () => (
+  const isFishbaitTurn = (
     gameState.actingPlayer === gameState.fishbaitSeat && gameState.inProgress
   );
 
-  const canCheck = () => (
-    gameState.inProgress && !isChanceNode() && gameState.neededToCall === 0
+  const canCheck = (
+    gameState.inProgress && !isChanceNode && gameState.neededToCall === 0
   );
 
-  const canCheckCall = () => (
-    gameState.inProgress && !isChanceNode()
+  const canCheckCall = (
+    gameState.inProgress
+    && !isChanceNode
     && gameState.neededToCall < gameState.stack[gameState.actingPlayer]
   );
 
@@ -78,7 +77,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
       setActionScratch({ action: Action.FOLD, size: null });
     } else if (code === 'checkcall') {
       setActionScratch({
-        action: canCheck() ? Action.CHECK : Action.CALL,
+        action: canCheck ? Action.CHECK : Action.CALL,
         size: null,
       });
     } else if (code === 'allin') {
@@ -238,12 +237,6 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
     return true;
   }
 
-  const neededToCall = isChanceNode() || !gameState.inProgress
-      ? null
-      : gameState.neededToCall;
-  const minRaise = isChanceNode() || !gameState.inProgress
-      ? null
-      : gameState.minRaise;
   const toDeal = gameState.playerNeedsHand;
   const modifyingHand = (() => {
     if (toDeal === null) {
@@ -263,18 +256,18 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
       return (
         <GameInput type={'card'} handler={handleHandInput} disabled={disabled}/>
       );
-    } else if (!isChanceNode() && !isFishbaitTurn() && gameState.inProgress) {
+    } else if (!isChanceNode && !isFishbaitTurn && gameState.inProgress) {
       const disabled = (() => {
         const retVal = [];
-        if (canCheck()) retVal.push('fold');
-        if (!canCheckCall()) retVal.push('checkcall');
+        if (canCheck) retVal.push('fold');
+        if (!canCheckCall) retVal.push('checkcall');
         if (!verifyScratchAction()) retVal.push('next');
         return retVal;
       })();
       return (
         <GameInput
           type={'bet'} handler={handleBetInput} disabled={disabled}
-          canCheck={canCheck()} />
+          canCheck={canCheck} />
       );
     } else if (toBoard !== null) {
       const disabled = verifyScratchBoard(toBoard) ? [] : ['next'];
@@ -287,7 +280,6 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
       return <GameInput type={'new hand'} handler={callback} disabled={[]}/>
     }
   })();
-  const actingPlayer = gameState.inProgress ? gameState.actingPlayer : null;
 
   return (
     <div className='boxSpace'>
@@ -304,13 +296,8 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
         offset={selectedBoardOffset} scratch={boardScratch} 
       />
       <BetView
-        players={gameState.players} playerNames={gameState.playerNames}
-        fishbaitSeat={gameState.fishbaitSeat} button={gameState.button}
-        actingPlayer={actingPlayer} bets={gameState.bets}
-        stack={gameState.stack} neededToCall={neededToCall} pot={gameState.pot}
-        minRaise={minRaise} hands={gameState.hands} folded={gameState.folded}
-        lastAction={gameState.lastAction} modifyingHand={modifyingHand}
-        enteredAction={actionScratch}
+        gameState={gameState} isChanceNode={isChanceNode}
+        modifyingHand={modifyingHand} enteredAction={actionScratch}
       />
       {properInput}
     </div>
