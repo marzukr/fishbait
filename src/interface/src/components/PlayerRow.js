@@ -25,7 +25,6 @@ import Card from './Card';
 */
 class PlayerRow extends React.Component {
   render() {
-    let playerIdClass = this.props.isButton ? 'dealerButton' : '';
     let nameStr = this.props.action === null && !this.props.isActingPlayer
         ? this.props.playerName
         : this.props.playerName + ':';
@@ -45,9 +44,6 @@ class PlayerRow extends React.Component {
         return this.props.action.action;
       }
     })();
-    let playerInfoBoxClass = this.props.folded
-        ? 'playerInfoBox folded'
-        : 'playerInfoBox';
     let generateCard = (id) => {
       let isModifying = this.props.modifying === id ? true : false;
       let card = this.props.hand === null ? null : this.props.hand[id];
@@ -56,20 +52,36 @@ class PlayerRow extends React.Component {
                    shouldHide={this.props.hideCards} key={key}/>
     };
     return (
-      <div className='playerBorderBox'>
-        <div className={playerInfoBoxClass}>
-          <div className='playerIdBox'>
-            <div className={playerIdClass}>{this.props.playerId + 1}.</div>
+      <div className='border-t border-neutral-200'>
+        <div className={`
+          playerInfoBox grid grid-cols-[35px_1fr_1fr_30%] grid-rows-2 px-1
+          h-full ${this.props.folded ? 'opacity-50' : ''}
+        `}>
+          <div className={`
+            col-span-1 row-span-2 flex justify-center items-center text-xl
+          `}>
+            <div className={
+              this.props.isButton ? `
+                dealerButton w-[20pt] h-[20pt] bg-black rounded-2xl
+                text-white text-center
+              ` : ''
+            }>
+              {this.props.playerId + 1}.
+            </div>
           </div>
           <div className='playerNameBox'>
             <div className='playerNameBoxName'>{nameStr}</div>
             <div className={cursorClass}>{actionString}</div>
           </div>
-          <div className='playerBetBox'>
-            <i className='fas fa-dice'></i>{this.props.bet}
+          <div className={`
+            playerBetBox col-start-2 col-end-3 flex gap-1.5 pl-1.5 pt-1
+          `}>
+            <i className='fas fa-dice'/>
+            <span className='leading-5'>{this.props.bet}</span>
           </div>
           <div className='playerStackBox'>
-            <i className='fas fa-coins'></i>{this.props.stack}
+            <i className='fas fa-coins'/>
+            <span className='leading-5'>{this.props.stack}</span>
           </div>
           <div className='playerCardBox'>
             {generateCard(0)}

@@ -81,11 +81,15 @@ export const Settings: React.FC<SettingsProps> = ({ api, toggleSettings }) => {
       ? <div className='fishbaitNameSetting'>
           <div>Fishbait 🐟</div>
           <div className='moveFishbaitButtons'>
-            <button onClick={() => moveFishbait(-1)}>
-              <i className="fas fa-long-arrow-alt-up"></i>
+            <button
+              onClick={() => moveFishbait(-1)} className="flex content-center"
+            >
+              <i className="fas fa-long-arrow-alt-up leading-4"></i>
             </button>
-            <button onClick={() => moveFishbait(1)}>
-              <i className="fas fa-long-arrow-alt-down"></i>
+            <button
+              onClick={() => moveFishbait(1)} className="flex content-center"
+            >
+              <i className="fas fa-long-arrow-alt-down leading-4"></i>
             </button>
           </div>
         </div>

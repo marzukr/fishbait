@@ -5,8 +5,6 @@ import React from 'react';
 import PlayerRow from 'components/PlayerRow';
 import { GameState, CardT, PartialAction } from 'utils/api';
 
-import './BetView.css';
-
 
 /** An object describing the hand currently being modified */
 interface ModifyingHandProps {
@@ -79,8 +77,11 @@ export const BetView: React.FC<BetViewProps> = (
   const callAmount = neededToCall === null ? 'n/a' : neededToCall;
   const minRaiseLabel = minRaise === null ? 'n/a' : minRaise;
   return (
-    <div className='betView'>
-      <div className='topInfo'>
+    <div className={`
+      h-[56vh] mx-2.5 pb-2.5 shadow-[0_0_5px_rgba(0,0,0,0.35)] rounded-t-md grid
+      grid-rows-[24pt_repeat(6,1fr)]
+    `}>
+      <div className='flex justify-evenly items-center'>
         <span>Pot: {gameState.pot}</span>
         <span>Min Raise: {minRaiseLabel}</span>
         <span>To Call: {callAmount}</span>
