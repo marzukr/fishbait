@@ -1,14 +1,5 @@
 /* Copyright 2021 Marzuk Rashid */
 
-.contentArea {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  top: 6vh;
-  margin: 0 10px;
-}
-
 .sectionHeader {
   margin-top: 15px;
   text-align: center;

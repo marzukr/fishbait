@@ -35,7 +35,7 @@ export const Error: React.FC<ErrorInterface> = (
   }
 
   const messageElements = messages.map((v, i) => (
-    <p className='text-justify' key={i}>{v}</p>
+    <p className='text-justify mt-2.5' key={i}>{v}</p>
   ));
 
   const renderForm = () => {

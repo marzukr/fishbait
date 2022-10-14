@@ -2,8 +2,11 @@
 
 import React, { useState } from 'react';
 
-import 'screens/Settings.css';
 import { Api, useSafeAsync } from 'utils/api';
+import { DiscordButton } from 'components/DiscordButton';
+import { EmailLink } from 'components/EmailLink';
+
+import './Settings.css';
 
 interface SettingsProps {
   api: Api;
@@ -122,44 +125,62 @@ export const Settings: React.FC<SettingsProps> = ({ api, toggleSettings }) => {
   const saveButtonClass = isValid ? 'saveButton' : 'saveButton disabled';
 
   return (
-    <div className='boxSpace'>
-      <div className='header'>
+    <div>
+      <div className='header max-w-sm fixed bg-white mx-auto'>
         <button className='headerButton' onClick={toggleSettings}>
           <i className='fas fa-chevron-left'></i>
         </button>
         <p>Settings</p>
         <div className='headerPad'></div>
       </div>
-      <div className='contentArea'>
-        <div className='sectionHeader'>Game Attributes</div>
-        <div className='settingsTable blind'>
-          <div className='settingsTableRow headerCol1'>
-            <div>Small Blind:</div>
-            <input
-              type='text' className='settingsInput' value={smallBlind}
-              pattern='[0-9]*' onChange={e => handleChange(setSmallBlind, e)} />
+      <div className='flex flex-col items-center'>
+        <div className='h-[6vh] max-w-sm'/>
+        <div className='px-2.5 max-w-sm pb-12'>
+          <div className='sectionHeader'>Game Attributes</div>
+          <div className='settingsTable blind'>
+            <div className='settingsTableRow headerCol1'>
+              <div>Small Blind:</div>
+              <input
+                type='text' className='settingsInput' value={smallBlind}
+                pattern='[0-9]*' onChange={e => handleChange(setSmallBlind, e)}
+              />
+            </div>
+            <div className='settingsTableRow headerCol1'>
+              <div>Big Blind:</div>
+              <input
+                type='text' className='settingsInput' value={bigBlind}
+                pattern='[0-9]*' onChange={e => handleChange(setBigBlind, e)}
+              />
+            </div>
           </div>
-          <div className='settingsTableRow headerCol1'>
-            <div>Big Blind:</div>
-            <input
-              type='text' className='settingsInput' value={bigBlind}
-              pattern='[0-9]*' onChange={e => handleChange(setBigBlind, e)} />
+          <div className='sectionHeader'>Players</div>
+          <div className='settingsTable players'>
+            <div className='settingsTableRow headerRow'>
+              <div className='settingsPlayerIdBox'><div>#</div></div>
+              <div>Name</div>
+              <div>Stack</div>
+            </div>
+            {tableRows}
           </div>
+          <button
+            className={saveButtonClass} onClick={saveClick} disabled={!isValid}
+          >
+            Save
+          </button>
+          <div className='border-t-2 pt-3.5 mt-7 text-center'>About</div>
+          <p className='text-justify mt-3'>
+            Fishbait is an AI that plays poker. It was trained by playing billions
+            of hands of poker against itself. It has a unique strategy for over
+            600 million different situations. For context, it would take a human
+            over 200 years of playing poker nonstop to train on all of these
+            possible permutations. All that power is now in your pocket.
+          </p>
+          <p className='text-justify mt-3'>
+            If you have questions or suggestions, you can contact us on the
+            official Fishbait <DiscordButton /> server. You can also email{' '}
+            <EmailLink/>
+          </p>
         </div>
-        <div className='sectionHeader'>Players</div>
-        <div className='settingsTable players'>
-          <div className='settingsTableRow headerRow'>
-            <div className='settingsPlayerIdBox'><div>#</div></div>
-            <div>Name</div>
-            <div>Stack</div>
-          </div>
-          {tableRows}
-        </div>
-        <button
-          className={saveButtonClass} onClick={saveClick} disabled={!isValid}
-        >
-          Save
-        </button>
       </div>
     </div>
   );  // return
