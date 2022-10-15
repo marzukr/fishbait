@@ -45,7 +45,7 @@ export const Error: React.FC<ErrorInterface> = (
         <input
           className={
             `h-9 border-y border-l border-black rounded-l-md box-border
-              align-top text-base border-r-0 font-sans grow`
+              align-top text-base border-r-0 font-sans grow rounded-r-none`
           }
           type='email' value={email} placeholder='Email address'
           onChange={updateEmail}
