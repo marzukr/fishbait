@@ -283,7 +283,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
 
   return (
     <div className='boxSpace'>
-      <div className='header'>
+      <div className='header max-w-sm fixed bg-white mx-auto z-30 h-12'>
         <div className='headerPad'></div>
         <div>{gameState.round}</div>
         <button className='headerButton'
@@ -293,12 +293,18 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
       </div>
       <CardBoard
         board={gameState.board} boardNeedsCards={gameState.boardNeedsCards}
-        offset={selectedBoardOffset} scratch={boardScratch} 
+        offset={selectedBoardOffset} scratch={boardScratch}
       />
-      <BetView
-        gameState={gameState} isChanceNode={isChanceNode}
-        modifyingHand={modifyingHand} enteredAction={actionScratch}
-      />
+      <div className={`
+        flex flex-col h-full fixed w-full max-w-sm
+      `}>
+        <div className='h-12 flex-none'/>
+        <div className='h-24 flex-none'/>
+        <BetView
+          gameState={gameState} isChanceNode={isChanceNode}
+          modifyingHand={modifyingHand} enteredAction={actionScratch}
+        />
+      </div>
       {properInput}
     </div>
   );

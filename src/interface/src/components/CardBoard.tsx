@@ -38,7 +38,10 @@ export const CardBoard: React.FC<CardBoardProps> = ({
     return <Card card={card} isModifying={isModifying} key={idx}/>
   });
   return (
-    <div className='h-[12vh] flex justify-evenly px-[5px] inset-x-0'>
+    <div className={`
+      h-24 flex justify-evenly px-2.5 inset-x-0 fixed max-w-sm mx-auto top-12
+      z-10
+    `}>
       {boardCards}
     </div>
   );

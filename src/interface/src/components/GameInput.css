@@ -1,21 +1,16 @@
 /* Copyright 2021 Marzuk Rashid */
 
 .gameInput {
-  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 1;
-  background-color: white;
   box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.15);
-  height: calc(26vh);
   display: grid;
   grid-template-columns: repeat(6, 12%);
   grid-template-rows: repeat(3, 23%);
   justify-content: space-evenly;
   align-content: space-evenly;
   box-sizing: border-box;
-  padding-bottom: 2vh;
 }
 
 .gameInputButton {

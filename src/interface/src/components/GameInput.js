@@ -95,7 +95,13 @@ class GameInput extends React.Component {
         </button>
       );
     }
-    return <div className='gameInput'>{buttons}</div>;
+    return (
+      <div className={`
+        gameInput max-w-sm fixed bg-white mx-auto z-10 h-52 pb-4
+      `}>
+        {buttons}
+      </div>
+    );
   }  // render()
 }  // class GameInput
 

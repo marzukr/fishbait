@@ -52,7 +52,10 @@ class PlayerRow extends React.Component {
                    shouldHide={this.props.hideCards} key={key}/>
     };
     return (
-      <div className='border-t border-neutral-200'>
+      <div className={`
+        ${this.props.playerId !== 0 ? 'border-t' : ''} border-neutral-200
+        h-[72px]
+      `}>
         <div className={`
           playerInfoBox grid grid-cols-[35px_1fr_1fr_30%] grid-rows-2 px-1
           h-full ${this.props.folded ? 'opacity-50' : ''}

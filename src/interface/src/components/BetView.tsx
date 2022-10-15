@@ -78,15 +78,22 @@ export const BetView: React.FC<BetViewProps> = (
   const minRaiseLabel = minRaise === null ? 'n/a' : minRaise;
   return (
     <div className={`
-      h-[56vh] mx-2.5 pb-2.5 shadow-[0_0_5px_rgba(0,0,0,0.35)] rounded-t-md grid
-      grid-rows-[24pt_repeat(6,1fr)]
+      grow min-h-0 flex flex-col mx-2.5 shadow-[0_0_5px_rgba(0,0,0,0.35)]
+      rounded-t-md
     `}>
-      <div className='flex justify-evenly items-center'>
+      <div className={`
+        flex justify-evenly items-center h-8 absolute left-0 right-0 bg-white
+        rounded-t-md mx-2.5 z-10 border-b border-neutral-200
+      `}>
         <span>Pot: {gameState.pot}</span>
         <span>Min Raise: {minRaiseLabel}</span>
         <span>To Call: {callAmount}</span>
       </div>
-      {playerInfoBoxes}
+      <div className='h-8 shrink-0'/>
+      <div className='min-h-0 overflow-auto pb-2'>
+        {playerInfoBoxes}
+      </div>
+      <div className='h-52 shrink-0'/>
     </div>
   );
 }
