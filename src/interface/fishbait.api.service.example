@@ -6,7 +6,7 @@ After=fishbait.depot.service
 [Service]
 User=ubuntu
 WorkingDirectory=PLACEHOLDER
-ExecStart=PLACEHOLDER -b 127.0.0.1:5000 api.app:app
+ExecStart=PLACEHOLDER -b 127.0.0.1:5000 app:app
 Restart=always
 
 [Install]

@@ -48,12 +48,12 @@ All executables will now be located in `build/bin`. So, for example, to execute
 5. Configure `src/interface/api/settings.py`
 6. Copy `src/interface/fishbait.api.service.example` to
    `/etc/systemd/system/fishbait.api.service` and replace the placeholders
-     * Set the `WorkingDirectory` to the absolute path of `src/interface`
+     * Set the `WorkingDirectory` to the absolute path of `src/interface/api`
      * Set the placeholder in `ExecStart` to be the absolute path of
        `build/src/interface/venv/bin/gunicorn`
 7. Copy `src/interface/fishbait.depot.service.example` to
    `/etc/systemd/system/fishbait.depot.service` and replace the placeholders
-     * Set the `WorkingDirectory` to the absolute path of `src/interface`
+     * Set the `WorkingDirectory` to the absolute path of `src/interface/api`
      * Set the placeholder in `ExecStart` to be the absolute path of
        `build/src/interface/venv/bin/python`
 8. `sudo systemctl daemon-reload`
