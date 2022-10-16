@@ -3,7 +3,7 @@
 # setup venv if it doesn't exist
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/venv")
   message(STATUS "Creating python virtual environment")
-  find_package(Python3 3.10)
+  find_package(Python3 3.10 REQUIRED)
   execute_process(
     COMMAND ${Python3_EXECUTABLE} "-m" "venv" "venv" "--copies"
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
