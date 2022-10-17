@@ -49,7 +49,6 @@ TEST_CASE("sample test", "[utils][math]") {
   int trial_failures = 0;
   std::vector<double> probabilities = {0.1, 0.1, 0.2, 0.3, 0.2, 0.1};
   fishbait::Random rng;
-  
   for (int j = 0; j < kTrialsOfSample; ++j) {
     std::array<int, 6> observed{0};
     for (int i = 0; i < kTrials; ++i) {
