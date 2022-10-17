@@ -45,6 +45,9 @@ class SequenceTable {
      number legal actions in all sequences preceding sequence i. */
   std::array<std::vector<std::size_t>, kNRounds> legal_offsets_;
 
+  // If this is real time search
+  bool real_time_;
+
  public:
   /*
     @brief Constructs a sequence table.
@@ -53,14 +56,16 @@ class SequenceTable {
     @param start_state The game tree node to start the table at.
   */
   SequenceTable(const std::array<AbstractAction, kActions>& actions,
-                const Node<kPlayers>& start_state) : actions_{},
+                const Node<kPlayers>& start_state, bool real_time = false) :
+                                                     actions_{},
                                                      start_state_{start_state},
                                                      table_{},
-                                                     legal_offsets_{} {
+                                                     legal_offsets_{},
+                                                     real_time_{real_time} {
     NumActionsArray action_counter;
     SortActions(actions, actions_, action_counter);
     NumNodesArray node_counter = CountSorted(actions_, action_counter,
-                                             start_state);
+                                             start_state, real_time_);
     for (RoundId i = 0; i < kNRounds; ++i) {
       table_[i] = nda::matrix<SequenceId>{{node_counter[i].internal_nodes,
                                            action_counter[i]}};
@@ -68,7 +73,8 @@ class SequenceTable {
 
     node_counter.fill({0, 0, 0, 0});
     Node new_state = start_state_;
-    Generate(new_state, 0, actions_, action_counter, 0, node_counter,
+    Generate(new_state, 0, actions_, action_counter, real_time_, start_state_,
+             0, node_counter,
         [&](SequenceId seq, Round round, nda::index_t action_col,
             SequenceId val) {
           table_[+round](seq, action_col) = val;
@@ -197,11 +203,11 @@ class SequenceTable {
   */
   static NumNodesArray Count(
       const std::array<AbstractAction, kActions>& actions,
-      const Node<kPlayers>& start_state) {
+      const Node<kPlayers>& start_state, const bool real_time = false) {
     ActionArray sorted_actions;
     NumActionsArray num_actions;
     SortActions(actions, sorted_actions, num_actions);
-    return CountSorted(sorted_actions, num_actions, start_state);
+    return CountSorted(sorted_actions, num_actions, start_state, real_time);
   }
 
   /* @brief Checks if two SequenceTables are not the same */
@@ -228,11 +234,13 @@ class SequenceTable {
   */
   static NumNodesArray CountSorted(const ActionArray& sorted_actions,
                                    const NumActionsArray& num_actions,
-                                   const Node<kPlayers>& start_state) {
+                                   const Node<kPlayers>& start_state,
+                                   const bool real_time) {
     NumNodesArray node_counter;
     node_counter.fill({0, 0, 0, 0});
     Node new_state = start_state;
-    Generate(new_state, 0, sorted_actions, num_actions, 0, node_counter,
+    Generate(new_state, 0, sorted_actions, num_actions, real_time, start_state,
+             0, node_counter,
              [](SequenceId, Round, nda::index_t, SequenceId) {});
     return node_counter;
   }
@@ -277,7 +285,9 @@ class SequenceTable {
   template <typename RowMarkFn>
   static SequenceId Generate(Node<kPlayers>& state, int num_raises,
                              const ActionArray& actions,
-                             const NumActionsArray& num_actions, SequenceId seq,
+                             const NumActionsArray& num_actions,
+                             const bool real_time,
+                             const Node<kPlayers>& start_state, SequenceId seq,
                              NumNodesArray& node_counter,
                              RowMarkFn&& row_marker) {
     if (node_counter[+state.round()].internal_nodes == kLeafId ||
@@ -287,10 +297,17 @@ class SequenceTable {
     } else if (!state.in_progress()) {
       ++node_counter[+state.round()].leaf_nodes;
       return kLeafId;
+    } else if (real_time && IsLeafNode(start_state, state, num_raises)) {
+      PlayerId current_player = state.acting_player();
+      if (current_player == state.kChancePlayer) {
+        current_player = (state.button() + 1)%kPlayers;
+      }
+      return GenerateAtLeaf(state, current_player, current_player, seq,
+                            node_counter, row_marker, true);
     } else if (state.acting_player() == state.kChancePlayer) {
       state.ProceedPlay();
-      return Generate(state, 0, actions, num_actions, seq, node_counter,
-                      row_marker);
+      return Generate(state, 0, actions, num_actions, real_time, start_state,
+                      seq, node_counter, row_marker);
     }
 
     ++node_counter[+state.round()].internal_nodes;
@@ -305,8 +322,9 @@ class SequenceTable {
         int new_raise_num = num_raises;
         if (action.play == Action::kBet) ++new_raise_num;
         SequenceId new_state_id = Generate(new_state, new_raise_num, actions,
-            num_actions, node_counter[+new_round].internal_nodes, node_counter,
-            row_marker);
+            num_actions, real_time, start_state,
+            node_counter[+new_round].internal_nodes,
+            node_counter, row_marker);
         row_marker(seq, state.round(), j, new_state_id);
       } else {
         ++node_counter[+state.round()].illegal_nodes;
@@ -315,6 +333,49 @@ class SequenceTable {
     }  // for j
     return seq;
   }  // Generate()
+
+  template <typename RowMarkFn>
+  static SequenceId GenerateAtLeaf(Node<kPlayers> state,
+                                   PlayerId starting_player,
+                                   PlayerId acting_player, SequenceId seq,
+                                   NumNodesArray& node_counter,
+                                   RowMarkFn&& row_marker, bool cycled) {
+    if (starting_player == acting_player && cycled) {
+      ++node_counter[+state.round()].leaf_nodes;
+      return kLeafId;
+    } else if (state.folded(acting_player)) {
+      return GenerateAtLeaf(state, starting_player,
+                           (acting_player + 1) % kPlayers, seq, node_counter,
+                           row_marker, true);
+    }
+
+    ++node_counter[+state.round()].internal_nodes;
+    for (std::size_t j = 0; j < 4; ++j) {
+      ++node_counter[+state.round()].legal_actions;
+      SequenceId new_state_id = GenerateAtLeaf(state, starting_player,
+        (acting_player + 1) % kPlayers, seq, node_counter, row_marker, true);
+        row_marker(seq, state.round(), j, new_state_id);
+    }  // for j
+    return seq;
+  }  // GenerateAtLeaf()
+
+  static bool IsLeafNode(Node<kPlayers> start_state, Node<kPlayers> state,
+                         int num_raises) {
+    if (start_state.round() == Round::kPreFlop) {
+      if (state.round() != Round::kPreFlop) {
+        return true;
+      }
+    } else if (start_state.round() == Round::kFlop &&
+              start_state.players_left() > 2){
+      if (state.round() > Round::kFlop) {
+        return true;
+      }
+      if (num_raises >= 2) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /*
     @brief Converts the pot proportion of action to a state Apply()-able size.
