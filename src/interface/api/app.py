@@ -75,7 +75,7 @@ def handle_exceptions(e: Exception):
 
 @app.before_request
 def record_api_metric():
-  statsd.increment('api.requests', 1, request.base_url)
+  statsd.increment('api.requests', 1, [request.base_url])
 
 # ------------------------------------------------------------------------------
 # Routes -----------------------------------------------------------------------
