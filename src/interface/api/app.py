@@ -10,6 +10,8 @@ import logging
 
 from flask import Flask, request, make_response
 from werkzeug.exceptions import BadRequest
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 from pigeon import PigeonInterface
 import settings
@@ -25,6 +27,11 @@ from props import (
   SetHandProps, ApplyProps, SetBoardProps, ResetProps, JoinEmailListProps
 )
 
+sentry_sdk.init(
+    dsn=settings.SENTRY_DSN,
+    integrations=[FlaskIntegration()],
+    traces_sample_rate=1.0
+)
 app = Flask(__name__)
 depot_server.connect()
 log = logging.getLogger(__name__)
@@ -69,6 +76,10 @@ def handle_exceptions(e: Exception):
       rec_er = RecursionError('Could not reduce the encountered error')
       raise rec_er from new_exc
     return handle_exceptions(new_exc)
+
+@app.route('/api/debug-sentry')
+def trigger_error():
+  _ = 1 / 0
 
 @app.route('/api', methods=['GET'])
 def api_status():
