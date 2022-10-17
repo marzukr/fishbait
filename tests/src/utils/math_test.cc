@@ -44,21 +44,27 @@ TEST_CASE("chi-squared test", "[utils][math]") {
 }  // TEST_CASE "chi-squared test"
 
 TEST_CASE("sample test", "[utils][math]") {
-  constexpr int kTrials = 240000;
+  constexpr int kTrialsOfSample = 10000;
+  constexpr int kTrials = 10000;
+  int trial_failures = 0;
   std::vector<double> probabilities = {0.1, 0.1, 0.2, 0.3, 0.2, 0.1};
   fishbait::Random rng;
+  
+  for (int j = 0; j < kTrialsOfSample; ++j) {
+    std::array<int, 6> observed{0};
+    for (int i = 0; i < kTrials; ++i) {
+      std::size_t sampled = Sample(probabilities, rng);
+      observed[sampled] += 1;
+    }
 
-  std::array<int, 6> observed{0};
-  for (int i = 0; i < kTrials; ++i) {
-    std::size_t sampled = Sample(probabilities, rng);
-    observed[sampled] += 1;
+    // Chi-Squared test
+    std::array<double, 6> expected;
+    for (int i = 0; i < 6; ++i) {
+      expected[i] = probabilities[i] * kTrials;
+    }
+    if(fishbait::ChiSqTestStat(observed, expected) > 11.070) {
+      trial_failures += 1;
+    }
   }
-
-  // Chi-Squared test
-  std::array<double, 6> expected;
-  for (int i = 0; i < 6; ++i) {
-    expected[i] = probabilities[i] * kTrials;
-  }
-  REQUIRE(fishbait::ChiSqTestStat(observed, expected) <=
-          11.070);  // 0.05 significance level, 5 degrees of freedom
+  REQUIRE(trial_failures < 550);
 }  // TEST_CASE "sample test"
