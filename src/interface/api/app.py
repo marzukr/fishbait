@@ -10,8 +10,8 @@ import logging
 
 from flask import Flask, request, make_response
 from werkzeug.exceptions import BadRequest
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
+import datadog
+from datadog import statsd
 
 from pigeon import PigeonInterface
 import settings
@@ -27,14 +27,10 @@ from props import (
   SetHandProps, ApplyProps, SetBoardProps, ResetProps, JoinEmailListProps
 )
 
-sentry_sdk.init(
-    dsn=settings.SENTRY_DSN,
-    integrations=[FlaskIntegration()],
-    traces_sample_rate=1.0
-)
 app = Flask(__name__)
 depot_server.connect()
 log = logging.getLogger(__name__)
+datadog.initialize()
 
 def handle_api_error(e: ApiError):
   log.exception(e)
@@ -77,9 +73,13 @@ def handle_exceptions(e: Exception):
       raise rec_er from new_exc
     return handle_exceptions(new_exc)
 
-@app.route('/api/debug-sentry')
-def trigger_error():
-  _ = 1 / 0
+@app.before_request
+def record_api_metric():
+  statsd.increment('api.requests', 1, request.base_url)
+
+# ------------------------------------------------------------------------------
+# Routes -----------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 @app.route('/api', methods=['GET'])
 def api_status():
