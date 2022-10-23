@@ -2,7 +2,13 @@
 
 import React, { useState } from 'react';
 
-import GameInput from 'components/GameInput';
+import {
+  GameInput,
+  cardInputLabels,
+  GameInputCode,
+  makeBetLabels,
+  newHandLabels,
+} from 'components/GameInput';
 import { CardBoard } from 'components/CardBoard';
 import { BetView } from 'components/BetView';
 import { constructCard, asciiStringToIso } from 'utils/hands';
@@ -72,7 +78,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
     && gameState.neededToCall < gameState.stack[gameState.actingPlayer]
   );
 
-  const handleBetInput = (code: string | number) => {
+  const handleBetInput = (code: GameInputCode) => {
     if (code === 'fold') {
       setActionScratch({ action: Action.FOLD, size: null });
     } else if (code === 'checkcall') {
@@ -116,7 +122,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
     }
   }
 
-  const handleHandInput = (code: string) => {
+  const handleHandInput = (code: GameInputCode) => {
     const sendCards = () => {
       const scratchMucked = (
         handScratch[0] === handScratch[1] && handScratch[0] === null
@@ -133,7 +139,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
       }
     };
     if (code !== 'next') {
-      const newCard = constructCard(handScratch[selectedCard], code);
+      const newCard = constructCard(handScratch[selectedCard], String(code));
       const newHand = handScratch.slice();
       newHand[selectedCard] = newCard;
       setHandScratch(newHand);
@@ -148,12 +154,12 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
     }
   }
 
-  const handleBoardInput = (code: string) => {
+  const handleBoardInput = (code: GameInputCode) => {
     const toBoard = gameState.boardNeedsCards;
     if (toBoard === null || selectedBoardOffset === null) return;
     const idx = toBoard.start + selectedBoardOffset;
     if (code !== 'next') {
-      const newCard = constructCard(boardScratch[idx], code);
+      const newCard = constructCard(boardScratch[idx], String(code));
       const newHand = boardScratch.slice();
       newHand[idx] = newCard;
       setBoardScratch(newHand);
@@ -252,13 +258,17 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
   const toBoard = gameState.boardNeedsCards;
   const properInput = (() => {
     if (toDeal !== null) {
-      const disabled = verifyScratchForPlayer(toDeal) ? [] : ['next'];
+      const disabled: GameInputCode[] = (
+        verifyScratchForPlayer(toDeal) ? [] : ['next']
+      );
       return (
-        <GameInput type={'card'} handler={handleHandInput} disabled={disabled}/>
+        <GameInput
+          labels={cardInputLabels} handler={handleHandInput} disabled={disabled}
+        />
       );
     } else if (!isChanceNode && !isFishbaitTurn && gameState.inProgress) {
       const disabled = (() => {
-        const retVal = [];
+        const retVal: GameInputCode[] = [];
         if (canCheck) retVal.push('fold');
         if (!canCheckCall) retVal.push('checkcall');
         if (!verifyScratchAction()) retVal.push('next');
@@ -266,18 +276,25 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
       })();
       return (
         <GameInput
-          type={'bet'} handler={handleBetInput} disabled={disabled}
-          canCheck={canCheck} />
+          labels={makeBetLabels(canCheck)} handler={handleBetInput}
+          disabled={disabled}
+        />
       );
     } else if (toBoard !== null) {
-      const disabled = verifyScratchBoard(toBoard) ? [] : ['next'];
+      const disabled: GameInputCode[] = (
+        verifyScratchBoard(toBoard) ? [] : ['next']
+      );
       return (
         <GameInput
-          type={'card'} handler={handleBoardInput} disabled={disabled} />
+          labels={cardInputLabels} handler={handleBoardInput}
+          disabled={disabled}
+        />
       );
     } else if (gameState.pot === 0 && !gameState.inProgress) {
       const callback = () => api.newHand();
-      return <GameInput type={'new hand'} handler={callback} disabled={[]}/>
+      return (
+        <GameInput labels={newHandLabels} handler={callback} disabled={[]}/>
+      );
     }
   })();
 
