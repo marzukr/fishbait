@@ -22,6 +22,8 @@
 #include "utils/cereal.h"
 #include "utils/math.h"
 #include "utils/print.h"
+#include "relay/scribe.h"
+
 
 TEST_CASE("mccfr test", "[blueprint][strategy]") {
   constexpr fishbait::PlayerN kPlayers = 3;
@@ -4127,7 +4129,7 @@ TEST_CASE("mccfr test helper", "[blueprint][strategy]") {
 TEST_CASE("sample action test", "[blueprint][strategy]") {
   constexpr fishbait::PlayerN kPlayers = 3;
   constexpr int kActions = 5;
-  constexpr int kTrials = 60000;
+  constexpr int kTrials = 5000;
 
   fishbait::Node<kPlayers> start_state;
   start_state.SetSeed(fishbait::Random::Seed(7));
@@ -4144,40 +4146,48 @@ TEST_CASE("sample action test", "[blueprint][strategy]") {
   fishbait::TestClusters info_abstraction;
   int prune_constant = 0;
   int regret_floor = -10000;
+  int num_failures = 0;
   fishbait::Strategy s(start_state, actions, info_abstraction,
                        prune_constant, regret_floor);
-
-  std::array<int, 3> observed = {0, 0, 0};
-  for (int i = 0; i < kTrials; ++i) {
-    std::size_t sampled =
-        s.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
-    observed[sampled] += 1;
-  }
-
-  // Chi-Squared test
   std::array<double, 3> expected = {kTrials/3.0, kTrials/3.0, kTrials/3.0};
-  REQUIRE(fishbait::ChiSqTestStat(observed, expected) <=
-          5.991);  // 0.05 significance level, 2 degrees of freedom
-
-  auto s_avg = s.InitialAverage();
-  observed = {0, 0, 0};
-  for (int i = 0; i < kTrials; ++i) {
-    std::size_t sampled =
-        s_avg.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
-    observed[sampled] += 1;
+  std::array<int, 3> observed = {0, 0, 0};
+  for (int j = 0; j < kTrials; ++j) {
+    observed = {0, 0, 0};
+    for (int i = 0; i < kTrials; ++i) {
+      std::size_t sampled =
+          s.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
+      observed[sampled] += 1;
+    }
+    if(fishbait::ChiSqTestStat(observed, expected) > 5.991) {
+      num_failures++;
+    }
   }
-  std::array policy = s_avg.Policy(fishbait::Round::kPreFlop, 0, 0);
-  for (int i = 0; i < 3; ++i) {
-    REQUIRE(policy[i] == Approx(1.0/3.0));
+  REQUIRE(num_failures <= 275);
+  num_failures = 0;
+  for (int j = 0; j < kTrials; ++j) {
+    auto s_avg = s.InitialAverage();
+    observed = {0, 0, 0};
+    for (int i = 0; i < kTrials; ++i) {
+      std::size_t sampled =
+          s_avg.SampleAction(fishbait::Round::kPreFlop, 0, 0).legal_idx;
+      observed[sampled] += 1;
+    }
+    std::array policy = s_avg.Policy(fishbait::Round::kPreFlop, 0, 0);
+    for (int i = 0; i < 3; ++i) {
+      REQUIRE(policy[i] == Approx(1.0/3.0));
+    }
+    if(fishbait::ChiSqTestStat(observed, expected) > 5.991) {
+      num_failures++;
+    }
   }
-  REQUIRE(fishbait::ChiSqTestStat(observed, expected) <= 5.991);
+  REQUIRE(num_failures <= 275);
 }
 
 TEST_CASE("battle test", "[blueprint][strategy][.]") {
   constexpr fishbait::PlayerN kPlayers = 3;
   constexpr int kActions = 6;
   constexpr int kMeans = 100;
-  constexpr int kTrials = 20000;
+  constexpr int kTrials = 10000;
   constexpr int kTrainTime = 10000;
   constexpr int kAverageInterval = 1000;
 
