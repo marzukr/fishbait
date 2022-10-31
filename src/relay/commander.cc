@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 
+#include "blueprint/definitions.h"
 #include "blueprint/hyperparameters.h"
 #include "clustering/cluster_table.h"
 #include "poker/definitions.h"
@@ -19,8 +20,10 @@ namespace fishbait {
 
 extern "C" {
 
-template class Commander<hparam::kPlayers, hparam::kActions, ClusterTable>;
-using CommanderT = Commander<hparam::kPlayers, hparam::kActions, ClusterTable>;
+constexpr int kActions = hparam::kActions;
+
+template class Commander<hparam::kPlayers, kActions, ClusterTable>;
+using CommanderT = Commander<hparam::kPlayers, kActions, ClusterTable>;
 template struct NodeSnapshot<hparam::kPlayers>;
 using NodeSnapshotT = NodeSnapshot<hparam::kPlayers>;
 
@@ -118,6 +121,25 @@ PlayerId CommanderFishbaitSeat(CommanderT* c) {
     HandleError(e);
   }
   return 0;
+}
+
+SequenceId GetIllegalActionId() {
+  return kIllegalId;
+}
+
+/* out_arr is expected to be of size kActions */
+void CommanderGetAvailableActions(
+  CommanderT* c, CommanderT::AvailableAction* out_arr
+) {
+  try {
+    std::array aas = c->GetAvailableActions();
+    for (std::size_t i = 0; i < aas.size(); ++i) {
+      out_arr[i] = aas[i];
+    }
+    return;
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
 }
 
 struct ActionStruct {
