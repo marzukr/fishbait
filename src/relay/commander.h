@@ -192,7 +192,7 @@ class Commander {
   struct AvailableAction {
     Action play;
     double size;
-    double policy;
+    float policy;
     std::size_t action_idx = kIllegalId;
   };
 

@@ -123,8 +123,12 @@ PlayerId CommanderFishbaitSeat(CommanderT* c) {
   return 0;
 }
 
-SequenceId GetIllegalActionId() {
+SequenceId CommanderGetIllegalActionId() {
   return kIllegalId;
+}
+
+int CommanderGetKActions() {
+  return kActions;
 }
 
 /* out_arr is expected to be of size kActions */

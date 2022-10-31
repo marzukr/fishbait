@@ -83,9 +83,6 @@ class Prop(Generic[T]):
     stamped_value = self.prop_type(value)
     obj.__dict__[self.name] = stamped_value
 
-# ------------------------------------------------------------------------------
-# Base Props and Validation Classes --------------------------------------------
-# ------------------------------------------------------------------------------
 
 class TypedList(Generic[T], list[T]):
   '''
@@ -143,6 +140,14 @@ class ValidationInt(int):
       raise ValidationError()
     if cls.MAXIMUM is not None and self >= cls.MAXIMUM:
       raise ValidationError()
+    return self
+
+class ValidationFloat(float):
+  def __new__(cls, requested):
+    try:
+      self = super().__new__(cls, requested)
+    except (ValueError, TypeError) as err:
+      raise ValidationError() from err
     return self
 
 # ------------------------------------------------------------------------------
@@ -238,6 +243,9 @@ class ActionSize(ChipCount):
       return super().__new__(cls, 0)
     return super().__new__(cls, requested)
 
+class ValidationSequenceId(ValidationInt):
+  MINIMUM: int | None = 0
+
 
 class ChipPlayerList(TypedList[ChipCount]):
   LIST_LEN = settings.PLAYERS
@@ -269,6 +277,13 @@ class SetHandProps(BaseProps):
 class ApplyProps(BaseProps):
   action: Prop[ActionType] = Prop(ActionType)
   size: Prop[ActionSize] = Prop(ActionSize)
+
+@propclass
+class AvailableActionProps(BaseProps):
+  action: Prop[ActionType] = Prop(ActionType)
+  size: Prop[ValidationFloat] = Prop(ValidationFloat)
+  policy: Prop[ValidationFloat] = Prop(ValidationFloat)
+  action_idx: Prop[ValidationSequenceId] = Prop(ValidationSequenceId)
 
 @propclass
 class SetBoardProps(BaseProps):
