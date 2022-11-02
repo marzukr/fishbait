@@ -44,8 +44,8 @@ TEST_CASE("chi-squared test", "[utils][math]") {
 }  // TEST_CASE "chi-squared test"
 
 TEST_CASE("sample test", "[utils][math]") {
-  constexpr int kTrialsOfSample = 10000;
-  constexpr int kTrials = 10000;
+  constexpr int kTrialsOfSample = 5000;
+  constexpr int kTrials = 5000;
   int trial_failures = 0;
   std::vector<double> probabilities = {0.1, 0.1, 0.2, 0.3, 0.2, 0.1};
   fishbait::Random rng;
@@ -65,5 +65,8 @@ TEST_CASE("sample test", "[utils][math]") {
       trial_failures += 1;
     }
   }
-  REQUIRE(trial_failures < 550);
+  // if chi-squared failures are binomial with probability = 0.05, then
+  // number of failures is between 200 and 300 with probability > 0.999
+  REQUIRE(trial_failures < 300);
+  REQUIRE(trial_failures > 200);
 }  // TEST_CASE "sample test"

@@ -4162,7 +4162,10 @@ TEST_CASE("sample action test", "[blueprint][strategy]") {
       num_failures++;
     }
   }
-  REQUIRE(num_failures <= 275);
+  // if chi-squared failures are binomial with probability = 0.05, then
+  // number of failures is between 200 and 300 with probability > 0.999
+  REQUIRE(num_failures < 300);
+  REQUIRE(num_failures > 200);
   num_failures = 0;
   for (int j = 0; j < kTrials; ++j) {
     auto s_avg = s.InitialAverage();
@@ -4180,7 +4183,10 @@ TEST_CASE("sample action test", "[blueprint][strategy]") {
       num_failures++;
     }
   }
-  REQUIRE(num_failures <= 275);
+  // if chi-squared failures are binomial with probability = 0.05, then
+  // number of failures is between 200 and 300 with probability > 0.999
+  REQUIRE(num_failures < 300);
+  REQUIRE(num_failures > 200);
 }
 
 TEST_CASE("battle test", "[blueprint][strategy][.]") {
