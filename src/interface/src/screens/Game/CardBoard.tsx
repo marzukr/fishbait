@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import Card from 'components/Card';
+import Card from 'screens/Game/Card';
 import { BoardNeedsCards, CardT } from 'utils/api';
 
 interface CardBoardProps {

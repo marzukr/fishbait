@@ -5,7 +5,7 @@ import { keyBy, get, map } from 'lodash';
 
 import { useKey } from 'utils/effects';
 
-import 'components/GameInput.css';
+import './GameInput.css';
 
 type NextCode = 'next';
 

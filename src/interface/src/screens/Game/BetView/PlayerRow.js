@@ -1,8 +1,8 @@
 // Copyright 2021 Marzuk Rashid
 
 import React from 'react';
-import 'components/PlayerRow.css';
-import Card from './Card';
+import './PlayerRow.css';
+import Card from '../Card';
 
 /*
   This component is a single row in the BetView table. This represents the state

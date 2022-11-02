@@ -8,9 +8,9 @@ import {
   GameInputCode,
   makeBetLabels,
   newHandLabels,
-} from 'components/GameInput';
-import { CardBoard } from 'components/CardBoard';
-import { BetView } from 'components/BetView';
+} from 'screens/Game/GameInput';
+import { CardBoard } from 'screens/Game/CardBoard';
+import { BetView } from 'screens/Game/BetView/BetView';
 import { constructCard, asciiStringToIso } from 'utils/hands';
 import {
   Api, Action, BoardNeedsCards, useSafeAsync, CardT, PartialAction

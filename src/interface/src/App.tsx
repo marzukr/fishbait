@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 
-import { Game } from 'screens/Game';
-import { Settings } from 'screens/Settings';
+import { Game } from 'screens/Game/Game';
+import { Settings } from 'screens/Settings/Settings';
 import { Error } from 'screens/Error';
 import { useApi } from 'utils/api';
 import { DiscordButton } from 'components/DiscordButton';

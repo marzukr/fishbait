@@ -1,7 +1,7 @@
 // Copyright 2021 Marzuk Rashid
 
 import React from 'react';
-import 'components/Card.css';
+import './Card.css';
 import { isSuit } from 'utils/hands';
 
 /*

@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import PlayerRow from 'components/PlayerRow';
+import PlayerRow from 'screens/Game/BetView/PlayerRow';
 import { GameState, CardT, PartialAction } from 'utils/api';
 
 
