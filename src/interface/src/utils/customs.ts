@@ -127,7 +127,7 @@ export function unionAgent
 (leftType: U, rightType: V) {
   return new UnionAgent(leftType, rightType);
 }
-export function nullable<T extends BaseAgent<Stamped<T>>>(otherAgent: T) {
+export function nullableAgent<T extends BaseAgent<Stamped<T>>>(otherAgent: T) {
   return unionAgent(nullAgent, otherAgent);
 }
 

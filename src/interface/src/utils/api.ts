@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { isEqual, mapKeys, snakeCase } from 'lodash';
 
 import {
-  objectAgent, numberAgent, booleanAgent, enumAgent, arrayAgent, nullable,
-  Stamped, stringAgent, unsnakeAgent, conversionAgent, Nullable
+  objectAgent, numberAgent, booleanAgent, enumAgent, arrayAgent,
+  nullableAgent, Stamped, stringAgent, unsnakeAgent, conversionAgent, Nullable
 } from 'utils/customs';
 import { isoToAsciiString } from 'utils/hands';
 
@@ -40,7 +40,14 @@ const actionInterfaceAgent = objectAgent({
 export type ActionInterface = Stamped<typeof actionInterfaceAgent>;
 export type PartialAction = Nullable<ActionInterface>;
 
-const cardAgent = nullable(stringAgent);
+const availableActionAgent = objectAgent({
+  action: enumAgent(Action),
+  size: numberAgent,
+  policy: numberAgent,
+  action_idx: numberAgent,
+});
+
+const cardAgent = nullableAgent(stringAgent);
 export type CardT = Stamped<typeof cardAgent>;
 
 /**
@@ -95,26 +102,26 @@ const gameStateAgent = unsnakeAgent(objectAgent({
    * null. If the player has mucked, then it will be an array filled with null.
    */
   hands: arrayAgent(conversionAgent(
-    nullable(arrayAgent(nullable(numberAgent))),
+    nullableAgent(arrayAgent(nullableAgent(numberAgent))),
     (val) => {
       if (val === null) return val;
       if (isEqual(val, [null, null])) return [null, null];
       return val.map(c => c ? isoToAsciiString[c] : null);
     },
-    nullable(arrayAgent(cardAgent))
+    nullableAgent(arrayAgent(cardAgent))
   )),
   /** The cards on the public board. Null if we don't know the card yet. */
   board: arrayAgent(conversionAgent(
-    nullable(numberAgent),
+    nullableAgent(numberAgent),
     (c) => c ? isoToAsciiString[c] : null,
     cardAgent
   )),
   /** Which player number fishbait is */
   fishbaitSeat: numberAgent,
   /** Which player, if any, we need hand info for */
-  playerNeedsHand: nullable(numberAgent),
+  playerNeedsHand: nullableAgent(numberAgent),
   /** Which board cards, if any, we need info for */
-  boardNeedsCards: nullable(boardNeedsCardsAgent),
+  boardNeedsCards: nullableAgent(boardNeedsCardsAgent),
   /** If the player we need hand info for can muck */
   canMuck: booleanAgent,
   /** Names of each player */
@@ -122,9 +129,11 @@ const gameStateAgent = unsnakeAgent(objectAgent({
   /** If each player's hand is known or not */
   knownCards: arrayAgent(booleanAgent),
   /** What each player's last action was */
-  lastAction: arrayAgent(nullable(actionInterfaceAgent)),
+  lastAction: arrayAgent(nullableAgent(actionInterfaceAgent)),
   /** If each board card is known or not */
   knownBoard: arrayAgent(booleanAgent),
+  /** The actions available to fishbait during its last turn to act */
+  availableActions: nullableAgent(arrayAgent(availableActionAgent)),
 }));
 export type GameState = Stamped<typeof gameStateAgent>;
 
