@@ -57,8 +57,8 @@ class PlayerRow extends React.Component {
         h-[72px]
       `}>
         <div className={`
-          playerInfoBox grid grid-cols-[35px_1fr_1fr_30%] grid-rows-2 px-1
-          h-full ${this.props.folded ? 'opacity-50' : ''}
+          grid grid-cols-[35px_1fr_1fr_30%] grid-rows-2 px-1 h-full
+          ${this.props.folded ? 'opacity-50' : ''}
         `}>
           <div className={`
             col-span-1 row-span-2 flex justify-center items-center text-xl

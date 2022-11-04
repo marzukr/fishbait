@@ -2,9 +2,10 @@
 
 import React from 'react';
 
-import PlayerRow from 'screens/Game/BetView/PlayerRow';
 import { GameState, CardT, PartialAction } from 'utils/api';
 
+import { StrategyRow } from './StrategyRow';
+import PlayerRow from './PlayerRow';
 
 /** An object describing the hand currently being modified */
 interface ModifyingHandProps {
@@ -73,6 +74,11 @@ export const BetView: React.FC<BetViewProps> = (
         hideCards={i === gameState.fishbaitSeat}
       />
     );
+    if (i === gameState.fishbaitSeat) {
+      playerInfoBoxes.push(
+        <StrategyRow key={`${i}-strategy`} gameState={gameState} />
+      );
+    }
   }
   const callAmount = neededToCall === null ? 'n/a' : neededToCall;
   const minRaiseLabel = minRaise === null ? 'n/a' : minRaise;

@@ -642,6 +642,7 @@ class Pigeon(PigeonInterface):
     self._state.known_cards = [False] * settings.PLAYERS
     self._state.last_action = [None] * settings.PLAYERS
     self._state.known_board = [False] * settings.BOARD_CARDS
+    self._state.available_actions = None
     self._update_state()
 
   @_auto_advance

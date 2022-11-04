@@ -46,6 +46,7 @@ const availableActionAgent = objectAgent({
   policy: numberAgent,
   action_idx: numberAgent,
 });
+export type AvailableAction = Stamped<typeof availableActionAgent>;
 
 const cardAgent = nullableAgent(stringAgent);
 export type CardT = Stamped<typeof cardAgent>;
