@@ -69,15 +69,28 @@ export const StrategyRow: React.FC<StrategyRowProps> = ({
   });
   const bars = actions.map((action, idx) => {
     const actionPercent = action.policy * 100;
-    const roundedPolicy = actionPercent.toPrecision(ACTION_POLICY_PRECISION);
-    const percentText = `${roundedPolicy}%`
-    const barPercent = percentText;
+    const roundedString = (
+      actionPercent >= 1
+        ? actionPercent.toPrecision(ACTION_POLICY_PRECISION)
+        : (Math.round(actionPercent * 100) / 100)
+          .toFixed(ACTION_POLICY_PRECISION - 1)
+    );
+    const roundedNumber = Number(roundedString);
+    const roundedTo100 =  roundedNumber === 100 && actionPercent !== 100;
+    const roundedTo0 = roundedNumber === 0 && actionPercent !== 0;
+    const percentText = (
+      roundedTo100
+        ? '>99.9%'
+        : roundedTo0
+          ? '<0.01%'
+          : `${roundedString}%`
+    );
     return (
       <div className={`flex h-6 ${idx !== 0 ? 'border-t' : ''}`} key={idx}>
         <div
           className='h-full shrink-0 py-1'
           style={{
-            flexBasis: `max(3px, ${barPercent})`
+            flexBasis: `max(3px, ${percentText})`
           }}
         >
           <div className='h-full w-full border-y border-r border-sky-500'>
