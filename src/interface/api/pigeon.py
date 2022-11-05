@@ -665,7 +665,8 @@ class Pigeon(PigeonInterface):
     available_action_arr = (AvailableActionStruct * NUM_ACTIONS)()
     commander_get_available_actions(self._commander, available_action_arr)
     available_action_list: List[AvailableActionStruct] = [
-      act for act in available_action_arr if act.action_idx != ILLEGAL_SEQ_ID
+      act for act in available_action_arr
+      if act.action_idx != ILLEGAL_SEQ_ID and act.policy != 0
     ]
     self._state.available_actions = [
       act.to_props(can_check) for act in available_action_list

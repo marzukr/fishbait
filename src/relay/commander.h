@@ -215,11 +215,16 @@ class Commander {
     std::array<AvailableAction, kActions> ret_arr;
     for (std::size_t i = 0; i < n_actions; ++i) {
       SequenceId next_seq = strategy_.Next(r, abstract_seq_, i);
-      /* Skip any actions that are illegal in the actual or abstract game */
+      /* Filter out all actions that are illegal in the actual game */
       if (!actual_state_.IsLegal(actions[i]) || next_seq == kIllegalId) {
+        policy[i] = 0;
         continue;
       }
       ret_arr[i] = { actions[i].play, actions[i].size, policy[i], i };
+    }
+    Normalize(policy);
+    for (std::size_t i = 0; i < n_actions; ++i) {
+      ret_arr[i].policy = policy[i];
     }
     return ret_arr;
   }
