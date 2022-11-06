@@ -40,12 +40,12 @@ const actionInterfaceAgent = objectAgent({
 export type ActionInterface = Stamped<typeof actionInterfaceAgent>;
 export type PartialAction = Nullable<ActionInterface>;
 
-const availableActionAgent = objectAgent({
+const availableActionAgent = unsnakeAgent(objectAgent({
   action: enumAgent(Action),
   size: numberAgent,
   policy: numberAgent,
-  action_idx: numberAgent,
-});
+  actionIdx: numberAgent,
+}));
 export type AvailableAction = Stamped<typeof availableActionAgent>;
 
 const cardAgent = nullableAgent(stringAgent);
@@ -246,7 +246,8 @@ export const useApi = () => {
             throw error;
           }
         });
-        const catchallCatch = promCatch.catch(() => {
+        const catchallCatch = promCatch.catch((error) => {
+          console.error(error);
           setUnexpectedError(true);
           return false;
         });

@@ -27,7 +27,16 @@ abstract class BaseAgent<T = unknown> {
   defaultValue: T | undefined;
 
   /** A function that checks if the given value is a T. */
-  abstract canStamp(requested: unknown): requested is T;
+  abstract verifyStamp(requested: unknown): requested is T;
+
+  /**
+   * A function that checks if the given value can be made into a T with
+   * makeStampable.
+   */
+  canStamp(requested: unknown): boolean {
+    const stampable = this.makeStampable(requested);
+    return this.verifyStamp(stampable);
+  };
 
   /**
    * If we need to make any modifications to requested before we can stamp it,
@@ -44,7 +53,7 @@ abstract class BaseAgent<T = unknown> {
    */
   stamp(requested: unknown): T {
     const stampable = this.makeStampable(requested);
-    if (this.canStamp(stampable)) return stampable;
+    if (this.verifyStamp(stampable)) return stampable;
     throw new Error(`${requested} cannot be stamped by agent ${this}`);
   }
 }
@@ -70,28 +79,28 @@ export type Nullable<T> = {
 /** */
 
 class StringAgent extends BaseAgent<string> {
-  canStamp(requested: unknown): requested is string {
+  verifyStamp(requested: unknown): requested is string {
     return typeof requested === 'string';
   }
 }
 export const stringAgent = new StringAgent();
 
 class NumberAgent extends BaseAgent<number> {
-  canStamp(requested: unknown): requested is number {
+  verifyStamp(requested: unknown): requested is number {
     return typeof requested === 'number';
   }
 }
 export const numberAgent = new NumberAgent();
 
 class BooleanAgent extends BaseAgent<boolean> {
-  canStamp(requested: unknown): requested is boolean {
+  verifyStamp(requested: unknown): requested is boolean {
     return typeof requested === 'boolean';
   }
 }
 export const booleanAgent = new BooleanAgent();
 
 class NullAgent extends BaseAgent<null> {
-  canStamp(requested: unknown): requested is null {
+  verifyStamp(requested: unknown): requested is null {
     return requested === null;
   }
 }
@@ -115,10 +124,18 @@ extends BaseAgent<Stamped<U> | Stamped<V>> {
       v: vAgent,
     };
   }
-  canStamp(requested: unknown): requested is Stamped<U> | Stamped<V> {
+  makeStampable(requested: unknown): unknown {
+    if (this.directReports.u.canStamp(requested)) {
+      return this.directReports.u.makeStampable(requested);
+    } else if (this.directReports.v.canStamp(requested)) {
+      return this.directReports.v.makeStampable(requested);
+    }
+    return requested;
+  }
+  verifyStamp(requested: unknown): requested is Stamped<U> | Stamped<V> {
     return (
-      this.directReports.u.canStamp(requested)
-      || this.directReports.v.canStamp(requested)
+      this.directReports.u.verifyStamp(requested)
+      || this.directReports.v.verifyStamp(requested)
     );
   }
 }
@@ -147,9 +164,9 @@ extends BaseAgent<Array<Stamped<T>>> {
     if (!Array.isArray(requested)) return requested;
     return requested.map((value) => this.itemAgent.makeStampable(value));
   }
-  canStamp(requested: unknown): requested is Array<Stamped<T>> {
+  verifyStamp(requested: unknown): requested is Array<Stamped<T>> {
     if (!Array.isArray(requested)) return false;
-    return requested.every(v => this.itemAgent.canStamp(v));
+    return requested.every(v => this.itemAgent.verifyStamp(v));
   }
 }
 export const arrayAgent = <T extends BaseAgent<Stamped<T>>>(itemAgent: T) => (
@@ -175,7 +192,7 @@ extends BaseAgent<EnumValue<E>> {
     super();
     this.enumObj = enumObj;
   }
-  canStamp(requested: unknown): requested is EnumValue<E> {
+  verifyStamp(requested: unknown): requested is EnumValue<E> {
     const enumValues = Object.values(this.enumObj);
     return enumValues.includes(requested);
   }
@@ -206,11 +223,11 @@ extends BaseAgent<StampedObject<O>> {
       return this.objShape[key].makeStampable(value);
     });
   }
-  canStamp(requested: unknown): requested is StampedObject<O> {
+  verifyStamp(requested: unknown): requested is StampedObject<O> {
     if (typeof requested !== 'object' || requested === null) return false;
     return Object.entries(this.objShape).every(([property, agent]) => {
       if (!hasProperty(requested, property)) return false;
-      return agent.canStamp(requested[property]);
+      return agent.verifyStamp(requested[property]);
     });
   }
 }
@@ -231,8 +248,8 @@ extends BaseAgent<StampedObject<O>> {
     super();
     this.objAgent = objAgent;
   }
-  canStamp(requested: unknown): requested is StampedObject<O> {
-    return this.objAgent.canStamp(requested);
+  verifyStamp(requested: unknown): requested is StampedObject<O> {
+    return this.objAgent.verifyStamp(requested);
   }
   makeStampable(requested: unknown): unknown {
     if (typeof requested !== 'object' || requested === null) return requested;
@@ -262,15 +279,15 @@ extends BaseAgent<Stamped<O>> {
     this.converter = converter;
     this.outputAgent = outputAgent;
   }
-  canStamp(requested: unknown): requested is Stamped<O> {
-    return this.outputAgent.canStamp(requested);
+  verifyStamp(requested: unknown): requested is Stamped<O> {
+    return this.outputAgent.verifyStamp(requested);
   }
   makeStampable(requested: unknown): unknown {
-    if (!this.inputAgent.canStamp(requested)) return requested
+    if (!this.inputAgent.verifyStamp(requested)) return requested
     return this.converter(requested);
   }
   stamp(requested: unknown) {
-    if (this.inputAgent.canStamp(requested)) {
+    if (this.inputAgent.verifyStamp(requested)) {
       return this.converter(requested);
     }
     throw new Error(`${requested} cannot be stamped by agent ${this}`);
