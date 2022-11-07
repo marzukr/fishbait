@@ -650,6 +650,7 @@ class Pigeon(PigeonInterface):
     '''Proceeds play to the next round.'''
     commander_proceed_play(self._commander)
     self._state.last_action = [None] * settings.PLAYERS
+    self._state.available_actions = None
 
   def _update_state(self):
     '''
