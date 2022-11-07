@@ -112,6 +112,7 @@ export const StrategyRow: React.FC<StrategyRowProps> = ({
       className={`
         ${shouldShow && 'px-3 py-2.5'} overflow-hidden flex bg-slate-50
         shadow-[inset_0_1px_4px_0_rgba(0,0,0,0.1)] box-content
+        ${gameState.folded[gameState.fishbaitSeat] ? 'opacity-50' : ''}
       `}
       style={{
         height: shouldShow ? `${actions.length * 24}px` : 0,
