@@ -21,6 +21,10 @@ export const StrategyRow: React.FC<StrategyRowProps> = ({
   const [availableActions, setAvailableActions] = (
     useState<AvailableAction[]>([])
   );
+  const fishbaitAction = gameState.lastAction[gameState.fishbaitSeat];
+  const [fishbaitActionIdx, setFishbaitActionIdx] = (
+    useState(fishbaitAction?.actionIdx)
+  );
 
   /*
    * This logic updates availableActions state if gameState.availableActions has
@@ -34,6 +38,7 @@ export const StrategyRow: React.FC<StrategyRowProps> = ({
     && availableActions !== gameState.availableActions
   ) {
     setAvailableActions(gameState.availableActions);
+    setFishbaitActionIdx(fishbaitAction?.actionIdx);
     return null;
   }
 
@@ -85,6 +90,9 @@ export const StrategyRow: React.FC<StrategyRowProps> = ({
           ? '<0.01%'
           : `${roundedString}%`
     );
+    const barClass = (
+      fishbaitActionIdx === action.actionIdx ? ' opacity-40' : 'opacity-10'
+    );
     return (
       <div className={`flex h-6 ${idx !== 0 ? 'border-t' : ''}`} key={idx}>
         <div
@@ -94,7 +102,7 @@ export const StrategyRow: React.FC<StrategyRowProps> = ({
           }}
         >
           <div className='h-full w-full border-y border-r border-sky-500'>
-            <div className='h-full w-full bg-sky-500 opacity-25'/>
+            <div className={`h-full w-full bg-sky-500 ${barClass}`}/>
           </div>
         </div>
         <div className='pl-1'>{percentText}</div>
