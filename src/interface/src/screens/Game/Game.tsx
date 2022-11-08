@@ -39,6 +39,7 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
   const [actionScratch, setActionScratch] = useState<PartialAction>({
     action: null,
     size: null,
+    actionIdx: null,
   });
 
   // Array of board cards where the entered board cards are written if board
@@ -80,16 +81,18 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
 
   const handleBetInput = (code: GameInputCode) => {
     if (code === 'fold') {
-      setActionScratch({ action: Action.FOLD, size: null });
+      setActionScratch({ action: Action.FOLD, size: null, actionIdx: null });
     } else if (code === 'checkcall') {
       setActionScratch({
         action: canCheck ? Action.CHECK : Action.CALL,
         size: null,
+        actionIdx: null,
       });
     } else if (code === 'allin') {
       setActionScratch({
         action: Action.ALL_IN,
         size: null,
+        actionIdx: null,
       });
     } else if (code === 'delete') {
       const newAction = (
@@ -105,19 +108,20 @@ export const Game: React.FC<GameProps> = ({ api, toggleSettings }) => {
           ? actionScratch.size / 10 >> 0
           : null
       );
-      setActionScratch({ action: newAction, size: newSize });
+      setActionScratch({ action: newAction, size: newSize, actionIdx: null });
     } else if (typeof code === 'number') {
       const prevSize = actionScratch.size === null
         ? 0
         : actionScratch.size;
       const newSize = prevSize * 10 + code;
-      setActionScratch({ action: Action.BET, size: newSize });
+      setActionScratch({ action: Action.BET, size: newSize, actionIdx: null });
 
     // code is 'next':
     } else {
       safeAsync(api.apply(actionScratch)).then(() => setActionScratch({
         action: null,
         size: null,
+        actionIdx: null,
       }));
     }
   }

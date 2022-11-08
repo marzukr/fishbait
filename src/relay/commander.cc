@@ -147,16 +147,18 @@ void CommanderGetAvailableActions(
 }
 
 struct ActionStruct {
+  // The action fishbait decided to take
   Action action;
+  // The amount of chips fishbait bet if the action was kBet
   Chips size;
-  bool could_check;
+  // The index of the chosen action
+  std::size_t action_idx;
 };
 
 ActionStruct CommanderQuery(CommanderT* c) {
   try {
-    bool can_check = c->State().NeededToCall() == 0;
-    std::pair fish_act = c->Query();
-    return { fish_act.first, fish_act.second, can_check };
+    auto [ action, size, action_idx ] = c->Query();
+    return { action, size, action_idx };
   } catch (const std::exception& e) {
     HandleError(e);
   }

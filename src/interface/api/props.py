@@ -4,7 +4,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Type, Generic, TypeVar
+from typing import Any, Type, Generic, TypeVar, Callable
 from ctypes import _SimpleCData, Array
 import logging
 from collections.abc import Iterable
@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 
 T = TypeVar('T')
+U = TypeVar('U')
 C = TypeVar('C', bound=_SimpleCData)
 
 # ------------------------------------------------------------------------------
@@ -52,7 +53,7 @@ def propclass(custom_props: Type[T]) -> Type[T]:
       if candidate_val == not_found_err and is_dict:
         candidate_val = candidate_obj.get(prop, not_found_err)
       if candidate_val == not_found_err:
-        raise ValidationError()
+        candidate_val = None
       setattr(self, prop, candidate_val)
 
   # Note: We need set the __init__ method manually here instead of putting it in
@@ -66,22 +67,49 @@ def propclass(custom_props: Type[T]) -> Type[T]:
 class Prop(Generic[T]):
   '''
   A descriptor that takes an arbitrary object and attempts to convert it to a
-  `T` by using `T(obj)` and then assigning that value to the parent object if
-  the conversion is successful.
+  `T` by using `prop_type(obj)` and then assigning that value to the parent
+  object if the conversion is successful.
   '''
 
-  def __init__(self, prop_type: Type[T]):
-    self.prop_type = prop_type
+  def __init__(self, prop_type: Callable[[Any], T]):
+    self.prop_ctr = prop_type
 
   def __set_name__(self, owner, name):
     self.name = name
 
   def __get__(self, obj, obj_type=None) -> T:
-    return obj.__dict__.get(self.name)
+    return obj.__dict__[self.name]
 
   def __set__(self, obj, value):
-    stamped_value = self.prop_type(value)
+    stamped_value = self.prop_ctr(value)
     obj.__dict__[self.name] = stamped_value
+
+
+class ValidationUnion(Generic[T, U]):
+  '''Validates to a T or U'''
+
+  def __init__(self, t_ctr: Callable[[Any], T], u_ctr: Callable[[Any], U]):
+    self.t_ctr = t_ctr
+    self.u_ctr = u_ctr
+
+  def __call__(self, requested) -> T | U:
+    try:
+      return self.t_ctr(requested)
+    except ValidationError:
+      pass
+    try:
+      return self.u_ctr(requested)
+    except ValidationError:
+      pass
+    raise ValidationError()
+
+def validation_none(requested):
+  if requested is not None:
+    raise ValidationError()
+
+class ValidationOptional(Generic[T], ValidationUnion[T, None]):
+  def __init__(self, t_ctr: Callable[[Any], T]):
+    super().__init__(t_ctr, validation_none)
 
 
 class TypedList(Generic[T], list[T]):
@@ -277,6 +305,9 @@ class SetHandProps(BaseProps):
 class ApplyProps(BaseProps):
   action: Prop[ActionType] = Prop(ActionType)
   size: Prop[ActionSize] = Prop(ActionSize)
+  action_idx: Prop[ValidationSequenceId | None] = (
+    Prop(ValidationOptional(ValidationSequenceId))
+  )
 
 @propclass
 class AvailableActionProps(BaseProps):

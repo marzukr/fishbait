@@ -33,10 +33,11 @@ export enum Action {
   ALL_IN = 'All In'
 }
 
-const actionInterfaceAgent = objectAgent({
+const actionInterfaceAgent = unsnakeAgent(objectAgent({
   action: enumAgent(Action),
   size: numberAgent,
-});
+  actionIdx: nullableAgent(numberAgent),
+}));
 export type ActionInterface = Stamped<typeof actionInterfaceAgent>;
 export type PartialAction = Nullable<ActionInterface>;
 

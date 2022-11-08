@@ -9,6 +9,7 @@
 #include <random>
 #include <stdexcept>
 #include <utility>
+#include <tuple>
 
 #include "array/array.h"
 #include "blueprint/definitions.h"
@@ -189,13 +190,6 @@ class Commander {
     AutoFoldCheckCall();
   }  // Apply()
 
-  struct AvailableAction {
-    Action play;
-    double size;
-    float policy;
-    std::size_t action_idx = kIllegalId;
-  };
-
   /*
     @brief Get the policy of Fishbait if it were choosing an action for the
         player acting in the current abstract state. All illegal actions in the
@@ -226,6 +220,13 @@ class Commander {
     return policy;
   }
 
+  struct AvailableAction {
+    Action play;
+    double size;
+    float policy;
+    std::size_t action_idx = kIllegalId;
+  };
+
   /*
     @brief Get the actions available to Fishbait and its policy if it were
         choosing an action for the player acting in the current abstract state.
@@ -245,11 +246,9 @@ class Commander {
   /*
     @brief Ask fishbait to make a move.
 
-    @return A pair of an Action and an amount of Chips. The Action is the action
-        that fishbait has decided to take. The Chips are how many Chips fishbait
-        is betting if the Action is kBet.
+    @return A tuple detailing the action, chips, and action_idx
   */
-  std::pair<Action, Chips> Query() {
+  std::tuple<Action, Chips, std::size_t> Query() {
     if (actual_state_.acting_player() != fishbait_seat_) {
       throw std::logic_error("Query called when it's not fishbait's turn.");
     }
@@ -271,7 +270,7 @@ class Commander {
     actual_state_.Apply(action.play, actual_chips);
 
     AutoFoldCheckCall();
-    return std::make_pair(action.play, actual_chips);
+    return std::make_tuple(action.play, actual_chips, action_idx);
   }
 
   /* @brief Returns the current state of the game. */
