@@ -9,15 +9,19 @@ from typing import (
 )
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from ctypes import cdll
 from ctypes import (
-  Structure,
+  cdll,
   c_void_p,
   c_char_p,
   c_uint32,
   c_uint8,
   c_bool,
   c_double,
+  c_float,
+  c_size_t,
+  c_int,
+  POINTER,
+  Structure,
 )
 import logging
 
@@ -31,76 +35,12 @@ lib = cdll.LoadLibrary(settings.RELAY_LIB_LOCATION)
 
 
 Chips = c_uint32
+SequenceId = c_uint32
 PlayerId = c_uint8
 CommanderPtr = c_void_p
 RoundId = c_uint8
 ActionCode = c_uint8
 ISOCard = c_uint8
-
-
-class Round(str, Enum):
-  PREFLOP = 'Preflop'
-  FLOP = 'Flop'
-  TURN = 'Turn'
-  RIVER = 'River'
-
-
-class NodeSnapshot(Structure):
-  '''A ctypes Structure for the C++ NodeSnapshot struct.'''
-  _fields_ = [
-    ('players', PlayerId),
-    ('big_blind', Chips),
-    ('small_blind', Chips),
-    ('ante', Chips),
-    ('big_blind_ante', c_bool),
-    ('blind_before_ante', c_bool),
-    ('rake', c_double),
-    ('rake_cap', Chips),
-    ('no_flop_no_drop', c_bool),
-    ('button', PlayerId),
-    ('in_progress', c_bool),
-    ('round', RoundId),
-    ('acting_player', PlayerId),
-    ('folded', c_bool * settings.PLAYERS),
-    ('players_left', PlayerId),
-    ('players_all_in', PlayerId),
-    ('pot', Chips),
-    ('bets', Chips * settings.PLAYERS),
-    ('stack', Chips * settings.PLAYERS),
-    ('min_raise', Chips),
-    ('needed_to_call', Chips),
-    ('hands', (ISOCard * settings.HAND_CARDS) * settings.PLAYERS),
-    ('board', ISOCard * settings.BOARD_CARDS)
-  ]
-
-  def round_name(self):
-    mapping = {0: Round.PREFLOP, 1: Round.FLOP, 2: Round.TURN, 3: Round.RIVER}
-    return mapping[self.round]
-
-
-class ActionStruct(Structure):
-  '''A ctypes Structure for the C++ ActionStruct struct in commander.cc'''
-  _fields_ = [
-    ('action', ActionCode),
-    ('size', Chips),
-    ('could_check', c_bool)
-  ]
-
-  def to_props(self) -> props.ApplyProps:
-    mapping: Dict[int, Literal['Check/Call'] | props.ActionType] = {
-      0: props.ActionType.FOLD,
-      1: 'Check/Call',
-      2: props.ActionType.BET,
-      3: props.ActionType.ALL_IN
-    }
-    action = mapping[self.action]
-    size = self.size
-    if action == 'Check/Call':
-      if self.could_check:
-        action = props.ActionType.CHECK
-      else:
-        action = props.ActionType.CALL
-    return props.ApplyProps(dict(action=action, size=size))
 
 
 A = TypeVar('A')
@@ -168,6 +108,108 @@ class LibFn(Generic[P, R]):
     new_res_fn: Callable[P, S] = self.func
     return LibFn[P, S](new_res_fn, self.argtypes, ret)
 
+commander_get_illegal_action_id = (
+  LibFn.name('CommanderGetIllegalActionId').ret(SequenceId)
+)
+commander_get_k_actions = LibFn.name('CommanderGetKActions').ret(c_int)
+ILLEGAL_SEQ_ID = commander_get_illegal_action_id()
+NUM_ACTIONS = int(commander_get_k_actions())
+
+
+class Round(str, Enum):
+  PREFLOP = 'Preflop'
+  FLOP = 'Flop'
+  TURN = 'Turn'
+  RIVER = 'River'
+
+class NodeSnapshot(Structure):
+  '''A ctypes Structure for the C++ NodeSnapshot struct.'''
+  _fields_ = [
+    ('players', PlayerId),
+    ('big_blind', Chips),
+    ('small_blind', Chips),
+    ('ante', Chips),
+    ('big_blind_ante', c_bool),
+    ('blind_before_ante', c_bool),
+    ('rake', c_double),
+    ('rake_cap', Chips),
+    ('no_flop_no_drop', c_bool),
+    ('button', PlayerId),
+    ('in_progress', c_bool),
+    ('round', RoundId),
+    ('acting_player', PlayerId),
+    ('folded', c_bool * settings.PLAYERS),
+    ('players_left', PlayerId),
+    ('players_all_in', PlayerId),
+    ('pot', Chips),
+    ('bets', Chips * settings.PLAYERS),
+    ('stack', Chips * settings.PLAYERS),
+    ('min_raise', Chips),
+    ('needed_to_call', Chips),
+    ('hands', (ISOCard * settings.HAND_CARDS) * settings.PLAYERS),
+    ('board', ISOCard * settings.BOARD_CARDS)
+  ]
+
+  def round_name(self):
+    mapping = {0: Round.PREFLOP, 1: Round.FLOP, 2: Round.TURN, 3: Round.RIVER}
+    return mapping[self.round]
+
+class ActionStruct(Structure):
+  '''A ctypes Structure for the C++ ActionStruct struct in commander.cc'''
+  _fields_ = [
+    ('action', ActionCode),
+    ('size', Chips),
+    ('action_idx', c_size_t),
+  ]
+
+  def to_props(self, could_check: bool) -> props.ApplyProps:
+    mapping: Dict[int, Literal['Check/Call'] | props.ActionType] = {
+      0: props.ActionType.FOLD,
+      1: 'Check/Call',
+      2: props.ActionType.BET,
+      3: props.ActionType.ALL_IN
+    }
+    action = mapping[self.action]
+    if action == 'Check/Call':
+      if could_check:
+        action = props.ActionType.CHECK
+      else:
+        action = props.ActionType.CALL
+    action_idx = self.action_idx if self.action_idx != ILLEGAL_SEQ_ID else None
+    return props.ApplyProps(
+      dict(action=action, size=self.size, action_idx=action_idx)
+    )
+
+class AvailableActionStruct(Structure):
+  '''A ctypes Structure for the C++ AvailableAction struct in commander.h'''
+  _fields_ = [
+    ('action', ActionCode),
+    ('size', c_double),
+    ('policy', c_float),
+    ('action_idx', c_size_t)
+  ]
+
+  def to_props(self, can_check: bool) -> props.AvailableActionProps:
+    mapping: Dict[int, Literal['Check/Call'] | props.ActionType] = {
+      0: props.ActionType.FOLD,
+      1: 'Check/Call',
+      2: props.ActionType.BET,
+      3: props.ActionType.ALL_IN
+    }
+    action = mapping[self.action]
+    if action == 'Check/Call':
+      if can_check:
+        action = props.ActionType.CHECK
+      else:
+        action = props.ActionType.CALL
+    return props.AvailableActionProps({
+      'action': action,
+      'size': self.size,
+      'policy': self.policy,
+      'action_idx': self.action_idx,
+    })
+
+
 # Note: arguments here are in reverse order
 commander_new = LibFn.name('CommanderNew').ret(CommanderPtr).arg(c_char_p)
 commander_delete = LibFn.name('CommanderDelete').arg(CommanderPtr)
@@ -192,6 +234,11 @@ commander_state = (
 )
 commander_fishbait_seat = (
   LibFn.name('CommanderFishbaitSeat').ret(PlayerId).arg(CommanderPtr)
+)
+commander_get_available_actions = (
+  LibFn.name('CommanderGetAvailableActions')
+  .arg(POINTER(AvailableActionStruct))
+  .arg(CommanderPtr)
 )
 commander_query = (
   LibFn.name('CommanderQuery').ret(ActionStruct).arg(CommanderPtr)
@@ -315,6 +362,8 @@ class PigeonState:
     default_factory=lambda: [False] * settings.BOARD_CARDS
   )
   '''If each board card is known or not'''
+  available_actions: Optional[List[props.AvailableActionProps]] = None
+  '''The actions available to fishbait during its last turn to act'''
 
   def _set_can_muck(self):
     """
@@ -577,7 +626,7 @@ class Pigeon(PigeonInterface):
     action_code = action_map[action]
     commander_apply(self._commander, action_code, size)
     self._state.last_action[self._state.acting_player] = (
-      ActionStruct(action_code, size, can_check).to_props()
+      ActionStruct(action_code, size, ILLEGAL_SEQ_ID).to_props(can_check)
     )
 
   @_auto_advance
@@ -593,6 +642,7 @@ class Pigeon(PigeonInterface):
     self._state.known_cards = [False] * settings.PLAYERS
     self._state.last_action = [None] * settings.PLAYERS
     self._state.known_board = [False] * settings.BOARD_CARDS
+    self._state.available_actions = None
     self._update_state()
 
   @_auto_advance
@@ -600,6 +650,7 @@ class Pigeon(PigeonInterface):
     '''Proceeds play to the next round.'''
     commander_proceed_play(self._commander)
     self._state.last_action = [None] * settings.PLAYERS
+    self._state.available_actions = None
 
   def _update_state(self):
     '''
@@ -611,7 +662,18 @@ class Pigeon(PigeonInterface):
   @_auto_advance
   def _query(self):
     '''Asks fishbait to decide on an action and take it.'''
-    action_taken = commander_query(self._commander).to_props()
+    can_check = self._state.needed_to_call == 0
+    available_action_arr = (AvailableActionStruct * NUM_ACTIONS)()
+    commander_get_available_actions(self._commander, available_action_arr)
+    available_action_list: List[AvailableActionStruct] = [
+      act for act in available_action_arr
+      if act.action_idx != ILLEGAL_SEQ_ID and act.policy != 0
+    ]
+    self._state.available_actions = [
+      act.to_props(can_check) for act in available_action_list
+    ]
+
+    action_taken = commander_query(self._commander).to_props(can_check)
     fishbait_seat = commander_fishbait_seat(self._commander)
     self._state.last_action[fishbait_seat] = action_taken
 

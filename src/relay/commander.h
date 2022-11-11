@@ -9,6 +9,7 @@
 #include <random>
 #include <stdexcept>
 #include <utility>
+#include <tuple>
 
 #include "array/array.h"
 #include "blueprint/definitions.h"
@@ -190,33 +191,72 @@ class Commander {
   }  // Apply()
 
   /*
-    @brief Ask fishbait to make a move.
-
-    @return A pair of an Action and an amount of Chips. The Action is the action
-        that fishbait has decided to take. The Chips are how many Chips fishbait
-        is betting if the Action is kBet.
+    @brief Get the policy of Fishbait if it were choosing an action for the
+        player acting in the current abstract state. All illegal actions in the
+        abstract or real game are set to 0, and the normalized result is
+        returned.
   */
-  std::pair<Action, Chips> Query() {
-    if (actual_state_.acting_player() != fishbait_seat_) {
-      throw std::logic_error("Query called when it's not fishbait's turn.");
-    }
-
-    // Sample the action
+  std::array<float, kActions> GetNormalizedLegalPolicy() {
     Round r = actual_state_.round();
+    PlayerId acting_player = actual_state_.acting_player();
     auto access_fn = std::bind(&ScribeT::GetCluster, &strategy_,
                                std::placeholders::_1, std::placeholders::_2);
-    CardCluster cc = info_abstraction_.Cluster(actual_state_, fishbait_seat_,
+    CardCluster cc = info_abstraction_.Cluster(actual_state_, acting_player,
                                                access_fn);
     std::array policy = strategy_.Policy(r, cc, abstract_seq_);
     std::array actions = strategy_.Actions(r);
     hsize_t n_actions = strategy_.ActionCount(r);
-    for (nda::size_t i = 0; i < policy.size(); ++i) {
+
+    /* It is important to go through all items in policies, not just until
+     * n_actions because otherwise some may be NaN which makes Normalize turn
+     * everything into Nan */
+    for (std::size_t i = 0; i < policy.size(); ++i) {
       /* Filter out all actions that are illegal in the actual game */
       if (!actual_state_.IsLegal(actions[i]) || i >= n_actions) {
         policy[i] = 0;
       }
     }
     Normalize(policy);
+    return policy;
+  }
+
+  struct AvailableAction {
+    Action play;
+    double size;
+    float policy;
+    std::size_t action_idx = kIllegalId;
+  };
+
+  /*
+    @brief Get the actions available to Fishbait and its policy if it were
+        choosing an action for the player acting in the current abstract state.
+  */
+  std::array<AvailableAction, kActions> GetAvailableActions() {
+    Round r = actual_state_.round();
+    std::array actions = strategy_.Actions(r);
+    hsize_t n_actions = strategy_.ActionCount(r);
+    std::array<AvailableAction, kActions> ret_arr;
+    std::array policy = GetNormalizedLegalPolicy();
+    for (std::size_t i = 0; i < n_actions; ++i) {
+      ret_arr[i] = {actions[i].play, actions[i].size, policy[i], i};
+    }
+    return ret_arr;
+  }
+
+  /*
+    @brief Ask fishbait to make a move.
+
+    @return A tuple detailing the action, chips, and action_idx
+  */
+  std::tuple<Action, Chips, std::size_t> Query() {
+    if (actual_state_.acting_player() != fishbait_seat_) {
+      throw std::logic_error("Query called when it's not fishbait's turn.");
+    }
+
+    // Sample the action
+    Round r = actual_state_.round();
+    std::array actions = strategy_.Actions(r);
+    std::array policy = GetNormalizedLegalPolicy();
     std::size_t action_idx = Sample(policy, rng_);
     AbstractAction action = actions[action_idx];
 
@@ -230,7 +270,7 @@ class Commander {
     actual_state_.Apply(action.play, actual_chips);
 
     AutoFoldCheckCall();
-    return std::make_pair(action.play, actual_chips);
+    return std::make_tuple(action.play, actual_chips, action_idx);
   }
 
   /* @brief Returns the current state of the game. */

@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 
+#include "blueprint/definitions.h"
 #include "blueprint/hyperparameters.h"
 #include "clustering/cluster_table.h"
 #include "poker/definitions.h"
@@ -19,8 +20,10 @@ namespace fishbait {
 
 extern "C" {
 
-template class Commander<hparam::kPlayers, hparam::kActions, ClusterTable>;
-using CommanderT = Commander<hparam::kPlayers, hparam::kActions, ClusterTable>;
+constexpr int kActions = hparam::kActions;
+
+template class Commander<hparam::kPlayers, kActions, ClusterTable>;
+using CommanderT = Commander<hparam::kPlayers, kActions, ClusterTable>;
 template struct NodeSnapshot<hparam::kPlayers>;
 using NodeSnapshotT = NodeSnapshot<hparam::kPlayers>;
 
@@ -120,17 +123,42 @@ PlayerId CommanderFishbaitSeat(CommanderT* c) {
   return 0;
 }
 
+SequenceId CommanderGetIllegalActionId() {
+  return kIllegalId;
+}
+
+int CommanderGetKActions() {
+  return kActions;
+}
+
+/* out_arr is expected to be of size kActions */
+void CommanderGetAvailableActions(
+  CommanderT* c, CommanderT::AvailableAction* out_arr
+) {
+  try {
+    std::array aas = c->GetAvailableActions();
+    for (std::size_t i = 0; i < aas.size(); ++i) {
+      out_arr[i] = aas[i];
+    }
+    return;
+  } catch (const std::exception& e) {
+    HandleError(e);
+  }
+}
+
 struct ActionStruct {
+  // The action fishbait decided to take
   Action action;
+  // The amount of chips fishbait bet if the action was kBet
   Chips size;
-  bool could_check;
+  // The index of the chosen action
+  std::size_t action_idx;
 };
 
 ActionStruct CommanderQuery(CommanderT* c) {
   try {
-    bool can_check = c->State().NeededToCall() == 0;
-    std::pair fish_act = c->Query();
-    return { fish_act.first, fish_act.second, can_check };
+    auto [ action, size, action_idx ] = c->Query();
+    return { action, size, action_idx };
   } catch (const std::exception& e) {
     HandleError(e);
   }

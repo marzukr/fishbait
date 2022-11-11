@@ -25,7 +25,9 @@ export const Settings: React.FC<SettingsProps> = ({ api, toggleSettings }) => {
     gameState?.bigBlind.toString() || ""
   );
   const [playerNames, setPlayerNames] = useState(gameState?.playerNames || []);
-  const [stack, setStack] = useState(gameState?.stack.map((s) => `${s}`) || []);
+  const [stack, setStack] = useState(
+    gameState?.stack.map((s, idx) => `${s + gameState.bets[idx]}`) || []
+  );
   const [button, setButton] = useState(gameState?.button || 0);
   const [fishbaitSeat, setFishbaitSeat] = useState(
     gameState?.fishbaitSeat || 0
