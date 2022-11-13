@@ -142,14 +142,16 @@ class Commander {
 
         /* if the all in is a call */
         if (additional_bet <= call_amount) {
-          Chips abstract_size = abstract_state_.ProportionToChips(bet_prop);
           Chips abstract_call = abstract_state_.NeededToCall();
+          double call_proportion = (
+            abstract_state_.ChipsToProportion(abstract_call)
+          );
 
           /* if we can check, map the all in to a check. Otherwise, either map
              it to a fold or call with ps-har */
           if (!abstract_state_.CanFold()) {
             ApplyAbstract(Action::kCheckCall);
-          } else if (MapToA(0, abstract_call, abstract_size)) {
+          } else if (MapToA(0, call_proportion, bet_prop)) {
             ApplyAbstract(Action::kFold);
           } else {
             /* if mapped to call and the previous bet in the abstract game was
@@ -369,14 +371,10 @@ class Commander {
         action_idx = min_i;
 
       /* In this case, the requested size is in between two sizes in the
-         abstraction, so we convert the pot sizes to actual chips in the
-         abstract game, and then use the randomized pseudo harmonic mapping to
-         pick one of them to play. */
+         abstraction, so we use the randomized pseudo harmonic mapping to pick
+         one of them to play. */
       } else {
-        Chips a_chips = abstract_state_.ProportionToChips(min_size);
-        Chips b_chips = abstract_state_.ProportionToChips(max_size);
-        Chips x_chips = abstract_state_.ProportionToChips(*size);
-        if (MapToA(a_chips, b_chips, x_chips)) {
+        if (MapToA(min_size, max_size, *size)) {
           play = actions[min_i].play;
           size = min_size;
           action_idx = min_i;
@@ -426,9 +424,12 @@ class Commander {
   /*
     @brief Randomly maps x to either a or b with the pseudo-harmonic mapping.
 
+    @param a the lower abstraction bound as a proportion of the pot
+    @param b the upper abstraction bound as a proportion of the pot
+    @param x the actual bet size as a proportion of the pot
     @return True if map to a, false if map to b.
   */
-  bool MapToA(Chips a, Chips b, Chips x) {
+  bool MapToA(double a, double b, double x) {
     double f = ((b - x) * (1.0 + a)) / ((b - a) * (1.0 + x));
     std::uniform_real_distribution<double> sampler(0, 1);
     double sampled = sampler(rng_());
