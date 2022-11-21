@@ -5,8 +5,8 @@ add_executable(tests.out main.cc
 
   external/array/array_test.cc
 
-  src/blueprint/sequence_table_test.cc
-  src/blueprint/strategy_test.cc
+  src/mccfr/sequence_table_test.cc
+  src/mccfr/strategy_test.cc
 
   src/clustering/cluster_table_test.cc
   src/clustering/distance_test.cc

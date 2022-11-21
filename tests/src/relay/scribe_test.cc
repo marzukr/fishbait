@@ -6,10 +6,10 @@
 
 #include "array/array.h"
 #include "catch2/catch.hpp"
-#include "blueprint/definitions.h"
-#include "blueprint/strategy.h"
-#include "clustering/test_clusters.h"
 #include "clustering/matchmaker.h"
+#include "clustering/test_clusters.h"
+#include "mccfr/definitions.h"
+#include "mccfr/strategy.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
 #include "relay/scribe.h"

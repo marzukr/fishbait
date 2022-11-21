@@ -12,7 +12,6 @@
     "@types/react": "^18.0.20",
     "@types/react-dom": "^18.0.6",
     "autoprefixer": "^10.4.12",
-    "concurrently": "^6.2.1",
     "lodash": "^4.17.21",
     "postcss": "^8.4.16",
     "react": "^17.0.2",
@@ -23,11 +22,7 @@
     "web-vitals": "^1.0.1"
   },
   "scripts": {
-    "start-frontend": "react-scripts start",
-    "start-api": "$($VENV_BIN/flask --app api/app.py --debug run)",
-    "start-depot": "$($VENV_BIN/python api/depot.py)",
-    "start-backend": "concurrently -k -n depot,api \"npm:start-depot\" \"npm:start-api\"",
-    "start": "concurrently -k -n frontend,backend \"npm:start-frontend\" \"npm:start-backend\"",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

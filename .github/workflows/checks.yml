@@ -30,7 +30,7 @@ jobs:
       - name: create build directory
         run: mkdir build
       - name: create hyperparameters file
-        run: cp src/blueprint/hyperparameters.h.dev src/blueprint/hyperparameters.h
+        run: cp src/ai/mccfr/hyperparameters.h.dev src/ai/mccfr/hyperparameters.h
       - name: generate build files
         working-directory: build
         run: cmake -DCMAKE_BUILD_TYPE=Release ..
