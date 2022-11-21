@@ -6,9 +6,9 @@
 #include <utility>
 
 #include "catch2/catch.hpp"
-#include "blueprint/definitions.h"
-#include "blueprint/strategy.h"
 #include "clustering/test_clusters.h"
+#include "mccfr/definitions.h"
+#include "mccfr/strategy.h"
 #include "poker/definitions.h"
 #include "poker/node.h"
 #include "relay/commander.h"
