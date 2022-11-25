@@ -1,0 +1,5 @@
+# Copyright 2022 Marzuk Rashid
+
+'''Config for the Scout'''
+
+LAB_URL: str = 'http://127.0.0.1:8000'

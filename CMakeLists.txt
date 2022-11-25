@@ -108,6 +108,46 @@ function(add_module module_path)
   endforeach()
 endfunction()
 
+# Function available to submodules that create or updates a python virtual
+# environment made with the given parameters.
+function(create_or_update_venv)
+  # setup venv if it doesn't exist
+  if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/venv")
+    message(STATUS "Creating python virtual environment")
+    find_package(Python3 3.10 REQUIRED)
+    execute_process(
+      COMMAND ${Python3_EXECUTABLE} "-m" "venv" "venv" "--copies"
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      RESULTS_VARIABLE venv_status
+      )
+    execute_process(
+      COMMAND touch -t 200001010000 venv
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      RESULTS_VARIABLE touch_status
+      )
+    if(venv_status)
+      message(FATAL_ERROR "Failed to create python virtual enviornment: "
+              ${venv_status}
+              )
+    elseif(touch_status)
+      message(FATAL_ERROR "Failed to touch python virtual enviornment: "
+              ${touch_status}
+              )
+    endif()
+  endif()
+
+  # update venv packages
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/venv
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/venv/bin/pip install -r
+            ${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt
+    COMMAND touch -r ${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt
+            ${CMAKE_CURRENT_BINARY_DIR}/venv
+    COMMENT "Updating python virtual environment packages"
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt
+  )
+endfunction()
+
 add_module(external/hand-isomorphism/src)
 set(HDF5_EXTERNALLY_CONFIGURED ON CACHE BOOL "Set hdf5 variables externally"
     FORCE)
@@ -127,6 +167,8 @@ add_module(src/ai/relay)
 add_module(src/ai/utils)
 add_module(src/api)
 add_module(src/interface)
+add_module(src/lab)
+add_module(src/scout)
 
 add_module(tests)
 

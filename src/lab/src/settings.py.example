@@ -1,0 +1,5 @@
+# Copyright 2022 Marzuk Rashid
+
+'''Config for the Lab'''
+
+TEMPLATE_MATCH_THRESHOLD: float = 0.01
