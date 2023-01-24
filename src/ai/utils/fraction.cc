@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include "utils/fraction.h"
 
 #include <cmath>

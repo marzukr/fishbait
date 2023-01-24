@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 """Webserver for the FISHBAIT web interface."""
 
 from datetime import datetime, timezone

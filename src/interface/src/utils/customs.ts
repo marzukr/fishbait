@@ -1,5 +1,3 @@
-// Copyright 2022 Marzuk Rashid
-
 /**
  * This file serves as our Customs and Border Control between arbitrary objects
  * and our typed interfaces. The 'agents' in this file will look at an object

@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include "clustering/cluster_table.h"
 
 #include <array>

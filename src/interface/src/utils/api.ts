@@ -1,5 +1,3 @@
-// Copyright 2022 Marzuk Rashid
-
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { isEqual, mapKeys, snakeCase } from 'lodash';
 

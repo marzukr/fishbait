@@ -1,5 +1,3 @@
-// Copyright 2022 Marzuk Rashid
-
 import React, { useState } from 'react';
 
 import { Action, GameState, AvailableAction } from 'utils/api';

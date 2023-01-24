@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 import React, { useState } from 'react';
 
 import { Game } from 'screens/Game/Game';

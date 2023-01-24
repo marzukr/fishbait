@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 /* Returns if the given string is a suit. */
 export function isSuit(entry: string) {
   return entry === 's' || entry === 'c' || entry === 'd' || entry === 'h';

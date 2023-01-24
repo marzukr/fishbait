@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include "hand_strengths/lut_generators.h"
 
 #include <algorithm>

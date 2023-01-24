@@ -1,5 +1,3 @@
-# Copyright 2022 Marzuk Rashid
-
 '''Definitions for the props of our api routes.'''
 
 from dataclasses import dataclass

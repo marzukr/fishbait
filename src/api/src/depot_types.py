@@ -1,5 +1,3 @@
-# Copyright 2022 Marzuk Rashid
-
 '''Types used by the depot'''
 
 from abc import ABC, abstractmethod

@@ -1,5 +1,3 @@
-// Copyright 2022 Marzuk Rashid
-
 import { useEffect } from 'react';
 
 /**

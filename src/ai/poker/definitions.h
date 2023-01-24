@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #ifndef SRC_AI_POKER_DEFINITIONS_H_
 #define SRC_AI_POKER_DEFINITIONS_H_
 

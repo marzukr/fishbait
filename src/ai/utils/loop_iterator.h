@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #ifndef SRC_AI_UTILS_LOOP_ITERATOR_H_
 #define SRC_AI_UTILS_LOOP_ITERATOR_H_
 

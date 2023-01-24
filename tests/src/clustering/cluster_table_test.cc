@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include <type_traits>
 
 #include "catch2/catch.hpp"

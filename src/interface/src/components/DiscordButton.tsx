@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 import React from 'react';
 
 const DISCORD_INVITE_LINK = 'https://discord.gg/r8dXHVSqe6';

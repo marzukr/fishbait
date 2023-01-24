@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 '''Global config for the fishbait API'''
 
 STRATEGY_LOCATION: str = '../../../build/out/ai/mccfr/dev/blueprint_dev.hdf'

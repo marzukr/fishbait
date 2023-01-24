@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 # setup venv if it doesn't exist
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/venv")
   message(STATUS "Creating python virtual environment")

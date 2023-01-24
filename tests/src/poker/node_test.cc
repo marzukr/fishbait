@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include "catch2/catch.hpp"
 #include "poker/card_utils.h"
 #include "poker/definitions.h"

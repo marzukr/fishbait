@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include <chrono>  // NOLINT(build/c++11)
 #include <sstream>
 #include <string>

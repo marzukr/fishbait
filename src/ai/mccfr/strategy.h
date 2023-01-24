@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid and Emily Dale
-
 #ifndef SRC_AI_MCCFR_STRATEGY_H_
 #define SRC_AI_MCCFR_STRATEGY_H_
 
