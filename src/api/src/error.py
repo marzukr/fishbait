@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 """Error types for the Fishbait API"""
 
 from typing import Optional

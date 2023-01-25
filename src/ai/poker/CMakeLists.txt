@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 add_library(
   poker SHARED
   card_utils.cc

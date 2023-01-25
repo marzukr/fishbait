@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include "poker/card_utils.h"
 
 #include <stdexcept>

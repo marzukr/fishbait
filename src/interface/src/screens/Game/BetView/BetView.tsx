@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 import React from 'react';
 
 import { GameState, CardT, PartialAction } from 'utils/api';

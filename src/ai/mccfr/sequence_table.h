@@ -1,5 +1,3 @@
-// Copyright 2021 Emily Dale and Marzuk Rashid
-
 #ifndef SRC_AI_MCCFR_SEQUENCE_TABLE_H_
 #define SRC_AI_MCCFR_SEQUENCE_TABLE_H_
 

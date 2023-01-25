@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #include "hand_strengths/card_combinations.h"
 
 #include <algorithm>

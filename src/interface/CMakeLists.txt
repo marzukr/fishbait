@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 # update npm packages
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/node_modules

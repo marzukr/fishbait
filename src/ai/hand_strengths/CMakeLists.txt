@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 add_library(
   hand_strengths SHARED
   card_combinations.cc

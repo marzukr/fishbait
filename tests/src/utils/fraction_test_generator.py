@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 """Generates catch2 testers for the C++ fraction class"""
 
 import argparse

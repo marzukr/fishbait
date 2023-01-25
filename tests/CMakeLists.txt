@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 add_executable(tests.out main.cc
   ${CMAKE_BINARY_DIR}/out/tests
 

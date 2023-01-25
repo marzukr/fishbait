@@ -1,5 +1,3 @@
-// Copyright 2021 Marzuk Rashid
-
 #ifndef SRC_AI_CLUSTERING_DISTANCE_H_
 #define SRC_AI_CLUSTERING_DISTANCE_H_
 

@@ -1,5 +1,3 @@
-// Copyright 2022 Marzuk Rashid
-
 import React from 'react';
 import { keyBy, get, map } from 'lodash';
 

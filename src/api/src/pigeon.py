@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 '''The messenger between the python API and the fishbait AI'''
 
 from abc import abstractmethod, ABC

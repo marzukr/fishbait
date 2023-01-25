@@ -1,5 +1,3 @@
-# Copyright 2021 Marzuk Rashid
-
 add_library(
   utils SHARED
   array.h
@@ -22,9 +20,7 @@ else()
 endif()
 
 file(WRITE config.h
-"// Copyright 2021 Marzuk Rashid
-
-#ifndef SRC_AI_UTILS_CONFIG_H_
+"#ifndef SRC_AI_UTILS_CONFIG_H_
 #define SRC_AI_UTILS_CONFIG_H_
 
 namespace fishbait {
