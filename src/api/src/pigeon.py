@@ -175,7 +175,7 @@ class ActionStruct(Structure):
         action = props.ActionType.CALL
     action_idx = self.action_idx if self.action_idx != ILLEGAL_SEQ_ID else None
     return props.ApplyProps(
-      dict(action=action, size=self.size, action_idx=action_idx)
+      {"action": action, "size": self.size, "action_idx": action_idx}
     )
 
 class AvailableActionStruct(Structure):
