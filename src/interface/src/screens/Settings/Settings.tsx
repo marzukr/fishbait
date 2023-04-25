@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { Api, useSafeAsync } from 'utils/api';
 import { DiscordButton } from 'components/DiscordButton';
-import { EmailLink } from 'components/EmailLink';
+import { Link } from 'components/Link';
 
 import './Settings.css';
 
@@ -171,16 +171,34 @@ export const Settings: React.FC<SettingsProps> = ({ api, toggleSettings }) => {
         </button>
         <div className='border-t-2 pt-3.5 mt-7 text-center w-full'>About</div>
         <p className='shrink-0 text-justify mt-3'>
-          Fishbait is an AI that plays poker. It was trained by playing billions
-          of hands of poker against itself. It has a unique strategy for over
-          600 million different situations. For context, it would take a human
-          over 200 years of playing poker nonstop to train on all of these
-          possible permutations. All that power is now in your pocket.
+          Fishbait is an{' '}
+          <Link
+            url='https://github.com/marzukr/fishbait/'
+            displayText='open source'
+          /> AI that
+          plays poker. It has a unique strategy for over 600 million different
+          situations.
+        </p>
+        <p className='shrink-0 text-justify mt-3'>
+          Fishbait is under active development. Our mission is to make the
+          world's best AIs available to everyone, starting with poker.
+        </p>  
+        <p className='shrink-0 text-justify mt-3 w-full'>
+          Upcoming features include:
+          <ul className='list-disc pl-6'>
+            <li>Real time strategy fine-tuning</li>
+            <li>Support for different table sizes</li>
+            <li>Measure your performance vs. the AI</li>
+            <li>Share a hand play-through with a link</li>
+          </ul>
         </p>
         <p className='shrink-0 text-justify mt-3 pb-12'>
-          If you have questions or suggestions, you can contact us on the
-          official Fishbait <DiscordButton /> server. You can also email{' '}
-          <EmailLink/>
+          If you want a question answered, or want a say in future development,
+          join the Fishbait <DiscordButton/> server. You can also email{' '}
+          <Link
+            url='mailto:fishbait@marzuk.io'
+            displayText='fishbait@marzuk.io'
+          />
         </p>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { Settings } from 'screens/Settings/Settings';
 import { Error } from 'screens/Error';
 import { useApi } from 'utils/api';
 import { DiscordButton } from 'components/DiscordButton';
-import { EmailLink } from 'components/EmailLink';
+import { Link } from 'components/Link';
 
 enum AppError {
   CONNECTION_ISSUE = 'connectionIssue',
@@ -33,7 +33,8 @@ export const App: React.FC = () => {
       </>,
       <>
         {'If this issue persists, please message us on the official '}
-        <DiscordButton/>{' server. You can also contact '}<EmailLink/>
+        <DiscordButton/>{' server. You can also contact '}
+        <Link url='mailto:fishbait@marzuk.io' displayText='fishbait@marzuk.io'/>
       </>
     ];
     return (
@@ -67,7 +68,8 @@ export const App: React.FC = () => {
       </>,
       <>
         {'If this issue persists, please message us on the official '}
-        <DiscordButton/>{' server. You can also contact '}<EmailLink/>
+        <DiscordButton/>{' server. You can also contact '}
+        <Link url='mailto:fishbait@marzuk.io' displayText='fishbait@marzuk.io'/>
       </>
     ];
     return (
