@@ -19,6 +19,7 @@ From the root directory:
         * `-DTGT_SYSTEM=Graviton2` for AWS Graviton2 optimizations.
         * `-DCORES=<core_count>` to instruct parallel algorithms to use
           `<core_count>` cores.
+        * `-DPython3_EXECUTABLE=<python executable>`
 5. Build the code: `cmake --build .`
    * `cmake --build . -- -j CORES` to run a parallel build.
 6. Download the card cluster files to `build/out/ai/clustering`

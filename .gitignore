@@ -55,3 +55,4 @@ install_manifest.txt
 # Python dev
 .mypy_cache
 .mypy_cache/*
+.python-version
