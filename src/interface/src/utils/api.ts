@@ -106,14 +106,14 @@ const gameStateAgent = unsnakeAgent(objectAgent({
     (val) => {
       if (val === null) return val;
       if (isEqual(val, [null, null])) return [null, null];
-      return val.map(c => c ? isoToAsciiString[c] : null);
+      return val.map(c => c !== null ? isoToAsciiString[c] : null);
     },
     nullableAgent(arrayAgent(cardAgent))
   )),
   /** The cards on the public board. Null if we don't know the card yet. */
   board: arrayAgent(conversionAgent(
     nullableAgent(numberAgent),
-    (c) => c ? isoToAsciiString[c] : null,
+    (c) => c !== null ? isoToAsciiString[c] : null,
     cardAgent
   )),
   /** Which player number fishbait is */
