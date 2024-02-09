@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from multiprocessing.managers import RemoteError
 import re
 from typing import Any
-import logging
 
 from flask import Flask, request, make_response
 from werkzeug.exceptions import BadRequest
@@ -24,10 +23,11 @@ from error import (
 from props import (
   SetHandProps, ApplyProps, SetBoardProps, ResetProps, JoinEmailListProps
 )
+from utils import get_logger
 
 app = Flask(__name__)
 depot_server.connect()
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 datadog.initialize()
 
 def handle_api_error(e: ApiError):

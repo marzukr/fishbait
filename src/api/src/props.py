@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Type, Generic, TypeVar, Callable
 from ctypes import _SimpleCData, Array
-import logging
 from collections.abc import Iterable
 
 import settings
 from error import ValidationError
+from utils import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 # Type Vars --------------------------------------------------------------------

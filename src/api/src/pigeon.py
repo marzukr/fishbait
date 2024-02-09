@@ -21,14 +21,14 @@ from ctypes import (
   POINTER,
   Structure,
 )
-import logging
 
 import settings
 import props
 from error import InvalidStateTransitionError
+from utils import get_logger
 
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 lib = cdll.LoadLibrary(settings.RELAY_LIB_LOCATION)
 
 
@@ -91,7 +91,7 @@ class LibFn(Generic[P, R]):
     error = self._check_error()
     if error is not None:
       error_msg = error.decode('utf-8')
-      log.exception(error_msg)
+      log.error('Error from C++: %s', error_msg)
       raise InvalidStateTransitionError()
     return result
 
@@ -550,6 +550,7 @@ class Pigeon(PigeonInterface):
     self._update_state()
 
   def __del__(self):
+    log.info('Deleting commander')
     commander_delete(self._commander)
 
   @staticmethod

@@ -5,12 +5,12 @@ import secrets
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Type, TypeVar, Generic, ParamSpec
 from multiprocessing.managers import BaseManager
-import logging
 
 from pigeon import Pigeon, PigeonInterface
+from utils import get_logger
 import settings
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 class Depot(BaseManager):
@@ -34,14 +34,24 @@ class DepotMessage(Generic[P, T], ABC):
 
   @classmethod
   def send(cls, *args: P.args, **kwargs: P.kwargs):
+    log.info(
+      'Sending %s to depot with args %s and kwargs %s',
+      cls.__name__, args, kwargs
+    )
     executor = getattr(depot_server, cls.__name__)
     proxy = executor(*args, **kwargs)
+    log.info('Executed %s', cls.__name__)
     proxy_val: T = getattr(proxy, '_getvalue')()
     return proxy_val
 
   @classmethod
   def register(cls):
-    Depot.register(cls.__name__, cls.execute)
+    def logged_execute(*args: P.args, **kwargs: P.kwargs) -> T:
+      log.info(
+        'Executing %s with args %s and kwargs %s', cls.__name__, args, kwargs
+      )
+      return cls.execute(*args, **kwargs)
+    Depot.register(cls.__name__, logged_execute)
 
 
 class Session:
@@ -80,8 +90,11 @@ class PigeonProxy(PigeonInterface):
         # We should not get an error from Pigeon. If we do, something has gone
         # horribly wrong and we need to delete this session to preserve the
         # integrity of the server:
-        sessions.pop(session_id)
+        log.error(
+          'Error in %s with args %s and kwargs %s', fn_name, args, kwargs
+        )
         log.exception(e)
+        sessions.pop(session_id)
         raise
       return result
 
