@@ -16,7 +16,7 @@ import settings
 import error
 from error import (
   ApiError, ServerOverloadedError, MissingSessionIdError, UnknownSessionIdError,
-  ValidationError, InvalidStateTransitionError
+  ValidationError
 )
 from props import (
   SetHandProps, ApplyProps, SetBoardProps, ResetProps, JoinEmailListProps
@@ -96,12 +96,15 @@ def session_guard(route):
     session.updated = datetime.now(timezone.utc).timestamp()
     try:
       return route(session.revere)
-    except (RemoteError, InvalidStateTransitionError) as e:
-      # We should not get these errors. If we do, something may have gone
-      # horribly wrong and we need to delete this session to preserve the
+    except ApiError:
+      # These errors are anticipated and should be passed through
+      raise
+    except Exception:
+      # We should not get any other type of error. If we do, something may have
+      # gone horribly wrong and we need to delete this session to preserve the
       # integrity of the server:
       sessions.pop(session_id)
-      raise e
+      raise
 
   guarded_route.__name__ = route.__name__
   return guarded_route

@@ -22,10 +22,11 @@ from ctypes import (
   Structure,
 )
 from multiprocessing.managers import BaseManager
+import concurrent.futures
 
 import settings
 import props
-from error import InvalidStateTransitionError
+from error import InvalidStateTransitionError, CPlusPlusError
 from utils import get_logger
 
 
@@ -93,7 +94,7 @@ class LibFn(Generic[P, R]):
     if error is not None:
       error_msg = error.decode('utf-8')
       log.error('Error from C++: %s', error_msg)
-      raise InvalidStateTransitionError()
+      raise CPlusPlusError()
     return result
 
   def arg(self, arg: Type[A]):
@@ -698,7 +699,9 @@ class PigeonProxy(PigeonInterface):
     self.revere = self.manager.Pigeon()
 
   def __del__(self):
+    log.info('Shutting down manager for %s', self)
     self.manager.shutdown()
+    log.info('Completed manager shutdown for %s', self)
 
   class PigeonMessage():
     '''
@@ -710,8 +713,16 @@ class PigeonProxy(PigeonInterface):
 
     def __get__(self, obj, objtype):
       def wrapped_fn(*args, **kwargs):
-        fn = getattr(obj.revere, self.name)
-        return fn(*args, **kwargs)
+        log.info(
+          'Calling %s for %s with args %s and kwargs %s',
+          self.name, obj, args, kwargs
+        )
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+          fn = getattr(obj.revere, self.name)
+          future = executor.submit(fn, *args, **kwargs)
+          result = future.result(timeout=settings.PIGEON_EXECUTION_TIMEOUT)
+          log.info('Completed %s for %s', self.name, obj)
+          return result
       return wrapped_fn
 
   reset = PigeonMessage()
