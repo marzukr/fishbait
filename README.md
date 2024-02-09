@@ -51,14 +51,9 @@ All executables will now be located in `build/bin`. So, for example, to execute
      * Set the `WorkingDirectory` to the absolute path of `src/api/src`
      * Set the placeholder in `ExecStart` to be the absolute path of
        `build/src/api/venv/bin/gunicorn`
-7. Copy `src/interface/fishbait.depot.service.example` to
-   `/etc/systemd/system/fishbait.depot.service` and replace the placeholders
-     * Set the `WorkingDirectory` to the absolute path of `src/api/src`
-     * Set the placeholder in `ExecStart` to be the absolute path of
-       `build/src/api/venv/bin/python`
-8. `sudo systemctl daemon-reload`
-9. `sudo systemctl start fishbait.api`
-10. Setup https/ssl with the appropriate
+7. `sudo systemctl daemon-reload`
+8. `sudo systemctl start fishbait.api`
+9. Setup https/ssl with the appropriate
    [certbot instructions](https://certbot.eff.org/)
 
 ## Testing

@@ -4,30 +4,27 @@ from datetime import datetime, timezone
 from multiprocessing.managers import RemoteError
 import re
 from typing import Any
-import logging
+import secrets
 
 from flask import Flask, request, make_response
 from werkzeug.exceptions import BadRequest
 import datadog
 from datadog import statsd
 
-from pigeon import PigeonInterface
+from pigeon import PigeonProxy, PigeonInterface
 import settings
-from depot_types import (
-  depot_server, TryCreateNewSession, GetSession, SetSession
-)
 import error
 from error import (
   ApiError, ServerOverloadedError, MissingSessionIdError, UnknownSessionIdError,
-  ValidationError,
+  ValidationError, InvalidStateTransitionError
 )
 from props import (
   SetHandProps, ApplyProps, SetBoardProps, ResetProps, JoinEmailListProps
 )
+from utils import get_logger
 
 app = Flask(__name__)
-depot_server.connect()
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 datadog.initialize()
 
 def handle_api_error(e: ApiError):
@@ -37,7 +34,7 @@ def handle_api_error(e: ApiError):
 def handle_remote_error(e: RemoteError):
   match = re.search(r'error\.([A-z]*?): ((.|\n)*)\n-{75}', f'{e}')
   if match is None:
-    log.error('Could not parse depot error')
+    log.error('Could not parse PigeonProxy error')
     raise ApiError() from e
   error_name, error_msg = match.group(1, 2)
   error_type = getattr(error, error_name)
@@ -76,6 +73,63 @@ def record_api_metric():
   statsd.increment('api.requests', 1, [request.base_url])
 
 # ------------------------------------------------------------------------------
+# Session Management -----------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+class Session:
+  def __init__(self):
+    self.updated = datetime.now(timezone.utc).timestamp()
+    self.revere = PigeonProxy()
+
+sessions: dict[str, Session] = {}
+
+def session_guard(route):
+  def guarded_route():
+    session_id = request.cookies.get(settings.SESSION_ID_KEY)
+    if session_id is None:
+      raise MissingSessionIdError()
+
+    session = sessions.get(session_id)
+    if session is None:
+      raise UnknownSessionIdError()
+
+    session.updated = datetime.now(timezone.utc).timestamp()
+    try:
+      return route(session.revere)
+    except (RemoteError, InvalidStateTransitionError) as e:
+      # We should not get these errors. If we do, something may have gone
+      # horribly wrong and we need to delete this session to preserve the
+      # integrity of the server:
+      sessions.pop(session_id)
+      raise e
+
+  guarded_route.__name__ = route.__name__
+  return guarded_route
+
+def create_new_session():
+  token_candidate = secrets.token_hex(settings.SESSION_ID_BYTES)
+  while token_candidate in sessions:
+    token_candidate = secrets.token_hex(settings.SESSION_ID_BYTES)
+  sessions[token_candidate] = Session()
+  return token_candidate
+
+def try_create_new_session():
+  if len(sessions) >= settings.MAX_SESSIONS:
+    current_time = datetime.now(timezone.utc).timestamp()
+    to_remove = None
+    for session_id, session in sessions.items():
+      if current_time - session.updated >= settings.SESSION_TIMEOUT:
+        to_remove = session_id
+        break
+    if to_remove is not None:
+      sessions.pop(to_remove)
+      return create_new_session()
+    else:
+      return None
+  else:
+    return create_new_session()
+
+# ------------------------------------------------------------------------------
 # Routes -----------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
@@ -85,30 +139,12 @@ def api_status():
 
 @app.route('/api/new-session', methods=['GET'])
 def new_session():
-  new_session_id = TryCreateNewSession.send()
+  new_session_id = try_create_new_session()
   if new_session_id is None:
     raise ServerOverloadedError()
   resp = make_response()
   resp.set_cookie(settings.SESSION_ID_KEY, new_session_id)
   return resp
-
-def session_guard(route):
-  def guarded_route():
-    session_id = request.cookies.get(settings.SESSION_ID_KEY)
-    if session_id is None:
-      raise MissingSessionIdError()
-
-    session = GetSession.send(session_id)
-    if session is None:
-      raise UnknownSessionIdError()
-
-    session.updated = datetime.now(timezone.utc).timestamp()
-    route_result = route(session.revere)
-    SetSession.send(session_id, session)
-    return route_result
-
-  guarded_route.__name__ = route.__name__
-  return guarded_route
 
 @app.route('/api/state', methods=['GET'])
 @session_guard
