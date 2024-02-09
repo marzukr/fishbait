@@ -3,9 +3,6 @@
 STRATEGY_LOCATION: str = '../../../build/out/ai/mccfr/dev/blueprint_dev.hdf'
 RELAY_LIB_LOCATION: str = '../../../build/lib/librelay.dylib'
 
-DEPOT_PORT = 50000
-DEPOT_PASSWORD = b'REPLACE_ME_IN_PROD'
-
 MAX_SESSIONS: int = 1000
 SESSION_ID_BYTES: int = 8
 SESSION_TIMEOUT: int = 1800  # in seconds

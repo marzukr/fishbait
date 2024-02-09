@@ -21,6 +21,7 @@ from ctypes import (
   POINTER,
   Structure,
 )
+from multiprocessing.managers import BaseManager
 
 import settings
 import props
@@ -679,3 +680,43 @@ class Pigeon(PigeonInterface):
   def _award_pot(self):
     commander_award_pot(self._commander)
     self._update_state()
+
+class PigeonManager(BaseManager):
+  pass
+PigeonManager.register('Pigeon', Pigeon)
+
+class PigeonProxy(PigeonInterface):
+  '''
+  An object that behaves like a local Pigeon to an outside observer but spawns
+  a Pigeon on a new process and sends messages to it.
+  '''
+
+  def __init__(self) -> None:
+    super().__init__()
+    self.manager = PigeonManager()
+    self.manager.start()  # pylint: disable=consider-using-with
+    self.revere = self.manager.Pigeon()
+
+  def __del__(self):
+    self.manager.shutdown()
+
+  class PigeonMessage():
+    '''
+    A descriptor that applies the given function on the managed Pigeon
+    '''
+
+    def __set_name__(self, owner, name):
+      self.name = name
+
+    def __get__(self, obj, objtype):
+      def wrapped_fn(*args, **kwargs):
+        fn = getattr(obj.revere, self.name)
+        return fn(*args, **kwargs)
+      return wrapped_fn
+
+  reset = PigeonMessage()
+  set_hand = PigeonMessage()
+  apply = PigeonMessage()
+  set_board = PigeonMessage()
+  state_dict = PigeonMessage()
+  new_hand = PigeonMessage()

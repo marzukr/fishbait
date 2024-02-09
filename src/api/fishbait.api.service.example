@@ -1,7 +1,7 @@
 [Unit]
 Description=Fishbait Flask API hosted with gunicorn
-Requires=fishbait.depot.service
-After=fishbait.depot.service
+Requires=network.target
+After=network.target
 
 [Service]
 User=ubuntu
