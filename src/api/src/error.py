@@ -59,3 +59,6 @@ class ValidationError(ApiError):
 class InvalidStateTransitionError(ApiError):
   message = 'The requested operation is invalid in the current game state'
   status_code = 400
+
+class CPlusPlusError(Exception):
+  pass
