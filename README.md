@@ -11,21 +11,21 @@ From the root directory:
 3. Navigate to the build folder: `cd build`
 4. Generate the build files: `cmake <options> ..`
     * Possible Options:
-        * `-DCMAKE_C_COMPILER=<c-compiler>` and
-          `-DCMAKE_CXX_COMPILER=<cpp-compiler>`
-        * `-DCMAKE_BUILD_TYPE=Debug` to debug with gdb or lldb.
-        * `-DCMAKE_BUILD_TYPE=Release` to run in release mode. Release mode
-          will add optimizations that makes the code run faster.
-        * `-DTGT_SYSTEM=Graviton2` for AWS Graviton2 optimizations.
-        * `-DCORES=<core_count>` to instruct parallel algorithms to use
-          `<core_count>` cores.
-        * `-DPython3_EXECUTABLE=<python executable>`
+      * `-DCMAKE_C_COMPILER=<c-compiler>` and
+        `-DCMAKE_CXX_COMPILER=<cpp-compiler>`
+      * `-DCMAKE_BUILD_TYPE=Debug` to debug with gdb or lldb.
+      * `-DCMAKE_BUILD_TYPE=Release` to run in release mode. Release mode
+        will add optimizations that makes the code run faster.
+      * `-DTGT_SYSTEM=Graviton2` for AWS Graviton2 optimizations.
+      * `-DCORES=<core_count>` to instruct parallel algorithms to use
+        `<core_count>` cores.
+      * `-DPython3_EXECUTABLE=<python executable>`
 5. Build the code: `cmake --build .`
-   * `cmake --build . -- -j CORES` to run a parallel build.
+    * `cmake --build . -- -j CORES` to run a parallel build.
 6. Download the card cluster files to `build/out/ai/clustering`
-   * [Flop](https://drive.google.com/file/d/1Q_9M-KGe0855QksD6sro9DI0V4aUwyk9/view?usp=sharing)
-   * [Turn](https://drive.google.com/file/d/1KRE-eHi8ryvrnbBjCNCGVTujuCLi9hKz/view?usp=sharing)
-   * [River](https://drive.google.com/file/d/1qNSfJKBzAZ2CQGYvplQqjAXPHIkbe3sI/view?usp=sharing)
+    * [Flop](https://drive.google.com/file/d/1Q_9M-KGe0855QksD6sro9DI0V4aUwyk9/view?usp=sharing)
+    * [Turn](https://drive.google.com/file/d/1KRE-eHi8ryvrnbBjCNCGVTujuCLi9hKz/view?usp=sharing)
+    * [River](https://drive.google.com/file/d/1qNSfJKBzAZ2CQGYvplQqjAXPHIkbe3sI/view?usp=sharing)
 7. Generate the dev strategy: `./bin/blueprint.out`
 8. Convert the dev strategy to the hdf5 format: `./bin/avg_to_hd5.out out/ai/mccfr/dev/average_final.cereal out/ai/mccfr/dev/blueprint_dev.hdf`
 9. Create the api config file: `cp ../src/api/src/settings.py.example ../src/api/src/settings.py`
@@ -39,18 +39,20 @@ All executables will now be located in `build/bin`. So, for example, to execute
 1. Build the project as detailed above.
 2. Copy `fishbait.nginx.example` to
    `/etc/nginx/sites-available/fishbait.nginx` and replace the placeholders
-     * Set the `host` property to the absolute path of
-       `build/src/interface/build`
-     * Set the `server_name` property to be whatever url the interface is to be
-       deployed on.
+    * Set the `host` property to the absolute path of
+      `build/src/interface/build`
+    * Set the `server_name` property to be whatever url the interface is to be
+      deployed on.
 3. `sudo ln -s /etc/nginx/sites-available/fishbait.nginx /etc/nginx/sites-enabled/fishbait.nginx`
 4. `sudo systemctl reload nginx`
 5. Configure `src/api/src/settings.py`
 6. Copy `src/api/fishbait.api.service.example` to
    `/etc/systemd/system/fishbait.api.service` and replace the placeholders
-     * Set the `WorkingDirectory` to the absolute path of `src/api/src`
-     * Set the placeholder in `ExecStart` to be the absolute path of
-       `build/src/api/venv/bin/gunicorn`
+    * Set the `WorkingDirectory` to the absolute path of `src/api/src`
+    * Set the gunicorn placeholder in `ExecStart` to be the absolute path of
+      `build/src/api/venv/bin/gunicorn`
+    * Set the datadog placeholder in `ExecStart` to be the absolute path of
+      `build/src/api/venv/bin/ddtrace`
 7. `sudo systemctl daemon-reload`
 8. `sudo systemctl start fishbait.api`
 9. Setup https/ssl with the appropriate
@@ -77,12 +79,12 @@ installed for code coverage.
 * Do not put commas in the Catch2 tester descriptions
 * This project follows the [Google C++ Style guide](https://google.github.io/styleguide/cppguide.html)
   with the following exceptions:
-    * Exceptions are allowed
-    * Constructors are allowed to do work and fail
-    * Integer types other than `int` are allowed
-    * Type names with acronyms (like `OCHS_N`) may have underscores.
+  * Exceptions are allowed
+  * Constructors are allowed to do work and fail
+  * Integer types other than `int` are allowed
+  * Type names with acronyms (like `OCHS_N`) may have underscores.
 * This project follows the [Google Python Style guide](https://google.github.io/styleguide/pyguide.html)
   with the following exceptions:
-    * 2 spaces are used for indentation
+  * 2 spaces are used for indentation
 * Needs to be run on a processor where 32 bit integer reads and writes are
   atomic.
