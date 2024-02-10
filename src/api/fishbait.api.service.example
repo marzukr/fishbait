@@ -6,7 +6,8 @@ After=network.target
 [Service]
 User=ubuntu
 WorkingDirectory=PLACEHOLDER
-ExecStart=DD_SERVICE="fishbait-api" DD_ENV="prod" DD_LOGS_INJECTION=true DD_PROFILING_ENABLED=true DD_APPSEC_ENABLED=true DDTRACE_PLACEHOLDER GUNICORN_PLACEHOLDER --log-level=debug -b 127.0.0.1:5000 app:app
+Environment=DD_SERVICE="fishbait-api" DD_ENV="prod" DD_LOGS_INJECTION=true DD_PROFILING_ENABLED=true DD_APPSEC_ENABLED=true
+ExecStart=DDTRACE_PLACEHOLDER GUNICORN_PLACEHOLDER --log-level=debug -b 127.0.0.1:5000 app:app
 Restart=always
 
 [Install]
