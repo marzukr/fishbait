@@ -9,7 +9,7 @@ import settings
 file_handler = RotatingFileHandler(
   settings.LOG_LOCATION,
   mode='a',
-  maxBytes=5*1024*1024, 
+  maxBytes=5*1024*1024,
   backupCount=2,
   encoding=None,
 )
@@ -18,7 +18,7 @@ logging.basicConfig(
   level=logging.INFO,
   format=(
     '%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
-    '[dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+    '[dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '  # pylint: disable=line-too-long
     '- %(message)s'
   ),
   handlers=[file_handler],
@@ -29,4 +29,4 @@ def get_logger(name: str):
 
 @ddtrace.tracer.wrap()
 def hello():
-    get_logger(__name__).info('Hello, World!')
+  get_logger(__name__).info('Hello, World!')
