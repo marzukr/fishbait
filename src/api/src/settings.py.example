@@ -14,4 +14,5 @@ HAND_CARDS: int = 2
 BOARD_CARDS: int = 5
 CARDS_IN_DECK: int = 52
 
-EMAIL_LIST_LOCATION: str = '../../build/emails.txt'
+EMAIL_LIST_LOCATION: str = '../../../build/emails.txt'
+LOG_LOCATION: str = '../../../build/out/api/fishbait.log'

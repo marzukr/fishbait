@@ -52,7 +52,7 @@ All executables will now be located in `build/bin`. So, for example, to execute
     * Set the gunicorn placeholder in `ExecStart` to be the absolute path of
       `build/src/api/venv/bin/gunicorn`
     * Set the datadog placeholder in `ExecStart` to be the absolute path of
-      `build/src/api/venv/bin/ddtrace`
+      `build/src/api/venv/bin/ddtrace-run`
 7. `sudo systemctl daemon-reload`
 8. `sudo systemctl start fishbait.api`
 9. Setup https/ssl with the appropriate
