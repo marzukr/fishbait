@@ -4,7 +4,7 @@ import { isEqual, mapKeys, snakeCase } from 'lodash';
 import {
   objectAgent, numberAgent, booleanAgent, enumAgent, arrayAgent,
   nullableAgent, Stamped, stringAgent, unsnakeAgent, conversionAgent, Nullable
-} from 'utils/customs';
+} from 'cbp';
 import { isoToAsciiString } from 'utils/hands';
 
 enum Round {
