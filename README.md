@@ -9,7 +9,7 @@ python -m venv api/venv
 api/venv/bin/pip install -r api/requirements.txt
 cp .githooks/pre-commit .git/hooks/pre-commit
 git submodule update --init --recursive
-cp ai/mccfr/hyperparameters.h.dev ai/mccfr/hyperparameters.h
+cp ai/src/mccfr/hyperparameters.h.dev ai/src/mccfr/hyperparameters.h
 docker build -t fishbait-ai ./ai
 docker run --rm -v ./ai/out:/build/out fishbait-ai /ai/dev_blueprint.sh
 docker compose -f docker-compose.dev.yml up
