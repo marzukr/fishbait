@@ -1,0 +1,48 @@
+name: fishbait
+
+services:
+  ai:
+    build:
+      context: ./ai
+    image: fishbait-ai
+    container_name: fishbait-ai
+    volumes:
+      - lib:/libvol
+    command: ["sh", "-c", "cp -r /build/lib /libvol && touch /libvol/done"]
+
+  api:
+    build:
+      context: ./api
+    image: fishbait-api
+    container_name: fishbait-api
+    environment:
+      - STRATEGY_LOCATION=/aivol/blueprint_dev.hdf
+      - RELAY_LIB_LOCATION=/libvol/lib/librelay.so
+      - MAX_SESSIONS=${MAX_SESSIONS}
+      - SESSION_ID_BYTES=${SESSION_ID_BYTES}
+      - SESSION_TIMEOUT=${SESSION_TIMEOUT}
+      - PIGEON_EXECUTION_TIMEOUT=${PIGEON_EXECUTION_TIMEOUT}
+    depends_on:
+      - ai
+    ports:
+      - "5001:5000"
+    volumes:
+      - lib:/libvol
+      - ./ai/out/ai/mccfr/dev:/aivol
+      - ./api/src:/api/src
+    entrypoint: ["/api/entrypoint.dev.sh"]
+
+  app:
+    build:
+      context: ./app
+    image: fishbait-app
+    container_name: fishbait-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    command: ["yarn", "start"]
+
+volumes:
+  lib:

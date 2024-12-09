@@ -1,0 +1,29 @@
+user nginx;
+worker_processes 1;
+pid /var/run/nginx.pid;
+
+events {}
+
+http {
+	include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+	server {
+		listen 80;
+		index index.html;
+		server_name PLACEHOLDER;
+		
+		location / {
+			root /usr/share/nginx/html;
+			try_files $uri $uri/ =404;
+		}
+
+		location /api {
+			proxy_set_header Host $host;
+			proxy_set_header X-Real-IP $remote_addr;
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+			proxy_set_header X-Forwarded-Proto $scheme;
+			proxy_pass http://api:5000;
+		}
+	}
+}

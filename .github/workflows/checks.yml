@@ -9,7 +9,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install cpplint
-      - run: cpplint --recursive .
+      - run: cpplint --recursive ai/src ai/tests
   pylint:
     runs-on: ubuntu-latest
     steps:
@@ -18,25 +18,19 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install pylint
-      - run: find . -type f -name "*.py" | xargs pylint
+      - run: find api/src -type f -name "*.py" | xargs pylint
   build-test:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repo
         uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - name: create build directory
-        run: mkdir build
+          submodules: 'recursive'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: create hyperparameters file
-        run: cp src/ai/mccfr/hyperparameters.h.dev src/ai/mccfr/hyperparameters.h
-      - name: generate build files
-        working-directory: build
-        run: cmake -DCMAKE_BUILD_TYPE=Release ..
+        run: cp ai/src/mccfr/hyperparameters.h.dev ai/src/mccfr/hyperparameters.h
       - name: build
-        working-directory: build
-        run: make
+        run: docker build -t fishbait-ai ./ai
       - name: test
-        working-directory: build
-        run: ./bin/tests.out
+        run: docker run --rm fishbait-ai /build/bin/tests.out

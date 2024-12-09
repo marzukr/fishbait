@@ -1,20 +1,20 @@
-[submodule "external/Catch2"]
-	path = external/Catch2
+[submodule "ai/external/Catch2"]
+	path = ai/external/Catch2
 	url = https://github.com/marzukr/Catch2
 	branch = v2.x
-[submodule "external/hand-isomorphism"]
-	path = external/hand-isomorphism
+[submodule "ai/external/hand-isomorphism"]
+	path = ai/external/hand-isomorphism
 	url = https://github.com/marzukr/hand-isomorphism
-[submodule "external/SKPokerEval"]
-	path = external/SKPokerEval
+[submodule "ai/external/SKPokerEval"]
+	path = ai/external/SKPokerEval
 	url = https://github.com/marzukr/SKPokerEval
-[submodule "external/cereal"]
-	path = external/cereal
+[submodule "ai/external/cereal"]
+	path = ai/external/cereal
 	url = https://github.com/marzukr/cereal.git
-[submodule "external/array"]
-	path = external/array
+[submodule "ai/external/array"]
+	path = ai/external/array
 	url = https://github.com/marzukr/array.git
-[submodule "external/hdf5"]
-	path = external/hdf5
+[submodule "ai/external/hdf5"]
+	path = ai/external/hdf5
 	url = https://github.com/marzukr/hdf5
 	branch = 1.12/master

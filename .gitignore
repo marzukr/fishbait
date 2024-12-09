@@ -43,7 +43,8 @@ __pycache__/
 */.vscode/*
 
 /build/*
-build
+.env
+nginx.conf
 
 ### CMake template
 CMakeCache.txt
