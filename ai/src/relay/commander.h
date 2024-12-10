@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <utility>
 #include <tuple>
+#include <memory>
 
 #include "array/array.h"
 #include "clustering/cluster_table.h"
@@ -225,6 +226,13 @@ class Commander {
     double size;
     float policy;
     std::size_t action_idx = kIllegalId;
+
+    bool operator==(const AvailableAction& other) const {
+      return (
+        std::tie(play, size, policy, action_idx) ==
+        std::tie(other.play, other.size, other.policy, other.action_idx)
+      );
+    }
   };
 
   /*
@@ -278,6 +286,35 @@ class Commander {
 
   /* @brief Returns fishbait's player id. */
   PlayerId fishbait_seat() const { return fishbait_seat_; }
+
+  /* @brief Commander serialize function */
+  template<class Archive>
+  void save(Archive& archive) const {
+    std::unique_ptr<ScribeT> archive_strategy = (
+      std::make_unique<ScribeT>(strategy_)
+    );
+    archive(archive_strategy);
+    archive(
+      abstract_state_, actual_state_, abstract_seq_, fishbait_seat_,
+      first_round_action_
+    );
+  }
+
+  /* @brief Commander deserialize function */
+  template <class Archive>
+  static void load_and_construct(
+    Archive& archive,
+    cereal::construct<Commander<kPlayers, kActions, InfoAbstraction>>& construct
+  ) {
+    std::unique_ptr<ScribeT> archive_strategy;
+    archive(archive_strategy);
+    construct(std::move(*archive_strategy));
+    archive(
+      construct->abstract_state_, construct->actual_state_,
+      construct->abstract_seq_, construct->fishbait_seat_,
+      construct->first_round_action_
+    );
+  }
 
  private:
   /*

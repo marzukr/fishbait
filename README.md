@@ -10,8 +10,9 @@ api/venv/bin/pip install -r api/requirements.txt
 cp .githooks/pre-commit .git/hooks/pre-commit
 git submodule update --init --recursive
 cp ai/src/mccfr/hyperparameters.h.dev ai/src/mccfr/hyperparameters.h
-docker build -t fishbait-ai ./ai
+docker compose -f docker-compose.dev.yml build ai
 docker run --rm -v ./ai/out:/build/out fishbait-ai /ai/dev_blueprint.sh
+docker compose -f docker-compose.dev.yml build
 docker compose -f docker-compose.dev.yml up
 ```
 
@@ -26,12 +27,12 @@ docker compose -f docker-compose.dev.yml up
 
 ## Testing
 ```sh
-docker run --rm fishbait-ai /build/bin/tests.out
+docker run --rm fishbait-ai sh -c "cd /build && ./bin/tests.out"
 ```
 
 ## Requirements
 - Docker
-- Python 3.10
+- Python 3.12
 - nginx (to deploy the interface)
 
 ## Other Notes

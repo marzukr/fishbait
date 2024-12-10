@@ -3,18 +3,7 @@
 import os
 
 import logging
-from logging.handlers import RotatingFileHandler
 import ddtrace
-
-import settings
-
-file_handler = RotatingFileHandler(
-  settings.LOG_LOCATION,
-  mode='a',
-  maxBytes=5*1024*1024,
-  backupCount=2,
-  encoding=None,
-)
 
 if os.getenv('DD_SERVICE'):
   logging.basicConfig(
@@ -24,7 +13,7 @@ if os.getenv('DD_SERVICE'):
       '[dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '  # pylint: disable=line-too-long
       '- %(message)s'
     ),
-    handlers=[file_handler],
+    handlers=[logging.StreamHandler()],
   )
 else:
   logging.basicConfig(
@@ -33,7 +22,7 @@ else:
       '%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
       '- %(message)s'
     ),
-    handlers=[file_handler],
+    handlers=[logging.StreamHandler()],
   )
 
 def get_logger(name: str):

@@ -440,6 +440,24 @@ class Scribe {
     round_sequences.read(&buffer, H5::PredType::NATIVE_UINT32, mspace, fspace);
     return buffer;
   }  // Next()
+
+  /* @brief Scribe serialize function */
+  template<class Archive>
+  void save(Archive& archive) const {
+    archive(average_.getFileName());
+  }
+
+  /* @brief Scribe deserialize function */
+  template <class Archive>
+  static void load_and_construct(
+    Archive& ar,
+    cereal::construct<Scribe<kPlayers, kActions, InfoAbstraction>>& construct
+  ) {
+    std::string file_name;
+    ar(file_name);
+    std::filesystem::path file_path{file_name};
+    construct(file_path);
+  }
 };  // class Scribe
 
 }  // namespace fishbait

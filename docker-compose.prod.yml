@@ -16,6 +16,8 @@ services:
   ai:
     build:
       context: ./ai
+      args:
+        MAX_THREADS: ${MAX_THREADS}
     image: fishbait-ai
     container_name: fishbait-ai
     volumes:

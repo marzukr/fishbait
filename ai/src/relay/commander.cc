@@ -37,43 +37,60 @@ void HandleError(const std::exception& e) {
   error_message = std::make_unique<std::string>(e.what());
 }
 
+typedef void (*CallbackFunc)(const char*, size_t);
+
 /*
   @brief Creates a new Commander from the given Average strategy file.
 
   @param location The location of the Average strategy file to use.
-
-  @return A pointer to the created Commander object on the heap.
+  @param callback A callback that will receive the binary string representation
+    of the new commander.
 */
-CommanderT* CommanderNew(char* location) {
+void CommanderCreate(const char* location, CallbackFunc callback) {
   std::filesystem::path avg_loc{location};
-  return new CommanderT{CommanderT::ScribeT{avg_loc}};
-}
-
-/* @brief Deallocate the given Commander object. */
-void CommanderDelete(CommanderT* c) {
-  delete c;
+  std::unique_ptr<CommanderT> napoleon = std::make_unique<CommanderT>(
+    CommanderT::ScribeT{avg_loc}
+  );
+  std::string saved = CerealSave(&napoleon);
+  callback(saved.data(), saved.length());
 }
 
 /*
   @brief Resets the game with the given parameters.
+
+  @param buffer Binary data start of the Commander to use
+  @param length Binary data length of the Commander to use
 
   @param stacks An array of the stack size of each player.
   @param button Seat number of the button.
   @param big_blind Size of the big blind in number of chips.
   @param small_blind Size of the small blind in number of chips.
   @param fishbait_seat Seat number of fishbait.
+
+  @param callback A callback that will receive the binary string representation
+    of the mutated commander.
 */
 void CommanderReset(
-  CommanderT* c, Chips stacks[3], PlayerId button, Chips big_blind,
-  Chips small_blind, PlayerId fishbait_seat
+  const char* buffer, std::size_t length,
+
+  Chips stacks[3], PlayerId button, Chips big_blind, Chips small_blind,
+  PlayerId fishbait_seat,
+
+  CallbackFunc callback
 ) {
   try {
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+
     std::array<Chips, hparam::kPlayers> stack_arr;
     std::copy_n(stacks, hparam::kPlayers, stack_arr.begin());
     Node<hparam::kPlayers> start_state{
       stack_arr, button, big_blind, small_blind
     };
-    c->Reset(start_state, fishbait_seat);
+    napoleon->Reset(start_state, fishbait_seat);
+
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
   } catch (const std::exception& e) {
     HandleError(e);
   }
@@ -81,30 +98,48 @@ void CommanderReset(
 
 /* @brief Deals the given player the given hand. */
 void CommanderSetHand(
-  CommanderT* c, PlayerId player, ISO_Card hand[kHandCards]
+  const char* buffer, std::size_t length,
+  PlayerId player, ISO_Card hand[kHandCards],
+  CallbackFunc callback
 ) {
   try {
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+
     Hand<ISO_Card> player_hand;
     std::copy_n(hand, player_hand.size(), player_hand.begin());
-    c->SetHand(player, player_hand);
+    napoleon->SetHand(player, player_hand);
+
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
   } catch (const std::exception& e) {
     HandleError(e);
   }
 }
 
 /* @brief Proceeds play to the next round. */
-void CommanderProceedPlay(CommanderT* c) {
+void CommanderProceedPlay(
+  const char* buffer, std::size_t length, CallbackFunc callback
+) {
   try {
-    c->ProceedPlay();
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+
+    napoleon->ProceedPlay();
+
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
   } catch (const std::exception& e) {
     HandleError(e);
   }
 }
 
 /* @brief Get the current state of the game. */
-NodeSnapshotT CommanderState(CommanderT* c) {
+NodeSnapshotT CommanderState(const char* buffer, std::size_t length) {
   try {
-    return c->State().Snapshot();
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+    return napoleon->State().Snapshot();
   } catch (const std::exception& e) {
     HandleError(e);
   }
@@ -112,9 +147,11 @@ NodeSnapshotT CommanderState(CommanderT* c) {
 }
 
 /* @brief Returns fishbait's player id. */
-PlayerId CommanderFishbaitSeat(CommanderT* c) {
+PlayerId CommanderFishbaitSeat(const char* buffer, std::size_t length) {
   try {
-    return c->fishbait_seat();
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+    return napoleon->fishbait_seat();
   } catch (const std::exception& e) {
     HandleError(e);
   }
@@ -131,10 +168,12 @@ int CommanderGetKActions() {
 
 /* out_arr is expected to be of size kActions */
 void CommanderGetAvailableActions(
-  CommanderT* c, CommanderT::AvailableAction* out_arr
+  const char* buffer, std::size_t length, CommanderT::AvailableAction* out_arr
 ) {
   try {
-    std::array aas = c->GetAvailableActions();
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+    std::array aas = napoleon->GetAvailableActions();
     for (std::size_t i = 0; i < aas.size(); ++i) {
       out_arr[i] = aas[i];
     }
@@ -153,9 +192,15 @@ struct ActionStruct {
   std::size_t action_idx;
 };
 
-ActionStruct CommanderQuery(CommanderT* c) {
+ActionStruct CommanderQuery(
+  const char* buffer, std::size_t length, CallbackFunc callback
+) {
   try {
-    auto [ action, size, action_idx ] = c->Query();
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+    auto [ action, size, action_idx ] = napoleon->Query();
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
     return { action, size, action_idx };
   } catch (const std::exception& e) {
     HandleError(e);
@@ -163,35 +208,67 @@ ActionStruct CommanderQuery(CommanderT* c) {
   return {};
 }
 
-void CommanderApply(CommanderT* c, Action play, Chips size) {
+void CommanderApply(
+  const char* buffer, std::size_t length,
+  Action play, Chips size,
+  CallbackFunc callback
+) {
   try {
-    c->Apply(play, size);
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+
+    napoleon->Apply(play, size);
+
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
   } catch (const std::exception& e) {
     HandleError(e);
   }
 }
 
-void CommanderSetBoard(CommanderT* c, ISO_Card board[kBoardCards]) {
+void CommanderSetBoard(
+  const char* buffer, std::size_t length,
+  ISO_Card board[kBoardCards],
+  CallbackFunc callback
+) {
   try {
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+
     BoardArray<ISO_Card> board_arr;
     std::copy_n(board, kBoardCards, board_arr.begin());
-    c->SetBoard(board_arr);
+    napoleon->SetBoard(board_arr);
+
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
   } catch (const std::exception& e) {
     HandleError(e);
   }
 }
 
-void CommanderAwardPot(CommanderT* c) {
+void CommanderAwardPot(
+  const char* buffer, std::size_t length, CallbackFunc callback
+) {
   try {
-    c->AwardPot();
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+    napoleon->AwardPot();
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
   } catch (const std::exception& e) {
     HandleError(e);
   }
 }
 
-void CommanderNewHand(CommanderT* c) {
+void CommanderNewHand(
+  const char* buffer, std::size_t length, CallbackFunc callback
+) {
   try {
-    c->NewHand();
+    std::unique_ptr<CommanderT> napoleon;
+    CerealLoad(buffer, length, &napoleon);
+    napoleon->NewHand();
+    std::string saved = CerealSave(&napoleon);
+    callback(saved.data(), saved.length());
   } catch (const std::exception& e) {
     HandleError(e);
   }
