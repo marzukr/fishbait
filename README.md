@@ -12,6 +12,7 @@ git submodule update --init --recursive
 cp ai/src/mccfr/hyperparameters.h.dev ai/src/mccfr/hyperparameters.h
 docker compose -f docker-compose.dev.yml build ai
 docker run --rm -v ./ai/out:/build/out fishbait-ai /ai/dev_blueprint.sh
+docker compose -f docker-compose.dev.yml build
 docker compose -f docker-compose.dev.yml up
 ```
 
@@ -31,7 +32,7 @@ docker run --rm fishbait-ai sh -c "cd /build && ./bin/tests.out"
 
 ## Requirements
 - Docker
-- Python 3.10
+- Python 3.12
 - nginx (to deploy the interface)
 
 ## Other Notes

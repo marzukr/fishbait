@@ -19,4 +19,3 @@ BOARD_CARDS: int = 5
 CARDS_IN_DECK: int = 52
 
 EMAIL_LIST_LOCATION: str = "/tmp/emails.txt"
-LOG_LOCATION: str = "/tmp/fishbait.log"

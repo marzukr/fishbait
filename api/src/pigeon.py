@@ -2,14 +2,12 @@
 
 from abc import abstractmethod, ABC
 from typing import (
-  Any, Callable, Concatenate, Dict, List, Literal, TypedDict, Optional, TypeVar,
-  ParamSpec, Type, Generic
+  Any, Callable, Concatenate, Dict, List, Literal, TypedDict, Optional, Type
 )
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from ctypes import (
   cdll,
-  c_void_p,
   c_char_p,
   c_uint32,
   c_uint8,
@@ -18,8 +16,10 @@ from ctypes import (
   c_float,
   c_size_t,
   c_int,
+  c_char,
   POINTER,
   Structure,
+  CFUNCTYPE,
 )
 from multiprocessing.managers import BaseManager
 import concurrent.futures
@@ -37,28 +37,23 @@ lib = cdll.LoadLibrary(settings.RELAY_LIB_LOCATION)
 Chips = c_uint32
 SequenceId = c_uint32
 PlayerId = c_uint8
-CommanderPtr = c_void_p
 RoundId = c_uint8
 ActionCode = c_uint8
 ISOCard = c_uint8
 
 
-A = TypeVar('A')
-class LibArg(Generic[A]):
+class LibArg[A]:
   def __init__(self, arg: Type[A]):
     self.arg = arg
 
-R = TypeVar('R')
-class LibRet(Generic[R]):
+class LibRet[R]:
   def __init__(self, ret: Type[R]):
     self.ret = ret
 
-P = ParamSpec('P')
-S = TypeVar('S')
-class LibFn(Generic[P, R]):
+class LibFn[**P, R]:
   '''Wraps ctypes functions with the appropriate types'''
 
-  def __init__(self, func: Callable[P, R], argtypes: List, restype):
+  def __init__(self, func: Callable[P, R], argtypes: list, restype):
     self.func: Any = func
 
     self.argtypes = argtypes
@@ -97,14 +92,14 @@ class LibFn(Generic[P, R]):
       raise CPlusPlusError()
     return result
 
-  def arg(self, arg: Type[A]):
+  def arg[A](self, arg: Type[A]):
     new_arg_fn: Callable[Concatenate[A, P], R] = self.func
     new_argtypes = [arg] + self.argtypes
     return LibFn[Concatenate[A, P], R](
       new_arg_fn, new_argtypes, self.restype  # type: ignore
     )
 
-  def ret(self, ret: Type[S]):
+  def ret[S](self, ret: Type[S]):
     new_res_fn: Callable[P, S] = self.func
     return LibFn[P, S](new_res_fn, self.argtypes, ret)
 
@@ -210,52 +205,86 @@ class AvailableActionStruct(Structure):
     })
 
 
+BinStr = POINTER(c_char)
+CallbackFunc = CFUNCTYPE(None, BinStr, c_size_t)
+
+BinStrType = type[BinStr]
+SizeTypeType = type[c_size_t]
+def handle_commander_buffer[**P, R](
+    commander_fn: Callable[Concatenate[BinStrType, SizeTypeType, P], R]
+):
+  def wrapped(commander: bytes, *args: P.args, **kwargs: P.kwargs) -> R:
+    return commander_fn(commander, len(commander), *args, **kwargs)
+  return wrapped
+
+
 # Note: arguments here are in reverse order
-commander_new = LibFn.name('CommanderNew').ret(CommanderPtr).arg(c_char_p)
-commander_delete = LibFn.name('CommanderDelete').arg(CommanderPtr)
-commander_reset = (
+commander_create = LibFn.name('CommanderCreate').arg(CallbackFunc).arg(c_char_p)
+commander_reset = handle_commander_buffer(
   LibFn.name('CommanderReset')
+  .arg(CallbackFunc)
   .arg(PlayerId)
   .arg(Chips)
   .arg(Chips)
   .arg(PlayerId)
   .arg(Chips * settings.PLAYERS)
-  .arg(CommanderPtr)
+  .arg(c_size_t)
+  .arg(BinStr)
 )
-commander_set_hand = (
+commander_set_hand = handle_commander_buffer(
   LibFn.name('CommanderSetHand')
+  .arg(CallbackFunc)
   .arg(ISOCard * settings.HAND_CARDS)
   .arg(PlayerId)
-  .arg(CommanderPtr)
+  .arg(c_size_t)
+  .arg(BinStr)
 )
-commander_proceed_play = LibFn.name('CommanderProceedPlay').arg(CommanderPtr)
-commander_state = (
-  LibFn.name('CommanderState').ret(NodeSnapshot).arg(CommanderPtr)
+
+commander_proceed_play = handle_commander_buffer(
+  LibFn.name('CommanderProceedPlay')
+    .arg(CallbackFunc).arg(c_size_t).arg(BinStr)
 )
-commander_fishbait_seat = (
-  LibFn.name('CommanderFishbaitSeat').ret(PlayerId).arg(CommanderPtr)
+
+commander_state = handle_commander_buffer(
+  LibFn.name('CommanderState').ret(NodeSnapshot).arg(c_size_t).arg(BinStr)
 )
-commander_get_available_actions = (
+commander_fishbait_seat = handle_commander_buffer(
+  LibFn.name('CommanderFishbaitSeat').ret(PlayerId).arg(c_size_t).arg(BinStr)
+)
+commander_get_available_actions = handle_commander_buffer(
   LibFn.name('CommanderGetAvailableActions')
   .arg(POINTER(AvailableActionStruct))
-  .arg(CommanderPtr)
+  .arg(c_size_t)
+  .arg(BinStr)
 )
-commander_query = (
-  LibFn.name('CommanderQuery').ret(ActionStruct).arg(CommanderPtr)
+commander_query = handle_commander_buffer(
+  LibFn.name('CommanderQuery')
+    .ret(ActionStruct).arg(CallbackFunc).arg(c_size_t).arg(BinStr)
 )
-commander_apply = (
+commander_apply = handle_commander_buffer(
   LibFn.name('CommanderApply')
+  .arg(CallbackFunc)
   .arg(Chips)
   .arg(ActionCode)
-  .arg(CommanderPtr)
+  .arg(c_size_t)
+  .arg(BinStr)
 )
-commander_set_board = (
+
+commander_set_board = handle_commander_buffer(
   LibFn.name('CommanderSetBoard')
+  .arg(CallbackFunc)
   .arg(ISOCard * settings.BOARD_CARDS)
-  .arg(CommanderPtr)
+  .arg(c_size_t)
+  .arg(BinStr)
 )
-commander_award_pot = LibFn.name('CommanderAwardPot').arg(CommanderPtr)
-commander_new_hand = LibFn.name('CommanderNewHand').arg(CommanderPtr)
+
+commander_award_pot = handle_commander_buffer(
+  LibFn.name('CommanderAwardPot').arg(CallbackFunc).arg(c_size_t).arg(BinStr)
+)
+
+commander_new_hand = handle_commander_buffer(
+  LibFn.name('CommanderNewHand').arg(CallbackFunc).arg(c_size_t).arg(BinStr)
+)
 
 
 @dataclass
@@ -460,9 +489,9 @@ class PigeonState:
       elif self.hands[i] == [0] * settings.HAND_CARDS:
         self.hands[i] = [None] * settings.HAND_CARDS
 
-  def pull_from_commander(self, commander: CommanderPtr):
+  def pull_from_commander(self, commander: bytes):
     '''Pulls the latest state from the given Commander into this object.'''
-    node_snapshot = commander_state(commander)
+    node_snapshot = commander_state(commander, len(commander))
 
     direct_copy_fields = [
       'players', 'big_blind', 'small_blind', 'ante', 'big_blind_ante',
@@ -485,12 +514,11 @@ class PigeonState:
     hands_array = node_snapshot.hands
     self.hands = [list(hands_array[i]) for i in range(len(hands_array))]
 
-    self.fishbait_seat = commander_fishbait_seat(commander)
+    self.fishbait_seat = commander_fishbait_seat(commander, len(commander))
     self._cleanup_cards()
     self._set_player_needs_hand()
     self._set_board_needs_cards()
     self._set_can_muck()
-
 
 class PigeonInterface(ABC):
   '''Interface for a Pigeon's public functions'''
@@ -541,22 +569,22 @@ class PigeonInterface(ABC):
   def new_hand(self) -> None:
     raise NotImplementedError()
 
-T = TypeVar('T')
 class Pigeon(PigeonInterface):
   '''Sends messages between python clients and the fishbait C++ AI.'''
 
   def __init__(self):
+    def commander_callback(data, size):
+      self._commander = bytes(data[:size])
+    self._commander_callback = CallbackFunc(commander_callback)
+
     strategy_loc = settings.STRATEGY_LOCATION
-    self._commander: CommanderPtr = commander_new(bytes(strategy_loc, 'utf-8'))
+    commander_create(bytes(strategy_loc, 'utf-8'), self._commander_callback)
+
     self._state: PigeonState = PigeonState()
     self._update_state()
 
-  def __del__(self):
-    log.info('Deleting commander')
-    commander_delete(self._commander)
-
   @staticmethod
-  def _auto_advance(fn: Callable[Concatenate['Pigeon', P], T]):
+  def _auto_advance[**P, T](fn: Callable[Concatenate['Pigeon', P], T]):
     # pylint: disable=protected-access
     def auto_advancer(pigeon_obj: 'Pigeon', *args: P.args, **kwargs: P.kwargs):
       result = fn(pigeon_obj, *args, **kwargs)
@@ -597,7 +625,8 @@ class Pigeon(PigeonInterface):
   ):
     c_stacks = stacks.c_arr(Chips)
     commander_reset(
-      self._commander, c_stacks, button, big_blind, small_blind, fishbait_seat
+      self._commander, c_stacks, button, big_blind, small_blind, fishbait_seat,
+      self._commander_callback
     )
     self._state = PigeonState(player_names=player_names)
     self._update_state()
@@ -608,7 +637,10 @@ class Pigeon(PigeonInterface):
       log.error('No player needs a hand right now')
       raise InvalidStateTransitionError()
     iso_hand = hand.c_arr(ISOCard)
-    commander_set_hand(self._commander, self._state.player_needs_hand, iso_hand)
+    commander_set_hand(
+      self._commander, self._state.player_needs_hand, iso_hand,
+      self._commander_callback
+    )
     self._state.known_cards[self._state.player_needs_hand] = True
 
   @_auto_advance
@@ -625,7 +657,9 @@ class Pigeon(PigeonInterface):
       props.ActionType.ALL_IN: 3,
     }
     action_code = action_map[action]
-    commander_apply(self._commander, action_code, size)
+    commander_apply(
+      self._commander, action_code, size, self._commander_callback
+    )
     self._state.last_action[self._state.acting_player] = (
       ActionStruct(action_code, size, ILLEGAL_SEQ_ID).to_props(can_check)
     )
@@ -633,13 +667,15 @@ class Pigeon(PigeonInterface):
   @_auto_advance
   def set_board(self, board: props.Board):
     self._state.known_board = [card is not None for card in board]
-    commander_set_board(self._commander, board.c_arr(ISOCard))
+    commander_set_board(
+      self._commander, board.c_arr(ISOCard), self._commander_callback
+    )
 
   def state_dict(self):
     return asdict(self._state)
 
   def new_hand(self):
-    commander_new_hand(self._commander)
+    commander_new_hand(self._commander, self._commander_callback)
     self._state.known_cards = [False] * settings.PLAYERS
     self._state.last_action = [None] * settings.PLAYERS
     self._state.known_board = [False] * settings.BOARD_CARDS
@@ -649,7 +685,7 @@ class Pigeon(PigeonInterface):
   @_auto_advance
   def _proceed_play(self):
     '''Proceeds play to the next round.'''
-    commander_proceed_play(self._commander)
+    commander_proceed_play(self._commander, self._commander_callback)
     self._state.last_action = [None] * settings.PLAYERS
     self._state.available_actions = None
 
@@ -674,12 +710,17 @@ class Pigeon(PigeonInterface):
       act.to_props(can_check) for act in available_action_list
     ]
 
-    action_taken = commander_query(self._commander).to_props(can_check)
+    action_taken = (
+      commander_query(self._commander, self._commander_callback)
+        .to_props(can_check)
+    )
     fishbait_seat = commander_fishbait_seat(self._commander)
     self._state.last_action[fishbait_seat] = action_taken
 
   def _award_pot(self):
-    commander_award_pot(self._commander)
+    commander_award_pot(
+      self._commander, self._commander_callback
+    )
     self._update_state()
 
 class PigeonManager(BaseManager):
