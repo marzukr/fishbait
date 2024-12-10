@@ -1,0 +1,76 @@
+name: fishbait
+
+services:
+  nginx:
+    image: nginx:1.27
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - app-build:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+      - app
+
+  ai:
+    build:
+      context: ./ai
+    image: fishbait-ai
+    container_name: fishbait-ai
+    volumes:
+      - lib:/libvol
+    command: ["sh", "-c", "cp -r /build/lib /libvol && touch /libvol/done"]
+
+  api:
+    build:
+      context: ./api
+    image: fishbait-api
+    container_name: fishbait-api
+    environment:
+      - STRATEGY_LOCATION=/strategy
+      - RELAY_LIB_LOCATION=/libvol/lib/librelay.so
+      - MAX_SESSIONS=${MAX_SESSIONS}
+      - SESSION_ID_BYTES=${SESSION_ID_BYTES}
+      - SESSION_TIMEOUT=${SESSION_TIMEOUT}
+      - PIGEON_EXECUTION_TIMEOUT=${PIGEON_EXECUTION_TIMEOUT}
+      - DD_AGENT_HOST=datadog-agent
+      - DD_SERVICE=fishbait-api
+      - DD_ENV=${DD_ENV}
+      - DD_LOGS_INJECTION=true 
+      - DD_PROFILING_ENABLED=true 
+      - DD_APPSEC_ENABLED=true
+    depends_on:
+      - ai
+      - datadog-agent
+    volumes:
+      - lib:/libvol
+      - ./api/src:/api/src
+      - ${STRATEGY_LOCATION}:/strategy
+    entrypoint: ["/api/entrypoint.prod.sh"]
+
+  app:
+    build:
+      context: ./app
+    image: fishbait-app
+    container_name: fishbait-app
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+      - app-build:/app/build
+    command: ["yarn", "build"]
+
+  datadog-agent:
+    image: "datadog/agent:7"
+    container_name: datadog-agent
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_APM_ENABLED=true
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  lib:
+  app-build:

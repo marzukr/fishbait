@@ -1,16 +1,16 @@
 #!/bin/sh
+set -e
 
 echo "Linting C++ Files..."
-cpplint --recursive --quiet src tests || { exit 1; }
+api/venv/bin/cpplint --recursive --quiet ai/src ai/tests
 
 echo "Linting Python Files..."
-find src tests -type f -name "*.py" | xargs pylint || { exit 1; }
+find api/src -type f -name "*.py" | xargs api/venv/bin/pylint
 
 echo "Building..."
-cmake --build build || { exit 1; }
+docker build -t fishbait-ai ./ai
 
 echo "Testing..."
-cd build || { exit 1; }
-./bin/tests.out || { exit 1; }
+docker run --rm fishbait-ai /build/bin/tests.out
 
 exit 0
