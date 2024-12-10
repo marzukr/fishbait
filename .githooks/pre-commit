@@ -8,9 +8,9 @@ echo "Linting Python Files..."
 find api/src -type f -name "*.py" | xargs api/venv/bin/pylint
 
 echo "Building..."
-docker build -t fishbait-ai ./ai
+docker compose -f docker-compose.dev.yml build ai
 
 echo "Testing..."
-docker run --rm fishbait-ai /build/bin/tests.out
+docker run --rm fishbait-ai sh -c "cd /build && ./bin/tests.out"
 
 exit 0

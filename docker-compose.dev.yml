@@ -4,6 +4,8 @@ services:
   ai:
     build:
       context: ./ai
+      args:
+        MAX_THREADS: ${MAX_THREADS:-1}
     image: fishbait-ai
     container_name: fishbait-ai
     volumes:
@@ -18,10 +20,10 @@ services:
     environment:
       - STRATEGY_LOCATION=/aivol/blueprint_dev.hdf
       - RELAY_LIB_LOCATION=/libvol/lib/librelay.so
-      - MAX_SESSIONS=${MAX_SESSIONS}
-      - SESSION_ID_BYTES=${SESSION_ID_BYTES}
-      - SESSION_TIMEOUT=${SESSION_TIMEOUT}
-      - PIGEON_EXECUTION_TIMEOUT=${PIGEON_EXECUTION_TIMEOUT}
+      - MAX_SESSIONS=${MAX_SESSIONS:-1000}
+      - SESSION_ID_BYTES=${SESSION_ID_BYTES:-8}
+      - SESSION_TIMEOUT=${SESSION_TIMEOUT:-1800}
+      - PIGEON_EXECUTION_TIMEOUT=${PIGEON_EXECUTION_TIMEOUT:-5}
     depends_on:
       - ai
     ports:

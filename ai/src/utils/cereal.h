@@ -17,6 +17,7 @@
 #include "cereal/types/string.hpp"
 #include "cereal/types/tuple.hpp"
 #include "cereal/types/vector.hpp"
+#include "cereal/types/memory.hpp"
 
 namespace fishbait {
 
@@ -38,6 +39,14 @@ void CerealSave(const std::string_view path, T* save, bool verbose = false) {
 }  // CerealSave
 
 template <typename T>
+std::string CerealSave(T* save) {
+  std::ostringstream oss;
+  cereal::PortableBinaryOutputArchive archive(oss);
+  archive(*save);
+  return oss.str();
+}  // CerealSave
+
+template <typename T>
 void CerealLoad(const std::string_view path, T* load, bool verbose = false) {
   if (verbose) {
     std::cout << "Loading " << path << std::endl;
@@ -50,6 +59,14 @@ void CerealLoad(const std::string_view path, T* load, bool verbose = false) {
   if (verbose) {
     std::cout << "Loaded " << path << std::endl;
   }
+}  // CerealLoad
+
+template <typename T>
+void CerealLoad(const char* buffer, std::size_t length, T* load) {
+  std::string data(buffer, length);
+  std::istringstream stream(data);
+  cereal::PortableBinaryInputArchive iarchive(stream);
+  iarchive(*load);
 }  // CerealLoad
 
 template <typename T>
