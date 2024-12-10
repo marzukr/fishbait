@@ -17,11 +17,12 @@ docker compose -f docker-compose.dev.yml up
 
 ## Deployment
 1. Build the project as detailed above.
-2. `cp nginx.conf.example nginx.conf`
+2. `cp ai/src/mccfr/hyperparameters.h.big ai/src/mccfr/hyperparameters.h`
+3. `cp nginx.conf.example nginx.conf`
     * Set the `server_name` property to be the deployment url of the interface
-3. `cp .env.example .env` and configure
-4. `docker compose -f docker-compose.prod.yml up`
-5. Configure HTTPS with AWS Certificate Manager + API Gateway
+4. `cp .env.example .env` and configure
+5. `docker compose -f docker-compose.prod.yml up`
+6. Configure HTTPS with AWS Application Load Balancer
 
 ## Testing
 ```sh
