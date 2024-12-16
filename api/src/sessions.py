@@ -1,3 +1,5 @@
+'''Manages sessions in redis.'''
+
 import pickle
 
 import redis

@@ -4,7 +4,6 @@ from typing import Any
 import os
 
 from flask import Flask, request, make_response
-import redis.exceptions
 from werkzeug.exceptions import BadRequest
 import datadog
 from datadog import statsd
@@ -50,8 +49,7 @@ def handle_exceptions(e: Exception):
     log.exception(e)
     return result
   except Exception as new_exc:  # pylint: disable=broad-except
-    log.exception(new_exc)
-    log.exception(f"Exception while handling exception: {e}")
+    log.exception('Exception while handling exception: %s', e)
     return ApiError().flask_tuple()
 
 @app.before_request
@@ -101,8 +99,8 @@ def new_session():
     new_session_id = tasks.create_new_session.delay().get(
       timeout=settings.PIGEON_EXECUTION_TIMEOUT
     )
-  except redis.exceptions.OutOfMemoryError:
-    raise ServerOverloadedError()
+  except redis.exceptions.OutOfMemoryError as e:
+    raise ServerOverloadedError() from e
 
   resp = make_response()
   resp.set_cookie(settings.SESSION_ID_KEY, new_session_id)

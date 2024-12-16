@@ -1,3 +1,5 @@
+'''Defines celery tasks for the api.'''
+
 import secrets
 
 from celery import Celery
