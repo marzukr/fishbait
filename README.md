@@ -7,13 +7,12 @@ poker. Inspired by the Pluribus poker bot developed by CMU and Facebook.
 ```sh
 python -m venv api/venv
 api/venv/bin/pip install -r api/requirements.txt
-cp .githooks/pre-commit .git/hooks/pre-commit
+cp .githooks/pre-push .git/hooks/pre-push
 git submodule update --init --recursive
 cp ai/src/mccfr/hyperparameters.h.dev ai/src/mccfr/hyperparameters.h
 docker compose -f docker-compose.dev.yml build ai
 docker run --rm -v ./ai/out:/build/out fishbait-ai /ai/dev_blueprint.sh
-docker compose -f docker-compose.dev.yml build
-docker compose -f docker-compose.dev.yml up
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 ## Deployment
@@ -22,7 +21,7 @@ docker compose -f docker-compose.dev.yml up
 3. `cp nginx.conf.example nginx.conf`
     * Set the `server_name` property to be the deployment url of the interface
 4. `cp .env.example .env` and configure
-5. `docker compose -f docker-compose.prod.yml up`
+5. `docker compose -f docker-compose.prod.yml up --build -d`
 6. Configure HTTPS with AWS Application Load Balancer
 
 ## Testing
