@@ -49,7 +49,7 @@ def handle_exceptions(e: Exception):
     log.exception(e)
     return result
   except Exception as new_exc:  # pylint: disable=broad-except
-    log.exception('Exception while handling exception: %s', e)
+    log.exception('Exception while handling exception: %s', new_exc)
     return ApiError().flask_tuple()
 
 @app.before_request
