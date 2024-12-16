@@ -326,7 +326,3 @@ class ResetProps(BaseProps):
   small_blind: Prop[ChipCount] = Prop(ChipCount)
   fishbait_seat: Prop[PlayerNumber] = Prop(PlayerNumber)
   player_names: Prop[StrPlayerList] = Prop(StrPlayerList)
-
-@propclass
-class JoinEmailListProps(BaseProps):
-  email: Prop[Email] = Prop(Email)

@@ -21,8 +21,7 @@ from ctypes import (
   Structure,
   CFUNCTYPE,
 )
-from multiprocessing.managers import BaseManager
-import concurrent.futures
+from functools import cached_property
 
 import settings
 import props
@@ -573,15 +572,25 @@ class Pigeon(PigeonInterface):
   '''Sends messages between python clients and the fishbait C++ AI.'''
 
   def __init__(self):
-    def commander_callback(data, size):
-      self._commander = bytes(data[:size])
-    self._commander_callback = CallbackFunc(commander_callback)
+    self._commander = b''
 
     strategy_loc = settings.STRATEGY_LOCATION
     commander_create(bytes(strategy_loc, 'utf-8'), self._commander_callback)
 
     self._state: PigeonState = PigeonState()
     self._update_state()
+
+  @cached_property
+  def _commander_callback(self):
+    def callback(data, size):
+      self._commander = bytes(data[:size])
+    return CallbackFunc(callback)
+
+  def __getstate__(self) -> object:
+    return (self._commander, self._state)
+
+  def __setstate__(self, state: tuple[bytes, PigeonState]):
+    self._commander, self._state = state
 
   @staticmethod
   def _auto_advance[**P, T](fn: Callable[Concatenate['Pigeon', P], T]):
@@ -722,53 +731,3 @@ class Pigeon(PigeonInterface):
       self._commander, self._commander_callback
     )
     self._update_state()
-
-class PigeonManager(BaseManager):
-  pass
-PigeonManager.register('Pigeon', Pigeon)
-
-class PigeonProxy(PigeonInterface):
-  '''
-  An object that behaves like a local Pigeon to an outside observer but spawns
-  a Pigeon on a new process and sends messages to it.
-  '''
-
-  def __init__(self) -> None:
-    super().__init__()
-    self.manager = PigeonManager()
-    self.manager.start()  # pylint: disable=consider-using-with
-    self.revere = self.manager.Pigeon()
-
-  def __del__(self):
-    log.info('Shutting down manager for %s', self)
-    self.manager.shutdown()
-    log.info('Completed manager shutdown for %s', self)
-
-  class PigeonMessage():
-    '''
-    A descriptor that applies the given function on the managed Pigeon
-    '''
-
-    def __set_name__(self, owner, name):
-      self.name = name
-
-    def __get__(self, obj, objtype):
-      def wrapped_fn(*args, **kwargs):
-        log.info(
-          'Calling %s for %s with args %s and kwargs %s',
-          self.name, obj, args, kwargs
-        )
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-          fn = getattr(obj.revere, self.name)
-          future = executor.submit(fn, *args, **kwargs)
-          result = future.result(timeout=settings.PIGEON_EXECUTION_TIMEOUT)
-          log.info('Completed %s for %s', self.name, obj)
-          return result
-      return wrapped_fn
-
-  reset = PigeonMessage()
-  set_hand = PigeonMessage()
-  apply = PigeonMessage()
-  set_board = PigeonMessage()
-  state_dict = PigeonMessage()
-  new_hand = PigeonMessage()
