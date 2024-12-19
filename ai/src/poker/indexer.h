@@ -40,9 +40,9 @@ class Indexer {
     std::array<CardN, Rounds()> cpr_array = {kCardsPerRound...};
     hand_indexer_init(Rounds(), cpr_array.data(), isocalc_);
   }
-  ~Indexer() { 
+  ~Indexer() {
     hand_indexer_free(isocalc_);
-    delete isocalc_; 
+    delete isocalc_;
   }
 
   Indexer(const Indexer&) = delete;
