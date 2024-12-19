@@ -25,5 +25,5 @@ RUN cmake \
     cmake --build . -- -j ${MAX_THREADS}
 
 WORKDIR /ai
-COPY dev_blueprint.sh .
-RUN chmod +x dev_blueprint.sh
+COPY dev_blueprint.sh check_leaks.sh .
+RUN chmod +x dev_blueprint.sh check_leaks.sh

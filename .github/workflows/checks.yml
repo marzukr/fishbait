@@ -37,4 +37,6 @@ jobs:
       - name: build
         run: docker build -t fishbait-ai ./ai
       - name: test
-        run: docker run --rm fishbait-ai sh -c "cd /build && ./bin/tests.out"
+        run: docker run fishbait-ai sh -c "cd /build && ./bin/tests.out"
+      - name: check leaks
+        run: docker run fishbait-ai /ai/check_leaks.sh
